@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Für dich 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdeef5; --pink:#e0457b; --pink-dark:#c2185b; --pink-soft:#fde3ee;
+    --key:#fcdbe8; --key-active:#f9c3d9; --purple:#d8b4fe; --purple-dark:#c084fc;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Quicksand',system-ui,sans-serif;background:var(--bg);color:var(--pink);
+    overflow:hidden;user-select:none;-webkit-user-select:none;
+  }
+  .bg-hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .bg-hearts span{position:absolute;bottom:-40px;opacity:.35;animation:floatUp linear infinite}
+  @keyframes floatUp{to{transform:translateY(-115vh) rotate(25deg)}}
+
+  .screen{
+    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16px;opacity:0;pointer-events:none;transition:opacity .6s ease;z-index:1;
+  }
+  .screen.active{opacity:1;pointer-events:auto}
+
+  #muteBtn{
+    position:fixed;top:14px;right:14px;z-index:20;width:42px;height:42px;border-radius:50%;
+    border:none;background:#fff;color:var(--pink);font-size:18px;box-shadow:0 4px 14px rgba(224,69,123,.2);cursor:pointer;
+  }
+
+  /* ---------- Schritt 1: Datum ---------- */
+  .card{
+    background:#fff;border-radius:22px;padding:28px 22px 24px;width:100%;max-width:340px;
+    box-shadow:0 12px 40px rgba(224,69,123,.18);text-align:center;
+  }
+  .card h1{font-size:22px;font-weight:700;color:var(--pink-dark)}
+  .hint{font-size:11px;letter-spacing:2px;color:#e99bb9;margin-top:6px}
+  .slots{display:flex;justify-content:center;gap:8px;margin:20px 0 22px}
+  .slot{width:24px;height:30px;border-bottom:2px solid #f6b8cf;display:flex;align-items:flex-end;justify-content:center;font-size:18px;line-height:1}
+  .slot.gap{margin-right:8px}
+  .slot.filled::after{content:'❤️';animation:pop .25s ease}
+  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .key{
+    height:52px;border:none;border-radius:26px;background:var(--key);color:var(--pink-dark);
+    font-family:inherit;font-size:20px;font-weight:600;cursor:pointer;transition:transform .1s,background .15s;
+  }
+  .key:active{transform:scale(.93);background:var(--key-active)}
+  .key.empty{visibility:hidden}
+  .key.back{background:var(--pink-soft);color:#e99bb9}
+  .shake{animation:shake .45s}
+  @keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+  .err{height:18px;margin-top:12px;font-size:13px;color:#e99bb9}
+
+  /* ---------- Schritt 2: Geschenk ---------- */
+  .gift{
+    position:relative;width:190px;height:190px;border-radius:16px;background:var(--purple);
+    box-shadow:0 14px 40px rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;
+    font-size:64px;cursor:pointer;animation:idle 2.2s ease-in-out infinite;
+  }
+  .gift::before,.gift::after{content:'';position:absolute;background:var(--purple-dark)}
+  .gift::before{left:50%;top:0;bottom:0;width:30px;transform:translateX(-50%)}
+  .gift::after{top:50%;left:0;right:0;height:30px;transform:translateY(-50%)}
+  .gift span{position:relative;z-index:1}
+  @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .gift.wiggle{animation:wiggle .35s ease-in-out infinite}
+  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+  .gift.boom{animation:boom .5s forwards}
+  @keyframes boom{to{transform:scale(1.6);opacity:0}}
+  .bar{width:190px;height:6px;border-radius:3px;background:#fbe3ee;margin-top:28px;overflow:hidden}
+  .bar div{height:100%;width:0;background:linear-gradient(90deg,#f9a8d4,var(--pink));transition:width 1.8s linear}
+  .tap{margin-top:16px;font-size:15px;font-weight:600;color:#e99bb9}
+
+  /* ---------- Schritt 3: Brief ---------- */
+  .env-wrap{transition:transform .6s ease,opacity .6s ease}
+  .env-wrap.hidden{opacity:0;transform:scale(.8)}
+  .envelope{position:relative;width:300px;height:190px;perspective:900px;transform:rotate(-2deg)}
+  .env-back{position:absolute;inset:0;background:#f9a8d4;border-radius:10px;box-shadow:0 14px 34px rgba(224,69,123,.25)}
+  .paper{
+    position:absolute;left:16px;right:16px;top:10px;height:168px;background:#fff;border-radius:6px;z-index:2;
+    transition:transform .9s cubic-bezier(.4,0,.2,1);display:flex;align-items:flex-start;justify-content:center;
+    padding-top:18px;font-weight:700;color:var(--pink);font-size:15px;
+  }
+  .envelope.out .paper{transform:translateY(-120px)}
+  .env-front{
+    position:absolute;inset:0;z-index:3;border-radius:10px;background:#fbb6d6;
+    clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%);
+  }
+  .flap{
+    position:absolute;left:0;right:0;top:0;height:62%;z-index:4;background:#f472b6;
+    clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s ease;
+  }
+  .envelope.flap-open .flap{transform:rotateX(180deg)}
+  .envelope.flap-back .flap{z-index:1}
+  .seal{
+    position:absolute;left:50%;top:62%;width:44px;height:44px;margin:-22px 0 0 -22px;z-index:5;border-radius:50%;
+    background:#ef3b4c;border:3px solid #fff4f6;box-shadow:0 3px 10px rgba(0,0,0,.2);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;
+    transition:opacity .3s,transform .3s;animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .envelope.flap-open .seal{opacity:0;pointer-events:none}
+
+  .letter{
+    position:fixed;left:50%;top:50%;width:calc(100% - 32px);max-width:340px;
+    transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;transition:all .5s ease;
+    background:#fff;border-radius:18px;padding:30px 22px;text-align:center;
+    box-shadow:0 14px 44px rgba(224,69,123,.22);z-index:5;
+  }
+  .letter.show{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+  .letter .small{font-size:14px;color:#e99bb9;font-weight:600}
+  .letter h2{font-size:26px;color:var(--pink-dark);margin:10px 0 4px}
+  .letter p{font-size:17px;font-weight:600}
+  .btns{position:relative;height:60px;margin-top:26px}
+  .btn{
+    position:absolute;top:0;height:50px;padding:0 26px;border:none;border-radius:25px;font-family:inherit;
+    font-size:18px;font-weight:700;cursor:pointer;transition:transform .15s;
+  }
+  #yes{left:calc(50% - 120px);background:var(--pink);color:#fff;box-shadow:0 6px 18px rgba(224,69,123,.35)}
+  #yes:active{transform:scale(.94)}
+  #no{left:calc(50% + 20px);background:var(--key);color:var(--pink-dark);transition:left .25s,top .25s}
+  #no.flee{position:fixed;z-index:30}
+
+  /* ---------- Schritt 4: Nachricht ---------- */
+  .final{max-width:360px;text-align:center}
+  .big-heart{font-size:70px;animation:beat 1.2s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.18)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
+  .final p{margin-top:22px;font-size:22px;font-weight:700;line-height:1.5;color:var(--pink-dark)}
+  .final p span{display:inline-block;opacity:0;transform:translateY(8px);transition:all .5s ease}
+  .final p span.in{opacity:1;transform:none}
+  .final .sign{margin-top:18px;font-size:30px}
+
+  .burst{position:fixed;pointer-events:none;z-index:40;font-size:22px;animation:burst 1.4s ease-out forwards}
+  @keyframes burst{to{transform:translate(var(--x),var(--y)) scale(.4) rotate(var(--r));opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="bg-hearts" id="bgHearts"></div>
+<button id="muteBtn" aria-label="Ton an/aus">🔊</button>
+<audio id="music" src="yellow.mp3" loop preload="auto"></audio>
+
+<!-- 1: Datum -->
+<section class="screen active" id="s-lock">
+  <div class="card" id="lockCard">
+    <h1>Gib unser besonderes Datum ein</h1>
+    <div class="hint">TT MM JJJJ</div>
+    <div class="slots" id="slots"></div>
+    <div class="keypad" id="keypad"></div>
+    <div class="err" id="err"></div>
+  </div>
+</section>
+
+<!-- 2: Geschenk -->
+<section class="screen" id="s-gift">
+  <div class="gift" id="gift"><span>🎁</span></div>
+  <div class="bar"><div id="barFill"></div></div>
+  <div class="tap" id="tapText">Tipp mich an</div>
+</section>
+
+<!-- 3: Brief -->
+<section class="screen" id="s-letter">
+  <div class="env-wrap" id="envWrap">
+    <div class="envelope" id="envelope">
+      <div class="env-back"></div>
+      <div class="paper">Für dich 💌</div>
+      <div class="env-front"></div>
+      <div class="flap"></div>
+      <div class="seal" id="seal">❤</div>
+    </div>
+  </div>
+  <div class="tap" id="sealHint" style="margin-top:34px">Öffne mich</div>
+
+  <div class="letter" id="letter">
+    <div class="small">Ich hab da eine Frage …</div>
+    <h2>Date am 17.10.?</h2>
+    <p>ab ca. 21 Uhr 🌙</p>
+    <div class="btns">
+      <button class="btn" id="yes">Ja</button>
+      <button class="btn" id="no">Nein</button>
+    </div>
+  </div>
+</section>
+
+<!-- 4: Nachricht -->
+<section class="screen" id="s-final">
+  <div class="final">
+    <div class="big-heart">💖</div>
+    <p id="finalText"></p>
+    <div class="sign" id="sign" style="opacity:0;transition:opacity .8s">&lt;3</div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const CODE = '10042026';
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  /* Hintergrund-Herzen */
+  const bg = $('bgHearts');
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('span');
+    s.textContent = ['💗','💕','🤍','💖'][i % 4];
+    s.style.left = Math.random() * 100 + '%';
+    s.style.fontSize = 12 + Math.random() * 16 + 'px';
+    s.style.animationDuration = 9 + Math.random() * 10 + 's';
+    s.style.animationDelay = -Math.random() * 18 + 's';
+    bg.appendChild(s);
+  }
+
+  /* Musik */
+  const music = $('music');
+  music.volume = 0.6;
+  let started = false;
+  function startMusic(){
+    if (started) return;
+    started = true;
+    music.play().catch(() => {});
+  }
+  $('muteBtn').addEventListener('click', () => {
+    if (!started) { startMusic(); $('muteBtn').textContent = '🔊'; return; }
+    music.muted = !music.muted;
+    $('muteBtn').textContent = music.muted ? '🔇' : '🔊';
+  });
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  function burst(x, y, n = 18){
+    for (let i = 0; i < n; i++) {
+      const h = document.createElement('span');
+      h.className = 'burst';
+      h.textContent = ['❤️','💖','💕','✨'][i % 4];
+      h.style.left = x + 'px'; h.style.top = y + 'px';
+      const a = Math.random() * Math.PI * 2, d = 80 + Math.random() * 140;
+      h.style.setProperty('--x', Math.cos(a) * d + 'px');
+      h.style.setProperty('--y', Math.sin(a) * d + 'px');
+      h.style.setProperty('--r', (Math.random() * 360 - 180) + 'deg');
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 1500);
+    }
+  }
+
+  /* ---------- 1: Datum ---------- */
+  const slots = $('slots');
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'slot' + (i === 1 || i === 3 ? ' gap' : '');
+    slots.appendChild(s);
+  }
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','←'];
+  keys.forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'key' + (k === '' ? ' empty' : '') + (k === '←' ? ' back' : '');
+    b.textContent = k;
+    b.addEventListener('click', () => press(k));
+    $('keypad').appendChild(b);
+  });
+
+  let input = '', locked = false;
+  function render(){
+    [...slots.children].forEach((s, i) => s.classList.toggle('filled', i < input.length));
+  }
+  async function press(k){
+    startMusic();
+    if (locked) return;
+    $('err').textContent = '';
+    if (k === '←') { input = input.slice(0, -1); render(); return; }
+    if (input.length >= 8) return;
+    input += k; render();
+    if (input.length === 8) {
+      locked = true;
+      await wait(300);
+      if (input === CODE) {
+        const r = $('lockCard').getBoundingClientRect();
+        burst(r.left + r.width / 2, r.top + r.height / 2, 24);
+        await wait(500);
+        show('s-gift');
+      } else {
+        $('lockCard').classList.add('shake');
+        $('err').textContent = 'Hmm, nicht ganz … versuch’s nochmal 💭';
+        await wait(450);
+        $('lockCard').classList.remove('shake');
+        input = ''; render(); locked = false;
+      }
+    }
+  }
+
+  /* ---------- 2: Geschenk ---------- */
+  let giftOpening = false;
+  $('gift').addEventListener('click', async () => {
+    startMusic();
+    if (giftOpening) return;
+    giftOpening = true;
+    $('tapText').textContent = 'Wird ausgepackt …';
+    $('gift').classList.add('wiggle');
+    $('barFill').style.width = '100%';
+    await wait(1850);
+    const r = $('gift').getBoundingClientRect();
+    $('gift').classList.remove('wiggle');
+    $('gift').classList.add('boom');
+    burst(r.left + r.width / 2, r.top + r.height / 2, 26);
+    await wait(650);
+    show('s-letter');
+  });
+
+  /* ---------- 3: Brief ---------- */
+  const env = $('envelope');
+  let letterOpen = false;
+  $('seal').addEventListener('click', async () => {
+    if (letterOpen) return;
+    letterOpen = true;
+    $('sealHint').style.opacity = 0;
+    env.classList.add('flap-open');
+    await wait(600);
+    env.classList.add('flap-back');
+    env.classList.add('out');
+    await wait(1000);
+    $('envWrap').classList.add('hidden');
+    $('letter').classList.add('show');
+  });
+
+  /* Nein-Button flieht */
+  const no = $('no');
+  const noTexts = ['Nein','Sicher? 🥺','Nö 😏','Falscher Knopf','Versuch’s nochmal','Keine Chance 😌'];
+  let noCount = 0;
+  function flee(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    noCount++;
+    no.textContent = noTexts[noCount % noTexts.length];
+    no.classList.add('flee');
+    const w = no.offsetWidth, h = no.offsetHeight;
+    const maxX = window.innerWidth - w - 16, maxY = window.innerHeight - h - 16;
+    no.style.left = 16 + Math.random() * Math.max(0, maxX - 16) + 'px';
+    no.style.top  = 16 + Math.random() * Math.max(0, maxY - 16) + 'px';
+    const yes = $('yes');
+    const sc = Math.min(1 + noCount * 0.08, 1.6);
+    yes.style.transform = 'scale(' + sc + ')';
+  }
+  no.addEventListener('pointerenter', flee);
+  no.addEventListener('pointerdown', flee);
+  no.addEventListener('touchstart', flee, {passive:false});
+  no.addEventListener('click', flee);
+
+  /* Ja → Brief schließt sich → Nachricht */
+  let yesDone = false;
+  $('yes').addEventListener('click', async e => {
+    if (yesDone) return;
+    yesDone = true;
+    burst(e.clientX, e.clientY, 22);
+    no.style.display = 'none';
+    await wait(500);
+    $('letter').classList.remove('show');
+    await wait(400);
+    $('envWrap').classList.remove('hidden');
+    await wait(500);
+    env.classList.remove('out');
+    await wait(950);
+    env.classList.remove('flap-back');
+    env.classList.remove('flap-open');
+    await wait(900);
+    const r = env.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 30);
+    $('envWrap').classList.add('hidden');
+    await wait(600);
+    show('s-final');
+    typeFinal();
+  });
+
+  /* ---------- 4: Nachricht ---------- */
+  async function typeFinal(){
+    const text = 'Du schaffst das alles, stress dich nicht so sehr. Du bist mehr als gut genug dafür. Ich liebe dich';
+    const p = $('finalText');
+    const spans = text.split(' ').map(w => {
+      const s = document.createElement('span');
+      s.textContent = w;
+      p.appendChild(s);
+      p.appendChild(document.createTextNode(' '));
+      return s;
+    });
+    await wait(500);
+    for (const s of spans) { s.classList.add('in'); await wait(170); }
+    await wait(300);
+    $('sign').style.opacity = 1;
+    burst(window.innerWidth / 2, window.innerHeight / 2, 34);
+    setInterval(() => burst(Math.random() * window.innerWidth, window.innerHeight * (0.2 + Math.random() * 0.6), 8), 2600);
+  }
+})();
+</script>
+</body>
+</html>
