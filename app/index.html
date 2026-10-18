@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wir</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Wir">
+<meta name="theme-color" content="#e8577e">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<section id="login" hidden>
+  <h1>Hallo 💛</h1>
+  <form id="login-form">
+    <input id="email" type="email" placeholder="E-Mail" autocomplete="username" required>
+    <input id="password" type="password" placeholder="Passwort" autocomplete="current-password" required>
+    <button>Einloggen</button>
+    <p id="login-error" class="error"></p>
+  </form>
+</section>
+
+<section id="app" hidden>
+  <header>
+    <h1>Unsere Bilder</h1>
+    <button id="logout" class="ghost">Logout</button>
+  </header>
+  <div class="upload">
+    <input id="caption" type="text" placeholder="Bildunterschrift (optional)">
+    <label class="btn">📷 Foto hinzufügen
+      <input id="file-input" class="sr-only" type="file" accept="image/*" multiple>
+    </label>
+    <p id="status"></p>
+  </div>
+  <main id="gallery"></main>
+</section>
+
+<div id="viewer" hidden><img alt=""></div>
+
+<script src="/lib/pocketbase.umd.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
