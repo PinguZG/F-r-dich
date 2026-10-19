@@ -1,131 +1,176 @@
-const pb = new PocketBase(window.location.origin);
-const $ = s => document.querySelector(s);
-const me = () => (pb.authStore.record || pb.authStore.model)?.id;
-let fileToken = null;
+(() => {
+  const pb = new PocketBase(window.location.origin);
+  pb.autoCancellation(false);
 
-async function refreshToken() { fileToken = await pb.files.getToken(); }
-function show(v) { $('#login').hidden = v !== 'login'; $('#app').hidden = v !== 'app'; }
+  const $ = id => document.getElementById(id);
+  const me = () => (pb.authStore.record || pb.authStore.model)?.id;
+  const grid = $('photos');
+  let fileToken = null;
+  let subscribed = false;
 
-// ---------- Login ----------
-$('#login-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  $('#login-error').textContent = '';
-  try {
-    await pb.collection('users').authWithPassword($('#email').value, $('#password').value);
-    start();
-  } catch { $('#login-error').textContent = 'Login fehlgeschlagen'; }
-});
+  async function refreshToken() { fileToken = await pb.files.getToken(); }
 
-$('#logout').onclick = () => {
-  pb.realtime.unsubscribe();
-  pb.authStore.clear();
-  show('login');
-};
-
-// ---------- Galerie ----------
-function card(r) {
-  const fig = document.createElement('figure');
-  fig.id = 'p-' + r.id;
-
-  const img = document.createElement('img');
-  img.loading = 'lazy';
-  img.src = pb.files.getURL(r, r.image, { thumb: '600x0', token: fileToken });
-  img.onclick = () => openViewer(r);
-
-  const cap = document.createElement('figcaption');
-  const who = r.expand?.author?.name;
-  cap.textContent = [r.caption, who && '– ' + who].filter(Boolean).join(' ');
-
-  fig.append(img, cap);
-
-  if (r.author === me()) {
-    const del = document.createElement('button');
-    del.className = 'del';
-    del.textContent = '🗑';
-    del.onclick = async ev => {
-      ev.stopPropagation();
-      if (confirm('Foto löschen?')) await pb.collection('photos').delete(r.id);
-    };
-    fig.append(del);
+  function setView(loggedIn) {
+    $('memLogin').hidden = loggedIn;
+    $('memTools').hidden = !loggedIn;
   }
-  return fig;
-}
 
-async function loadPhotos() {
-  await refreshToken();
-  const list = await pb.collection('photos').getFullList({ sort: '-created', expand: 'author' });
-  $('#gallery').replaceChildren(...list.map(card));
-}
+  function openLightbox(src, cap) {
+    $('lbImg').src = src;
+    $('lbCap').textContent = cap || '';
+    $('lightbox').classList.add('show');
+  }
 
-async function openViewer(r) {
-  await refreshToken();
-  $('#viewer img').src = pb.files.getURL(r, r.image, { token: fileToken });
-  $('#viewer').hidden = false;
-}
-$('#viewer').onclick = () => { $('#viewer').hidden = true; $('#viewer img').src = ''; };
-
-// ---------- Upload ----------
-function shrink(file, max = 2048, quality = 0.85) {
-  return new Promise((res, rej) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const s = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * s);
-      c.height = Math.round(img.height * s);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      c.toBlob(b => b ? res(b) : rej(new Error('toBlob')), 'image/jpeg', quality);
-    };
-    img.onerror = rej;
-    img.src = url;
-  });
-}
-
-$('#file-input').addEventListener('change', async e => {
-  const files = [...e.target.files];
-  if (!files.length) return;
-  const caption = $('#caption').value.trim();
-  try {
-    for (let i = 0; i < files.length; i++) {
-      $('#status').textContent = `Lade ${i + 1}/${files.length} hoch…`;
-      const fd = new FormData();
-      fd.append('image', await shrink(files[i]), 'foto.jpg');
-      fd.append('caption', caption);
-      fd.append('author', me());
-      await pb.collection('photos').create(fd);
+  function errText(err) {
+    const d = err?.response?.data;
+    if (d && Object.keys(d).length) {
+      return Object.entries(d).map(([k, v]) => k + ': ' + (v.message || JSON.stringify(v))).join(', ');
     }
-    $('#status').textContent = 'Fertig ✓';
-    $('#caption').value = '';
-  } catch (err) {
-    console.error(err);
-    $('#status').textContent = 'Upload fehlgeschlagen';
+    return err?.response?.message || err?.message || 'unbekannter Fehler';
   }
-  e.target.value = '';
-});
 
-// ---------- Start / Live-Updates ----------
-async function start() {
-  show('app');
-  try { await pb.collection('users').authRefresh(); }
-  catch { pb.authStore.clear(); return show('login'); }
+  // ---------- Foto-Kachel im gleichen Stil wie die festen Fotos ----------
+  function card(r) {
+    const d = document.createElement('div');
+    d.className = 'photo live';
+    d.id = 'p-' + r.id;
 
-  await loadPhotos();
-  pb.collection('photos').subscribe('*', async e => {
-    if (e.action === 'create') {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.src = pb.files.getURL(r, r.image, { thumb: '600x0', token: fileToken });
+    d.append(img);
+
+    const who = r.expand?.author?.name;
+    const capText = [r.caption, who && '– ' + who].filter(Boolean).join(' ');
+    if (capText) {
+      const c = document.createElement('div');
+      c.className = 'cap';
+      c.textContent = capText;
+      d.append(c);
+    }
+
+    if (r.author === me()) {
+      const del = document.createElement('button');
+      del.className = 'photo-del';
+      del.setAttribute('aria-label', 'Foto löschen');
+      del.textContent = '✕';
+      del.addEventListener('click', async ev => {
+        ev.stopPropagation();
+        if (!confirm('Dieses Foto löschen?')) return;
+        try {
+          await pb.collection('photos').delete(r.id);
+          document.getElementById('p-' + r.id)?.remove();
+        } catch (err) {
+          $('memStatus').textContent = 'Löschen fehlgeschlagen: ' + errText(err);
+        }
+      });
+      d.append(del);
+    }
+
+    d.addEventListener('click', async () => {
       await refreshToken();
-      const r = await pb.collection('photos').getOne(e.record.id, { expand: 'author' });
-      $('#gallery').prepend(card(r));
+      openLightbox(pb.files.getURL(r, r.image, { token: fileToken }), capText);
+    });
+    return d;
+  }
+
+  async function loadPhotos() {
+    await refreshToken();
+    const list = await pb.collection('photos').getFullList({ sort: '-created', expand: 'author' });
+    grid.querySelectorAll('.photo.live').forEach(e => e.remove());
+    grid.prepend(...list.map(card));
+  }
+
+  async function subscribe() {
+    if (subscribed) return;
+    subscribed = true;
+    await pb.collection('photos').subscribe('*', async e => {
+      if (e.action === 'create' && !document.getElementById('p-' + e.record.id)) {
+        await refreshToken();
+        const r = await pb.collection('photos').getOne(e.record.id, { expand: 'author' });
+        grid.prepend(card(r));
+      }
+      if (e.action === 'delete') document.getElementById('p-' + e.record.id)?.remove();
+    });
+  }
+
+  async function start() {
+    try { await pb.collection('users').authRefresh(); }
+    catch { pb.authStore.clear(); setView(false); return; }
+    setView(true);
+    try {
+      await loadPhotos();
+      await subscribe();
+    } catch (err) {
+      console.error(err);
+      $('memStatus').textContent = 'Fotos konnten nicht geladen werden: ' + errText(err);
     }
-    if (e.action === 'delete') document.getElementById('p-' + e.record.id)?.remove();
+  }
+
+  // ---------- Login ----------
+  $('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    $('loginErr').textContent = '';
+    try {
+      await pb.collection('users').authWithPassword($('loginEmail').value.trim(), $('loginPass').value);
+      $('loginPass').value = '';
+      start();
+    } catch {
+      $('loginErr').textContent = 'E-Mail oder Passwort stimmt nicht';
+    }
   });
-}
 
-// iOS kappt die Live-Verbindung im Hintergrund -> beim Zurückkommen neu laden
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && pb.authStore.isValid) loadPhotos();
-});
+  // ---------- Upload ----------
+  function shrink(file, max = 2048, quality = 0.85) {
+    return new Promise((res, rej) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const s = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * s);
+        c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => b ? res(b) : rej(new Error('Bild konnte nicht umgewandelt werden')), 'image/jpeg', quality);
+      };
+      img.onerror = () => rej(new Error('Bild konnte nicht gelesen werden'));
+      img.src = url;
+    });
+  }
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-pb.authStore.isValid ? start() : show('login');
+  $('fileInput').addEventListener('change', async e => {
+    const files = [...e.target.files];
+    if (!files.length) return;
+    const caption = $('caption').value.trim();
+    try {
+      for (let i = 0; i < files.length; i++) {
+        $('memStatus').textContent = `Lade ${i + 1}/${files.length} hoch …`;
+        const fd = new FormData();
+        fd.append('image', await shrink(files[i]), 'foto.jpg');
+        fd.append('caption', caption);
+        fd.append('author', me());
+        const rec = await pb.collection('photos').create(fd);
+        if (!document.getElementById('p-' + rec.id)) {
+          await refreshToken();
+          grid.prepend(card(await pb.collection('photos').getOne(rec.id, { expand: 'author' })));
+        }
+      }
+      $('memStatus').textContent = 'Hochgeladen ✓';
+      $('caption').value = '';
+    } catch (err) {
+      console.error(err);
+      $('memStatus').textContent = 'Hochladen fehlgeschlagen: ' + errText(err);
+    }
+    e.target.value = '';
+  });
+
+  // iOS trennt die Live-Verbindung im Hintergrund -> beim Zurückkommen neu laden
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && pb.authStore.isValid) loadPhotos().catch(console.error);
+  });
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+  pb.authStore.isValid ? start() : setView(false);
+})();
