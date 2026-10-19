@@ -32,3 +32,59 @@
   background:rgba(255,255,255,.92);color:var(--pink-dark);font-size:14px;font-weight:700;cursor:pointer;
   box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
+
+/* ---------- Login statt Datum ---------- */
+.login-form{margin-top:20px}
+
+/* ---------- Menü: eigene Reiter ---------- */
+.tab-menu{display:flex;flex-direction:column;gap:12px}
+.tab-menu:empty{display:none}
+.opt-new{background:transparent;border:2px dashed #f6b8cf;box-shadow:none}
+.opt .lock-note{display:block;font-size:12px;color:#e99bb9;font-weight:600;margin-top:2px}
+.opt.fresh{animation:fresh 1.2s ease-in-out 3}
+@keyframes fresh{0%,100%{transform:scale(1)}50%{transform:scale(1.04);box-shadow:0 10px 30px rgba(224,69,123,.35)}}
+.logout{align-self:center;margin-top:10px;border:none;background:none;font-family:inherit;font-size:13px;font-weight:700;color:#e99bb9;cursor:pointer;padding:8px}
+
+/* ---------- Gemeinsame Bausteine ---------- */
+.row{display:flex;gap:10px;align-items:center}
+.row > .mem-input{flex:1;min-width:0}
+.row > .mem-btn{flex:1}
+.emoji-input.mem-input{flex:0 0 64px;text-align:center;font-size:22px;padding:10px 6px}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--pink-dark);cursor:pointer;text-align:left}
+.check input{width:22px;height:22px;accent-color:var(--pink)}
+.add-card{max-width:420px;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.add-card h1{margin-bottom:4px}
+.add-card .mem-note{margin:0 0 8px}
+.add-toggle{margin:16px 0 0}
+#s-dates .add-card{margin-top:16px}
+.folder-btn{margin-left:auto;width:42px;height:42px;border-radius:50%;border:none;background:#fff;font-size:20px;
+  box-shadow:0 4px 14px rgba(224,69,123,.2);cursor:pointer;flex-shrink:0}
+.folder-btn:active,.del-x:active{transform:scale(.92)}
+
+/* ---------- Daten ---------- */
+.date{position:relative}
+.date > div{flex:1}
+.del-x{width:30px;height:30px;border-radius:50%;border:none;background:var(--pink-soft);color:#e99bb9;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
+
+/* ---------- Fotos sortieren ---------- */
+.photo img{-webkit-touch-callout:none;-webkit-user-drag:none;pointer-events:none}
+.photo.dragging{z-index:10;opacity:.92;box-shadow:0 16px 36px rgba(224,69,123,.35);transition:none;pointer-events:none}
+.photos .empty-note,.entries .empty-note{grid-column:1/-1;text-align:center;font-size:14px;font-weight:600;color:#e99bb9;padding:20px 0}
+
+/* ---------- Reiter-Inhalt ---------- */
+.file-pick{margin:0;flex:0 0 auto;white-space:nowrap}
+.file-pick.has{background:var(--pink-soft)}
+.tab-lock{width:100%;max-width:420px;background:#fff;border-radius:18px;padding:16px;margin-bottom:18px;display:flex;flex-direction:column;gap:10px;
+  border:2px dashed #f6b8cf;color:var(--pink-dark);text-align:center}
+.tab-lock b{font-size:17px}
+.tab-lock span{font-size:14px;font-weight:600;color:#e99bb9}
+.tab-lock .pack-btn{margin:0;flex:0 0 auto}
+.entries{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.entry{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 6px 18px rgba(224,69,123,.12);border:2px solid transparent;transition:border-color .2s}
+.entry.sel{border-color:var(--pink);box-shadow:0 10px 28px rgba(224,69,123,.28)}
+.entry img{display:block;width:100%;max-height:260px;object-fit:cover;cursor:pointer}
+.entry .e-row{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.entry .e-title{flex:1;font-size:16px;font-weight:700;color:var(--pink-dark);word-break:break-word}
+.entry .e-title small{display:block;font-size:12px;color:#e99bb9;font-weight:600}
+.heart-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--pink-soft);font-size:20px;cursor:pointer;flex-shrink:0;filter:grayscale(1);opacity:.55;transition:all .2s}
+.heart-btn.on{filter:none;opacity:1;background:#fff0f5;transform:scale(1.08)}

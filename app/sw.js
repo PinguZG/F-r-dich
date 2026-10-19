@@ -1,4 +1,4 @@
-const CACHE = 'wir-v1';
+const CACHE = 'wir-v2';
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/lib/pocketbase.umd.js', '/manifest.json'];
 
 self.addEventListener('install', e => {
