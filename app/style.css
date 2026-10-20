@@ -88,3 +88,44 @@
 .entry .e-title small{display:block;font-size:12px;color:#e99bb9;font-weight:600}
 .heart-btn{width:42px;height:42px;border-radius:50%;border:none;background:var(--pink-soft);font-size:20px;cursor:pointer;flex-shrink:0;filter:grayscale(1);opacity:.55;transition:all .2s}
 .heart-btn.on{filter:none;opacity:1;background:#fff0f5;transform:scale(1.08)}
+
+/* ---------- Benachrichtigungen ---------- */
+.opt-push{background:linear-gradient(135deg,#fff,#fde3ee);border:2px dashed #f6b8cf;box-shadow:0 8px 24px rgba(224,69,123,.15)}
+.opt-push .ico{animation:beat 1.8s ease-in-out infinite}
+.push-box .mem-btn{margin-top:4px}
+.list-head{width:100%;max-width:420px;margin:22px 0 10px;font-size:15px;font-weight:700;color:#e99bb9;letter-spacing:.5px}
+
+/* ---------- Wir zwei ---------- */
+.partner{width:100%;max-width:420px;display:flex;align-items:center;gap:14px;background:var(--pink);color:#fff;border-radius:20px;
+  padding:16px 20px;box-shadow:0 10px 28px rgba(224,69,123,.3);margin-bottom:16px}
+.partner .ico{font-size:36px;animation:beat 1.6s ease-in-out infinite}
+.partner small{display:block;font-size:13px;font-weight:600;opacity:.9}
+.partner b{display:block;font-size:24px;line-height:1.2}
+.ping-grid{width:100%;max-width:420px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ping-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:118px;padding:14px 10px;
+  background:#fff;border:none;border-radius:20px;font-family:inherit;font-size:15px;font-weight:700;color:var(--pink-dark);
+  cursor:pointer;box-shadow:0 8px 24px rgba(224,69,123,.15);transition:transform .15s,opacity .2s}
+.ping-btn span{font-size:42px;line-height:1}
+.ping-btn:active{transform:scale(.95)}
+.ping-btn:disabled{opacity:.55}
+.ping-btn.wide{grid-column:1/-1;flex-direction:row;min-height:64px;gap:12px}
+.ping-btn.wide span{font-size:28px}
+.ping-btn.sent{animation:pop .4s ease}
+#msgForm{margin-top:12px}
+.msg-input{resize:none;line-height:1.4;min-height:84px}
+.msg-count{flex:0 0 auto;font-size:13px;font-weight:600;color:#e99bb9}
+#pingStatus{margin-top:12px;width:100%;max-width:420px}
+.pings .date.in{background:linear-gradient(135deg,#fff,#fde3ee)}
+.pings .date span.d{display:block;word-break:break-word;color:var(--pink-dark)}
+.pings .empty-note,.prefs .empty-note{text-align:center;font-size:14px;font-weight:600;color:#e99bb9;padding:20px 0}
+
+/* ---------- Einstellungen ---------- */
+.prefs .date{cursor:pointer}
+.prefs .date small{display:block;font-size:12px;color:#e99bb9;font-weight:600;margin-top:2px}
+.switch{-webkit-appearance:none;appearance:none;flex-shrink:0;width:52px;height:30px;border-radius:15px;background:var(--pink-soft);
+  position:relative;cursor:pointer;transition:background .2s;outline:none;margin:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 6px rgba(224,69,123,.3);transition:transform .2s}
+.switch:checked{background:var(--pink)}
+.switch:checked::after{transform:translateX(22px)}
+.switch:focus-visible{outline:3px solid var(--purple-dark);outline-offset:2px}

@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pbc_wir_tabs",
+    "name": "tabs",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id != \"\" && (author = @request.auth.id || unlock_at = \"\" || unlock_at <= @now)",
+    "viewRule": "@request.auth.id != \"\" && (author = @request.auth.id || unlock_at = \"\" || unlock_at <= @now)",
+    "createRule": "@request.auth.id != \"\" && @request.body.author = @request.auth.id && @request.body.notified_created:isset = false && @request.body.notified_unlock:isset = false",
+    "updateRule": "author = @request.auth.id && @request.body.author:changed = false && @request.body.notified_created:isset = false && @request.body.notified_unlock:isset = false",
+    "deleteRule": "author = @request.auth.id",
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "tabs_name", "name": "name", "type": "text", "system": false, "required": true, "hidden": false, "presentable": true, "autogeneratePattern": "", "min": 0, "max": 60, "pattern": "", "primaryKey": false },
+      { "id": "tabs_emoji", "name": "emoji", "type": "text", "system": false, "required": false, "hidden": false, "presentable": false, "autogeneratePattern": "", "min": 0, "max": 16, "pattern": "", "primaryKey": false },
+      { "id": "tabs_unlock", "name": "unlock_at", "type": "date", "system": false, "required": false, "hidden": false, "presentable": false, "min": "", "max": "" },
+      { "id": "tabs_author", "name": "author", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": false, "minSelect": 0, "maxSelect": 1 },
+      { "id": "tabs_ncreated", "name": "notified_created", "type": "bool", "system": false, "required": false, "hidden": false, "presentable": false },
+      { "id": "tabs_nunlock", "name": "notified_unlock", "type": "bool", "system": false, "required": false, "hidden": false, "presentable": false },
+      { "id": "tabs_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "tabs_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": []
+  },
+  {
+    "id": "pbc_wir_entries",
+    "name": "tab_entries",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id != \"\" && (tab.author = @request.auth.id || tab.unlock_at = \"\" || tab.unlock_at <= @now)",
+    "viewRule": "@request.auth.id != \"\" && (tab.author = @request.auth.id || tab.unlock_at = \"\" || tab.unlock_at <= @now)",
+    "createRule": "@request.auth.id != \"\" && @request.body.author = @request.auth.id && (@request.body.tab.author = @request.auth.id || @request.body.tab.unlock_at = \"\" || @request.body.tab.unlock_at <= @now) && (@request.body.selected_by:isset = false || @request.body.selected_by = @request.auth.id)",
+    "updateRule": "@request.auth.id != \"\" && (tab.author = @request.auth.id || tab.unlock_at = \"\" || tab.unlock_at <= @now) && @request.body.author:changed = false && @request.body.tab:changed = false && (author = @request.auth.id || (@request.body.title:isset = false && @request.body.image:isset = false)) && (@request.body.selected_by:isset = false || @request.body.selected_by = @request.auth.id)",
+    "deleteRule": "author = @request.auth.id",
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "entries_tab", "name": "tab", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "pbc_wir_tabs", "cascadeDelete": true, "minSelect": 0, "maxSelect": 1 },
+      { "id": "entries_title", "name": "title", "type": "text", "system": false, "required": true, "hidden": false, "presentable": true, "autogeneratePattern": "", "min": 0, "max": 200, "pattern": "", "primaryKey": false },
+      { "id": "entries_image", "name": "image", "type": "file", "system": false, "required": false, "hidden": false, "presentable": false, "protected": true, "maxSelect": 1, "maxSize": 10485760, "mimeTypes": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/gif"], "thumbs": ["600x0"] },
+      { "id": "entries_selected", "name": "selected", "type": "bool", "system": false, "required": false, "hidden": false, "presentable": false },
+      { "id": "entries_selby", "name": "selected_by", "type": "relation", "system": false, "required": false, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": false, "minSelect": 0, "maxSelect": 1 },
+      { "id": "entries_author", "name": "author", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": false, "minSelect": 0, "maxSelect": 1 },
+      { "id": "entries_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "entries_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": []
+  },
+  {
+    "id": "pbc_wir_pings",
+    "name": "pings",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id != \"\" && (from = @request.auth.id || to = @request.auth.id)",
+    "viewRule": "@request.auth.id != \"\" && (from = @request.auth.id || to = @request.auth.id)",
+    "createRule": "@request.auth.id != \"\" && @request.body.from = @request.auth.id && @request.body.to != \"\" && @request.body.to != @request.auth.id && ((@request.body.type = \"message\" && @request.body.message != \"\") || (@request.body.type != \"message\" && @request.body.message:isset = false))",
+    "updateRule": null,
+    "deleteRule": "@request.auth.id != \"\" && from = @request.auth.id",
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "pings_from", "name": "from", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": true, "minSelect": 0, "maxSelect": 1 },
+      { "id": "pings_to", "name": "to", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": true, "minSelect": 0, "maxSelect": 1 },
+      { "id": "pings_type", "name": "type", "type": "select", "system": false, "required": true, "hidden": false, "presentable": true, "maxSelect": 1, "values": ["heart", "call", "love", "support", "message"] },
+      { "id": "pings_message", "name": "message", "type": "text", "system": false, "required": false, "hidden": false, "presentable": false, "autogeneratePattern": "", "min": 0, "max": 200, "pattern": "", "primaryKey": false },
+      { "id": "pings_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "pings_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": ["CREATE INDEX `idx_pings_created` ON `pings` (`created`)"]
+  },
+  {
+    "id": "pbc_wir_pushsubs",
+    "name": "push_subs",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "viewRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "createRule": "@request.auth.id != \"\" && @request.body.user = @request.auth.id",
+    "updateRule": null,
+    "deleteRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "psubs_user", "name": "user", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": true, "minSelect": 0, "maxSelect": 1 },
+      { "id": "psubs_endpoint", "name": "endpoint", "type": "text", "system": false, "required": true, "hidden": false, "presentable": true, "autogeneratePattern": "", "min": 0, "max": 2000, "pattern": "^https://", "primaryKey": false },
+      { "id": "psubs_keys", "name": "keys", "type": "json", "system": false, "required": true, "hidden": false, "presentable": false, "maxSize": 2000 },
+      { "id": "psubs_ua", "name": "ua", "type": "text", "system": false, "required": false, "hidden": false, "presentable": false, "autogeneratePattern": "", "min": 0, "max": 300, "pattern": "", "primaryKey": false },
+      { "id": "psubs_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "psubs_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX `idx_push_subs_endpoint` ON `push_subs` (`endpoint`)"]
+  },
+  {
+    "id": "pbc_wir_pushprefs",
+    "name": "push_prefs",
+    "type": "base",
+    "system": false,
+    "listRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "viewRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "createRule": "@request.auth.id != \"\" && @request.body.user = @request.auth.id",
+    "updateRule": "@request.auth.id != \"\" && user = @request.auth.id && @request.body.user:changed = false",
+    "deleteRule": "@request.auth.id != \"\" && user = @request.auth.id",
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "pprefs_user", "name": "user", "type": "relation", "system": false, "required": true, "hidden": false, "presentable": false, "collectionId": "_pb_users_auth_", "cascadeDelete": true, "minSelect": 0, "maxSelect": 1 },
+      { "id": "pprefs_prefs", "name": "prefs", "type": "json", "system": false, "required": false, "hidden": false, "presentable": false, "maxSize": 2000 },
+      { "id": "pprefs_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "pprefs_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX `idx_push_prefs_user` ON `push_prefs` (`user`)"]
+  },
+  {
+    "id": "pbc_wir_pushstate",
+    "name": "push_state",
+    "type": "base",
+    "system": false,
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      { "id": "text3208210256", "name": "id", "type": "text", "system": true, "primaryKey": true, "required": true, "hidden": false, "presentable": false, "autogeneratePattern": "[a-z0-9]{15}", "min": 15, "max": 15, "pattern": "^[a-z0-9]+$" },
+      { "id": "pstate_key", "name": "key", "type": "text", "system": false, "required": true, "hidden": false, "presentable": true, "autogeneratePattern": "", "min": 0, "max": 50, "pattern": "", "primaryKey": false },
+      { "id": "pstate_value", "name": "value", "type": "json", "system": false, "required": false, "hidden": false, "presentable": false, "maxSize": 200000 },
+      { "id": "pstate_created", "name": "created", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": false },
+      { "id": "pstate_updated", "name": "updated", "type": "autodate", "system": false, "hidden": false, "presentable": false, "onCreate": true, "onUpdate": true }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX `idx_push_state_key` ON `push_state` (`key`)"]
+  }
+]

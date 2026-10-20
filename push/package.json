@@ -1,0 +1,10 @@
+{
+  "name": "wir-push",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web-Push-Benachrichtigungen für die Wir-App (liest PocketBase)",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "engines": { "node": ">=20" },
+  "dependencies": { "web-push": "^3.6.7" }
+}

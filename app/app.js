@@ -473,9 +473,10 @@
           const others = await pb.collection('tab_entries').getFullList({
             filter: pb.filter('tab = {:t} && selected = true && id != {:id}', { t: r.tab, id: r.id }),
           });
-          await Promise.all(others.map(o => pb.collection('tab_entries').update(o.id, { selected: false })));
+          await Promise.all(others.map(o => pb.collection('tab_entries').update(o.id, { selected: false, selected_by: me() })));
         }
-        await pb.collection('tab_entries').update(r.id, { selected: on });
+        // selected_by: damit der Push-Dienst weiß, wer es war
+        await pb.collection('tab_entries').update(r.id, { selected: on, selected_by: me() });
         if (on) { const b = heart.getBoundingClientRect(); UI.burst(b.left + 21, b.top + 21, 14); }
         await loadEntries();
       } catch (err) {
@@ -596,12 +597,282 @@
   });
 
   // ======================================================================
+  // Wir zwei (Pings)
+  // ======================================================================
+  let partner = null;
+  const PING = {
+    heart:   { ico: '❤️', label: 'Herz' },
+    call:    { ico: '📞', label: 'Möchte dich anrufen' },
+    love:    { ico: '💗', label: 'Ganz viel Liebe' },
+    support: { ico: '🫂', label: 'Mentaler Support – ich bin für dich da' },
+    message: { ico: '✏️', label: 'Nachricht' },
+  };
+
+  function ago(d) {
+    const s = Math.round((Date.now() - d) / 1000);
+    if (s < 60) return 'gerade eben';
+    if (s < 3600) return 'vor ' + Math.floor(s / 60) + ' Min.';
+    if (s < 86400) return 'vor ' + Math.floor(s / 3600) + ' Std.';
+    return fmtWhen(d);
+  }
+
+  async function loadPartner() {
+    const list = await pb.collection('users').getFullList({ filter: pb.filter('id != {:me}', { me: me() }) });
+    partner = list[0] || null;
+    $('partnerName').textContent = partner ? (partner.name || 'Dein Schatz') + ' 💕' : 'Noch niemand da';
+  }
+
+  async function loadPings() {
+    const { items } = await pb.collection('pings').getList(1, 30, { sort: '-created', expand: 'from' });
+    $('pings').replaceChildren(...items.map(p => {
+      const sent = p.from === me();
+      const meta = PING[p.type] || PING.heart;
+      const el = document.createElement('div');
+      el.className = 'date' + (sent ? '' : ' in');
+      el.innerHTML = '<span class="ico"></span><div><b></b><span class="d"></span><em></em></div>';
+      el.querySelector('.ico').textContent = meta.ico;
+      el.querySelector('b').textContent = sent ? 'Du → ' + (partner?.name || 'Schatz') : (p.expand?.from?.name || 'Schatz') + ' → dich';
+      el.querySelector('.d').textContent = p.type === 'message' ? p.message : meta.label;
+      el.querySelector('em').textContent = ago(pbDate(p.created));
+      if (sent) {
+        const del = document.createElement('button');
+        del.className = 'del-x';
+        del.setAttribute('aria-label', 'Aus dem Verlauf löschen');
+        del.textContent = '✕';
+        del.addEventListener('click', async () => {
+          if (!confirm('Aus dem Verlauf löschen?')) return;
+          try { await pb.collection('pings').delete(p.id); el.remove(); }
+          catch (err) { $('pingStatus').textContent = 'Löschen fehlgeschlagen: ' + errText(err); }
+        });
+        el.append(del);
+      }
+      return el;
+    }));
+    if (!items.length) {
+      const e = document.createElement('div');
+      e.className = 'empty-note';
+      e.textContent = 'Noch nichts geschickt – fang mit einem Herz an ❤️';
+      $('pings').append(e);
+    }
+  }
+
+  async function sendPing(type, message, btn) {
+    if (!partner) { $('pingStatus').textContent = 'Niemand zum Anschicken gefunden 🥺'; return false; }
+    const data = { from: me(), to: partner.id, type };
+    if (type === 'message') data.message = message;
+    try {
+      if (btn) btn.disabled = true;
+      await pb.collection('pings').create(data);
+      const r = (btn || $('msgForm')).getBoundingClientRect();
+      UI.burst(r.left + r.width / 2, r.top + r.height / 2, 16);
+      $('pingStatus').textContent = 'Gesendet an ' + (partner.name || 'Schatz') + ' ✓';
+      await loadPings();
+      return true;
+    } catch (err) {
+      $('pingStatus').textContent = 'Senden fehlgeschlagen: ' + errText(err);
+      return false;
+    } finally {
+      if (btn) setTimeout(() => { btn.disabled = false; }, 1500);
+    }
+  }
+
+  document.querySelectorAll('[data-ping]').forEach(b => b.addEventListener('click', () => sendPing(b.dataset.ping, '', b)));
+  $('msgToggle').addEventListener('click', () => {
+    $('msgForm').hidden = !$('msgForm').hidden;
+    if (!$('msgForm').hidden) $('msgText').focus();
+  });
+  $('msgText').addEventListener('input', () => { $('msgCount').textContent = $('msgText').value.length + '/200'; });
+  $('msgForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = $('msgText').value.trim().slice(0, 200);
+    if (!text) return;
+    if (await sendPing('message', text)) {
+      $('msgForm').reset();
+      $('msgCount').textContent = '0/200';
+      $('msgForm').hidden = true;
+    }
+  });
+
+  // ======================================================================
+  // Push-Benachrichtigungen
+  // ======================================================================
+  const VAPID_PUBLIC_KEY = 'BFC5kOFZukTWvDdPBC__t2Mr0CvHR_CFy4QVMz13XZYJFwA1Z0UgRNer3zuYJlFiidYTBQpj8vsa3tonUB5l3Ag';
+  const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  let pushActive = false;
+
+  function keyBytes(s) {
+    const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(b, c => c.charCodeAt(0));
+  }
+
+  async function currentSub() {
+    const reg = await navigator.serviceWorker.ready;
+    return reg.pushManager.getSubscription();
+  }
+
+  async function saveSub(sub) {
+    const j = sub.toJSON();
+    const mine = await pb.collection('push_subs').getFullList({ filter: pb.filter('endpoint = {:e}', { e: j.endpoint }) });
+    if (mine.length) return;
+    await pb.collection('push_subs').create({ user: me(), endpoint: j.endpoint, keys: j.keys, ua: navigator.userAgent.slice(0, 300) });
+  }
+
+  const notUnique = err => err?.response?.data?.endpoint?.code === 'validation_not_unique';
+
+  function renderPush(note) {
+    const can = pushSupported() && Notification.permission !== 'denied';
+    $('pushBtn').hidden = pushActive || !can;
+    $('pushBtn2').hidden = pushActive || !can;
+    let txt;
+    if (pushActive) txt = 'Auf diesem Handy aktiv ✓';
+    else if (!pushSupported()) txt = standalone() ? 'Dieses Gerät kann leider keine Benachrichtigungen 🥺'
+      : 'Öffne die App über das Symbol auf dem Home-Bildschirm, dann kannst du sie hier aktivieren.';
+    else if (Notification.permission === 'denied') txt = 'Blockiert – erlaube sie in den iPhone-Einstellungen → Mitteilungen → Wir.';
+    else txt = 'Noch aus auf diesem Handy.';
+    $('pushState').textContent = note || txt;
+  }
+
+  // beim Start: vorhandene Subscription (ggf. neu) speichern
+  async function syncPush() {
+    pushActive = false;
+    if (pushSupported() && Notification.permission === 'granted') {
+      const sub = await currentSub();
+      if (sub) {
+        try { await saveSub(sub); pushActive = true; }
+        catch (err) {
+          // gehört noch zum anderen Account (z.B. nach Abmelden) -> neu anfordern lassen
+          if (notUnique(err)) await sub.unsubscribe().catch(() => {});
+          else console.error(err);
+        }
+      }
+    }
+    renderPush();
+  }
+
+  async function enablePush(btn) {
+    // requestPermission muss direkt im Tap passieren (iOS)
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { renderPush(perm === 'denied' ? null : 'Nicht erlaubt – du kannst es jederzeit nochmal versuchen.'); return; }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const opts = { userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC_KEY) };
+      let sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe(opts);
+      try { await saveSub(sub); }
+      catch (err) {
+        if (!notUnique(err)) throw err;
+        await sub.unsubscribe();
+        sub = await reg.pushManager.subscribe(opts);
+        await saveSub(sub);
+      }
+      pushActive = true;
+      renderPush();
+      const r = btn.getBoundingClientRect();
+      UI.burst(r.left + r.width / 2, r.top + r.height / 2, 18);
+    } catch (err) {
+      console.error(err);
+      renderPush('Aktivieren fehlgeschlagen: ' + errText(err));
+    }
+  }
+  $('pushBtn').addEventListener('click', () => enablePush($('pushBtn')));
+  $('pushBtn2').addEventListener('click', () => enablePush($('pushBtn2')));
+
+  async function dropPush() {
+    if (!pushSupported()) return;
+    const sub = await currentSub();
+    if (!sub) return;
+    const recs = await pb.collection('push_subs').getFullList({ filter: pb.filter('endpoint = {:e}', { e: sub.endpoint }) });
+    await Promise.all(recs.map(r => pb.collection('push_subs').delete(r.id)));
+    await sub.unsubscribe();
+  }
+
+  // ---------- Einstellungen ----------
+  const PREFS = [
+    { key: 'pings',   ico: '💞', title: 'Wir zwei',        sub: 'Herzen, Anruf-Wünsche, Nachrichten' },
+    { key: 'photos',  ico: '📸', title: 'Erinnerungen',    sub: 'Neue Fotos' },
+    { key: 'dates',   ico: '📅', title: 'Unsere Daten',    sub: 'Neue oder geänderte Daten' },
+    { key: 'clay',    ico: '🧸', title: 'Clay Date',       sub: 'Neue Fotos unserer Figuren' },
+    { key: 'tabs',    ico: '✨', title: 'Reiter',          sub: 'Neue Reiter, Einträge, ❤️-Auswahl' },
+    { key: 'planned', ico: '💌', title: 'Geplante Dates',  sub: 'Neues Date geplant & wenn es freigegeben ist' },
+  ];
+  let prefRec = null;
+
+  async function loadPrefs() {
+    [prefRec] = await pb.collection('push_prefs').getFullList({ filter: pb.filter('user = {:me}', { me: me() }) });
+    const prefs = prefRec?.prefs || {};
+    $('prefs').replaceChildren(...PREFS.map(p => {
+      const el = document.createElement('label');
+      el.className = 'date';
+      el.innerHTML = '<span class="ico"></span><div><b></b><small></small></div><input type="checkbox" class="switch">';
+      el.querySelector('.ico').textContent = p.ico;
+      el.querySelector('b').textContent = p.title;
+      el.querySelector('small').textContent = p.sub;
+      const sw = el.querySelector('input');
+      sw.checked = prefs[p.key] !== false; // Standard: an
+      sw.addEventListener('change', () => savePref(p.key, sw));
+      return el;
+    }));
+  }
+
+  async function savePref(key, sw) {
+    const prefs = { ...(prefRec?.prefs || {}), [key]: sw.checked };
+    try {
+      prefRec = prefRec
+        ? await pb.collection('push_prefs').update(prefRec.id, { prefs })
+        : await pb.collection('push_prefs').create({ user: me(), prefs });
+      $('prefStatus').textContent = 'Gespeichert ✓';
+    } catch (err) {
+      sw.checked = !sw.checked;
+      $('prefStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
+    }
+  }
+
+  // ---------- aus einer Benachrichtigung heraus öffnen ----------
+  async function goTo(target) {
+    if (!target) return;
+    if (target.startsWith('tab:')) {
+      const id = target.slice(4);
+      await loadTabs().catch(console.error);
+      if (tabs.some(t => t.id === id)) { openTab(id); return; }
+      target = 's-final';
+    }
+    if (!$(target)?.classList.contains('screen') || target === 's-lock' || target === 's-gift') target = 's-final';
+    UI.show(target);
+    $(target).scrollTop = 0;
+    if (target === 's-wir') loadPings().catch(console.error);
+  }
+
+  // Ziel aus der URL (/#go=...) – wird vom Service Worker beim Öffnen gesetzt
+  const startGo = new URLSearchParams(location.hash.slice(1)).get('go');
+  if (startGo) history.replaceState(null, '', location.pathname + location.search);
+  window.addEventListener('hashchange', () => {
+    const go = new URLSearchParams(location.hash.slice(1)).get('go');
+    if (!go) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    if (pb.authStore.isValid && started) goTo(go);
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.go && pb.authStore.isValid && started) goTo(e.data.go);
+    });
+  }
+
+  // beim Öffnen der Bereiche frisch laden
+  document.addEventListener('click', e => {
+    const go = e.target.closest('[data-go]')?.dataset.go;
+    if (go === 's-wir') { $('pingStatus').textContent = ''; loadPings().catch(console.error); }
+    if (go === 's-settings') { $('prefStatus').textContent = ''; renderPush(); loadPrefs().catch(console.error); }
+  });
+
+  // ======================================================================
   // Laden, Live-Updates, Login
   // ======================================================================
   async function loadAll() {
     await seedDates().catch(console.error);
+    await loadPartner().catch(console.error);
     await Promise.all([
-      memories.load(), clayDone.load(), loadDates(), loadTabs(),
+      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadPrefs(), syncPush(),
     ].map(p => p.catch(err => console.error(err))));
     started = true;
   }
@@ -616,18 +887,26 @@
     });
     const reloadEntries = debounce(loadEntries);
     const reloadDates = debounce(loadDates);
+    const reloadPings = debounce(loadPings);
     await Promise.all([
       pb.collection('photos').subscribe('*', memories.reload),
       pb.collection('clay_photos').subscribe('*', clayDone.reload),
       pb.collection('dates').subscribe('*', reloadDates),
       pb.collection('tabs').subscribe('*', reloadTabs),
       pb.collection('tab_entries').subscribe('*', e => { if (e.record.tab === currentTab) reloadEntries(); }),
+      pb.collection('pings').subscribe('*', e => {
+        reloadPings();
+        if (e.action === 'create' && e.record.to === me() && $('s-wir').classList.contains('active')) {
+          UI.burst(window.innerWidth / 2, window.innerHeight / 3, 22);
+        }
+      }),
     ]).catch(console.error);
   }
 
-  async function enter() {
+  async function enter(target) {
     await loadAll();
     subscribe();
+    if (target) goTo(target);
   }
 
   $('loginForm').addEventListener('submit', async e => {
@@ -639,16 +918,18 @@
       const r = $('lockCard').getBoundingClientRect();
       UI.burst(r.left + r.width / 2, r.top + r.height / 2, 24);
       await UI.wait(500);
-      UI.show('s-gift');
-      enter();
+      UI.show(startGo ? 's-final' : 's-gift');
+      enter(startGo);
     } catch {
       UI.shake($('lockCard'));
       $('err').textContent = 'Hmm, nicht ganz … versuch’s nochmal 💭';
     }
   });
 
-  $('logoutBtn').addEventListener('click', () => {
+  $('logoutBtn').addEventListener('click', async () => {
     if (!confirm('Wirklich abmelden?')) return;
+    // dieses Handy soll keine Benachrichtigungen für den alten Account mehr bekommen
+    await dropPush().catch(console.error);
     pb.authStore.clear();
     location.reload();
   });
@@ -659,6 +940,8 @@
     memories.load().catch(console.error);
     clayDone.load().catch(console.error);
     loadDates().catch(console.error);
+    loadPings().catch(console.error);
+    syncPush().catch(console.error);
     loadTabs().then(() => { if ($('s-tab').classList.contains('active')) return renderTab(); }).catch(console.error);
   });
   // neue gesperrte Reiter der anderen Person kommen nicht per Realtime -> ab und zu nachsehen
@@ -668,7 +951,7 @@
 
   async function boot() {
     if (!pb.authStore.isValid) { UI.show('s-lock'); return; }
-    UI.show('s-gift');
+    UI.show(startGo ? 's-final' : 's-gift');
     try {
       await pb.collection('users').authRefresh();
     } catch (err) {
@@ -679,7 +962,7 @@
         return;
       }
     }
-    enter();
+    enter(startGo);
   }
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');

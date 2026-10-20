@@ -188,11 +188,14 @@
   <button class="pack-btn" id="packBtn">🎁 Einpacken</button>
   <h1 class="love">Ich liebe dich mehr als <span>ALLES ANDERE</span></h1>
   <div class="menu in" id="menu">
+    <button class="opt opt-push" id="pushBtn" hidden><span class="ico">🔔</span><span><b>Benachrichtigungen aktivieren</b><small>Damit du nichts verpasst</small></span></button>
+    <button class="opt" data-go="s-wir"><span class="ico">💞</span><span><b>Wir zwei</b><small>Herz, Anruf, kleine Nachricht</small></span></button>
     <button class="opt" data-go="s-memories"><span class="ico">📸</span><span><b>Erinnerungen</b><small>Bilder von uns</small></span></button>
     <button class="opt" data-go="s-dates"><span class="ico">📅</span><span><b>Unsere Daten</b><small>Die wichtigsten Tage</small></span></button>
     <button class="opt" data-go="s-clay"><span class="ico">🧸</span><span><b>Clay Date</b><small>Such dir aus, was wir bauen</small></span></button>
     <div class="tab-menu" id="tabMenu"></div>
     <button class="opt opt-new" id="newTabBtn"><span class="ico">➕</span><span><b>Neuer Reiter</b></span></button>
+    <button class="opt" data-go="s-settings"><span class="ico">⚙️</span><span><b>Einstellungen</b><small>Welche Benachrichtigungen du bekommst</small></span></button>
     <button class="logout" id="logoutBtn">Abmelden</button>
   </div>
 </section>
@@ -287,6 +290,39 @@
     <button class="mem-btn" type="submit">Anlegen</button>
     <div class="err" id="tabErr"></div>
   </form>
+</section>
+
+<!-- Wir zwei -->
+<section class="screen sub" id="s-wir">
+  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Wir zwei 💞</h2></div>
+  <div class="partner"><span class="ico">💕</span><div><small>Du schickst an</small><b id="partnerName">…</b></div></div>
+  <div class="ping-grid">
+    <button class="ping-btn" data-ping="heart"><span>❤️</span>Herz senden</button>
+    <button class="ping-btn" data-ping="call"><span>📞</span>Anruf anfordern</button>
+    <button class="ping-btn" data-ping="love"><span>💗</span>Liebe senden</button>
+    <button class="ping-btn" data-ping="support"><span>🫂</span>Mentaler Support</button>
+    <button class="ping-btn wide" id="msgToggle"><span>✏️</span>Kleine Nachricht</button>
+  </div>
+  <form class="card add-card" id="msgForm" hidden>
+    <textarea class="mem-input msg-input" id="msgText" maxlength="200" rows="3" placeholder="Schreib was Süßes …" required></textarea>
+    <div class="row"><span class="msg-count" id="msgCount">0/200</span><button class="mem-btn" type="submit">Senden 💌</button></div>
+  </form>
+  <div class="mem-status" id="pingStatus"></div>
+  <h3 class="list-head">Verlauf</h3>
+  <div class="dates pings" id="pings"></div>
+</section>
+
+<!-- Einstellungen -->
+<section class="screen sub" id="s-settings">
+  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Einstellungen ⚙️</h2></div>
+  <div class="tab-lock push-box">
+    <b>🔔 Benachrichtigungen</b>
+    <span id="pushState"></span>
+    <button class="mem-btn" id="pushBtn2" hidden>🔔 Benachrichtigungen aktivieren</button>
+  </div>
+  <h3 class="list-head">Was möchtest du bekommen?</h3>
+  <div class="dates prefs" id="prefs"></div>
+  <div class="mem-status" id="prefStatus"></div>
 </section>
 
 <div class="lightbox" id="lightbox"><button class="lb-x" aria-label="Schließen">✕</button><img id="lbImg" alt=""><p id="lbCap"></p></div>

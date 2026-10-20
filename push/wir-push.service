@@ -1,0 +1,26 @@
+[Unit]
+Description=Wir-App Push-Benachrichtigungen
+After=network-online.target pocketbase.service
+Wants=network-online.target
+
+[Service]
+User=pingu
+WorkingDirectory=/home/pingu/F-r-dich/push
+EnvironmentFile=/etc/wir-push.env
+Environment=NODE_ENV=production TZ=Europe/Berlin
+ExecStart=/usr/bin/node /home/pingu/F-r-dich/push/index.js
+Restart=always
+RestartSec=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
