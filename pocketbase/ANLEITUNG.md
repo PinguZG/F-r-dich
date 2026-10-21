@@ -205,7 +205,7 @@ Service Worker das Update und zeigt das Banner „✨ Neue Version – tippen zu
 
 ---
 
-## (c) Auto-Deploy einrichten
+## (c) Auto-Deploy einrichten (eingerichtet am 21.10.2026)
 
 **Was es macht:** Alle 2 Minuten `git fetch`. Nur wenn `origin/main` neuer ist: `git pull --ff-only`.
 - Bei lokalen Änderungen oder wenn der Stand nicht fast-forward ist: **Abbruch mit Log-Eintrag**. Es wird nie etwas überschrieben.
