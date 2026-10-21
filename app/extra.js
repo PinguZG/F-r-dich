@@ -406,7 +406,9 @@
     const card = el('div', 'ow-cat');
     const head = el('div', 'ow-cat-head');
     const info = el('div');
-    info.append(el('b', '', c.title), el('small', '', mine.length ? `${opened} von ${mine.length} geöffnet` : 'Noch leer – erst mit Brief sichtbar'));
+    const isOpen = openCats.has(c.id);
+    const count = mine.length ? `${opened} von ${mine.length} geöffnet` : 'Noch leer – erst mit Brief sichtbar';
+    info.append(el('b', '', `${isOpen ? '▾' : '▸'} ${c.title}`), el('small', '', isOpen ? count : `${count} · Tippen zum Schreiben ✍️`));
     head.append(info);
     if (i > 0) head.append(delBtn('Nach oben', () => moveCat(i, -1), '▲'));
     if (i < cats.length - 1) head.append(delBtn('Nach unten', () => moveCat(i, 1), '▼'));

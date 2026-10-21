@@ -1,4 +1,4 @@
-const CACHE = 'wir-v4'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v5'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.css', '/extra.js', '/lib/pocketbase.umd.js', '/manifest.json', '/icons/icon-192.png'];
 
 self.addEventListener('install', e => {
