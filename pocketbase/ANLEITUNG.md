@@ -192,7 +192,7 @@ mit denselben VAPID-Schlüsseln und demselben Superuser aus `/etc/wir-push.env`.
 cd /home/pingu/F-r-dich
 git status                      # muss sauber sein
 git pull --ff-only origin main
-cp -a pocketbase/pb_hooks/. /home/pingu/pb/pb_hooks/
+mkdir -p /home/pingu/pb/pb_hooks && cp -a pocketbase/pb_hooks/. /home/pingu/pb/pb_hooks/
 sudo systemctl restart pocketbase
 journalctl -u pocketbase -n 30 --no-pager          # keine JS-Fehler zu wir_extra.pb.js?
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8090/api/wir/partner   # erwartet: 401
