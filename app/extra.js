@@ -1,7 +1,7 @@
-// Treffen-Countdown, "Öffne wenn …", Benachrichtigungs-Schalter, Update-Hinweis.
-// Eigenständig neben app.js: baut seine Bildschirme selbst ins DOM ein.
+// Treffen-Countdown, "Öffne wenn …" (Lesen + Schreiben im Briefpapier-Sheet), Benachrichtigungs-Schalter,
+// Update-Hinweis. Läuft neben app.js und nutzt dessen PocketBase-Verbindung.
 (() => {
-  const pb = new PocketBase(window.location.origin);
+  const pb = window.WIR_PB || new PocketBase(window.location.origin);
   pb.autoCancellation(false);
 
   const $ = id => document.getElementById(id);
@@ -86,97 +86,20 @@
   }
 
   // ======================================================================
-  // DOM einbauen
+  // DOM: Treffen-Karte (Startseite), Brief-Overlay, Update-Hinweis
   // ======================================================================
-  const menu = $('menu');
-  const finalScreen = $('s-final');
-
-  // Countdown oben auf der Startseite
-  const cdBox = el('button', 'countdown');
+  const cdBox = el('button', 'countdown glass');
+  cdBox.type = 'button';
   cdBox.hidden = true;
-  cdBox.innerHTML = '<small>Nächstes Treffen</small><div class="cd-num"></div><em></em>';
+  cdBox.innerHTML = '<span class="cd-ico">💗</span><div><small>Nächstes Treffen</small><div class="cd-num"></div><em></em></div>';
   cdBox.dataset.go = 's-meetings';
   const cdEmpty = el('button', 'cd-empty', '+ Nächstes Treffen eintragen');
+  cdEmpty.type = 'button';
   cdEmpty.hidden = true;
   cdEmpty.addEventListener('click', () => openMeetingForm());
-  finalScreen.insertBefore(cdEmpty, menu);
-  finalScreen.insertBefore(cdBox, cdEmpty);
+  $('homeMeet').append(cdBox, cdEmpty);
 
-  // Menüpunkte (vor den eigenen Reitern)
-  function menuOpt(ico, title, small, go) {
-    const b = el('button', 'opt');
-    b.innerHTML = '<span class="ico"></span><span><b></b><small></small></span>';
-    b.querySelector('.ico').textContent = ico;
-    b.querySelector('b').textContent = title;
-    b.querySelector('small').textContent = small;
-    b.dataset.go = go;
-    return b;
-  }
-  const optOpen = menuOpt('💌', 'Öffne wenn …', 'Briefe für besondere Momente', 's-openwhen');
-  const optWrite = menuOpt('✍️', 'Für dich schreiben', 'Öffne-wenn-Briefe schreiben', 's-write');
-  menu.insertBefore(optOpen, $('tabMenu'));
-  menu.insertBefore(optWrite, $('tabMenu'));
-  optOpen.addEventListener('click', () => loadInbox().catch(showInboxErr));
-  optWrite.addEventListener('click', () => loadWriter().catch(console.error));
-
-  // kleine Links unten im Menü
-  const links = el('div', 'menu-links');
-  const notifyLink = el('button', 'logout', '🔔 Benachrichtigungen: Treffen & Briefe');
-  notifyLink.dataset.go = 's-notify-extra';
-  notifyLink.addEventListener('click', () => loadPrefs().catch(console.error));
-  const reloadLink = el('button', 'logout', '↻ App neu laden');
-  reloadLink.addEventListener('click', reloadApp);
-  links.append(notifyLink, reloadLink);
-  menu.insertBefore(links, $('logoutBtn'));
-
-  // Unterseiten
-  const screens = document.createElement('div');
-  screens.innerHTML = `
-<section class="screen sub" id="s-meetings">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Unsere Treffen 💗</h2></div>
-  <div class="meet-list" id="meetList"></div>
-  <button class="pack-btn add-toggle" id="meetToggle">➕ Treffen eintragen</button>
-  <form class="card add-card" id="meetForm" hidden>
-    <h1 id="meetFormTitle">Nächstes Treffen</h1>
-    <input class="mem-input" id="meetWhen" type="datetime-local" required>
-    <input class="mem-input" id="meetNote" type="text" placeholder="Notiz (optional), z.B. Bahnhof" maxlength="200">
-    <button class="mem-btn" type="submit">Speichern</button>
-    <div class="err" id="meetErr"></div>
-  </form>
-</section>
-
-<section class="screen sub" id="s-openwhen">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Öffne wenn …</h2></div>
-  <div class="ow-intro">Tipp eins an – es wartet ein Brief auf dich 💌</div>
-  <div class="ow-list" id="owInbox"></div>
-</section>
-
-<section class="screen sub" id="s-write">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Für dich schreiben ✍️</h2></div>
-  <div class="ow-intro" id="owWriteIntro">Nur die andere Person kann sie öffnen – immer einen zufälligen Brief.</div>
-  <div class="ow-list" id="owCats"></div>
-  <form class="card add-card ow-new" id="owCatForm">
-    <h1>Neue Kategorie</h1>
-    <div class="ow-prefix">Öffne wenn …</div>
-    <input class="mem-input" id="owCatTitle" type="text" placeholder="… du mich vermisst" maxlength="120" required>
-    <button class="mem-btn" type="submit">Anlegen</button>
-    <div class="err" id="owCatErr"></div>
-  </form>
-</section>
-
-<section class="screen sub" id="s-notify-extra">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Benachrichtigungen 🔔</h2></div>
-  <div class="card add-card notify-card">
-    <label class="check"><input type="checkbox" id="prefMeetings"><span>📅 Treffen: am Vortag um 18:00 und am Tag um 08:00</span></label>
-    <label class="check"><input type="checkbox" id="prefOpenWhen"><span>💌 Neue Öffne-wenn-Nachricht für mich</span></label>
-    <p class="mem-note">Kommt nur an, wenn auf diesem Handy „Benachrichtigungen aktivieren“ eingeschaltet ist.</p>
-    <div class="mem-status" id="notifyExtraStatus"></div>
-  </div>
-</section>`;
   const lightbox = $('lightbox');
-  [...screens.children].forEach(s => document.body.insertBefore(s, lightbox));
-
-  // Brief-Overlay
   const overlay = el('div', 'ow-overlay');
   overlay.innerHTML = `
   <div class="ow-env-wrap" id="owEnvWrap">
@@ -197,11 +120,11 @@
   </div>`;
   document.body.insertBefore(overlay, lightbox);
 
-  // Update-Hinweis
   const updateBar = el('button', 'update-bar', '✨ Neue Version – tippen zum Aktualisieren');
   updateBar.type = 'button';
   updateBar.addEventListener('click', reloadApp);
   document.body.append(updateBar);
+  $('reloadBtn').addEventListener('click', reloadApp);
 
   // ======================================================================
   // Treffen
@@ -228,12 +151,13 @@
     const m = nextMeeting();
     cdBox.hidden = !m;
     cdEmpty.hidden = !!m;
-    if (!m) return;
+    if (!m) { $('planMeetInfo').textContent = 'Noch keins geplant 💭'; return; }
     const ms = pbMs(m.when);
     const c = countdownText(ms);
     cdBox.classList.toggle('today', !!c.today);
     cdBox.querySelector('.cd-num').textContent = c.txt;
     cdBox.querySelector('em').textContent = fmtWhen(ms) + (m.note ? ' · ' + m.note : '');
+    $('planMeetInfo').textContent = c.txt;
   }
 
   function renderMeetings() {
@@ -306,6 +230,18 @@
   });
 
   // ======================================================================
+  // Öffne wenn – Umschalter "Für mich" / "Schreiben"
+  // ======================================================================
+  function setSeg(seg) {
+    document.querySelectorAll('.seg').forEach(b => b.classList.toggle('on', b.dataset.seg === seg));
+    $('owInPane').hidden = seg !== 'in';
+    $('owWritePane').hidden = seg !== 'write';
+    if (seg === 'in') loadInbox().catch(showInboxErr);
+    else loadWriter().catch(console.error);
+  }
+  document.querySelectorAll('.seg').forEach(b => b.addEventListener('click', () => setSeg(b.dataset.seg)));
+
+  // ======================================================================
   // Öffne wenn – Empfängerin
   // ======================================================================
   function showInboxErr(err) {
@@ -315,10 +251,12 @@
 
   async function loadInbox() {
     const cats = await pb.send('/api/open-when/categories', {});
+    $('navOwDot').hidden = !cats.some(c => c.fresh);
     $('owInbox').replaceChildren(...cats.map(c => {
-      const b = el('button', 'opt');
+      const b = el('button', 'opt ow-letter-card');
+      b.type = 'button';
       b.innerHTML = '<span class="ico">💌</span><span><b></b><small></small></span>';
-      b.querySelector('b').textContent = c.title;
+      b.querySelector('b').textContent = 'Öffne wenn ' + c.title;
       b.querySelector('small').textContent = c.fresh ? 'Ein neuer Brief wartet' : 'Tippen zum Öffnen';
       if (c.fresh) b.querySelector('small').append(el('span', 'ow-dot'));
       b.addEventListener('click', () => openLetter(c));
@@ -362,7 +300,7 @@
   });
 
   // ======================================================================
-  // Öffne wenn – Schreiben
+  // Öffne wenn – Schreiben (Briefe im Bottom-Sheet)
   // ======================================================================
   let cats = [];
   let msgs = [];
@@ -420,7 +358,7 @@
         catch (err) { alert('Ging nicht: ' + errText(err)); }
       }, '✎'),
       delBtn('Kategorie löschen', async () => {
-        if (!confirm(`„${c.title}“ mit ${mine.length} Nachricht(en) löschen?`)) return;
+        if (!confirm(`„${c.title}“ mit ${mine.length} Brief(en) löschen?`)) return;
         try { await pb.collection('open_when_categories').delete(c.id); await loadWriter(); }
         catch (err) { alert('Löschen fehlgeschlagen: ' + errText(err)); }
       }),
@@ -430,74 +368,69 @@
       renderWriter();
     });
     card.append(head);
-    if (openCats.has(c.id)) card.append(catBody(c, mine));
+    if (isOpen) {
+      const body = el('div', 'ow-cat-body');
+      for (const m of mine) {
+        const b = el('button', 'ow-msg');
+        b.type = 'button';
+        b.append(el('p', '', m.text), el('small', '', (m.opened_at ? '✓ geöffnet' : 'noch nicht geöffnet') + ' · tippen zum Bearbeiten'));
+        b.addEventListener('click', () => openLetterSheet(c, m));
+        body.append(b);
+      }
+      const add = el('button', 'mem-btn ow-write', '✍️ Neuen Brief schreiben');
+      add.type = 'button';
+      add.addEventListener('click', () => openLetterSheet(c, null));
+      body.append(add);
+      card.append(body);
+    }
     return card;
   }
 
-  function catBody(c, mine) {
-    const body = el('div', 'ow-cat-body');
-    for (const m of mine) body.append(msgItem(m));
+  // ---------- Briefpapier-Sheet ----------
+  let sheetCat = null, sheetMsg = null;
+  const MAX = 5000;
+  const countLetter = () => { $('letterCount').textContent = `${$('letterText').value.length}/${MAX}`; };
 
-    const form = el('form', 'mem-form');
-    const ta = el('textarea', 'mem-input ow-text');
-    ta.placeholder = 'Neue Nachricht …';
-    ta.maxLength = 5000;
-    ta.required = true;
-    const row = el('div', 'row');
-    const btn = el('button', 'mem-btn', 'Hinzufügen 💌');
-    btn.type = 'submit';
-    row.append(btn);
-    const status = el('div', 'mem-status');
-    form.append(ta, row, status);
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      if (!ta.value.trim()) return;
-      try {
-        status.textContent = 'Speichere …';
-        await pb.collection('open_when_messages').create({ category: c.id, text: ta.value.trim(), author: myId() });
-        await loadWriter();
-        burstAt($('owCats'), 12);
-      } catch (err) {
-        status.textContent = 'Speichern fehlgeschlagen: ' + errText(err);
-      }
-    });
-    body.append(form);
-    return body;
+  function openLetterSheet(c, m) {
+    sheetCat = c; sheetMsg = m;
+    $('letterHead').textContent = 'Öffne wenn ' + c.title;
+    $('letterText').value = m?.text || '';
+    $('letterDelete').hidden = !m;
+    $('letterSave').textContent = m ? 'Änderung speichern 💌' : 'Brief speichern 💌';
+    $('letterStatus').textContent = partner.name && !m ? `Nur ${partner.name} kann ihn öffnen.` : '';
+    countLetter();
+    UI.sheet('letterSheet');
+    setTimeout(() => $('letterText').focus(), 380);
   }
+  $('letterText').addEventListener('input', countLetter);
 
-  function msgItem(m) {
-    const d = el('div', 'ow-msg');
-    const txt = el('div');
-    const p = el('p', '', m.text);
-    const sm = el('small', '', m.opened_at ? '✓ geöffnet' : 'noch nicht geöffnet');
-    txt.append(p, sm);
-    const edit = delBtn('Nachricht bearbeiten', () => {
-      const ta = el('textarea', 'mem-input ow-text');
-      ta.value = m.text;
-      ta.maxLength = 5000;
-      const row = el('div', 'row');
-      const save = el('button', 'mem-btn', 'Speichern');
-      const cancel = el('button', 'pack-btn', 'Abbrechen');
-      save.type = cancel.type = 'button';
-      cancel.style.margin = '0';
-      row.append(cancel, save);
-      txt.replaceChildren(ta, row);
-      edit.hidden = true;
-      ta.focus();
-      cancel.addEventListener('click', () => renderWriter());
-      save.addEventListener('click', async () => {
-        if (!ta.value.trim()) return;
-        try { await pb.collection('open_when_messages').update(m.id, { text: ta.value.trim() }); await loadWriter(); }
-        catch (err) { alert('Ging nicht: ' + errText(err)); }
-      });
-    }, '✎');
-    d.append(txt, edit, delBtn('Nachricht löschen', async () => {
-      if (!confirm('Diese Nachricht löschen?')) return;
-      try { await pb.collection('open_when_messages').delete(m.id); await loadWriter(); }
-      catch (err) { alert('Löschen fehlgeschlagen: ' + errText(err)); }
-    }));
-    return d;
-  }
+  $('letterForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = $('letterText').value.trim();
+    if (!text) return;
+    try {
+      $('letterStatus').textContent = 'Speichere …';
+      if (sheetMsg) await pb.collection('open_when_messages').update(sheetMsg.id, { text });
+      else await pb.collection('open_when_messages').create({ category: sheetCat.id, text, author: myId() });
+      openCats.add(sheetCat.id);
+      UI.sheet('letterSheet', false);
+      await loadWriter();
+      burstAt($('owCats'), 14);
+    } catch (err) {
+      $('letterStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
+    }
+  });
+
+  $('letterDelete').addEventListener('click', async () => {
+    if (!sheetMsg || !confirm('Diesen Brief löschen?')) return;
+    try {
+      await pb.collection('open_when_messages').delete(sheetMsg.id);
+      UI.sheet('letterSheet', false);
+      await loadWriter();
+    } catch (err) {
+      $('letterStatus').textContent = 'Löschen fehlgeschlagen: ' + errText(err);
+    }
+  });
 
   async function moveCat(i, dir) {
     const list = cats.slice();
@@ -533,7 +466,7 @@
   });
 
   // ======================================================================
-  // Benachrichtigungs-Schalter
+  // Benachrichtigungs-Schalter (Treffen, Öffne wenn)
   // ======================================================================
   let prefs = null;
   async function loadPrefs() {
@@ -603,32 +536,33 @@
     started = true;
     pb.send('/api/wir/partner', {}).then(p => {
       partner = p;
-      if (p.name) {
-        $('owWriteIntro').textContent = `Nur ${p.name} kann sie öffnen – immer einen zufälligen Brief.`;
-        optWrite.querySelector('small').textContent = `Öffne-wenn-Briefe für ${p.name}`;
-      }
+      if (p.name) $('owWriteIntro').textContent = `Nur ${p.name} kann sie öffnen – immer einen zufälligen Brief.`;
     }).catch(console.error);
     await Promise.all([
       loadMeetings(),
       seedCats(),
+      loadInbox(),
     ].map(p => p.catch(console.error)));
     pb.collection('meetings').subscribe('*', debounce(loadMeetings)).catch(console.error);
     if (location.hash === '#open-when') {
       history.replaceState(null, '', location.pathname);
       UI.show('s-openwhen');
-      loadInbox().catch(showInboxErr);
-    } else if (inboxPending) {
-      loadInbox().catch(showInboxErr);
+      setSeg('in');
     }
-    inboxPending = false;
   }
 
+  // Seitenwechsel: passende Bereiche frisch laden
+  document.addEventListener('wir:show', e => {
+    if (!started) return;
+    if (e.detail === 's-openwhen') setSeg($('owWritePane').hidden ? 'in' : 'write');
+    if (e.detail === 's-settings') { $('notifyExtraStatus').textContent = ''; loadPrefs().catch(console.error); }
+    if (e.detail === 's-plans' || e.detail === 's-home') renderCountdown();
+  });
+
   // app.js hat einen Bereich geöffnet (z. B. per Tippen auf einen Push)
-  let inboxPending = false;
   document.addEventListener('wir:go', e => {
-    if (e.detail !== 's-openwhen') return;
-    if (started) loadInbox().catch(showInboxErr);
-    else inboxPending = true;
+    if (e.detail === 's-write') setSeg('write');
+    else if (e.detail === 's-openwhen') setSeg('in');
   });
 
   setInterval(() => { if (started && !document.hidden) { renderCountdown(); if ($('s-meetings').classList.contains('active')) renderMeetings(); } }, 30000);
@@ -636,11 +570,9 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden || !started || !pb.authStore.isValid) return;
     loadMeetings().catch(console.error);
-    if ($('s-openwhen').classList.contains('active')) loadInbox().catch(showInboxErr);
+    loadInbox().catch(showInboxErr);
   });
 
-  // app.js meldet an; dieselbe Anmeldung liegt im localStorage -> warten, bis sie da ist
-  const waitLogin = setInterval(() => {
-    if (pb.authStore.isValid && myId()) { clearInterval(waitLogin); start(); }
-  }, 500);
+  // app.js meldet an und lädt; danach starten wir
+  document.addEventListener('wir:started', () => { if (!started) start(); });
 })();

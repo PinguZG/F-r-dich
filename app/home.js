@@ -1,0 +1,214 @@
+// Startseite + Einstellungen: Farbwelt, Zusammen-Timer ("Zusammen seit" für beide in shared_settings),
+// Profilbilder. Nutzt die PocketBase-Verbindung von app.js.
+(() => {
+  const pb = window.WIR_PB || new PocketBase(window.location.origin);
+  pb.autoCancellation(false);
+
+  const $ = id => document.getElementById(id);
+  const myId = () => (pb.authStore.record || pb.authStore.model)?.id;
+  const DAY = 86400000;
+  const DEFAULT_SINCE = '2026-04-10';
+  let started = false;
+  let meUser = null, partner = null;
+
+  function errText(err) {
+    const d = err?.response?.data;
+    if (d && Object.keys(d).length) {
+      return Object.entries(d).map(([k, v]) => k + ': ' + (v.message || JSON.stringify(v))).join(', ');
+    }
+    return err?.response?.message || err?.message || 'unbekannter Fehler';
+  }
+
+  // ======================================================================
+  // Farbwelt
+  // ======================================================================
+  const THEMES = {
+    rose:        '#fdeef5',
+    gluehwein:   '#3e0d1e',
+    mondnacht:   '#210635',
+    zuckerwatte: '#F4E7F8',
+  };
+  function applyTheme(t) {
+    if (!THEMES[t]) t = 'rose';
+    document.documentElement.dataset.theme = t;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES[t]);
+    document.querySelectorAll('.swatch').forEach(b => b.classList.toggle('on', b.dataset.theme === t));
+    try { localStorage.setItem('wir-theme', t); } catch (_) {}
+  }
+  applyTheme(document.documentElement.dataset.theme || 'rose');
+
+  document.querySelectorAll('.swatch').forEach(b => b.addEventListener('click', async () => {
+    applyTheme(b.dataset.theme);
+    if (!myId()) return;
+    try { meUser = await pb.collection('users').update(myId(), { theme: b.dataset.theme }); }
+    catch (err) { console.error('Farbwelt speichern', err); }
+  }));
+
+  // ======================================================================
+  // Profilbilder
+  // ======================================================================
+  const initial = u => (u?.name || u?.email || '?').trim().charAt(0).toUpperCase();
+  function paintAvatar(el, u) {
+    if (!el) return;
+    if (u?.avatar) {
+      el.style.backgroundImage = `url("${pb.files.getURL(u, u.avatar, { thumb: '200x200' })}")`;
+      el.classList.add('has');
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('has');
+    }
+    el.textContent = initial(u);
+    el.setAttribute('aria-label', (u?.name || '') + (el.id === 'meBtn' ? ' – Einstellungen' : ''));
+  }
+
+  function renderPeople() {
+    paintAvatar($('meBtn'), meUser);
+    paintAvatar($('avMe'), meUser);
+    paintAvatar($('avMe2'), meUser);
+    paintAvatar($('avSettings'), meUser);
+    paintAvatar($('avPartner'), partner);
+    paintAvatar($('avPartner2'), partner);
+    $('nameMe').textContent = meUser?.name || 'Ich';
+    $('namePartner').textContent = partner?.name || 'Schatz';
+    $('setName').textContent = meUser?.name || '';
+    $('lovePartnerLabel').textContent = 'von ' + (partner?.name || 'Schatz');
+    $('avatarRemove').hidden = !meUser?.avatar;
+  }
+
+  async function loadPeople() {
+    const users = await pb.collection('users').getFullList();
+    meUser = users.find(u => u.id === myId()) || null;
+    partner = users.find(u => u.id !== myId()) || null;
+    renderPeople();
+    if (meUser?.theme && meUser.theme !== document.documentElement.dataset.theme) applyTheme(meUser.theme);
+  }
+
+  $('avatarFile').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      $('avatarStatus').textContent = 'Lade hoch …';
+      const fd = new FormData();
+      fd.append('avatar', await UI.shrink(f, 512, 0.88), 'avatar.jpg');
+      meUser = await pb.collection('users').update(myId(), fd);
+      renderPeople();
+      $('avatarStatus').textContent = 'Gespeichert ✓';
+      const r = $('avSettings').getBoundingClientRect();
+      UI.burst(r.left + r.width / 2, r.top + r.height / 2, 14);
+    } catch (err) {
+      $('avatarStatus').textContent = 'Hochladen fehlgeschlagen: ' + errText(err);
+    }
+    e.target.value = '';
+  });
+
+  $('avatarRemove').addEventListener('click', async () => {
+    if (!confirm('Profilbild entfernen?')) return;
+    try {
+      meUser = await pb.collection('users').update(myId(), { avatar: null });
+      renderPeople();
+      $('avatarStatus').textContent = 'Entfernt ✓';
+    } catch (err) {
+      $('avatarStatus').textContent = 'Ging nicht: ' + errText(err);
+    }
+  });
+
+  // ======================================================================
+  // Zusammen-Timer
+  // ======================================================================
+  let since = DEFAULT_SINCE;
+  let sinceRec = null;
+  const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const valid = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
+
+  function setText(id, v) {
+    const e = $(id);
+    const s = String(v);
+    if (e.textContent !== s) e.textContent = s;
+  }
+
+  function tick() {
+    const [y, m, d] = since.split('-').map(Number);
+    const nowW = UI.berlinWall(Date.now());      // Berliner Uhrzeit als Rechenwert
+    const startW = Date.UTC(y, m - 1, d);         // 00:00 am Starttag
+    let Y = 0, M = 0, D = 0, h = 0, mi = 0, s = 0, total = 0;
+    if (nowW >= startW) {
+      total = Math.floor((nowW - startW) / DAY);
+      const n = new Date(nowW);
+      Y = n.getUTCFullYear() - y;
+      M = n.getUTCMonth() - (m - 1);
+      D = n.getUTCDate() - d;
+      if (D < 0) { M--; D += new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), 0)).getUTCDate(); }
+      if (M < 0) { Y--; M += 12; }
+      const rest = nowW % DAY;
+      h = Math.floor(rest / 3600000);
+      mi = Math.floor(rest % 3600000 / 60000);
+      s = Math.floor(rest % 60000 / 1000);
+    }
+    setText('dayCount', total);
+    setText('tY', Y); setText('tM', M); setText('tD', D);
+    setText('th', h); setText('tm', mi); setText('ts', s);
+  }
+
+  function renderSince() {
+    const [y, m, d] = since.split('-').map(Number);
+    $('sinceText').textContent = `Seit ${d}. ${MONTHS[m - 1]} ${y}`;
+    if (document.activeElement !== $('sinceInput')) $('sinceInput').value = since;
+    tick();
+  }
+
+  async function loadSince() {
+    try {
+      sinceRec = await pb.collection('shared_settings').getFirstListItem('key = "together_since"');
+      if (valid(sinceRec.value)) since = sinceRec.value;
+    } catch (err) {
+      if (err?.status !== 404) throw err;
+      sinceRec = null;
+    }
+    renderSince();
+  }
+
+  $('sinceInput').addEventListener('change', async () => {
+    const v = $('sinceInput').value;
+    if (!valid(v)) return;
+    if (v > new Date().toISOString().slice(0, 10)) { $('sinceStatus').textContent = 'Bitte kein Datum in der Zukunft 💭'; return; }
+    try {
+      const data = { value: v, updated_by: myId() };
+      sinceRec = sinceRec
+        ? await pb.collection('shared_settings').update(sinceRec.id, data)
+        : await pb.collection('shared_settings').create({ key: 'together_since', ...data });
+      since = v;
+      renderSince();
+      $('sinceStatus').textContent = 'Gespeichert ✓ – gilt für euch beide';
+    } catch (err) {
+      $('sinceStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
+    }
+  });
+
+  renderSince();
+  // jede Sekunde, aber nur wenn die App sichtbar ist
+  setInterval(() => { if (!document.hidden) tick(); }, 1000);
+
+  // ======================================================================
+  // Start
+  // ======================================================================
+  async function start() {
+    started = true;
+    await Promise.all([loadPeople(), loadSince()].map(p => p.catch(console.error)));
+    pb.collection('users').subscribe('*', () => loadPeople().catch(console.error)).catch(console.error);
+    pb.collection('shared_settings').subscribe('*', () => loadSince().catch(console.error)).catch(console.error);
+  }
+
+  document.addEventListener('wir:show', e => {
+    if (!started) return;
+    if (e.detail === 's-settings') { $('avatarStatus').textContent = ''; $('sinceStatus').textContent = ''; }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !started || !pb.authStore.isValid) return;
+    loadPeople().catch(console.error);
+    loadSince().catch(console.error);
+  });
+
+  // Profil schon vor dem Laden der restlichen Daten zeigen (Login liegt im localStorage)
+  if (pb.authStore.isValid) { meUser = pb.authStore.record || pb.authStore.model; renderPeople(); }
+  document.addEventListener('wir:started', () => { if (!started) start(); });
+})();

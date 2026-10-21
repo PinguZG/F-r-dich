@@ -210,6 +210,7 @@ Service Worker das Update und zeigt das Banner „✨ Neue Version – tippen zu
 **Was es macht:** Alle 2 Minuten `git fetch`. Nur wenn `origin/main` neuer ist: `git pull --ff-only`.
 - Bei lokalen Änderungen oder wenn der Stand nicht fast-forward ist: **Abbruch mit Log-Eintrag**. Es wird nie etwas überschrieben.
 - `pocketbase/pb_hooks/` geändert → nach `/home/pingu/pb/pb_hooks` kopieren und PocketBase neu starten. Es wird nur kopiert, nie etwas gelöscht.
+- `pocketbase/pb_migrations/` geändert (seit 22.10.2026) → nach `/home/pingu/pb/pb_migrations` kopieren und PocketBase neu starten; PocketBase spielt neue Migrationen beim Start selbst ein. Danach prüft das Skript bis zu 30 s lang `/api/health` und meldet „FEHLER: pocketbase antwortet … nicht“, falls PocketBase nicht hochkommt.
 - `push/` (wir-push) geändert → bei geänderter `package.json` `npm ci`, dann den Dienst neu starten.
 - Lock gegen parallele Läufe. Die Ausgaben landen im journal (`wir-deploy`).
 
@@ -320,3 +321,87 @@ Vorher: Auf beiden iPhones die App schließen (aus dem App-Umschalter wischen) u
 14. Falls nichts ankommt: `journalctl -u wir-push -n 30` (zeigt „gesendet …“ oder den Fehler). In `push_queue` im Admin-UI steht der Fehler in der Spalte `error`.
 
 **Update-Hinweis:** Nach dem nächsten Push auf GitHub, bei dem die Nummer in `sw.js` erhöht wurde, erscheint nach dem Öffnen der App unten „✨ Neue Version – tippen zum Aktualisieren“. Tippen lädt die neue Version.
+
+---
+
+# Redesign 22.10.2026
+
+Getestet mit einer lokalen PocketBase 0.40.5 und einer **Kopie der Live-Datenbank** (beide Accounts, über 50 UI-Prüfungen in Edge auf iPhone-Größe, alle vier Farbwelten) und einem lokalen Test des Push-Dienstes mit Fake-Endpunkt.
+
+## Was neu ist und wo es liegt
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | 🏡 Start · 📸 Erinnerungen · 📅 Dates · 💌 Öffne wenn · 💞 Wir zwei. Der rote Punkt an 💌 zeigt einen neuen Brief. |
+| **Avatar oben links** | Einstellungen: Profilbild, Farbwelt, „Zusammen seit“, Benachrichtigungen, App neu laden, 🎁 Wieder einpacken, Abmelden |
+| **Start** | Zusammen-Timer im Glow-Kreis (Tage + live Jahre/Monate/Tage/Std./Min./Sek.), beide Profilbilder, Liebe-Glas mit zwei Herzen (füllen sich bis 20, Reset um 00:00 Berlin), „💗 Liebe senden“, darunter Anruf/Support/Nachricht, darunter die Treffen-Karte |
+| **Erinnerungen** | Polaroids mit Handschrift (Caveat). Oben Ordner („Alle“ + eigene, ➕ Ordner). Foto antippen → 📁 Ordner / 🗑 Löschen. Ordner löschen lässt die Fotos stehen (dann ohne Ordner). Sortieren per Gedrückthalten bleibt. |
+| **Dates** | Kacheln für Treffen, Unsere Daten, Clay Date, Unsere Figuren; darunter die eigenen Reiter + „Neuer Reiter“ |
+| **Öffne wenn** | Umschalter „Für mich“ / „Schreiben“. Briefe werden im Briefpapier-Sheet geschrieben (Linien, Handschrift-Überschrift, Zeichenzähler). |
+| **Wir zwei** | Alle Aktionen + Verlauf; viele Liebe-Tipps erscheinen als eine Zeile („7× Liebe“) |
+
+„Herz senden“ und „Liebe senden“ sind jetzt **ein** Knopf (Typ `love`; alte `heart`-Pings zählen mit).
+Push bei Liebe: gesammelt, **höchstens alle 5 Minuten** einer pro Person: „💗 Daniel hat dir 7× Liebe geschickt“ (+ „Heute schon …×“). Nach einer Serie wartet der Dienst ~20 s, nie länger als 90 s.
+
+## Datenbank (nur additiv, per Migration)
+
+`pocketbase/pb_migrations/1792660000_wir_redesign.js` – wird vom Auto-Deploy kopiert und beim PocketBase-Start eingespielt. Nichts wird umbenannt oder gelöscht:
+- neu `photo_folders` (name, emoji, order, author) – beide dürfen anlegen/umbenennen/löschen
+- neu `photos.folder` (optional)
+- neu `shared_settings` (key, value, updated_by) mit `together_since = 2026-04-10`
+- neu `users.theme` (Farbwelt pro Person; zusätzlich im localStorage für den schnellen Start)
+- `users.avatar` bekommt das Vorschaubild `200x200`
+
+Der Service Worker steht auf `wir-v6` → auf den iPhones erscheint „✨ Neue Version – tippen zum Aktualisieren“.
+
+## Sicherung vor dem Umbau
+
+- Git-Tag **`vor-redesign`** = Commit `24dbd40` (Stand vorher), auf GitHub gepusht.
+- Datenbank-Backup (konsistent über die SQLite-Backup-Funktion, Integritätsprüfung „ok“):
+  `/home/pingu/backups/vor-redesign-2026-10-22/` mit `data.db`, `auxiliary.db`, `storage/` (Fotos), `pb_migrations/`, `pb_hooks/`.
+
+---
+
+# Zurück zur alten Version
+
+Die alte App läuft mit der neuen Datenbank unverändert (das Schema wurde nur erweitert). **Normalerweise reicht Schritt 1.**
+
+## 1. Code auf „vor-redesign“ zurücksetzen (am PC)
+
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-redesign -- app push      # App + Push-Dienst wie vorher
+git commit -m "Zurück zur Version vor dem Redesign"
+git push
+```
+
+Das Auto-Deploy holt den Commit innerhalb von 2 Minuten und startet `wir-push` neu. Die App-Dateien liest PocketBase direkt aus dem Repo.
+Auf den iPhones erscheint das Update-Banner, weil sich `app/sw.js` geändert hat. Falls nicht: in der alten Version im Menü unten auf „↻ App neu laden“ tippen.
+
+> Bitte **kein** `git reset --hard` + `git push --force`: Dann ist der Stand auf GitHub kein fast-forward mehr und das Auto-Deploy bricht ab („ABBRUCH: … kein fast-forward“).
+
+Prüfen auf dem Pi:
+```bash
+journalctl -u wir-deploy -n 20 --no-pager     # "aktualisiert … -> …", "wir-push neu gestartet"
+cd /home/pingu/F-r-dich && git log --oneline -1
+```
+
+Wieder zum Redesign: `git revert --no-edit HEAD && git push`.
+
+## 2. Nur falls Daten kaputt sind: Datenbank-Backup zurückspielen (auf dem Pi)
+
+⚠️ Alles, was nach dem 22.10.2026 00:47 angelegt wurde (Fotos, Pings, Briefe …), geht dabei verloren. Der aktuelle Stand wird vorher beiseitegelegt, nicht gelöscht.
+
+```bash
+sudo systemctl stop wir-deploy.timer wir-push pocketbase
+cd /home/pingu/pb/pb_data
+D=/home/pingu/pb/pb_data.vorher-$(date +%F-%H%M)
+mkdir -p "$D" && mv data.db* auxiliary.db* storage "$D"/
+cp -a /home/pingu/backups/vor-redesign-2026-10-22/{data.db,auxiliary.db,storage} .
+sudo systemctl start pocketbase
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8090/api/health    # erwartet: 200
+sudo systemctl start wir-push wir-deploy.timer
+```
+
+Beim Start spielt PocketBase die Redesign-Migration wieder ein (sie legt nur die neuen Collections/Felder an). Das schadet der alten App nicht.

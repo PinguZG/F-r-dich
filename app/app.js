@@ -1,9 +1,11 @@
 (() => {
   const pb = new PocketBase(window.location.origin);
   pb.autoCancellation(false);
+  window.WIR_PB = pb; // extra.js + home.js nutzen dieselbe Verbindung
 
   const $ = id => document.getElementById(id);
   const me = () => (pb.authStore.record || pb.authStore.model)?.id;
+  const shrink = UI.shrink;
   let fileToken = null;
   let started = false;
 
@@ -29,94 +31,187 @@
   const fmtWhen = d => `${WD[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth() + 1)}. um ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const toLocalInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-  function shrink(file, max = 2048, quality = 0.85) {
-    return new Promise((res, rej) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        const s = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.width * s);
-        c.height = Math.round(img.height * s);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        c.toBlob(b => b ? res(b) : rej(new Error('Bild konnte nicht umgewandelt werden')), 'image/jpeg', quality);
-      };
-      img.onerror = () => rej(new Error('Bild konnte nicht gelesen werden'));
-      img.src = url;
-    });
-  }
-
   // ======================================================================
-  // Foto-Galerien (Erinnerungen + fertige Clay-Figuren)
+  // Foto-Galerien im Polaroid-Look (Erinnerungen + fertige Clay-Figuren)
   // ======================================================================
-  function gallery({ collection, grid, status, caption, input, sortable, empty }) {
+  function gallery({ collection, grid, status, caption, input, sortable, empty, folders }) {
     let records = [];
     let dragging = false;
+    let filter = '';       // '' = alle, sonst ID des Ordners
+    let folderList = [];
     const sort = sortable ? 'order,-created' : '-created';
+    const visible = () => filter ? records.filter(r => r.folder === filter) : records;
 
     function card(r) {
       const d = document.createElement('div');
-      d.className = 'photo live';
+      d.className = 'photo polaroid live';
       d.dataset.id = r.id;
 
+      const pic = document.createElement('div');
+      pic.className = 'pic';
       const img = document.createElement('img');
       img.alt = '';
       img.loading = 'lazy';
       img.src = pb.files.getURL(r, r.image, { thumb: '600x0', token: fileToken });
-      d.append(img);
+      pic.append(img);
 
       const who = r.expand?.author?.name;
+      const cap = document.createElement('div');
+      cap.className = 'pc-cap' + (r.caption ? '' : ' who');
+      cap.textContent = r.caption || (who ? '♡ ' + who : '♡');
+      d.append(pic, cap);
+
       const capText = [r.caption, who && '– ' + who].filter(Boolean).join(' ');
-      if (capText) {
-        const c = document.createElement('div');
-        c.className = 'cap';
-        c.textContent = capText;
-        d.append(c);
-      }
-
-      if (r.author === me()) {
-        const del = document.createElement('button');
-        del.className = 'photo-del';
-        del.setAttribute('aria-label', 'Foto löschen');
-        del.textContent = '✕';
-        del.addEventListener('click', async ev => {
-          ev.stopPropagation();
-          if (!confirm('Dieses Foto löschen?')) return;
-          try {
-            await pb.collection(collection).delete(r.id);
-            d.remove();
-            records = records.filter(x => x.id !== r.id);
-            if (!records.length) render();
-          } catch (err) {
-            status.textContent = 'Löschen fehlgeschlagen: ' + errText(err);
-          }
-        });
-        d.append(del);
-      }
-
       d.addEventListener('click', async () => {
         await refreshToken();
-        UI.lightbox(pb.files.getURL(r, r.image, { token: fileToken }), capText);
+        const actions = [];
+        if (folders) actions.push({ label: '📁 Ordner', onClick: () => openMove(r) });
+        if (r.author === me()) actions.push({ label: '🗑 Löschen', onClick: () => remove(r) });
+        UI.lightbox(pb.files.getURL(r, r.image, { token: fileToken }), capText, actions);
       });
       return d;
     }
 
+    async function remove(r) {
+      if (!confirm('Dieses Foto löschen?')) return;
+      try {
+        await pb.collection(collection).delete(r.id);
+        UI.closeLightbox();
+        records = records.filter(x => x.id !== r.id);
+        render();
+      } catch (err) {
+        status.textContent = 'Löschen fehlgeschlagen: ' + errText(err);
+      }
+    }
+
     function render() {
-      grid.replaceChildren(...records.map(card));
-      if (!records.length) {
+      const list = visible();
+      grid.replaceChildren(...list.map(card));
+      if (!list.length) {
         const e = document.createElement('div');
         e.className = 'empty-note';
-        e.textContent = empty;
+        e.textContent = filter ? 'Noch keine Fotos in diesem Ordner – lad eins hoch oder verschieb eins hierher 📁' : empty;
         grid.append(e);
       }
+      if (folders) renderFolders();
     }
 
     async function load() {
       if (dragging) return;
       await refreshToken();
-      records = await pb.collection(collection).getFullList({ sort, expand: 'author' });
+      const [recs, fl] = await Promise.all([
+        pb.collection(collection).getFullList({ sort, expand: 'author' }),
+        folders ? pb.collection('photo_folders').getFullList({ sort: 'order,created' }) : [],
+      ]);
+      records = recs;
+      folderList = fl;
+      if (filter && !folderList.some(f => f.id === filter)) filter = '';
       render();
+    }
+
+    // ---------- Ordner ----------
+    let editFolder = null;
+
+    function folderCard(ico, name, count, on, onClick, extra = '') {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'folder' + (on ? ' on' : '') + extra;
+      b.innerHTML = '<span class="f-ico"></span><b></b><small></small>';
+      b.querySelector('.f-ico').textContent = ico;
+      b.querySelector('b').textContent = name;
+      b.querySelector('small').textContent = count;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    function renderFolders() {
+      const n = id => records.filter(r => r.folder === id).length;
+      const cnt = k => k === 1 ? '1 Foto' : k + ' Fotos';
+      $('folderBar').replaceChildren(
+        folderCard('🖼️', 'Alle', cnt(records.length), !filter, () => { filter = ''; render(); }),
+        ...folderList.map(f => folderCard(f.emoji || '📁', f.name, cnt(n(f.id)), filter === f.id, () => { filter = f.id; render(); })),
+        folderCard('➕', 'Ordner', 'neu', false, () => openFolderSheet(null), ' add'),
+      );
+      const cur = folderList.find(f => f.id === filter);
+      $('folderTools').hidden = !cur;
+      if (cur) $('folderLabel').textContent = (cur.emoji || '📁') + ' ' + cur.name;
+    }
+
+    function openFolderSheet(f) {
+      editFolder = f;
+      $('folderSheetTitle').textContent = f ? 'Ordner umbenennen' : 'Neuer Ordner 📁';
+      $('folderEmoji').value = f?.emoji || '';
+      $('folderName').value = f?.name || '';
+      $('folderErr').textContent = '';
+      UI.sheet('folderSheet');
+      setTimeout(() => $('folderName').focus(), 350);
+    }
+
+    function openMove(r) {
+      const choose = async id => {
+        try {
+          await pb.collection(collection).update(r.id, { folder: id });
+          r.folder = id;
+          UI.sheet('moveSheet', false);
+          UI.closeLightbox();
+          render();
+          status.textContent = id ? 'Verschoben ✓' : 'Aus dem Ordner genommen ✓';
+        } catch (err) {
+          status.textContent = 'Verschieben fehlgeschlagen: ' + errText(err);
+        }
+      };
+      const row = (ico, name, id) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'opt' + ((r.folder || '') === id ? ' on' : '');
+        b.innerHTML = '<span class="ico"></span><span><b></b></span>';
+        b.querySelector('.ico').textContent = ico;
+        b.querySelector('b').textContent = name;
+        b.addEventListener('click', () => choose(id));
+        return b;
+      };
+      $('moveList').replaceChildren(row('🖼️', 'Ohne Ordner', ''), ...folderList.map(f => row(f.emoji || '📁', f.name, f.id)));
+      if (!folderList.length) {
+        const e = document.createElement('div');
+        e.className = 'empty-note';
+        e.textContent = 'Noch keine Ordner – leg oben unter „➕ Ordner“ einen an.';
+        $('moveList').append(e);
+      }
+      UI.sheet('moveSheet');
+    }
+
+    if (folders) {
+      $('folderForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const data = { name: $('folderName').value.trim(), emoji: $('folderEmoji').value.trim() || '📁' };
+        if (!data.name) return;
+        try {
+          if (editFolder) await pb.collection('photo_folders').update(editFolder.id, data);
+          else {
+            const f = await pb.collection('photo_folders').create({
+              ...data, order: Math.max(-1, ...folderList.map(x => x.order || 0)) + 1, author: me(),
+            });
+            filter = f.id;
+          }
+          UI.sheet('folderSheet', false);
+          await load();
+        } catch (err) {
+          $('folderErr').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
+        }
+      });
+      $('folderEdit').addEventListener('click', () => openFolderSheet(folderList.find(f => f.id === filter)));
+      $('folderDel').addEventListener('click', async () => {
+        const f = folderList.find(x => x.id === filter);
+        if (!f || !confirm(`Ordner „${f.name}“ löschen?\nDie Fotos bleiben erhalten – nur ohne Ordner.`)) return;
+        try {
+          await pb.collection('photo_folders').delete(f.id);
+          filter = '';
+          await load();
+          status.textContent = 'Ordner gelöscht – die Fotos sind unter „Alle“ ✓';
+        } catch (err) {
+          status.textContent = 'Löschen fehlgeschlagen: ' + errText(err);
+        }
+      });
     }
 
     input.addEventListener('change', async e => {
@@ -130,6 +225,7 @@
           fd.append('image', await shrink(files[i]), 'foto.jpg');
           fd.append('caption', cap);
           fd.append('author', me());
+          if (folders && filter) fd.append('folder', filter);
           // neue Fotos landen ganz vorne
           if (sortable) fd.append('order', Math.min(0, ...records.map(x => x.order || 0)) - 1 - i);
           await pb.collection(collection).create(fd);
@@ -202,11 +298,20 @@
 
         const ids = [...grid.querySelectorAll('.photo.live')].map(x => x.dataset.id);
         const byId = Object.fromEntries(records.map(r => [r.id, r]));
-        const changed = ids.map((id, i) => [byId[id], i]).filter(([r, i]) => r && r.order !== i);
-        records = ids.map(id => byId[id]).filter(Boolean);
+        // In einem Ordner nur die Plätze der sichtbaren Fotos untereinander tauschen,
+        // damit die Reihenfolge unter „Alle“ sonst gleich bleibt.
+        let slots = ids.map((_, i) => i);
+        if (filter) {
+          slots = ids.map(id => byId[id]?.order ?? 0).sort((a, b) => a - b);
+          for (let i = 1; i < slots.length; i++) if (slots[i] <= slots[i - 1]) slots[i] = slots[i - 1] + 0.001;
+        }
+        const changed = ids.map((id, i) => [byId[id], slots[i]]).filter(([r, o]) => r && r.order !== o);
+        if (filter) records.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        else records = ids.map(id => byId[id]).filter(Boolean);
         try {
           if (changed.length) status.textContent = 'Speichere Reihenfolge …';
-          await Promise.all(changed.map(([r, i]) => pb.collection(collection).update(r.id, { order: i }).then(() => { r.order = i; })));
+          await Promise.all(changed.map(([r, o]) => pb.collection(collection).update(r.id, { order: o }).then(() => { r.order = o; })));
+          if (filter) records.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
           if (changed.length) status.textContent = 'Reihenfolge gespeichert ✓';
         } catch (err) {
           console.error(err);
@@ -225,11 +330,11 @@
 
   const memories = gallery({
     collection: 'photos', grid: $('photos'), status: $('memStatus'), caption: $('caption'), input: $('fileInput'),
-    sortable: true, empty: 'Noch keine Fotos – füg das erste hinzu 📷',
+    sortable: true, folders: true, empty: 'Noch keine Fotos – füg das erste hinzu 📷',
   });
   const clayDone = gallery({
     collection: 'clay_photos', grid: $('clayPhotos'), status: $('clayStatus'), caption: $('clayCaption'), input: $('clayFile'),
-    sortable: false, empty: 'Hier kommen unsere fertigen Figuren hin 🧸',
+    sortable: false, folders: false, empty: 'Hier kommen unsere fertigen Figuren hin 🧸',
   });
 
   // ======================================================================
@@ -257,22 +362,25 @@
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const DAY = 86400000;
     const fmt = d => pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.';
+    let next = null; // nächster Tag in der Zukunft (für die Dates-Übersicht)
     $('dates').replaceChildren(...list.map(x => {
-      let dateTxt, info;
+      let dateTxt, info, left = null;
       if (x.birthday) {
         const [m, d] = x.date.slice(-5).split('-').map(Number);
-        let next = new Date(today.getFullYear(), m - 1, d);
-        if (next < today) next = new Date(today.getFullYear() + 1, m - 1, d);
-        const left = Math.round((next - today) / DAY);
-        dateTxt = fmt(next);
+        let nx = new Date(today.getFullYear(), m - 1, d);
+        if (nx < today) nx = new Date(today.getFullYear() + 1, m - 1, d);
+        left = Math.round((nx - today) / DAY);
+        dateTxt = fmt(nx);
         info = left === 0 ? 'Heute! 🎉' : 'noch ' + left + (left === 1 ? ' Tag' : ' Tage');
       } else {
         const [y, m, d] = x.date.split('-').map(Number);
         const dt = new Date(y, m - 1, d);
         dateTxt = fmt(dt) + dt.getFullYear();
         const diff = Math.round((today - dt) / DAY);
+        if (diff <= 0) left = -diff;
         info = diff === 0 ? 'Heute! 🎉' : diff > 0 ? 'vor ' + diff + (diff === 1 ? ' Tag' : ' Tagen') : 'in ' + (-diff) + (diff === -1 ? ' Tag' : ' Tagen');
       }
+      if (left !== null && (!next || left < next.left)) next = { left, x };
       const el = document.createElement('div');
       el.className = 'date';
       el.innerHTML = '<span class="ico"></span><div><b></b><span class="d"></span><em></em></div>';
@@ -283,6 +391,7 @@
       if (x.author === me()) {
         const del = document.createElement('button');
         del.className = 'del-x';
+        del.type = 'button';
         del.setAttribute('aria-label', 'Datum löschen');
         del.textContent = '✕';
         del.addEventListener('click', async () => {
@@ -294,6 +403,9 @@
       }
       return el;
     }));
+    $('planDatesInfo').textContent = next
+      ? `${next.x.emoji || '💗'} ${next.x.title}: ${next.left === 0 ? 'heute 🎉' : 'in ' + next.left + (next.left === 1 ? ' Tag' : ' Tagen')}`
+      : 'Die wichtigsten Tage';
   }
 
   async function loadDates() {
@@ -342,6 +454,7 @@
   function optButton(ico, title, small, note) {
     const b = document.createElement('button');
     b.className = 'opt';
+    b.type = 'button';
     b.innerHTML = '<span class="ico"></span><span><b></b><small></small></span>';
     b.querySelector('.ico').textContent = ico;
     b.querySelector('b').textContent = title;
@@ -411,7 +524,7 @@
 
   async function renderTab() {
     const t = tabs.find(x => x.id === currentTab);
-    if (!t) { UI.show('s-final'); return; }
+    if (!t) { UI.show('s-plans'); return; }
     const mine = t.author === me();
     $('tabTitle').textContent = t.name + ' ' + (t.emoji || '');
     $('tabDelete').hidden = !mine;
@@ -463,6 +576,7 @@
     title.append(sub);
     const heart = document.createElement('button');
     heart.className = 'heart-btn' + (r.selected ? ' on' : '');
+    heart.type = 'button';
     heart.setAttribute('aria-label', r.selected ? 'Auswahl aufheben' : 'Auswählen');
     heart.textContent = '❤️';
     heart.addEventListener('click', async () => {
@@ -487,6 +601,7 @@
     if (r.author === me()) {
       const del = document.createElement('button');
       del.className = 'del-x';
+      del.type = 'button';
       del.setAttribute('aria-label', 'Eintrag löschen');
       del.textContent = '✕';
       del.addEventListener('click', async () => {
@@ -553,7 +668,7 @@
       await pb.collection('tabs').delete(t.id);
       currentTab = null;
       await loadTabs();
-      UI.show('s-final');
+      UI.show('s-plans');
     } catch (err) {
       $('entryStatus').textContent = 'Löschen fehlgeschlagen: ' + errText(err);
     }
@@ -597,7 +712,7 @@
   });
 
   // ======================================================================
-  // Wir zwei (Pings)
+  // Wir zwei (Pings) + Liebe-Glas
   // ======================================================================
   let partner = null;
   const PING = {
@@ -607,6 +722,7 @@
     support: { ico: '🫂', label: 'Mentaler Support – ich bin für dich da' },
     message: { ico: '✏️', label: 'Nachricht' },
   };
+  const isLove = t => t === 'love' || t === 'heart';
 
   function ago(d) {
     const s = Math.round((Date.now() - d) / 1000);
@@ -616,33 +732,55 @@
     return fmtWhen(d);
   }
 
+  function pingStatus(text) {
+    document.querySelectorAll('.ping-status').forEach(el => { el.textContent = text; });
+  }
+
   async function loadPartner() {
     const list = await pb.collection('users').getFullList({ filter: pb.filter('id != {:me}', { me: me() }) });
     partner = list[0] || null;
     $('partnerName').textContent = partner ? (partner.name || 'Dein Schatz') + ' 💕' : 'Noch niemand da';
   }
 
+  // Verlauf: Liebe-Tipps derselben Person kurz hintereinander werden zu einer Zeile zusammengefasst
+  function groupPings(items) {
+    const out = [];
+    for (const p of items) {
+      const last = out[out.length - 1];
+      if (last && isLove(p.type) && isLove(last.type) && last.from === p.from
+        && pbDate(last.items[last.items.length - 1].created) - pbDate(p.created) < 15 * 60000) {
+        last.items.push(p);
+      } else {
+        out.push({ type: p.type, from: p.from, items: [p] });
+      }
+    }
+    return out;
+  }
+
   async function loadPings() {
-    const { items } = await pb.collection('pings').getList(1, 30, { sort: '-created', expand: 'from' });
-    $('pings').replaceChildren(...items.map(p => {
+    const { items } = await pb.collection('pings').getList(1, 120, { sort: '-created', expand: 'from' });
+    $('pings').replaceChildren(...groupPings(items).slice(0, 40).map(g => {
+      const p = g.items[0];
       const sent = p.from === me();
       const meta = PING[p.type] || PING.heart;
       const el = document.createElement('div');
       el.className = 'date' + (sent ? '' : ' in');
       el.innerHTML = '<span class="ico"></span><div><b></b><span class="d"></span><em></em></div>';
-      el.querySelector('.ico').textContent = meta.ico;
+      el.querySelector('.ico').textContent = isLove(p.type) ? '💗' : meta.ico;
       el.querySelector('b').textContent = sent ? 'Du → ' + (partner?.name || 'Schatz') : (p.expand?.from?.name || 'Schatz') + ' → dich';
-      el.querySelector('.d').textContent = p.type === 'message' ? p.message : meta.label;
+      el.querySelector('.d').textContent = p.type === 'message' ? p.message
+        : isLove(p.type) ? (g.items.length > 1 ? `${g.items.length}× Liebe` : 'Liebe') : meta.label;
       el.querySelector('em').textContent = ago(pbDate(p.created));
       if (sent) {
         const del = document.createElement('button');
         del.className = 'del-x';
+        del.type = 'button';
         del.setAttribute('aria-label', 'Aus dem Verlauf löschen');
         del.textContent = '✕';
         del.addEventListener('click', async () => {
           if (!confirm('Aus dem Verlauf löschen?')) return;
-          try { await pb.collection('pings').delete(p.id); el.remove(); }
-          catch (err) { $('pingStatus').textContent = 'Löschen fehlgeschlagen: ' + errText(err); }
+          try { await Promise.all(g.items.map(x => pb.collection('pings').delete(x.id))); el.remove(); loadLove().catch(console.error); }
+          catch (err) { pingStatus('Löschen fehlgeschlagen: ' + errText(err)); }
         });
         el.append(del);
       }
@@ -651,13 +789,14 @@
     if (!items.length) {
       const e = document.createElement('div');
       e.className = 'empty-note';
-      e.textContent = 'Noch nichts geschickt – fang mit einem Herz an ❤️';
+      e.textContent = 'Noch nichts geschickt – fang mit Liebe an 💗';
       $('pings').append(e);
     }
   }
+  const reloadPings = debounce(loadPings, 600);
 
   async function sendPing(type, message, btn) {
-    if (!partner) { $('pingStatus').textContent = 'Niemand zum Anschicken gefunden 🥺'; return false; }
+    if (!partner) { pingStatus('Niemand zum Anschicken gefunden 🥺'); return false; }
     const data = { from: me(), to: partner.id, type };
     if (type === 'message') data.message = message;
     try {
@@ -665,22 +804,26 @@
       await pb.collection('pings').create(data);
       const r = (btn || $('msgForm')).getBoundingClientRect();
       UI.burst(r.left + r.width / 2, r.top + r.height / 2, 16);
-      $('pingStatus').textContent = 'Gesendet an ' + (partner.name || 'Schatz') + ' ✓';
-      await loadPings();
+      pingStatus('Gesendet an ' + (partner.name || 'Schatz') + ' ✓');
+      reloadPings();
       return true;
     } catch (err) {
-      $('pingStatus').textContent = 'Senden fehlgeschlagen: ' + errText(err);
+      pingStatus('Senden fehlgeschlagen: ' + errText(err));
       return false;
     } finally {
       if (btn) setTimeout(() => { btn.disabled = false; }, 1500);
     }
   }
 
-  document.querySelectorAll('[data-ping]').forEach(b => b.addEventListener('click', () => sendPing(b.dataset.ping, '', b)));
-  $('msgToggle').addEventListener('click', () => {
-    $('msgForm').hidden = !$('msgForm').hidden;
-    if (!$('msgForm').hidden) $('msgText').focus();
-  });
+  document.querySelectorAll('[data-ping]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.ping === 'love') sendLove(b); else sendPing(b.dataset.ping, '', b);
+  }));
+
+  // ---------- Nachricht (Bottom-Sheet) ----------
+  document.querySelectorAll('[data-msg]').forEach(b => b.addEventListener('click', () => {
+    UI.sheet('msgSheet');
+    setTimeout(() => $('msgText').focus(), 350);
+  }));
   $('msgText').addEventListener('input', () => { $('msgCount').textContent = $('msgText').value.length + '/200'; });
   $('msgForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -689,9 +832,118 @@
     if (await sendPing('message', text)) {
       $('msgForm').reset();
       $('msgCount').textContent = '0/200';
-      $('msgForm').hidden = true;
+      UI.sheet('msgSheet', false);
     }
   });
+
+  // ---------- Liebe-Glas: zwei Herzen, füllen sich bis 20 ----------
+  const LOVE_FULL = 20;
+  const HEART = 'M50 88 C22 68 4 52 4 31 C4 15 15 4 29 4 C38 4 46 9 50 17 C54 9 62 4 71 4 C85 4 96 15 96 31 C96 52 78 68 50 88Z';
+  const love = { mine: 0, theirs: 0 };
+  let midnightTimer = null;
+
+  function glassHeart(box, uid) {
+    box.insertAdjacentHTML('afterbegin', `
+<svg viewBox="0 0 100 92" aria-hidden="true">
+  <defs>
+    <clipPath id="hc-${uid}"><path d="${HEART}"/></clipPath>
+    <linearGradient id="hl-${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" style="stop-color:var(--liquid1)"/><stop offset="1" style="stop-color:var(--liquid2)"/>
+    </linearGradient>
+  </defs>
+  <path class="h-glass" d="${HEART}"/>
+  <g clip-path="url(#hc-${uid})">
+    <g class="h-liquid" style="transform:translateY(92px)">
+      <path class="h-wave back" d="M-100 2 Q-75 -5 -50 2 T0 2 T50 2 T100 2 T150 2 T200 2 V120 H-100Z" fill="url(#hl-${uid})"/>
+      <path class="h-wave" d="M-100 0 Q-75 6 -50 0 T0 0 T50 0 T100 0 T150 0 T200 0 V120 H-100Z" fill="url(#hl-${uid})"/>
+    </g>
+  </g>
+  <path class="h-rim" d="${HEART}"/>
+  <path class="h-shine" d="M21 18 C14 22 11 29 12 37"/>
+  <circle class="h-shine2" cx="25" cy="45" r="2.4"/>
+</svg>`);
+  }
+  glassHeart($('heartPartner'), 'p');
+  glassHeart($('heartMe'), 'm');
+
+  function fillHeart(box, n) {
+    const ratio = Math.min(1, n / LOVE_FULL);
+    // 92 = leer (Flüssigkeit unter dem Herz), 4 = randvoll
+    box.querySelector('.h-liquid').style.transform = `translateY(${92 - ratio * 88}px)`;
+    box.querySelector('.h-count').textContent = n;
+    box.classList.toggle('wet', ratio >= 0.5);
+  }
+
+  function renderLove() {
+    fillHeart($('heartPartner'), love.theirs);
+    fillHeart($('heartMe'), love.mine);
+    const pn = partner?.name || 'Schatz';
+    $('wirToday').textContent = love.theirs || love.mine ? `Heute: 💗 ${love.theirs}× von ${pn} · ${love.mine}× von dir` : '';
+  }
+
+  function pulse(box) {
+    box.classList.remove('pulse');
+    void box.offsetWidth;
+    box.classList.add('pulse');
+  }
+
+  async function loadLove() {
+    if (!partner) return;
+    const t = new Date(UI.berlinMidnight());
+    const f = (from, to) => pb.filter('from = {:f} && to = {:to} && (type = "love" || type = "heart") && created >= {:t}', { f: from, to, t });
+    const [a, b] = await Promise.all([
+      pb.collection('pings').getList(1, 1, { filter: f(partner.id, me()), fields: 'id' }),
+      pb.collection('pings').getList(1, 1, { filter: f(me(), partner.id), fields: 'id' }),
+    ]);
+    love.theirs = a.totalItems;
+    love.mine = Math.max(b.totalItems, pendingLove ? love.mine : 0);
+    renderLove();
+    // um 00:00 (Berlin) zurücksetzen
+    clearTimeout(midnightTimer);
+    const next = UI.berlinMidnight(UI.berlinMidnight() + UI.DAY + 3 * 3600000); // morgen 00:00 (auch bei Zeitumstellung)
+    midnightTimer = setTimeout(() => loadLove().catch(console.error), Math.min(next - Date.now() + 1000, 2 ** 31 - 1));
+  }
+  const reloadLove = debounce(loadLove, 1200);
+
+  let pendingLove = 0;
+  function floatHearts(btn) {
+    const r = btn.getBoundingClientRect();
+    const n = UI.reduced() ? 1 : 4;
+    for (let i = 0; i < n; i++) {
+      const h = document.createElement('span');
+      h.className = 'float-heart';
+      h.textContent = ['💗', '💖', '💕', '❤️'][i % 4];
+      h.style.left = r.left + r.width / 2 + (Math.random() - 0.5) * r.width * 0.5 + 'px';
+      h.style.top = r.top + 'px';
+      h.style.setProperty('--dx', (Math.random() - 0.5) * 120 + 'px');
+      h.style.animationDelay = i * 70 + 'ms';
+      document.body.append(h);
+      setTimeout(() => h.remove(), 1400);
+    }
+  }
+
+  async function sendLove(btn) {
+    if (!partner) { pingStatus('Niemand zum Anschicken gefunden 🥺'); return; }
+    love.mine++;
+    pendingLove++;
+    renderLove();
+    pulse($('heartMe'));
+    floatHearts(btn);
+    navigator.vibrate?.(12);
+    try {
+      await pb.collection('pings').create({ from: me(), to: partner.id, type: 'love' });
+      pingStatus('💗 Liebe an ' + (partner.name || 'Schatz') + ' geschickt');
+    } catch (err) {
+      love.mine = Math.max(0, love.mine - 1);
+      renderLove();
+      pingStatus('Senden fehlgeschlagen: ' + errText(err));
+    } finally {
+      pendingLove--;
+      reloadPings();
+      if (!pendingLove) reloadLove();
+    }
+  }
+  $('loveBtn').addEventListener('click', () => sendLove($('loveBtn')));
 
   // ======================================================================
   // Push-Benachrichtigungen
@@ -722,7 +974,6 @@
 
   function renderPush(note) {
     const can = pushSupported() && Notification.permission !== 'denied';
-    $('pushBtn').hidden = pushActive || !can;
     $('pushBtn2').hidden = pushActive || !can;
     let txt;
     if (pushActive) txt = 'Auf diesem Handy aktiv ✓';
@@ -774,7 +1025,6 @@
       renderPush('Aktivieren fehlgeschlagen: ' + errText(err));
     }
   }
-  $('pushBtn').addEventListener('click', () => enablePush($('pushBtn')));
   $('pushBtn2').addEventListener('click', () => enablePush($('pushBtn2')));
 
   async function dropPush() {
@@ -786,9 +1036,9 @@
     await sub.unsubscribe();
   }
 
-  // ---------- Einstellungen ----------
+  // ---------- Einstellungen: welche Pushs ----------
   const PREFS = [
-    { key: 'pings',   ico: '💞', title: 'Wir zwei',        sub: 'Herzen, Anruf-Wünsche, Nachrichten' },
+    { key: 'pings',   ico: '💞', title: 'Wir zwei',        sub: 'Liebe (gebündelt), Anruf-Wünsche, Nachrichten' },
     { key: 'photos',  ico: '📸', title: 'Erinnerungen',    sub: 'Neue Fotos' },
     { key: 'dates',   ico: '📅', title: 'Unsere Daten',    sub: 'Neue oder geänderte Daten' },
     { key: 'clay',    ico: '🧸', title: 'Clay Date',       sub: 'Neue Fotos unserer Figuren' },
@@ -834,13 +1084,15 @@
       const id = target.slice(4);
       await loadTabs().catch(console.error);
       if (tabs.some(t => t.id === id)) { openTab(id); return; }
-      target = 's-final';
+      target = 's-plans';
     }
-    if (!$(target)?.classList.contains('screen') || target === 's-lock' || target === 's-gift') target = 's-final';
+    const orig = target;
+    target = UI.resolve(target);
+    if (!$(target)?.classList.contains('page')) target = 's-home';
     UI.show(target);
     $(target).scrollTop = 0;
     if (target === 's-wir') loadPings().catch(console.error);
-    document.dispatchEvent(new CustomEvent('wir:go', { detail: target })); // extra.js lädt seine Bereiche nach
+    document.dispatchEvent(new CustomEvent('wir:go', { detail: orig })); // extra.js lädt seine Bereiche nach
   }
 
   // Ziel aus der URL (/#go=...) – wird vom Service Worker beim Öffnen gesetzt
@@ -860,10 +1112,11 @@
   }
 
   // beim Öffnen der Bereiche frisch laden
-  document.addEventListener('click', e => {
-    const go = e.target.closest('[data-go]')?.dataset.go;
-    if (go === 's-wir') { $('pingStatus').textContent = ''; loadPings().catch(console.error); }
-    if (go === 's-settings') { $('prefStatus').textContent = ''; renderPush(); loadPrefs().catch(console.error); }
+  document.addEventListener('wir:show', e => {
+    if (!started) return;
+    if (e.detail === 's-wir') { pingStatus(''); loadPings().catch(console.error); loadLove().catch(console.error); }
+    if (e.detail === 's-home') loadLove().catch(console.error);
+    if (e.detail === 's-settings') { $('prefStatus').textContent = ''; renderPush(); loadPrefs().catch(console.error); }
   });
 
   // ======================================================================
@@ -873,7 +1126,7 @@
     await seedDates().catch(console.error);
     await loadPartner().catch(console.error);
     await Promise.all([
-      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadPrefs(), syncPush(),
+      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadLove(), loadPrefs(), syncPush(),
     ].map(p => p.catch(err => console.error(err))));
     started = true;
   }
@@ -888,17 +1141,24 @@
     });
     const reloadEntries = debounce(loadEntries);
     const reloadDates = debounce(loadDates);
-    const reloadPings = debounce(loadPings);
     await Promise.all([
       pb.collection('photos').subscribe('*', memories.reload),
+      pb.collection('photo_folders').subscribe('*', memories.reload),
       pb.collection('clay_photos').subscribe('*', clayDone.reload),
       pb.collection('dates').subscribe('*', reloadDates),
       pb.collection('tabs').subscribe('*', reloadTabs),
       pb.collection('tab_entries').subscribe('*', e => { if (e.record.tab === currentTab) reloadEntries(); }),
       pb.collection('pings').subscribe('*', e => {
         reloadPings();
-        if (e.action === 'create' && e.record.to === me() && $('s-wir').classList.contains('active')) {
-          UI.burst(window.innerWidth / 2, window.innerHeight / 3, 22);
+        if (e.action === 'create' && e.record.to === me()) {
+          if (isLove(e.record.type)) {
+            love.theirs++;
+            renderLove();
+            pulse($('heartPartner'));
+            reloadLove();
+          } else if ($('s-wir').classList.contains('active') || $('s-home').classList.contains('active')) {
+            UI.burst(window.innerWidth / 2, window.innerHeight / 3, 22);
+          }
         }
       }),
     ]).catch(console.error);
@@ -907,6 +1167,7 @@
   async function enter(target) {
     await loadAll();
     subscribe();
+    document.dispatchEvent(new CustomEvent('wir:started'));
     if (target) goTo(target);
   }
 
@@ -919,7 +1180,7 @@
       const r = $('lockCard').getBoundingClientRect();
       UI.burst(r.left + r.width / 2, r.top + r.height / 2, 24);
       await UI.wait(500);
-      UI.show(startGo ? 's-final' : 's-gift');
+      UI.show(startGo ? 's-home' : 's-gift');
       enter(startGo);
     } catch {
       UI.shake($('lockCard'));
@@ -942,6 +1203,7 @@
     clayDone.load().catch(console.error);
     loadDates().catch(console.error);
     loadPings().catch(console.error);
+    loadLove().catch(console.error);
     syncPush().catch(console.error);
     loadTabs().then(() => { if ($('s-tab').classList.contains('active')) return renderTab(); }).catch(console.error);
   });
@@ -952,7 +1214,7 @@
 
   async function boot() {
     if (!pb.authStore.isValid) { UI.show('s-lock'); return; }
-    UI.show(startGo ? 's-final' : 's-gift');
+    UI.show(startGo ? 's-home' : 's-gift');
     try {
       await pb.collection('users').authRefresh();
     } catch (err) {

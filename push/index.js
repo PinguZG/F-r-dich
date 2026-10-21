@@ -11,6 +11,9 @@ webpush.setVapidDetails(env('VAPID_SUBJECT'), env('VAPID_PUBLIC_KEY'), env('VAPI
 
 const POLL_MS = Number(process.env.POLL_MS || 30000);
 const QUIET_MS = Number(process.env.QUIET_MS || 60000);   // so lange nach dem letzten Foto/Eintrag warten -> bündeln
+const LOVE_GAP_MS = Number(process.env.LOVE_GAP_MS || 5 * 60000);  // Liebe: höchstens ein Push pro 5 Minuten und Person
+const LOVE_QUIET_MS = Number(process.env.LOVE_QUIET_MS || 20000);  // Liebe: nach dem letzten Tipp kurz warten (Serie sammeln)
+const LOVE_MAX_WAIT_MS = 90000;                                    // … aber nie länger als 90 s nach dem ersten Tipp
 const OVERLAP_MS = 15000;                                  // Abfragen etwas überlappen lassen, "seen" verhindert Doppelte
 const TZ = process.env.TZ || 'Europe/Berlin';
 
@@ -76,6 +79,7 @@ async function loadState() {
   }
   state.streams ||= {};
   state.selections ||= {};
+  state.love ||= {};
 }
 
 async function saveState() {
@@ -177,29 +181,86 @@ const tabLabel = t => `${t.emoji || '✨'} ${t.name}`;
 const isLocked = t => !!t.unlock_at && ms(t.unlock_at) > Date.now();
 
 const PING_TEXT = {
-  heart: n => `❤️ ${n} schickt dir ein Herz`,
   call: n => `📞 ${n} möchte dich anrufen`,
-  love: n => `💗 ${n} schickt dir ganz viel Liebe`,
   support: n => `🫂 ${n} denkt an dich und ist für dich da`,
 };
+const isLove = t => t === 'love' || t === 'heart';
+
+// 00:00 Uhr in Europe/Berlin (für "heute schon …×")
+const berlinFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+function berlinWall(t) {
+  const p = Object.fromEntries(berlinFmt.formatToParts(new Date(t)).map(x => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+}
+function berlinMidnight(t) {
+  const w = berlinWall(t), mid = w - (w % 86400000);
+  let real = mid - (berlinWall(mid) - mid);
+  real = mid - (berlinWall(real) - real);
+  return real;
+}
+
+async function count(coll, filter) {
+  const q2 = new URLSearchParams({ page: 1, perPage: 1, filter, fields: 'id' });
+  return (await api('GET', `/api/collections/${coll}/records?${q2}`)).totalItems;
+}
 
 // ----------------------------------------------------------------------
 // Ereignisse
 // ----------------------------------------------------------------------
 
-// a) Pings – sofort, einzeln
+// a) Pings – sofort, einzeln (Liebe/Herz nicht: die bündelt doLove)
 async function doPings() {
   const items = await pull('pings', 'pings', 'created');
   if (!items.length) return;
   commit('pings', 'created', items);
   await saveState(); // erst merken, dann senden -> nie doppelt
   for (const p of items) {
-    if (p.from === p.to) continue;
+    if (p.from === p.to || isLove(p.type)) continue;
     const n = name(p.from);
     const payload = p.type === 'message'
       ? { title: `✏️ ${n}`, body: p.message, go: 's-wir', tag: 'ping-' + p.id }
-      : { title: (PING_TEXT[p.type] || PING_TEXT.heart)(n), body: 'Tippe, um zu antworten 💕', go: 's-wir', tag: 'ping-' + p.id };
+      : { title: (PING_TEXT[p.type] || PING_TEXT.support)(n), body: 'Tippe, um zu antworten 💕', go: 's-wir', tag: 'ping-' + p.id };
     await send(p.to, 'pings', payload);
+  }
+}
+
+// a2) Liebe (Herz-Glas): Tipps sammeln, höchstens alle 5 Minuten EIN Push "💗 Daniel hat dir 7× Liebe geschickt".
+//     state.love[from] = { upTo: letzter schon gemeldeter Tipp (created), lastSent: ms }
+let loveTimer = null;
+async function doLove() {
+  const now = Date.now();
+  for (const from of Object.keys(users)) {
+    if (!state.love[from]) { state.love[from] = { upTo: pbTime(now), lastSent: 0 }; stateDirty = true; } // Erststart: nichts nachholen
+  }
+  const nextCheck = [];
+  for (const [from, st] of Object.entries(state.love)) {
+    const to = otherOf(from);
+    if (!users[from] || !to) continue;
+    const taps = await list('pings', {
+      filter: `from = ${q(from)} && to = ${q(to)} && (type = "love" || type = "heart") && created > ${q(st.upTo)}`, sort: 'created',
+    });
+    if (!taps.length) continue;
+    const first = ms(taps[0].created), last = ms(taps[taps.length - 1].created);
+    const readyAt = Math.max(Math.min(last + LOVE_QUIET_MS, first + LOVE_MAX_WAIT_MS), (st.lastSent || 0) + LOVE_GAP_MS);
+    if (now < readyAt) { nextCheck.push(readyAt); continue; }
+
+    const today = await count('pings', `from = ${q(from)} && to = ${q(to)} && (type = "love" || type = "heart") && created >= ${q(pbTime(berlinMidnight(now)))}`);
+    st.upTo = taps[taps.length - 1].created;
+    st.lastSent = now;
+    stateDirty = true;
+    await saveState(); // erst merken, dann senden -> nie doppelt
+    const n = name(from), k = taps.length;
+    await send(to, 'pings', {
+      title: k === 1 ? `💗 ${n} hat dir Liebe geschickt` : `💗 ${n} hat dir ${k}× Liebe geschickt`,
+      body: today > k ? `Heute schon ${today}× 💗 – tippe, um zurückzuschicken` : 'Tippe, um Liebe zurückzuschicken 💕',
+      go: 's-home', tag: 'love-' + from,
+    });
+  }
+  // genau dann nochmal nachsehen, wenn die nächste Bündelung fällig ist (statt bis zu 30 s zu warten)
+  clearTimeout(loveTimer);
+  if (nextCheck.length) {
+    const wait = Math.min(...nextCheck) - Date.now() + 500;
+    if (wait < POLL_MS) loveTimer = setTimeout(tick, Math.max(wait, 500));
   }
 }
 
@@ -346,7 +407,7 @@ async function doSelections() {
 
 // g) Treffen + Öffne wenn: die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
 //    bündeln dort und prüfen die Schalter in notify_prefs
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-final' };
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home' };
 
 async function doQueue() {
   const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });
@@ -375,7 +436,7 @@ async function tick() {
     users = Object.fromEntries((await list('users')).map(u => [u.id, u]));
     if (!state) await loadState();
     const steps = [
-      doPings, doQueue, doTabs, doEntries, doSelections, doDates,
+      doPings, doLove, doQueue, doTabs, doEntries, doSelections, doDates,
       () => doPhotos('photos', 'photos', 'photos', 's-memories', { icon: '📷', one: 'Foto', many: 'Fotos', where: 'Erinnerungen' }),
       () => doPhotos('clay', 'clay_photos', 'clay', 's-clay-done', { icon: '🧸', one: 'Clay-Foto', many: 'Clay-Fotos', where: 'unseren Figuren' }),
     ];

@@ -4,152 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Für dich 💌</title>
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#fdeef5; --pink:#e0457b; --pink-dark:#c2185b; --pink-soft:#fde3ee;
-    --key:#fcdbe8; --key-active:#f9c3d9; --purple:#d8b4fe; --purple-dark:#c084fc;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-  html,body{height:100%}
-  body{
-    font-family:'Quicksand',system-ui,sans-serif;background:var(--bg);color:var(--pink);
-    overflow:hidden;user-select:none;-webkit-user-select:none;
-  }
-  .bg-hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
-  .bg-hearts span{position:absolute;bottom:-40px;opacity:.35;animation:floatUp linear infinite}
-  @keyframes floatUp{to{transform:translateY(-115vh) rotate(25deg)}}
-
-  .screen{
-    position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:16px;opacity:0;pointer-events:none;transition:opacity .6s ease;z-index:1;
-  }
-  .screen.active{opacity:1;pointer-events:auto}
-
-  #muteBtn{
-    position:fixed;top:14px;right:14px;z-index:20;width:42px;height:42px;border-radius:50%;
-    border:none;background:#fff;color:var(--pink);font-size:18px;box-shadow:0 4px 14px rgba(224,69,123,.2);cursor:pointer;
-  }
-
-  /* ---------- Schritt 1: Datum ---------- */
-  .card{
-    background:#fff;border-radius:22px;padding:28px 22px 24px;width:100%;max-width:340px;
-    box-shadow:0 12px 40px rgba(224,69,123,.18);text-align:center;
-  }
-  .card h1{font-size:22px;font-weight:700;color:var(--pink-dark)}
-  .hint{font-size:11px;letter-spacing:2px;color:#e99bb9;margin-top:6px}
-  .slots{display:flex;justify-content:center;gap:8px;margin:20px 0 22px}
-  .slot{width:24px;height:30px;border-bottom:2px solid #f6b8cf;display:flex;align-items:flex-end;justify-content:center;font-size:18px;line-height:1}
-  .slot.gap{margin-right:8px}
-  .slot.filled::after{content:'❤️';animation:pop .25s ease}
-  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
-  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .key{
-    height:52px;border:none;border-radius:26px;background:var(--key);color:var(--pink-dark);
-    font-family:inherit;font-size:20px;font-weight:600;cursor:pointer;transition:transform .1s,background .15s;
-  }
-  .key:active{transform:scale(.93);background:var(--key-active)}
-  .key.empty{visibility:hidden}
-  .key.back{background:var(--pink-soft);color:#e99bb9}
-  .shake{animation:shake .45s}
-  @keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
-  .err{height:18px;margin-top:12px;font-size:13px;color:#e99bb9}
-
-  /* ---------- Schritt 2: Geschenk ---------- */
-  .gift{
-    position:relative;width:190px;height:190px;border-radius:16px;background:var(--purple);
-    box-shadow:0 14px 40px rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;
-    font-size:64px;cursor:pointer;animation:idle 2.2s ease-in-out infinite;
-  }
-  .gift::before,.gift::after{content:'';position:absolute;background:var(--purple-dark)}
-  .gift::before{left:50%;top:0;bottom:0;width:30px;transform:translateX(-50%)}
-  .gift::after{top:50%;left:0;right:0;height:30px;transform:translateY(-50%)}
-  .gift span{position:relative;z-index:1}
-  @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-  .gift.wiggle{animation:wiggle .35s ease-in-out infinite}
-  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
-  .gift.boom{animation:boom .5s forwards}
-  @keyframes boom{to{transform:scale(1.6);opacity:0}}
-  .bar{width:190px;height:6px;border-radius:3px;background:#fbe3ee;margin-top:28px;overflow:hidden}
-  .bar div{height:100%;width:0;background:linear-gradient(90deg,#f9a8d4,var(--pink));transition:width 1.8s linear}
-  .tap{margin-top:16px;font-size:15px;font-weight:600;color:#e99bb9}
-
-  /* ---------- Schritt 3: Nachricht ---------- */
-  .final{max-width:360px;text-align:center}
-  .big-heart{font-size:70px;animation:beat 1.2s ease-in-out infinite}
-  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.18)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
-  .final p{margin-top:22px;font-size:22px;font-weight:700;line-height:1.5;color:var(--pink-dark)}
-  .final p span{display:inline-block;opacity:0;transform:translateY(8px);transition:all .5s ease}
-  .final p span.in{opacity:1;transform:none}
-  .final .sign{margin-top:18px;font-size:30px}
-
-  /* ---------- Menü + Unterseiten ---------- */
-  #s-final,.sub{overflow-y:auto;justify-content:flex-start;padding-top:max(60px,10vh);padding-bottom:40px}
-  .menu{display:flex;flex-direction:column;gap:12px;margin-top:30px;width:100%;max-width:340px;
-    opacity:0;transform:translateY(14px);transition:all .7s ease;pointer-events:none}
-  .menu.in{opacity:1;transform:none}
-  .screen.active .menu.in{pointer-events:auto}
-  .opt{display:flex;align-items:center;gap:14px;background:#fff;border:none;border-radius:18px;padding:16px 18px;
-    font-family:inherit;text-align:left;cursor:pointer;box-shadow:0 8px 24px rgba(224,69,123,.15);transition:transform .15s}
-  .opt:active{transform:scale(.97)}
-  .opt .ico{font-size:30px}
-  .opt b{display:block;font-size:17px;color:var(--pink-dark)}
-  .opt small{font-size:13px;color:#e99bb9;font-weight:600}
-  .opt.locked{opacity:.6;cursor:default}
-
-  .sub-head{width:100%;max-width:420px;display:flex;align-items:center;gap:12px;margin-bottom:22px}
-  .back-btn{width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:var(--pink);font-size:20px;
-    box-shadow:0 4px 14px rgba(224,69,123,.2);cursor:pointer;flex-shrink:0}
-  .sub-head h2{font-size:24px;color:var(--pink-dark)}
-
-  .photos{width:100%;max-width:420px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-  .photo{aspect-ratio:1;border-radius:16px;background:#fff;overflow:hidden;position:relative;cursor:pointer;
-    box-shadow:0 6px 18px rgba(224,69,123,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;
-    color:#e99bb9;font-size:13px;font-weight:600;gap:6px}
-  .photo:nth-child(odd){transform:rotate(-1.5deg)} .photo:nth-child(even){transform:rotate(1.5deg)}
-  .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .photo .cap{position:absolute;left:0;right:0;bottom:0;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.5));color:#fff;font-size:12px}
-  .photo .ph{font-size:28px}
-  .lightbox{position:fixed;inset:0;background:rgba(60,10,30,.85);z-index:50;display:none;flex-direction:column;
-    align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}
-  .lightbox.show{display:flex}
-  .lb-x{position:absolute;top:14px;right:14px;width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:var(--pink);font-size:18px;cursor:pointer}
-  .clay-sub{width:100%;max-width:420px;margin:-10px 0 16px;font-size:14px;font-weight:600;color:#e99bb9}
-  .clay{width:100%;max-width:420px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .clay-item{background:#fff;border:none;border-radius:16px;padding:6px 6px 8px;cursor:pointer;font-family:inherit;
-    box-shadow:0 6px 18px rgba(224,69,123,.13);transition:transform .15s}
-  .clay-item:active{transform:scale(.95)}
-  .clay-item img{width:100%;aspect-ratio:1/.68;object-fit:cover;border-radius:12px;display:block}
-  .clay-item span{display:block;margin-top:6px;font-size:13px;font-weight:700;color:var(--pink-dark)}
-  .lightbox img{max-width:100%;max-height:75vh;border-radius:14px}
-  .lightbox p{margin-top:14px;font-weight:600}
-
-  .counter{width:100%;max-width:420px;background:var(--pink);color:#fff;border-radius:20px;padding:20px;text-align:center;
-    box-shadow:0 10px 28px rgba(224,69,123,.3);margin-bottom:18px}
-  .counter .num{font-size:44px;font-weight:700;line-height:1.1}
-  .counter small{font-size:14px;font-weight:600;opacity:.9}
-  .dates{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
-  .date{display:flex;align-items:center;gap:14px;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px rgba(224,69,123,.12)}
-  .date .ico{font-size:28px}
-  .date b{display:block;color:var(--pink-dark);font-size:16px}
-  .date div span{font-size:14px;font-weight:600}
-  .date em{display:block;font-style:normal;font-size:12px;color:#e99bb9;font-weight:600;margin-top:2px}
-
-  .pack-btn{align-self:center;border:none;background:#fff;color:var(--pink-dark);font-family:inherit;font-weight:700;
-    font-size:15px;padding:10px 20px;border-radius:22px;box-shadow:0 4px 14px rgba(224,69,123,.2);cursor:pointer;margin-bottom:26px}
-  .pack-btn:active{transform:scale(.95)}
-  .love{max-width:340px;text-align:center;font-size:26px;line-height:1.35;color:var(--pink-dark);font-weight:700}
-  .love span{display:block;font-size:32px;color:var(--pink);letter-spacing:1px;animation:beat 1.6s ease-in-out infinite}
-  .menu{margin-top:26px}
-  .engage{width:100%;max-width:420px;margin-top:16px;display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:18px;
-    background:linear-gradient(135deg,#fff,#fde3ee);border:2px dashed #f6b8cf;color:var(--pink-dark)}
-  .engage .ring{font-size:38px;animation:beat 1.8s ease-in-out infinite}
-  .engage b{display:block;font-size:18px}
-  .engage small{font-size:14px;font-weight:600;color:#e99bb9}
-
-  .burst{position:fixed;pointer-events:none;z-index:40;font-size:22px;animation:burst 1.4s ease-out forwards}
-  @keyframes burst{to{transform:translate(var(--x),var(--y)) scale(.4) rotate(var(--r));opacity:0}}
-</style>
+<script>
+  // Farbwelt sofort setzen (vor dem ersten Zeichnen), Wert kommt später auch aus der DB
+  try { const t = localStorage.getItem('wir-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -158,15 +19,15 @@
 <meta name="apple-mobile-web-app-title" content="Wir">
 <meta name="theme-color" content="#fdeef5">
 <link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/extra.css">
 </head>
 <body>
 
-<div class="bg-hearts" id="bgHearts"></div>
+<div class="bg-hearts" id="bgHearts" aria-hidden="true"></div>
 
-<!-- 1: Login -->
+<!-- ============ Login ============ -->
 <section class="screen" id="s-lock">
-  <div class="card" id="lockCard">
+  <div class="card glass lock-card" id="lockCard">
+    <div class="lock-heart">💌</div>
     <div class="hint">BITTE ANMELDEN</div>
     <form class="mem-form login-form" id="loginForm">
       <input class="mem-input" id="loginEmail" type="email" placeholder="E-Mail" autocomplete="username" required>
@@ -177,90 +38,164 @@
   </div>
 </section>
 
-<!-- 2: Geschenk -->
+<!-- ============ Geschenk ============ -->
 <section class="screen" id="s-gift">
   <div class="gift" id="gift"><span>🎁</span></div>
   <div class="bar"><div id="barFill"></div></div>
   <div class="tap" id="tapText">Tipp mich an</div>
 </section>
 
-<!-- 3: Nachricht -->
-<section class="screen" id="s-final">
-  <button class="pack-btn" id="packBtn">🎁 Einpacken</button>
-  <h1 class="love">Ich liebe dich mehr als <span>ALLES ANDERE</span></h1>
-  <div class="menu in" id="menu">
-    <button class="opt opt-push" id="pushBtn" hidden><span class="ico">🔔</span><span><b>Benachrichtigungen aktivieren</b><small>Damit du nichts verpasst</small></span></button>
-    <button class="opt" data-go="s-wir"><span class="ico">💞</span><span><b>Wir zwei</b><small>Herz, Anruf, kleine Nachricht</small></span></button>
-    <button class="opt" data-go="s-memories"><span class="ico">📸</span><span><b>Erinnerungen</b><small>Bilder von uns</small></span></button>
-    <button class="opt" data-go="s-dates"><span class="ico">📅</span><span><b>Unsere Daten</b><small>Die wichtigsten Tage</small></span></button>
-    <button class="opt" data-go="s-clay"><span class="ico">🧸</span><span><b>Clay Date</b><small>Such dir aus, was wir bauen</small></span></button>
-    <div class="tab-menu" id="tabMenu"></div>
-    <button class="opt opt-new" id="newTabBtn"><span class="ico">➕</span><span><b>Neuer Reiter</b></span></button>
-    <button class="opt" data-go="s-settings"><span class="ico">⚙️</span><span><b>Einstellungen</b><small>Welche Benachrichtigungen du bekommst</small></span></button>
-    <button class="logout" id="logoutBtn">Abmelden</button>
+<!-- ============ App-Rahmen: oben Avatar, unten Navigation ============ -->
+<header class="topbar">
+  <button class="avatar sm" id="meBtn" data-go="s-settings" aria-label="Einstellungen"></button>
+  <h1 id="topTitle">Für dich 💌</h1>
+  <span class="top-spacer"></span>
+</header>
+
+<nav class="tabbar" aria-label="Navigation">
+  <button class="tab-btn" data-go="s-home"><span class="tab-ico">🏡</span><span class="tab-lbl">Start</span></button>
+  <button class="tab-btn" data-go="s-memories"><span class="tab-ico">📸</span><span class="tab-lbl">Erinnerungen</span></button>
+  <button class="tab-btn" data-go="s-plans"><span class="tab-ico">📅</span><span class="tab-lbl">Dates</span></button>
+  <button class="tab-btn" data-go="s-openwhen"><span class="tab-ico">💌<i class="nav-dot" id="navOwDot" hidden></i></span><span class="tab-lbl">Öffne wenn</span></button>
+  <button class="tab-btn" data-go="s-wir"><span class="tab-ico">💞</span><span class="tab-lbl">Wir zwei</span></button>
+</nav>
+
+<!-- ============ Start ============ -->
+<section class="screen page" id="s-home" data-title="Für dich 💌">
+  <div class="together card glass">
+    <div class="since" id="sinceText">Seit 10. April 2026</div>
+    <div class="glow-ring">
+      <div class="glow-core">
+        <small>Zusammen</small>
+        <b id="dayCount">0</b>
+        <small>Tage</small>
+      </div>
+    </div>
+    <div class="ticker" id="ticker">
+      <div><b id="tY">0</b><small>Jahre</small></div>
+      <div><b id="tM">0</b><small>Monate</small></div>
+      <div><b id="tD">0</b><small>Tage</small></div>
+      <div><b id="th">0</b><small>Std.</small></div>
+      <div><b id="tm">0</b><small>Min.</small></div>
+      <div><b id="ts">0</b><small>Sek.</small></div>
+    </div>
+    <div class="couple">
+      <div class="person"><div class="avatar lg" id="avPartner"></div><span id="namePartner">…</span></div>
+      <span class="couple-heart">💗</span>
+      <div class="person"><div class="avatar lg" id="avMe"></div><span id="nameMe">…</span></div>
+    </div>
+    <p class="love-line">Ich liebe dich mehr als alles andere</p>
   </div>
+
+  <div class="card glass love-glass">
+    <div class="glass-hearts">
+      <div class="glass-heart" id="heartPartner"><b class="h-count">0</b><span class="h-label" id="lovePartnerLabel">von …</span></div>
+      <div class="glass-heart" id="heartMe"><b class="h-count">0</b><span class="h-label">von mir</span></div>
+    </div>
+    <div class="love-today">heute · füllt sich bis 20 💗</div>
+    <button class="love-send" id="loveBtn" type="button">💗 Liebe senden</button>
+    <div class="mini-actions">
+      <button class="mini" data-ping="call" type="button"><span>📞</span>Anruf</button>
+      <button class="mini" data-ping="support" type="button"><span>🫂</span>Support</button>
+      <button class="mini" data-msg type="button"><span>✏️</span>Nachricht</button>
+    </div>
+    <div class="mem-status ping-status"></div>
+  </div>
+
+  <div id="homeMeet"></div>
 </section>
 
-<!-- Erinnerungen -->
-<section class="screen sub" id="s-memories">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Erinnerungen 📸</h2></div>
-  <div class="mem-tools">
-    <input class="mem-input" id="caption" type="text" placeholder="Bildunterschrift (optional)">
-    <label class="mem-btn">📷 Foto hinzufügen<input class="sr-only" id="fileInput" type="file" accept="image/*" multiple></label>
-    <div class="mem-status" id="memStatus">Gedrückt halten &amp; ziehen zum Sortieren</div>
+<!-- ============ Erinnerungen ============ -->
+<section class="screen page" id="s-memories" data-title="Erinnerungen 📸">
+  <div class="folder-bar" id="folderBar"></div>
+  <div class="folder-tools" id="folderTools" hidden>
+    <span id="folderLabel"></span>
+    <button class="chip-btn" id="folderEdit" type="button">✎ Umbenennen</button>
+    <button class="chip-btn" id="folderDel" type="button">🗑 Löschen</button>
   </div>
-  <div class="photos" id="photos"></div>
+  <div class="mem-tools upload-row">
+    <input class="mem-input" id="caption" type="text" placeholder="Bildunterschrift (optional)" maxlength="200">
+    <label class="mem-btn upload-btn">📷 Foto<input class="sr-only" id="fileInput" type="file" accept="image/*" multiple></label>
+  </div>
+  <div class="mem-status" id="memStatus">Gedrückt halten &amp; ziehen zum Sortieren · Tippen zum Ansehen</div>
+  <div class="photos polaroids" id="photos"></div>
 </section>
 
-<!-- Daten -->
-<section class="screen sub" id="s-dates">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Unsere Daten 📅</h2></div>
-  <div class="counter"><div class="num" id="dayCount">0</div><small>Tage zusammen 💕</small></div>
+<!-- ============ Dates (Übersicht) ============ -->
+<section class="screen page" id="s-plans" data-title="Dates 📅">
+  <div class="hub-grid">
+    <button class="hub-card glass" data-go="s-meetings" type="button"><span class="ico">💗</span><b>Treffen</b><small id="planMeetInfo">Nächstes Treffen</small></button>
+    <button class="hub-card glass" data-go="s-dates" type="button"><span class="ico">📅</span><b>Unsere Daten</b><small id="planDatesInfo">Die wichtigsten Tage</small></button>
+    <button class="hub-card glass" data-go="s-clay" type="button"><span class="ico">🧸</span><b>Clay Date</b><small>Such dir aus, was wir bauen</small></button>
+    <button class="hub-card glass" data-go="s-clay-done" type="button"><span class="ico">📁</span><b>Unsere Figuren</b><small>Was wir schon gebaut haben</small></button>
+  </div>
+  <h3 class="list-head">Unsere Reiter</h3>
+  <div class="tab-menu" id="tabMenu"></div>
+  <button class="opt opt-new" id="newTabBtn" type="button"><span class="ico">➕</span><span><b>Neuer Reiter</b><small>Movie Date, Ausflug, Wunschliste …</small></span></button>
+</section>
+
+<!-- Unsere Daten -->
+<section class="screen page sub" id="s-dates" data-tab="s-plans" data-title="Unsere Daten">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Daten 📅</h2></div>
   <div class="dates" id="dates"></div>
-  <button class="pack-btn add-toggle" id="dateToggle">➕ Neues Datum</button>
-  <form class="card add-card" id="dateForm" hidden>
+  <button class="pack-btn add-toggle" id="dateToggle" type="button">➕ Neues Datum</button>
+  <form class="card glass add-card" id="dateForm" hidden>
     <h1>Neues Datum</h1>
     <div class="row">
       <input class="mem-input emoji-input" id="dateEmoji" type="text" placeholder="🥰" maxlength="8">
       <input class="mem-input" id="dateTitle" type="text" placeholder="Titel" maxlength="100" required>
     </div>
     <input class="mem-input" id="dateValue" type="date" required>
-    <label class="check"><input type="checkbox" id="dateBirthday"><span>🎂 Geburtstag (jedes Jahr)</span></label>
+    <label class="check"><input type="checkbox" class="switch" id="dateBirthday"><span>🎂 Geburtstag (jedes Jahr)</span></label>
     <button class="mem-btn" type="submit">Speichern</button>
     <div class="err" id="dateErr"></div>
   </form>
-  <div class="engage"><span class="ring">💍</span><div><b>Verlobung</b><small>Coming soon …</small></div></div>
+  <div class="engage glass"><span class="ring">💍</span><div><b>Verlobung</b><small>Coming soon …</small></div></div>
+</section>
+
+<!-- Treffen -->
+<section class="screen page sub" id="s-meetings" data-tab="s-plans" data-title="Treffen">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Treffen 💗</h2></div>
+  <div class="meet-list" id="meetList"></div>
+  <button class="pack-btn add-toggle" id="meetToggle" type="button">➕ Treffen eintragen</button>
+  <form class="card glass add-card" id="meetForm" hidden>
+    <h1 id="meetFormTitle">Nächstes Treffen</h1>
+    <input class="mem-input" id="meetWhen" type="datetime-local" required>
+    <input class="mem-input" id="meetNote" type="text" placeholder="Notiz (optional), z.B. Bahnhof" maxlength="200">
+    <button class="mem-btn" type="submit">Speichern</button>
+    <div class="err" id="meetErr"></div>
+  </form>
 </section>
 
 <!-- Clay Date -->
-<section class="screen sub" id="s-clay">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Clay Date 🧸</h2><button class="folder-btn" data-go="s-clay-done" aria-label="Unsere fertigen Figuren">📁</button></div>
+<section class="screen page sub" id="s-clay" data-tab="s-plans" data-title="Clay Date">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Clay Date 🧸</h2><button class="folder-btn" data-go="s-clay-done" aria-label="Unsere fertigen Figuren">📁</button></div>
   <div class="clay-sub">Tipp eins an, um es groß zu sehen</div>
   <div class="clay" id="clay"></div>
 </section>
 
 <!-- Clay: fertige Figuren -->
-<section class="screen sub" id="s-clay-done">
-  <div class="sub-head"><button class="back-btn" data-go="s-clay">←</button><h2>Unsere Figuren 📁</h2></div>
-  <div class="mem-tools">
-    <input class="mem-input" id="clayCaption" type="text" placeholder="Was ist das? (optional)">
-    <label class="mem-btn">📷 Foto hinzufügen<input class="sr-only" id="clayFile" type="file" accept="image/*" multiple></label>
-    <div class="mem-status" id="clayStatus"></div>
+<section class="screen page sub" id="s-clay-done" data-tab="s-plans" data-title="Unsere Figuren">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Figuren 📁</h2></div>
+  <div class="mem-tools upload-row">
+    <input class="mem-input" id="clayCaption" type="text" placeholder="Was ist das? (optional)" maxlength="200">
+    <label class="mem-btn upload-btn">📷 Foto<input class="sr-only" id="clayFile" type="file" accept="image/*" multiple></label>
   </div>
-  <div class="photos" id="clayPhotos"></div>
+  <div class="mem-status" id="clayStatus"></div>
+  <div class="photos polaroids" id="clayPhotos"></div>
 </section>
 
 <!-- Eigener Reiter -->
-<section class="screen sub" id="s-tab">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2 id="tabTitle"></h2></div>
-  <div class="tab-lock" id="tabLock" hidden>
+<section class="screen page sub" id="s-tab" data-tab="s-plans" data-title="Reiter">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2 id="tabTitle"></h2></div>
+  <div class="tab-lock glass" id="tabLock" hidden>
     <b>🔒 Noch geheim</b>
     <span id="tabLockText"></span>
     <div class="row">
       <input class="mem-input" id="tabUnlockEdit" type="datetime-local">
-      <button class="pack-btn" id="tabUnlockSave">Ändern</button>
+      <button class="pack-btn" id="tabUnlockSave" type="button">Ändern</button>
     </div>
-    <button class="mem-btn" id="tabUnlockNow">Jetzt freigeben 🎉</button>
+    <button class="mem-btn" id="tabUnlockNow" type="button">Jetzt freigeben 🎉</button>
   </div>
   <form class="mem-tools" id="entryForm">
     <input class="mem-input" id="entryTitle" type="text" placeholder="Neuer Eintrag, z.B. Titanic" maxlength="200" required>
@@ -271,19 +206,19 @@
     <div class="mem-status" id="entryStatus"></div>
   </form>
   <div class="entries" id="entries"></div>
-  <button class="logout" id="tabDelete" hidden>🗑️ Reiter löschen</button>
+  <button class="logout" id="tabDelete" hidden type="button">🗑️ Reiter löschen</button>
 </section>
 
 <!-- Neuer Reiter -->
-<section class="screen sub" id="s-newtab">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Neuer Reiter ✨</h2></div>
-  <form class="card add-card" id="tabForm">
+<section class="screen page sub" id="s-newtab" data-tab="s-plans" data-title="Neuer Reiter">
+  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Neuer Reiter ✨</h2></div>
+  <form class="card glass add-card" id="tabForm">
     <h1>Wie soll er heißen?</h1>
     <div class="row">
       <input class="mem-input emoji-input" id="tabEmoji" type="text" placeholder="🎬" maxlength="8">
       <input class="mem-input" id="tabName" type="text" placeholder="Movie Date" maxlength="60" required>
     </div>
-    <label class="check"><input type="checkbox" id="tabPlan"><span>🔒 Geplante Freigabe</span></label>
+    <label class="check"><input type="checkbox" class="switch" id="tabPlan"><span>🔒 Geplante Freigabe</span></label>
     <div id="tabPlanBox" hidden>
       <p class="mem-note">Bis dahin sieht die andere Person nur „Neues Date geplant 🔒“.</p>
       <input class="mem-input" id="tabUnlock" type="datetime-local">
@@ -293,64 +228,204 @@
   </form>
 </section>
 
-<!-- Wir zwei -->
-<section class="screen sub" id="s-wir">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Wir zwei 💞</h2></div>
-  <div class="partner"><span class="ico">💕</span><div><small>Du schickst an</small><b id="partnerName">…</b></div></div>
-  <div class="ping-grid">
-    <button class="ping-btn" data-ping="heart"><span>❤️</span>Herz senden</button>
-    <button class="ping-btn" data-ping="call"><span>📞</span>Anruf anfordern</button>
-    <button class="ping-btn" data-ping="love"><span>💗</span>Liebe senden</button>
-    <button class="ping-btn" data-ping="support"><span>🫂</span>Mentaler Support</button>
-    <button class="ping-btn wide" id="msgToggle"><span>✏️</span>Kleine Nachricht</button>
+<!-- ============ Öffne wenn ============ -->
+<section class="screen page" id="s-openwhen" data-title="Öffne wenn … 💌">
+  <div class="segmented" role="tablist">
+    <button class="seg on" data-seg="in" type="button" role="tab">💌 Für mich</button>
+    <button class="seg" data-seg="write" type="button" role="tab">✍️ Schreiben</button>
   </div>
-  <form class="card add-card" id="msgForm" hidden>
-    <textarea class="mem-input msg-input" id="msgText" maxlength="200" rows="3" placeholder="Schreib was Süßes …" required></textarea>
-    <div class="row"><span class="msg-count" id="msgCount">0/200</span><button class="mem-btn" type="submit">Senden 💌</button></div>
-  </form>
-  <div class="mem-status" id="pingStatus"></div>
+  <div class="ow-pane" id="owInPane">
+    <div class="ow-intro">Tipp eins an – es wartet ein Brief auf dich 💌</div>
+    <div class="ow-list" id="owInbox"></div>
+  </div>
+  <div class="ow-pane" id="owWritePane" hidden>
+    <div class="ow-intro" id="owWriteIntro">Nur die andere Person kann sie öffnen – immer einen zufälligen Brief.</div>
+    <div class="ow-list" id="owCats"></div>
+    <form class="card glass add-card ow-new" id="owCatForm">
+      <h1>Neue Kategorie</h1>
+      <div class="ow-prefix">Öffne wenn …</div>
+      <input class="mem-input" id="owCatTitle" type="text" placeholder="… du mich vermisst" maxlength="120" required>
+      <button class="mem-btn" type="submit">Anlegen</button>
+      <div class="err" id="owCatErr"></div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ Wir zwei ============ -->
+<section class="screen page" id="s-wir" data-title="Wir zwei 💞">
+  <div class="partner card glass">
+    <div class="couple small">
+      <div class="avatar md" id="avPartner2"></div>
+      <span class="couple-heart">💗</span>
+      <div class="avatar md" id="avMe2"></div>
+    </div>
+    <div><small>Du schickst an</small><b id="partnerName">…</b></div>
+  </div>
+  <div class="wir-today" id="wirToday"></div>
+  <div class="ping-grid">
+    <button class="ping-btn glass" data-ping="love" type="button"><span>💗</span>Liebe senden</button>
+    <button class="ping-btn glass" data-ping="call" type="button"><span>📞</span>Anruf anfordern</button>
+    <button class="ping-btn glass" data-ping="support" type="button"><span>🫂</span>Mentaler Support</button>
+    <button class="ping-btn glass" data-msg type="button"><span>✏️</span>Kleine Nachricht</button>
+  </div>
+  <div class="mem-status ping-status" id="pingStatus"></div>
   <h3 class="list-head">Verlauf</h3>
   <div class="dates pings" id="pings"></div>
 </section>
 
-<!-- Einstellungen -->
-<section class="screen sub" id="s-settings">
-  <div class="sub-head"><button class="back-btn" data-go="s-final">←</button><h2>Einstellungen ⚙️</h2></div>
-  <div class="tab-lock push-box">
-    <b>🔔 Benachrichtigungen</b>
-    <span id="pushState"></span>
-    <button class="mem-btn" id="pushBtn2" hidden>🔔 Benachrichtigungen aktivieren</button>
+<!-- ============ Einstellungen (über den Avatar) ============ -->
+<section class="screen page sub" id="s-settings" data-tab="" data-title="Einstellungen">
+  <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einstellungen ⚙️</h2></div>
+
+  <div class="card glass set-card profile-card">
+    <div class="avatar xl" id="avSettings"></div>
+    <div class="profile-info">
+      <b id="setName">…</b>
+      <label class="pack-btn file-pick">📷 Profilbild ändern<input class="sr-only" id="avatarFile" type="file" accept="image/*"></label>
+      <button class="link-btn" id="avatarRemove" type="button" hidden>Bild entfernen</button>
+    </div>
+    <div class="mem-status" id="avatarStatus"></div>
   </div>
-  <h3 class="list-head">Was möchtest du bekommen?</h3>
-  <div class="dates prefs" id="prefs"></div>
-  <div class="mem-status" id="prefStatus"></div>
+
+  <div class="card glass set-card">
+    <h3>🎨 Farbwelt</h3>
+    <div class="theme-picker" id="themePicker">
+      <button class="swatch" data-theme="rose" type="button"><i></i><span>Rosé</span></button>
+      <button class="swatch" data-theme="gluehwein" type="button"><i></i><span>Glühwein</span></button>
+      <button class="swatch" data-theme="mondnacht" type="button"><i></i><span>Mondnacht</span></button>
+      <button class="swatch" data-theme="zuckerwatte" type="button"><i></i><span>Zuckerwatte</span></button>
+    </div>
+  </div>
+
+  <div class="card glass set-card">
+    <h3>💞 Zusammen seit</h3>
+    <input class="mem-input" id="sinceInput" type="date">
+    <p class="mem-note">Gilt für euch beide – der Zähler auf der Startseite rechnet ab diesem Tag.</p>
+    <div class="mem-status" id="sinceStatus"></div>
+  </div>
+
+  <div class="card glass set-card">
+    <h3>🔔 Benachrichtigungen</h3>
+    <span class="push-state" id="pushState"></span>
+    <button class="mem-btn" id="pushBtn2" type="button" hidden>🔔 Benachrichtigungen aktivieren</button>
+    <details class="fold">
+      <summary>Was möchtest du bekommen?</summary>
+      <div class="dates prefs" id="prefs"></div>
+      <label class="date pref-row"><span class="ico">💗</span><div><b>Treffen</b><small>Am Vortag ab 18:00 und am Tag ab 08:00</small></div><input type="checkbox" class="switch" id="prefMeetings"></label>
+      <label class="date pref-row"><span class="ico">💌</span><div><b>Öffne wenn</b><small>Neue Briefe für mich</small></div><input type="checkbox" class="switch" id="prefOpenWhen"></label>
+      <div class="mem-status" id="prefStatus"></div>
+      <div class="mem-status" id="notifyExtraStatus"></div>
+    </details>
+  </div>
+
+  <div class="card glass set-card app-card">
+    <button class="pack-btn" id="reloadBtn" type="button">↻ App neu laden</button>
+    <button class="pack-btn" id="packBtn" type="button">🎁 Wieder einpacken</button>
+    <button class="logout" id="logoutBtn" type="button">Abmelden</button>
+  </div>
 </section>
 
-<div class="lightbox" id="lightbox"><button class="lb-x" aria-label="Schließen">✕</button><img id="lbImg" alt=""><p id="lbCap"></p></div>
+<!-- ============ Bottom-Sheets ============ -->
+<div class="sheet-wrap" id="msgSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet" id="msgForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Kleine Nachricht ✏️</h2>
+    <textarea class="mem-input msg-input" id="msgText" maxlength="200" rows="4" placeholder="Schreib was Süßes …" required></textarea>
+    <div class="row"><span class="msg-count" id="msgCount">0/200</span><button class="mem-btn" type="submit">Senden 💌</button></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="letterSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet paper" id="letterForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <div class="paper-head" id="letterHead">Öffne wenn …</div>
+    <textarea class="mem-input letter-input" id="letterText" maxlength="5000" placeholder="Mein Schatz, …" required></textarea>
+    <div class="row letter-row">
+      <span class="msg-count" id="letterCount">0/5000</span>
+      <button class="link-btn" id="letterDelete" type="button" hidden>Brief löschen</button>
+    </div>
+    <button class="mem-btn" type="submit" id="letterSave">Speichern 💌</button>
+    <div class="mem-status" id="letterStatus"></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="folderSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet" id="folderForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title" id="folderSheetTitle">Neuer Ordner 📁</h2>
+    <div class="row">
+      <input class="mem-input emoji-input" id="folderEmoji" type="text" placeholder="📁" maxlength="8">
+      <input class="mem-input" id="folderName" type="text" placeholder="z.B. Urlaub 2026" maxlength="60" required>
+    </div>
+    <button class="mem-btn" type="submit">Speichern</button>
+    <div class="err" id="folderErr"></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="moveSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">In Ordner verschieben</h2>
+    <div class="move-list" id="moveList"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-x" aria-label="Schließen" type="button">✕</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+  <div class="lb-actions" id="lbActions"></div>
+</div>
 
 <script>
 (function(){
   const $ = id => document.getElementById(id);
   const wait = ms => new Promise(r => setTimeout(r, ms));
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Hintergrund-Herzen */
   const bg = $('bgHearts');
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 10; i++) {
     const s = document.createElement('span');
     s.textContent = ['💗','💕','🤍','💖'][i % 4];
     s.style.left = Math.random() * 100 + '%';
-    s.style.fontSize = 12 + Math.random() * 16 + 'px';
-    s.style.animationDuration = 9 + Math.random() * 10 + 's';
-    s.style.animationDelay = -Math.random() * 18 + 's';
+    s.style.fontSize = 12 + Math.random() * 14 + 'px';
+    s.style.animationDuration = 12 + Math.random() * 12 + 's';
+    s.style.animationDelay = -Math.random() * 22 + 's';
     bg.appendChild(s);
   }
 
+  // alte Bereichsnamen (z. B. aus Push-Nachrichten) -> neue Seiten
+  const ALIAS = { 's-final': 's-home', 's-write': 's-openwhen', 's-notify-extra': 's-settings' };
+  const resolve = id => ALIAS[id] || id;
+
   function show(id){
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    $(id).classList.add('active');
+    id = resolve(id);
+    const target = $(id);
+    if (!target) return;
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s === target));
+    document.querySelectorAll('.sheet-wrap.open').forEach(w => sheet(w.id, false));
+    const inApp = target.classList.contains('page');
+    document.body.classList.toggle('in-app', inApp);
+    if (inApp) {
+      const tab = target.dataset.tab ?? id;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('on', b.dataset.go === tab));
+      // Unterseiten haben ihre eigene Überschrift mit Zurück-Knopf
+      $('topTitle').textContent = target.classList.contains('sub') ? '' : target.dataset.title || '';
+    }
+    document.dispatchEvent(new CustomEvent('wir:show', { detail: id }));
   }
 
   function burst(x, y, n = 18){
+    if (reduced()) n = Math.min(n, 4);
     for (let i = 0; i < n; i++) {
       const h = document.createElement('span');
       h.className = 'burst';
@@ -370,15 +445,76 @@
     setTimeout(() => el.classList.remove('shake'), 450);
   }
 
-  function lightbox(src, cap){
+  // actions: [{ label, onClick }] – Knöpfe unter dem Bild
+  function lightbox(src, cap, actions = []){
     $('lbImg').src = src; $('lbCap').textContent = cap || '';
+    $('lbActions').replaceChildren(...actions.map(a => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pack-btn';
+      b.textContent = a.label;
+      b.addEventListener('click', e => { e.stopPropagation(); a.onClick(); });
+      return b;
+    }));
     $('lightbox').classList.add('show');
   }
+  const closeLightbox = () => $('lightbox').classList.remove('show');
 
-  // für app.js
-  window.UI = { show, burst, wait, shake, lightbox };
+  // ---------- Bottom-Sheets ----------
+  function sheet(id, open = true){
+    const w = $(id);
+    if (open) {
+      w.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('open')));
+    } else {
+      w.classList.remove('open');
+      setTimeout(() => { if (!w.classList.contains('open')) w.hidden = true; }, 320);
+    }
+  }
+  document.addEventListener('click', e => {
+    const c = e.target.closest('[data-close]');
+    if (c) sheet(c.closest('.sheet-wrap').id, false);
+  });
 
-  /* ---------- 2: Geschenk ---------- */
+  // ---------- Zeit in Europe/Berlin ----------
+  const DAY = 86400000;
+  const bFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  // Berliner Uhrzeit als "UTC-Zahl" (zum Rechnen mit Kalendertagen)
+  function berlinWall(ms){
+    const p = Object.fromEntries(bFmt.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  }
+  // Zeitpunkt von 00:00 Uhr (Berlin) des Tages von ms
+  function berlinMidnight(ms = Date.now()){
+    const w = berlinWall(ms), mid = w - (w % DAY);
+    let real = mid - (berlinWall(mid) - mid);
+    real = mid - (berlinWall(real) - real);
+    return real;
+  }
+
+  // Bild verkleinern (längste Seite max px) -> JPEG-Blob
+  function shrink(file, max = 2048, quality = 0.85){
+    return new Promise((res, rej) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const s = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * s);
+        c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => b ? res(b) : rej(new Error('Bild konnte nicht umgewandelt werden')), 'image/jpeg', quality);
+      };
+      img.onerror = () => rej(new Error('Bild konnte nicht gelesen werden'));
+      img.src = url;
+    });
+  }
+
+  // für app.js / extra.js / home.js
+  window.UI = { show, resolve, burst, wait, shake, lightbox, closeLightbox, sheet, berlinWall, berlinMidnight, shrink, reduced, DAY };
+
+  /* ---------- Geschenk ---------- */
   let giftOpening = false;
   $('gift').addEventListener('click', async () => {
     if (giftOpening) return;
@@ -392,8 +528,8 @@
     $('gift').classList.add('boom');
     burst(r.left + r.width / 2, r.top + r.height / 2, 26);
     await wait(650);
-    show('s-final');
-    $('s-final').scrollTop = 0;
+    show('s-home');
+    $('s-home').scrollTop = 0;
   });
 
   /* Einpacken: zurück zum Geschenk */
@@ -412,37 +548,33 @@
   /* ---------- Inhalte (hier anpassen) ---------- */
   // Clay-Bilder liegen in img/clay/<name>.jpg und img/clay/<name>_thumb.jpg
   const CLAY = ['Pinguin', 'Dino', 'Hase', 'Shiba', 'Frosch', 'Biene', 'Axolotl', 'Panda', 'Katze', 'Oktopus', 'Avocado', 'Erdbeere'];
-  const TOGETHER = '2026-04-10';
 
   /* ---------- Navigation ---------- */
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-go]');
     if (!b) return;
-    show(b.dataset.go); $(b.dataset.go).scrollTop = 0;
+    const id = resolve(b.dataset.go);
+    show(id); if ($(id)) $(id).scrollTop = 0;
   });
-  $('lightbox').addEventListener('click', () => $('lightbox').classList.remove('show'));
+  $('lightbox').addEventListener('click', closeLightbox);
 
   /* Clay Date */
   CLAY.forEach(name => {
     const f = '/img/clay/' + name.toLowerCase();
     const b = document.createElement('button');
     b.className = 'clay-item';
+    b.type = 'button';
     b.innerHTML = '<img alt=""><span></span>';
     b.querySelector('img').src = f + '_thumb.jpg';
     b.querySelector('span').textContent = name;
     b.addEventListener('click', () => lightbox(f + '.jpg', name));
     $('clay').appendChild(b);
   });
-
-  /* Tage-Zähler */
-  const today = new Date(); today.setHours(0,0,0,0);
-  const [ty, tm, td] = TOGETHER.split('-').map(Number);
-  $('dayCount').textContent = Math.max(0, Math.round((today - new Date(ty, tm - 1, td)) / 86400000));
-
 })();
 </script>
 <script src="/lib/pocketbase.umd.js"></script>
 <script src="/app.js"></script>
 <script src="/extra.js"></script>
+<script src="/home.js"></script>
 </body>
 </html>
