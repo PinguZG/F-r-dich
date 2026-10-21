@@ -840,6 +840,7 @@
     UI.show(target);
     $(target).scrollTop = 0;
     if (target === 's-wir') loadPings().catch(console.error);
+    document.dispatchEvent(new CustomEvent('wir:go', { detail: target })); // extra.js lädt seine Bereiche nach
   }
 
   // Ziel aus der URL (/#go=...) – wird vom Service Worker beim Öffnen gesetzt

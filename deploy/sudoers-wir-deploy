@@ -1,0 +1,3 @@
+# /etc/sudoers.d/wir-deploy  (installieren mit: sudo visudo -cf … , siehe pocketbase/ANLEITUNG.md)
+# pingu darf ohne Passwort GENAU diese Neustarts ausführen – sonst nichts.
+pingu ALL=(root) NOPASSWD: /usr/bin/systemctl restart pocketbase, /usr/bin/systemctl restart wir-push

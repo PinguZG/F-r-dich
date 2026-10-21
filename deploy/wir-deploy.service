@@ -1,0 +1,14 @@
+[Unit]
+Description=Wir Auto-Deploy (git pull + Neustarts bei Bedarf)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pingu
+Group=pingu
+Environment=HOME=/home/pingu
+ExecStart=/bin/bash /home/pingu/F-r-dich/deploy/autodeploy.sh
+SyslogIdentifier=wir-deploy
+TimeoutStartSec=10min
+Nice=10

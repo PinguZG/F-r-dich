@@ -131,13 +131,19 @@ async function send(to, category, payload) {
   if (!to || !users[to]) return;
   if (!PREF_KEYS.includes(category)) throw new Error('unbekannte Kategorie ' + category);
   if (!(await wants(to, category))) { log('aus (Einstellung)', category, '->', name(to)); return; }
+  await deliver(to, category, payload, category === 'pings' ? 'high' : 'normal', category !== 'pings');
+}
+
+// an alle Handys einer Person; liefert die Fehler (abgelaufene Abos werden gelöscht)
+async function deliver(to, category, payload, urgency, useTopic) {
   const subs = await list('push_subs', { filter: 'user = ' + q(to) });
   const body = JSON.stringify(payload);
+  const errors = [];
   for (const s of subs) {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, body, {
-        TTL: 24 * 3600, urgency: category === 'pings' ? 'high' : 'normal',
-        ...(payload.tag && category !== 'pings' ? { topic: payload.tag.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 32) } : {}),
+        TTL: 24 * 3600, urgency,
+        ...(payload.tag && useTopic ? { topic: payload.tag.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 32) } : {}),
       });
       log('gesendet', category, '->', name(to), JSON.stringify(payload.title));
     } catch (e) {
@@ -146,9 +152,12 @@ async function send(to, category, payload) {
         await api('DELETE', '/api/collections/push_subs/records/' + s.id).catch(err => log('Löschen fehlgeschlagen', err.message));
       } else {
         log('Senden fehlgeschlagen', e.statusCode || '', e.body || e.message);
+        errors.push(`${s.id}: ${e.statusCode || ''} ${e.body || e.message}`.slice(0, 200));
       }
     }
   }
+  if (!subs.length) errors.push('kein Push-Abo');
+  return errors;
 }
 
 // ----------------------------------------------------------------------
@@ -335,6 +344,25 @@ async function doSelections() {
   }
 }
 
+// g) Treffen + Öffne wenn: die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
+//    bündeln dort und prüfen die Schalter in notify_prefs
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-final' };
+
+async function doQueue() {
+  const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });
+  for (const item of due) {
+    // erst als verschickt markieren, dann senden -> nie doppelt; Antwort enthält den Stand inkl. letzter Bündelung
+    const it = await api('PATCH', '/api/collections/push_queue/records/' + item.id, { sent_at: pbTime(Date.now()) });
+    const errors = await deliver(it.user, 'queue:' + it.kind, {
+      title: it.title, body: it.body || '', go: QUEUE_GO[it.kind] || 's-final', tag: it.kind,
+    }, 'high', true);
+    if (errors.length) {
+      await api('PATCH', '/api/collections/push_queue/records/' + it.id, { error: errors.join(' | ').slice(0, 1000) })
+        .catch(e => log('Fehler merken fehlgeschlagen', e.message));
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 // Ablauf
 // ----------------------------------------------------------------------
@@ -347,7 +375,7 @@ async function tick() {
     users = Object.fromEntries((await list('users')).map(u => [u.id, u]));
     if (!state) await loadState();
     const steps = [
-      doPings, doTabs, doEntries, doSelections, doDates,
+      doPings, doQueue, doTabs, doEntries, doSelections, doDates,
       () => doPhotos('photos', 'photos', 'photos', 's-memories', { icon: '📷', one: 'Foto', many: 'Fotos', where: 'Erinnerungen' }),
       () => doPhotos('clay', 'clay_photos', 'clay', 's-clay-done', { icon: '🧸', one: 'Clay-Foto', many: 'Clay-Fotos', where: 'unseren Figuren' }),
     ];

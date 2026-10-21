@@ -1,0 +1,11 @@
+[Unit]
+Description=Wir Auto-Deploy alle 2 Minuten
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+Unit=wir-deploy.service
+
+[Install]
+WantedBy=timers.target

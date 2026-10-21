@@ -1,0 +1,98 @@
+/* Treffen-Countdown, "Öffne wenn …", Benachrichtigungen, Update-Hinweis (extra.js) */
+
+/* ---------- Countdown auf der Startseite ---------- */
+.countdown{width:100%;max-width:340px;margin-top:22px;border:none;font-family:inherit;cursor:pointer;
+  background:var(--pink);color:#fff;border-radius:20px;padding:18px 20px;text-align:center;
+  box-shadow:0 10px 28px rgba(224,69,123,.3);transition:transform .15s}
+.countdown:active{transform:scale(.97)}
+.countdown small{display:block;font-size:13px;font-weight:600;opacity:.9}
+.countdown .cd-num{font-size:clamp(22px,6.6vw,30px);font-weight:700;line-height:1.2;margin:4px 0}
+.countdown em{display:block;font-style:normal;font-size:13px;font-weight:600;opacity:.9}
+.countdown.today .cd-num{animation:beat 1.6s ease-in-out infinite}
+.cd-empty{margin-top:18px;border:none;background:none;font-family:inherit;font-size:14px;font-weight:700;color:#e99bb9;cursor:pointer;padding:8px 12px}
+.cd-empty:active{transform:scale(.95)}
+
+/* ---------- Kleine Links unten im Menü ---------- */
+.menu-links{display:flex;flex-direction:column;align-items:center}
+.menu-links .logout{margin-top:0}
+
+/* ---------- Treffen ---------- */
+.meet-list{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.meet-list .date em{color:var(--pink)}
+.meet-list .acts{display:flex;gap:6px}
+.meet-list .empty-note,.ow-list .empty-note{text-align:center;font-size:14px;font-weight:600;color:#e99bb9;padding:20px 0}
+#s-meetings .add-card{margin-top:16px}
+
+/* ---------- Öffne wenn: Empfängerin ---------- */
+.ow-intro{width:100%;max-width:420px;margin:-10px 0 16px;font-size:14px;font-weight:600;color:#e99bb9}
+.ow-list{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.ow-list .opt{width:100%}
+.ow-list .opt b{font-size:16px}
+.ow-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--pink);margin-left:6px;vertical-align:middle;animation:beat 1.6s ease-in-out infinite}
+
+/* Brief-Animation (wie früher auf der Startseite) */
+.ow-overlay{position:fixed;inset:0;z-index:45;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(253,238,245,.94);padding:16px}
+.ow-overlay.show{display:flex}
+.ow-env-wrap{transition:transform .6s ease,opacity .6s ease}
+.ow-env-wrap.hidden{opacity:0;transform:scale(.8)}
+.ow-envelope{position:relative;width:300px;height:190px;perspective:900px;transform:rotate(-2deg)}
+.ow-env-back{position:absolute;inset:0;background:#f9a8d4;border-radius:10px;box-shadow:0 14px 34px rgba(224,69,123,.25)}
+.ow-paper{position:absolute;left:16px;right:16px;top:10px;height:168px;background:#fff;border-radius:6px;z-index:2;
+  transition:transform .9s cubic-bezier(.4,0,.2,1);display:flex;align-items:flex-start;justify-content:center;
+  padding-top:18px;font-weight:700;color:var(--pink);font-size:15px}
+.ow-envelope.out .ow-paper{transform:translateY(-120px)}
+.ow-env-front{position:absolute;inset:0;z-index:3;border-radius:10px;background:#fbb6d6;
+  clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%)}
+.ow-flap{position:absolute;left:0;right:0;top:0;height:62%;z-index:4;background:#f472b6;
+  clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s ease}
+.ow-envelope.flap-open .ow-flap{transform:rotateX(180deg)}
+.ow-envelope.flap-back .ow-flap{z-index:1}
+.ow-seal{position:absolute;left:50%;top:62%;width:44px;height:44px;margin:-22px 0 0 -22px;z-index:5;border-radius:50%;
+  background:#ef3b4c;border:3px solid #fff4f6;box-shadow:0 3px 10px rgba(0,0,0,.2);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;
+  transition:opacity .3s,transform .3s;animation:owPulse 1.6s ease-in-out infinite}
+@keyframes owPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.ow-envelope.flap-open .ow-seal{opacity:0}
+
+.ow-letter{position:fixed;left:50%;top:50%;width:calc(100% - 32px);max-width:360px;max-height:calc(100% - 60px);overflow-y:auto;
+  transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;transition:all .5s ease;
+  background:#fff;border-radius:18px;padding:30px 22px 22px;text-align:center;box-shadow:0 14px 44px rgba(224,69,123,.22);z-index:46}
+.ow-letter.show{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+.ow-letter .small{font-size:14px;color:#e99bb9;font-weight:600}
+.ow-letter h2{font-size:22px;color:var(--pink-dark);margin:8px 0 14px}
+.ow-letter p{font-size:17px;font-weight:600;line-height:1.5;color:var(--pink-dark);white-space:pre-wrap;text-align:left;
+  -webkit-user-select:text;user-select:text;word-break:break-word}
+.ow-letter .sign{margin-top:16px;font-size:15px;font-weight:700;color:var(--pink);text-align:right}
+.ow-letter .mem-btn{margin-top:20px}
+
+/* ---------- Öffne wenn: Schreiben ---------- */
+.ow-cat{width:100%;background:#fff;border-radius:18px;box-shadow:0 6px 18px rgba(224,69,123,.12);overflow:hidden}
+.ow-cat-head{display:flex;align-items:center;gap:8px;padding:14px 14px 14px 16px;cursor:pointer}
+.ow-cat-head > div{flex:1;min-width:0}
+.ow-cat-head b{display:block;font-size:16px;color:var(--pink-dark);word-break:break-word}
+.ow-cat-head small{font-size:12px;font-weight:600;color:#e99bb9}
+.ow-cat-body{border-top:2px dashed var(--pink-soft);padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.ow-msg{background:var(--pink-soft);border-radius:14px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start}
+.ow-msg > div{flex:1;min-width:0}
+.ow-msg p{font-size:14px;font-weight:600;color:var(--pink-dark);white-space:pre-wrap;word-break:break-word;line-height:1.4}
+.ow-msg small{display:block;margin-top:4px;font-size:12px;font-weight:600;color:#e99bb9}
+.ow-msg .del-x,.ow-cat .del-x{background:#fff}
+.ow-cat-head .del-x{background:var(--pink-soft)}
+.mem-input.ow-text{min-height:96px;resize:vertical;line-height:1.4}
+.ow-msg .mem-input.ow-text{background:#fff}
+.ow-cat-body .row .mem-btn{height:42px;line-height:42px;font-size:15px}
+.ow-new{width:100%;max-width:420px;margin-top:16px}
+.ow-prefix{font-size:15px;font-weight:700;color:var(--pink-dark);text-align:left}
+
+/* ---------- Benachrichtigungen ---------- */
+.notify-card{max-width:420px;display:flex;flex-direction:column;gap:14px;text-align:left}
+.notify-card .mem-note{margin:0}
+
+/* ---------- Update-Hinweis ---------- */
+.update-bar{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:60;transform:translate(-50%,140%);
+  width:calc(100% - 32px);max-width:360px;border:none;border-radius:25px;padding:14px 18px;
+  background:var(--pink);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 10px 28px rgba(224,69,123,.35);transition:transform .5s cubic-bezier(.2,.9,.3,1.2)}
+.update-bar.show{transform:translate(-50%,0)}
+.update-bar:active{transform:translate(-50%,0) scale(.97)}
