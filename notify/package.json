@@ -1,0 +1,16 @@
+{
+  "name": "wir-notify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Verschickt Treffen- und Öffne-wenn-Pushs aus push_queue",
+  "main": "sender.js",
+  "scripts": {
+    "start": "node sender.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

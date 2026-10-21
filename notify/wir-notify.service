@@ -1,0 +1,15 @@
+[Unit]
+Description=wir-notify (Treffen- und Öffne-wenn-Pushs)
+After=network-online.target pocketbase.service
+Wants=network-online.target
+
+[Service]
+User=pingu
+WorkingDirectory=/home/pingu/F-r-dich/notify
+EnvironmentFile=/etc/wir-notify.env
+ExecStart=/usr/bin/env node sender.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
