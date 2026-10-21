@@ -13,6 +13,7 @@ main() {
   local REPO="${REPO:-/home/pingu/F-r-dich}"
   local BRANCH="${BRANCH:-main}"
   local PB_HOOKS="${PB_HOOKS:-/home/pingu/pb/pb_hooks}"
+  local PB_MIGRATIONS="${PB_MIGRATIONS:-/home/pingu/pb/pb_migrations}"
   local LOCK="${LOCK:-/tmp/wir-deploy.lock}"
   local SYSTEMCTL="${SYSTEMCTL:-sudo -n /usr/bin/systemctl}"
   # Ordner im Repo -> systemd-Dienst
@@ -52,15 +53,38 @@ main() {
   if ! git pull --ff-only --quiet origin "$BRANCH"; then log "FEHLER: git pull --ff-only fehlgeschlagen"; return 1; fi
   log "aktualisiert ${old:0:7} -> ${new:0:7} ($(echo "$changed" | wc -l) Datei(en))"
 
-  local rc=0
+  local rc=0 restart_pb=0
 
   # pb_hooks -> PocketBase (nur kopieren, nie etwas in pb_hooks löschen)
   if echo "$changed" | grep -q '^pocketbase/pb_hooks/'; then
     if cp -a "$REPO/pocketbase/pb_hooks/." "$PB_HOOKS/"; then
-      log "pb_hooks nach $PB_HOOKS kopiert"
-      if $SYSTEMCTL restart pocketbase; then log "pocketbase neu gestartet"; else log "FEHLER: Neustart pocketbase"; rc=1; fi
+      log "pb_hooks nach $PB_HOOKS kopiert"; restart_pb=1
     else
       log "FEHLER: pb_hooks kopieren"; rc=1
+    fi
+  fi
+
+  # pb_migrations -> PocketBase (nur kopieren); PocketBase spielt neue Migrationen beim Start selbst ein
+  if echo "$changed" | grep -q '^pocketbase/pb_migrations/'; then
+    if mkdir -p "$PB_MIGRATIONS" && cp -a "$REPO/pocketbase/pb_migrations/." "$PB_MIGRATIONS/"; then
+      log "pb_migrations nach $PB_MIGRATIONS kopiert"; restart_pb=1
+    else
+      log "FEHLER: pb_migrations kopieren"; rc=1
+    fi
+  fi
+
+  if [ "$restart_pb" = 1 ]; then
+    if $SYSTEMCTL restart pocketbase; then
+      # läuft PocketBase wieder? (scheitert z. B. eine Migration, beendet es sich sofort)
+      local i up=0
+      for i in $(seq 1 30); do
+        if curl -fs --max-time 3 -o /dev/null "${PB_HEALTH:-http://127.0.0.1:8090/api/health}"; then up=1; break; fi
+        sleep 1
+      done
+      if [ "$up" = 1 ]; then log "pocketbase neu gestartet"
+      else log "FEHLER: pocketbase antwortet nach dem Neustart nicht – journalctl -u pocketbase -n 50"; rc=1; fi
+    else
+      log "FEHLER: Neustart pocketbase"; rc=1
     fi
   fi
 
