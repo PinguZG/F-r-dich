@@ -836,47 +836,89 @@
     }
   });
 
-  // ---------- Liebe-Glas: zwei Herzen, füllen sich bis 20 ----------
-  const LOVE_FULL = 20;
+  // ---------- Liebe-Glas: EIN gemeinsames Herz, voll bei 200, in beiden Herzfarben ----------
+  const LOVE_FULL = 200;
+  const LOVE_COOLDOWN = 500;
   const HEART = 'M50 88 C22 68 4 52 4 31 C4 15 15 4 29 4 C38 4 46 9 50 17 C54 9 62 4 71 4 C85 4 96 15 96 31 C96 52 78 68 50 88Z';
   const love = { mine: 0, theirs: 0 };
+  const heartHex = { me: '#3b9eff', partner: '#ff5fa2' };
   let midnightTimer = null;
 
-  function glassHeart(box, uid) {
-    box.insertAdjacentHTML('afterbegin', `
+  // Flüssigkeit: oben meine Farbe, unten die der anderen Person, weicher Übergang dazwischen
+  $('loveHeart').insertAdjacentHTML('afterbegin', `
 <svg viewBox="0 0 100 92" aria-hidden="true">
   <defs>
-    <clipPath id="hc-${uid}"><path d="${HEART}"/></clipPath>
-    <linearGradient id="hl-${uid}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" style="stop-color:var(--liquid1)"/><stop offset="1" style="stop-color:var(--liquid2)"/>
+    <clipPath id="hc-love"><path d="${HEART}"/></clipPath>
+    <linearGradient id="hl-love" gradientUnits="userSpaceOnUse" x1="0" y1="-6" x2="0" y2="88">
+      <stop class="s-me" offset="0"/><stop class="s-me" offset=".45"/>
+      <stop class="s-pa" offset=".55"/><stop class="s-pa" offset="1"/>
+    </linearGradient>
+    <linearGradient id="hs-love" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".14"/>
     </linearGradient>
   </defs>
   <path class="h-glass" d="${HEART}"/>
-  <g clip-path="url(#hc-${uid})">
-    <g class="h-liquid" style="transform:translateY(92px)">
-      <path class="h-wave back" d="M-100 2 Q-75 -5 -50 2 T0 2 T50 2 T100 2 T150 2 T200 2 V120 H-100Z" fill="url(#hl-${uid})"/>
-      <path class="h-wave" d="M-100 0 Q-75 6 -50 0 T0 0 T50 0 T100 0 T150 0 T200 0 V120 H-100Z" fill="url(#hl-${uid})"/>
+  <g clip-path="url(#hc-love)">
+    <g class="h-liquid" transform="translate(0 92)">
+      <path class="h-wave back" d="M-100 2 Q-75 -5 -50 2 T0 2 T50 2 T100 2 T150 2 T200 2 V120 H-100Z" fill="url(#hl-love)"/>
+      <path class="h-wave" d="M-100 0 Q-75 6 -50 0 T0 0 T50 0 T100 0 T150 0 T200 0 V120 H-100Z" fill="url(#hl-love)"/>
     </g>
+    <rect x="0" y="0" width="100" height="92" fill="url(#hs-love)"/>
   </g>
   <path class="h-rim" d="${HEART}"/>
   <path class="h-shine" d="M21 18 C14 22 11 29 12 37"/>
   <circle class="h-shine2" cx="25" cy="45" r="2.4"/>
 </svg>`);
-  }
-  glassHeart($('heartPartner'), 'p');
-  glassHeart($('heartMe'), 'm');
 
-  function fillHeart(box, n) {
-    const ratio = Math.min(1, n / LOVE_FULL);
-    // 92 = leer (Flüssigkeit unter dem Herz), 4 = randvoll
-    box.querySelector('.h-liquid').style.transform = `translateY(${92 - ratio * 88}px)`;
-    box.querySelector('.h-count').textContent = n;
-    box.classList.toggle('wet', ratio >= 0.5);
+  // weich zum Ziel gleiten (Füllstand + Anteil), statt zu springen
+  const shown = { fill: 0, share: 0.5 };
+  const target = { fill: 0, share: 0.5 };
+  let anim = 0;
+  function drawLove() {
+    const box = $('loveHeart');
+    const top = 92 - shown.fill * 88; // 92 = leer, 4 = randvoll
+    box.querySelector('.h-liquid').setAttribute('transform', `translate(0 ${top.toFixed(2)})`);
+    // Verlauf in Koordinaten der Flüssigkeit: 0 = Oberfläche (inkl. Welle), unten = Herzspitze
+    const g = box.querySelector('#hl-love');
+    g.setAttribute('y2', (88 - top).toFixed(2));
+    const blend = 0.06;
+    const a = Math.min(1, Math.max(0, shown.share));
+    const st = g.querySelectorAll('stop');
+    st[1].setAttribute('offset', Math.max(0, a - blend));
+    st[2].setAttribute('offset', Math.min(1, a + blend));
+    box.classList.toggle('wet', shown.fill >= 0.42);
   }
+  function stepLove() {
+    const k = UI.reduced() ? 1 : 0.12;
+    let moving = false;
+    for (const p of ['fill', 'share']) {
+      const d = target[p] - shown[p];
+      if (Math.abs(d) > 0.001) { shown[p] += d * k; moving = true; } else shown[p] = target[p];
+    }
+    drawLove();
+    anim = moving ? requestAnimationFrame(stepLove) : 0;
+  }
+  function paintColors() {
+    const st = $('loveHeart').querySelectorAll('#hl-love stop');
+    st[0].setAttribute('stop-color', heartHex.me); st[1].setAttribute('stop-color', heartHex.me);
+    st[2].setAttribute('stop-color', heartHex.partner); st[3].setAttribute('stop-color', heartHex.partner);
+    $('loveWhoMe').style.setProperty('--c', heartHex.me);
+    $('loveWhoPartner').style.setProperty('--c', heartHex.partner);
+    document.documentElement.style.setProperty('--heart-me', heartHex.me);
+  }
+  paintColors();
+  document.addEventListener('wir:hearts', e => { Object.assign(heartHex, e.detail); paintColors(); });
 
   function renderLove() {
-    fillHeart($('heartPartner'), love.theirs);
-    fillHeart($('heartMe'), love.mine);
+    const total = love.mine + love.theirs;
+    target.fill = Math.min(1, total / LOVE_FULL);
+    if (total) target.share = love.mine / total;
+    if (!anim) anim = requestAnimationFrame(stepLove);
+    $('loveTotal').textContent = total;
+    $('loveNumMe').textContent = love.mine;
+    $('loveNumPartner').textContent = love.theirs;
+    $('loveHeart').classList.toggle('full', total >= LOVE_FULL);
     const pn = partner?.name || 'Schatz';
     $('wirToday').textContent = love.theirs || love.mine ? `Heute: 💗 ${love.theirs}× von ${pn} · ${love.mine}× von dir` : '';
   }
@@ -922,14 +964,25 @@
     }
   }
 
+  // 0,5 s Pause pro Tipp: alle Liebe-Knöpfe kurz gesperrt, mit sichtbarem Ablauf
+  let loveCoolUntil = 0;
+  function coolDown() {
+    loveCoolUntil = Date.now() + LOVE_COOLDOWN;
+    const btns = [$('loveBtn'), ...document.querySelectorAll('[data-ping="love"]')];
+    btns.forEach(b => { b.disabled = true; b.classList.remove('cooling'); void b.offsetWidth; b.classList.add('cooling'); });
+    setTimeout(() => btns.forEach(b => { b.disabled = false; b.classList.remove('cooling'); }), LOVE_COOLDOWN);
+  }
+
   async function sendLove(btn) {
     if (!partner) { pingStatus('Niemand zum Anschicken gefunden 🥺'); return; }
+    if (Date.now() < loveCoolUntil) return;
+    coolDown();
     love.mine++;
     pendingLove++;
     renderLove();
-    pulse($('heartMe'));
+    pulse($('loveHeart'));
     floatHearts(btn);
-    navigator.vibrate?.(12);
+    navigator.vibrate?.(15);
     try {
       await pb.collection('pings').create({ from: me(), to: partner.id, type: 'love' });
       pingStatus('💗 Liebe an ' + (partner.name || 'Schatz') + ' geschickt');
@@ -1036,47 +1089,6 @@
     await sub.unsubscribe();
   }
 
-  // ---------- Einstellungen: welche Pushs ----------
-  const PREFS = [
-    { key: 'pings',   ico: '💞', title: 'Wir zwei',        sub: 'Liebe (gebündelt), Anruf-Wünsche, Nachrichten' },
-    { key: 'photos',  ico: '📸', title: 'Erinnerungen',    sub: 'Neue Fotos' },
-    { key: 'dates',   ico: '📅', title: 'Unsere Daten',    sub: 'Neue oder geänderte Daten' },
-    { key: 'clay',    ico: '🧸', title: 'Clay Date',       sub: 'Neue Fotos unserer Figuren' },
-    { key: 'tabs',    ico: '✨', title: 'Reiter',          sub: 'Neue Reiter, Einträge, ❤️-Auswahl' },
-    { key: 'planned', ico: '💌', title: 'Geplante Dates',  sub: 'Neues Date geplant & wenn es freigegeben ist' },
-  ];
-  let prefRec = null;
-
-  async function loadPrefs() {
-    [prefRec] = await pb.collection('push_prefs').getFullList({ filter: pb.filter('user = {:me}', { me: me() }) });
-    const prefs = prefRec?.prefs || {};
-    $('prefs').replaceChildren(...PREFS.map(p => {
-      const el = document.createElement('label');
-      el.className = 'date';
-      el.innerHTML = '<span class="ico"></span><div><b></b><small></small></div><input type="checkbox" class="switch">';
-      el.querySelector('.ico').textContent = p.ico;
-      el.querySelector('b').textContent = p.title;
-      el.querySelector('small').textContent = p.sub;
-      const sw = el.querySelector('input');
-      sw.checked = prefs[p.key] !== false; // Standard: an
-      sw.addEventListener('change', () => savePref(p.key, sw));
-      return el;
-    }));
-  }
-
-  async function savePref(key, sw) {
-    const prefs = { ...(prefRec?.prefs || {}), [key]: sw.checked };
-    try {
-      prefRec = prefRec
-        ? await pb.collection('push_prefs').update(prefRec.id, { prefs })
-        : await pb.collection('push_prefs').create({ user: me(), prefs });
-      $('prefStatus').textContent = 'Gespeichert ✓';
-    } catch (err) {
-      sw.checked = !sw.checked;
-      $('prefStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
-    }
-  }
-
   // ---------- aus einer Benachrichtigung heraus öffnen ----------
   async function goTo(target) {
     if (!target) return;
@@ -1116,7 +1128,7 @@
     if (!started) return;
     if (e.detail === 's-wir') { pingStatus(''); loadPings().catch(console.error); loadLove().catch(console.error); }
     if (e.detail === 's-home') loadLove().catch(console.error);
-    if (e.detail === 's-settings') { $('prefStatus').textContent = ''; renderPush(); loadPrefs().catch(console.error); }
+    if (e.detail === 's-settings') renderPush();
   });
 
   // ======================================================================
@@ -1126,7 +1138,7 @@
     await seedDates().catch(console.error);
     await loadPartner().catch(console.error);
     await Promise.all([
-      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadLove(), loadPrefs(), syncPush(),
+      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadLove(), syncPush(),
     ].map(p => p.catch(err => console.error(err))));
     started = true;
   }
@@ -1154,7 +1166,7 @@
           if (isLove(e.record.type)) {
             love.theirs++;
             renderLove();
-            pulse($('heartPartner'));
+            pulse($('loveHeart'));
             reloadLove();
           } else if ($('s-wir').classList.contains('active') || $('s-home').classList.contains('active')) {
             UI.burst(window.innerWidth / 2, window.innerHeight / 3, 22);

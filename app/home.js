@@ -71,8 +71,9 @@
     $('nameMe').textContent = meUser?.name || 'Ich';
     $('namePartner').textContent = partner?.name || 'Schatz';
     $('setName').textContent = meUser?.name || '';
-    $('lovePartnerLabel').textContent = 'von ' + (partner?.name || 'Schatz');
+    $('lovePartnerLabel').textContent = partner?.name || 'Schatz';
     $('avatarRemove').hidden = !meUser?.avatar;
+    renderHearts();
   }
 
   async function loadPeople() {
@@ -111,6 +112,84 @@
       $('avatarStatus').textContent = 'Ging nicht: ' + errText(err);
     }
   });
+
+  // ======================================================================
+  // Herzfarbe – jede Farbe nur für EINE Person (Unique-Index users.heart_color auf dem Server)
+  // ======================================================================
+  const HEART_COLORS = [
+    { key: 'rosa',     name: 'Rosa',     hex: '#ff5fa2' },
+    { key: 'kirsche',  name: 'Kirsche',  hex: '#e11d48' },
+    { key: 'koralle',  name: 'Koralle',  hex: '#ff7f50' },
+    { key: 'pfirsich', name: 'Pfirsich', hex: '#ffab5e' },
+    { key: 'sonne',    name: 'Sonne',    hex: '#f5c518' },
+    { key: 'mint',     name: 'Mint',     hex: '#34d399' },
+    { key: 'tuerkis',  name: 'Türkis',   hex: '#14b8c4' },
+    { key: 'himmel',   name: 'Himmel',   hex: '#3b9eff' },
+    { key: 'ozean',    name: 'Ozean',    hex: '#4f5bd5' },
+    { key: 'lavendel', name: 'Lavendel', hex: '#a78bfa' },
+    { key: 'flieder',  name: 'Flieder',  hex: '#d946ef' },
+    { key: 'beere',    name: 'Beere',    hex: '#9d174d' },
+  ];
+  const colorOf = k => HEART_COLORS.find(c => c.key === k);
+
+  // gewählte Farbe, sonst automatisch eine freie (nach Anlegedatum: zuerst Rosa, dann Himmel)
+  function heartColors() {
+    const people = [meUser, partner].filter(Boolean).sort((a, b) => (a.created || '').localeCompare(b.created || ''));
+    const taken = new Set(people.map(u => u.heart_color).filter(colorOf));
+    const out = {};
+    for (const u of people) {
+      let k = colorOf(u.heart_color) ? u.heart_color : null;
+      if (!k) { k = ['rosa', 'himmel', ...HEART_COLORS.map(c => c.key)].find(x => !taken.has(x)); taken.add(k); }
+      out[u.id] = colorOf(k);
+    }
+    return { me: out[meUser?.id] || HEART_COLORS[0], partner: out[partner?.id] || HEART_COLORS[7] };
+  }
+
+  let heartKey = '';
+  function renderHearts() {
+    const c = heartColors();
+    const key = c.me.key + '/' + c.partner.key + '/' + (partner?.avatar || '') + (partner?.name || '');
+    if (key === heartKey) return;
+    heartKey = key;
+    document.dispatchEvent(new CustomEvent('wir:hearts', { detail: { me: c.me.hex, partner: c.partner.hex } }));
+    $('heartColors').replaceChildren(...HEART_COLORS.map(col => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hc-btn';
+      b.style.setProperty('--c', col.hex);
+      const mine = col.key === c.me.key, theirs = col.key === c.partner.key;
+      b.classList.toggle('on', mine);
+      b.classList.toggle('taken', theirs);
+      b.setAttribute('aria-pressed', mine);
+      b.setAttribute('aria-label', col.name + (theirs ? ' – hat schon ' + (partner?.name || 'Schatz') : ''));
+      b.title = col.name;
+      if (theirs) {
+        const av = document.createElement('span');
+        av.className = 'avatar hc-av';
+        paintAvatar(av, partner);
+        b.append(av);
+      }
+      b.addEventListener('click', () => pickHeart(col, theirs, b));
+      return b;
+    }));
+  }
+
+  async function pickHeart(col, theirs, btn) {
+    const st = $('heartColorStatus');
+    if (theirs) { st.textContent = col.name + ' hat schon ' + (partner?.name || 'Schatz') + ' 💗 – such dir eine andere aus.'; UI.shake(btn); return; }
+    if (meUser?.heart_color === col.key) return;
+    try {
+      meUser = await pb.collection('users').update(myId(), { heart_color: col.key });
+      renderHearts();
+      st.textContent = col.name + ' ist jetzt deine Herzfarbe ✓';
+      const r = btn.getBoundingClientRect();
+      UI.burst(r.left + r.width / 2, r.top + r.height / 2, 10);
+    } catch (err) {
+      const taken = err?.response?.data?.heart_color?.code === 'validation_not_unique';
+      st.textContent = taken ? 'Die hat sich gerade ' + (partner?.name || 'Schatz') + ' geschnappt 💗' : 'Speichern fehlgeschlagen: ' + errText(err);
+      await loadPeople().catch(console.error);
+    }
+  }
 
   // ======================================================================
   // Zusammen-Timer
@@ -200,7 +279,7 @@
 
   document.addEventListener('wir:show', e => {
     if (!started) return;
-    if (e.detail === 's-settings') { $('avatarStatus').textContent = ''; $('sinceStatus').textContent = ''; }
+    if (e.detail === 's-settings') { $('avatarStatus').textContent = ''; $('sinceStatus').textContent = ''; $('heartColorStatus').textContent = ''; }
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden || !started || !pb.authStore.isValid) return;

@@ -124,17 +124,12 @@ let users = {};
 const name = id => users[id]?.name || 'Dein Schatz';
 const otherOf = id => Object.keys(users).find(u => u !== id);
 
-// Standard: alles an (nicht gesetzte Schalter gelten als an)
+// Benachrichtigungen sind nicht abschaltbar: push_prefs/notify_prefs bleiben bestehen, werden aber ignoriert.
 const PREF_KEYS = ['pings', 'photos', 'dates', 'clay', 'tabs', 'planned'];
-async function wants(userId, category) {
-  const [p] = await list('push_prefs', { filter: 'user = ' + q(userId) });
-  return p?.prefs?.[category] !== false;
-}
 
 async function send(to, category, payload) {
   if (!to || !users[to]) return;
   if (!PREF_KEYS.includes(category)) throw new Error('unbekannte Kategorie ' + category);
-  if (!(await wants(to, category))) { log('aus (Einstellung)', category, '->', name(to)); return; }
   await deliver(to, category, payload, category === 'pings' ? 'high' : 'normal', category !== 'pings');
 }
 
@@ -406,7 +401,7 @@ async function doSelections() {
 }
 
 // g) Treffen + Öffne wenn: die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
-//    bündeln dort und prüfen die Schalter in notify_prefs
+//    und bündeln dort (notify_prefs wird ignoriert)
 const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home' };
 
 async function doQueue() {

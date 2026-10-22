@@ -88,11 +88,12 @@
   </div>
 
   <div class="card glass love-glass">
-    <div class="glass-hearts">
-      <div class="glass-heart" id="heartPartner"><b class="h-count">0</b><span class="h-label" id="lovePartnerLabel">von …</span></div>
-      <div class="glass-heart" id="heartMe"><b class="h-count">0</b><span class="h-label">von mir</span></div>
+    <div class="glass-heart big" id="loveHeart"><div class="h-num"><b class="h-count" id="loveTotal">0</b><small>von 200</small></div></div>
+    <div class="love-split">
+      <span class="love-who" id="loveWhoPartner"><i class="dot"></i><span class="lw-name" id="lovePartnerLabel">…</span><b id="loveNumPartner">0</b></span>
+      <span class="love-who" id="loveWhoMe"><i class="dot"></i><span class="lw-name">Du</span><b id="loveNumMe">0</b></span>
     </div>
-    <div class="love-today">heute · füllt sich bis 20 💗</div>
+    <div class="love-today">heute zusammen · voll bei 200 💗</div>
     <button class="love-send" id="loveBtn" type="button">💗 Liebe senden</button>
     <div class="mini-actions">
       <button class="mini" data-ping="call" type="button"><span>📞</span>Anruf</button>
@@ -298,6 +299,13 @@
   </div>
 
   <div class="card glass set-card">
+    <h3>💗 Meine Herzfarbe</h3>
+    <div class="heart-colors" id="heartColors"></div>
+    <p class="mem-note">Jede Farbe gibt es nur einmal – damit füllt ihr gemeinsam das Liebe-Glas.</p>
+    <div class="mem-status" id="heartColorStatus"></div>
+  </div>
+
+  <div class="card glass set-card">
     <h3>💞 Zusammen seit</h3>
     <input class="mem-input" id="sinceInput" type="date">
     <p class="mem-note">Gilt für euch beide – der Zähler auf der Startseite rechnet ab diesem Tag.</p>
@@ -308,14 +316,7 @@
     <h3>🔔 Benachrichtigungen</h3>
     <span class="push-state" id="pushState"></span>
     <button class="mem-btn" id="pushBtn2" type="button" hidden>🔔 Benachrichtigungen aktivieren</button>
-    <details class="fold">
-      <summary>Was möchtest du bekommen?</summary>
-      <div class="dates prefs" id="prefs"></div>
-      <label class="date pref-row"><span class="ico">💗</span><div><b>Treffen</b><small>Am Vortag ab 18:00 und am Tag ab 08:00</small></div><input type="checkbox" class="switch" id="prefMeetings"></label>
-      <label class="date pref-row"><span class="ico">💌</span><div><b>Öffne wenn</b><small>Neue Briefe für mich</small></div><input type="checkbox" class="switch" id="prefOpenWhen"></label>
-      <div class="mem-status" id="prefStatus"></div>
-      <div class="mem-status" id="notifyExtraStatus"></div>
-    </details>
+    <p class="mem-note">Einmal aktivieren – dann bekommst du alles: Liebe, Nachrichten, Fotos, Dates, Treffen und Briefe.</p>
   </div>
 
   <div class="card glass set-card app-card">

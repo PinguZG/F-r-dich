@@ -283,6 +283,40 @@ textarea.mem-input{resize:none;line-height:1.45}
   background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink);font-size:19px;font-weight:700;
   box-shadow:0 10px 26px rgba(var(--shadow),.38);transition:transform .12s}
 .love-send:active{transform:scale(.95)}
+/* großes gemeinsames Herz */
+.glass-heart.big{width:230px;margin:2px auto 0}
+.glass-heart.big svg{width:230px;height:212px}
+.glass-heart.big.pulse svg{animation:squish .5s ease}
+.glass-heart.big.full svg{filter:drop-shadow(0 0 22px var(--heart-me,#ff5fa2)) drop-shadow(0 10px 18px rgba(var(--shadow),.28))}
+@keyframes squish{0%{transform:scale(1)}30%{transform:scale(1.08,.95)}60%{transform:scale(.97,1.04)}100%{transform:scale(1)}}
+.h-num{position:absolute;top:66px;left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.glass-heart.big .h-count{position:static;font-size:46px;line-height:1}
+.h-num small{font-size:12px;font-weight:700;color:var(--ink-soft);transition:color .4s}
+.glass-heart.wet .h-num small{color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.love-split{display:flex;justify-content:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.love-who{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--glass-strong);
+  border:1px solid var(--glass-border);font-size:13px;font-weight:700;color:var(--ink-soft);max-width:48%}
+.love-who .dot{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.love-who .lw-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.love-who b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* 0,5 s Pause nach jedem Tipp */
+.love-send,.ping-btn{position:relative;overflow:hidden}
+.love-send:disabled,.ping-btn:disabled{cursor:default}
+.love-send.cooling::after,.ping-btn.cooling::after{content:'';position:absolute;left:0;bottom:0;height:4px;width:100%;
+  background:rgba(255,255,255,.75);transform-origin:left;animation:cool .5s linear forwards}
+.love-send.cooling{filter:saturate(.75) brightness(.97)}
+@keyframes cool{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+/* Herzfarbe */
+.heart-colors{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:10px;justify-items:center}
+.hc-btn{position:relative;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;background:var(--c);
+  box-shadow:0 4px 10px rgba(var(--shadow),.22),inset 0 -3px 6px rgba(0,0,0,.12),inset 0 3px 6px rgba(255,255,255,.35);transition:transform .15s}
+.hc-btn:active{transform:scale(.9)}
+.hc-btn.on{box-shadow:0 0 0 3px var(--card,#fff),0 0 0 6px var(--c),0 4px 12px rgba(var(--shadow),.3)}
+.hc-btn.on::before{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.hc-btn.taken{filter:grayscale(.75);opacity:.45;cursor:not-allowed}
+.hc-av{position:absolute;right:-6px;bottom:-6px;width:22px!important;height:22px!important;min-width:0;font-size:10px!important;
+  border:2px solid #fff;filter:none}
+@media (max-width:360px){.heart-colors{gap:8px}.hc-btn{width:38px;height:38px}}
 .mini-actions{display:flex;justify-content:center;gap:18px;margin-top:12px}
 .mini{display:flex;flex-direction:column;align-items:center;gap:5px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--ink-soft)}
 .mini span{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;
@@ -571,9 +605,9 @@ textarea.mem-input{resize:none;line-height:1.45}
 
 /* sehr schmale Handys */
 @media (max-width:360px){
-  .glass-heart,.glass-heart svg{width:112px}
-  .glass-heart svg{height:103px}
-  .h-count{top:31px}
+  .glass-heart.big,.glass-heart.big svg{width:200px}
+  .glass-heart.big svg{height:184px}
+  .h-num{top:56px}
   .glow-ring{width:136px;height:136px}
   .glow-core b{font-size:40px}
   .ticker b{font-size:17px}

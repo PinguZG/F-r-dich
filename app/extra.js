@@ -466,35 +466,6 @@
   });
 
   // ======================================================================
-  // Benachrichtigungs-Schalter (Treffen, Öffne wenn)
-  // ======================================================================
-  let prefs = null;
-  async function loadPrefs() {
-    try {
-      prefs = await pb.collection('notify_prefs').getFirstListItem(pb.filter('user = {:me}', { me: myId() }));
-    } catch (err) {
-      if (err?.status !== 404) throw err;
-      prefs = null;
-    }
-    $('prefMeetings').checked = !prefs?.mute_meetings;
-    $('prefOpenWhen').checked = !prefs?.mute_openwhen;
-  }
-  async function savePrefs() {
-    const data = { mute_meetings: !$('prefMeetings').checked, mute_openwhen: !$('prefOpenWhen').checked };
-    try {
-      prefs = prefs
-        ? await pb.collection('notify_prefs').update(prefs.id, data)
-        : await pb.collection('notify_prefs').create({ ...data, user: myId() });
-      $('notifyExtraStatus').textContent = 'Gespeichert ✓';
-    } catch (err) {
-      $('notifyExtraStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
-      await loadPrefs().catch(console.error);
-    }
-  }
-  $('prefMeetings').addEventListener('change', savePrefs);
-  $('prefOpenWhen').addEventListener('change', savePrefs);
-
-  // ======================================================================
   // Update-Hinweis + neu laden
   // ======================================================================
   let swReg = null;
@@ -555,7 +526,6 @@
   document.addEventListener('wir:show', e => {
     if (!started) return;
     if (e.detail === 's-openwhen') setSeg($('owWritePane').hidden ? 'in' : 'write');
-    if (e.detail === 's-settings') { $('notifyExtraStatus').textContent = ''; loadPrefs().catch(console.error); }
     if (e.detail === 's-plans' || e.detail === 's-home') renderCountdown();
   });
 

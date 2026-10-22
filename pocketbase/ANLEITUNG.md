@@ -405,3 +405,58 @@ sudo systemctl start wir-push wir-deploy.timer
 ```
 
 Beim Start spielt PocketBase die Redesign-Migration wieder ein (sie legt nur die neuen Collections/Felder an). Das schadet der alten App nicht.
+
+---
+
+# Liebe-Update 22.10.2026
+
+Kurz getestet mit einer lokalen PocketBase 0.40.5 und einer Kopie der Live-Datenbank (PocketBase startet, Migration läuft, ein Liebe-Tipp, doppelte Herzfarbe wird abgelehnt).
+
+## Was neu ist
+
+| Wo | Was |
+|---|---|
+| **Start** | **Ein** großes Glas-Herz statt zwei. Füllstand = Liebe-Tipps von euch beiden heute / 200 (ab 200 voll, leuchtet). Die Flüssigkeit zeigt das Verhältnis in euren Herzfarben (oben deine, unten die der anderen Person, weicher Übergang, Wellen). Darunter die Tageszahlen beider. Reset um 00:00 Europe/Berlin. |
+| **💗 Liebe senden** | 0,5 s Pause nach jedem Tipp (Knopf kurz gesperrt, Balken läuft ab, kurze Vibration auf Android – iPhones können im Browser nicht vibrieren). Jeder Tipp zählt sofort im Glas, auch beim anderen (Realtime). |
+| **Einstellungen → 💗 Meine Herzfarbe** | 12 runde Farbknöpfe. Die Farbe der anderen Person ist ausgegraut, mit ihrem kleinen Profilbild. |
+| **Einstellungen → 🔔** | Keine Schalter mehr, nur noch „Benachrichtigungen aktivieren“ (iOS-Erlaubnis). |
+
+**Push bei Liebe: unverändert gebündelt** wie vorher (höchstens alle 5 Minuten eine: „💗 Daniel hat dir 7× Liebe geschickt“).
+**Benachrichtigungen nicht mehr abschaltbar:** wir-push ignoriert `push_prefs`, die Hooks ignorieren `notify_prefs`. Beide Collections bleiben mit ihren Daten bestehen.
+
+## Datenbank (nur additiv)
+
+`pocketbase/pb_migrations/1792700000_wir_liebe.js`:
+- neu `users.heart_color` (Text, nur Werte aus der Palette) + **Unique-Index** `idx_users_heart_color` (leere Werte ausgenommen) → zwei Personen können serverseitig nie dieselbe Farbe haben (Fehler `validation_not_unique`)
+- Standardfarben beim ersten Lauf: Daniel = Rosa, Ida = Himmel (nach Anlegedatum)
+- neu `pings.series` (Serien-Zähler: Tipps innerhalb von 10 s nach dem letzten = selbe Serie, setzt der Hook `pb_hooks/wir_liebe.pb.js`)
+
+Service Worker: `wir-v7`.
+
+## Sicherung vorher
+
+- Git-Tag **`vor-liebe-update`** = Commit `8a2b584`, auf GitHub gepusht.
+- Datenbank-Backup (SQLite-Backup-Funktion, Integritätsprüfung „ok“): `/home/pingu/backups/vor-liebe-update-2026-10-22/` mit `data.db`, `auxiliary.db`, `storage/`, `pb_migrations/`, `pb_hooks/`.
+
+## Zurück zur Version davor
+
+Das Schema wurde nur erweitert, die alte App läuft damit unverändert. **Normalerweise reicht Schritt 1.**
+
+**1. Code zurück (am PC):**
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-liebe-update -- app push pocketbase/pb_hooks
+git rm -q --cached pocketbase/pb_hooks/wir_liebe.pb.js; rm pocketbase/pb_hooks/wir_liebe.pb.js
+git commit -m "Zurück zur Version vor dem Liebe-Update"
+git push
+```
+Danach auf dem Pi die Hook-Datei entfernen (das Auto-Deploy löscht keine Dateien) und PocketBase neu starten:
+```bash
+rm /home/pingu/pb/pb_hooks/wir_liebe.pb.js
+sudo systemctl restart pocketbase
+```
+Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wieder vor: `git revert --no-edit HEAD && git push`.
+
+**2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
+`/home/pingu/backups/vor-liebe-update-2026-10-22/`. ⚠️ Alles nach dem 22.10.2026 06:57 geht dabei verloren.

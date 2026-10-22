@@ -37,13 +37,10 @@ function partnerOf(app, userId) {
   return others[0];
 }
 
+// Benachrichtigungen sind seit dem Liebe-Update (22.10.2026) nicht mehr abschaltbar:
+// notify_prefs bleibt bestehen, wird aber ignoriert.
 function isMuted(app, userId, field) {
-  try {
-    const p = app.findFirstRecordByFilter('notify_prefs', 'user = {:u}', { u: userId });
-    return p.getBool(field);
-  } catch (_) {
-    return false; // keine Einstellung gespeichert -> an
-  }
+  return false;
 }
 
 // Push in die Warteschlange legen; mit key nur einmal (eindeutiger Index als Absicherung)
