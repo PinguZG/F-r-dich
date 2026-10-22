@@ -837,7 +837,6 @@
   });
 
   // ---------- Liebe-Glas: EIN gemeinsames Herz, ab dem ersten Tipp voll, harter Schnitt zwischen beiden Herzfarben ----------
-  const LOVE_COOLDOWN = 500;
   const HEART = 'M50 88 C22 68 4 52 4 31 C4 15 15 4 29 4 C38 4 46 9 50 17 C54 9 62 4 71 4 C85 4 96 15 96 31 C96 52 78 68 50 88Z';
   const love = { mine: 0, theirs: 0 };
   const heartHex = { me: '#3b9eff', partner: '#ff5fa2' };
@@ -1000,37 +999,44 @@
     }
   }
 
-  // 0,5 s Pause pro Tipp: alle Liebe-Knöpfe kurz gesperrt, mit sichtbarem Ablauf
-  let loveCoolUntil = 0;
-  function coolDown() {
-    loveCoolUntil = Date.now() + LOVE_COOLDOWN;
-    const btns = [$('loveBtn'), ...document.querySelectorAll('[data-ping="love"]')];
-    btns.forEach(b => { b.disabled = true; b.classList.remove('cooling'); void b.offsetWidth; b.classList.add('cooling'); });
-    setTimeout(() => btns.forEach(b => { b.disabled = false; b.classList.remove('cooling'); }), LOVE_COOLDOWN);
+  // Kein Tipp-Limit: jeder Tipp zählt sofort im Herz. Verschickt wird nacheinander aus einer Warteschlange,
+  // höchstens ~3,5 pro Sekunde (PocketBase-Rate-Limit: 20 neue Einträge / 5 s); bei 429 kurz warten und weiter.
+  const LOVE_GAP = 280;
+  let loveQueue = 0, loveSending = false;
+  async function drainLove() {
+    if (loveSending) return;
+    loveSending = true;
+    let sent = 0;
+    while (loveQueue > 0) {
+      try {
+        await pb.collection('pings').create({ from: me(), to: partner.id, type: 'love' });
+        loveQueue--; pendingLove--; sent++;
+        if (loveQueue) await UI.wait(LOVE_GAP);
+      } catch (err) {
+        if (err?.status === 429) { await UI.wait(1500); continue; }
+        // anderer Fehler: die noch offenen Tipps wieder abziehen
+        love.mine = Math.max(0, love.mine - loveQueue);
+        pendingLove -= loveQueue; loveQueue = 0;
+        renderLove();
+        pingStatus('Senden fehlgeschlagen: ' + errText(err));
+      }
+    }
+    loveSending = false;
+    if (sent) pingStatus('💗 Liebe an ' + (partner.name || 'Schatz') + ' geschickt');
+    reloadPings();
+    if (!pendingLove) reloadLove();
   }
 
-  async function sendLove(btn) {
+  function sendLove(btn) {
     if (!partner) { pingStatus('Niemand zum Anschicken gefunden 🥺'); return; }
-    if (Date.now() < loveCoolUntil) return;
-    coolDown();
     love.mine++;
     pendingLove++;
+    loveQueue++;
     renderLove();
     pulse($('loveHeart'));
     floatHearts(btn);
     navigator.vibrate?.(15);
-    try {
-      await pb.collection('pings').create({ from: me(), to: partner.id, type: 'love' });
-      pingStatus('💗 Liebe an ' + (partner.name || 'Schatz') + ' geschickt');
-    } catch (err) {
-      love.mine = Math.max(0, love.mine - 1);
-      renderLove();
-      pingStatus('Senden fehlgeschlagen: ' + errText(err));
-    } finally {
-      pendingLove--;
-      reloadPings();
-      if (!pendingLove) reloadLove();
-    }
+    drainLove();
   }
   $('loveBtn').addEventListener('click', () => sendLove($('loveBtn')));
 

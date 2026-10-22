@@ -561,3 +561,9 @@ git rm -q app/mono-ui.js app/lib/mono.js pocketbase/pb_hooks/mono.js
 git commit -m "Zurück zur Version vor Herzstadt" && git push
 ```
 Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/mono.js && sudo systemctl restart pocketbase`. Die Collection `mono_games` bleibt ungenutzt stehen.
+
+---
+
+# 22.10.2026: Liebe-Herz ohne 0,5-s-Pause
+
+Die Pause nach jedem Tipp ist weg: Jeder Tipp zählt sofort im Herz. Verschickt wird im Hintergrund nacheinander (höchstens ~3,5 pro Sekunde, wegen des PocketBase-Rate-Limits von 20 neuen Einträgen pro 5 s); bei „429“ wartet die App kurz und schickt den Rest hinterher – kein Tipp geht verloren. Service Worker `wir-v12`.
