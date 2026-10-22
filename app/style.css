@@ -301,7 +301,13 @@ textarea.mem-input{resize:none;line-height:1.45}
 .love-who .dot{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.6)}
 .love-who .lw-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .love-who b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* 0,5 s Pause nach jedem Tipp */
 .love-send,.ping-btn{position:relative;overflow:hidden}
+.love-send:disabled,.ping-btn:disabled{cursor:default}
+.love-send.cooling::after,.ping-btn.cooling::after{content:'';position:absolute;left:0;bottom:0;height:4px;width:100%;
+  background:rgba(255,255,255,.75);transform-origin:left;animation:cool .5s linear forwards}
+.love-send.cooling{filter:saturate(.75) brightness(.97)}
+@keyframes cool{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 /* Herzfarbe */
 .heart-colors{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:10px;justify-items:center}
 .hc-btn{position:relative;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;background:var(--c);

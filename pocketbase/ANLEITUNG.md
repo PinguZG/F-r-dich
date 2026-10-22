@@ -564,6 +564,6 @@ Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/mono.js && sudo systemctl restart
 
 ---
 
-# 22.10.2026: Liebe-Herz ohne 0,5-s-Pause
+# 22.10.2026: 0,5-s-Pause beim Liebe-Herz wieder drin
 
-Die Pause nach jedem Tipp ist weg: Jeder Tipp zählt sofort im Herz. Verschickt wird im Hintergrund nacheinander (höchstens ~3,5 pro Sekunde, wegen des PocketBase-Rate-Limits von 20 neuen Einträgen pro 5 s); bei „429“ wartet die App kurz und schickt den Rest hinterher – kein Tipp geht verloren. Service Worker `wir-v12`.
+Die kurz entfernte Pause nach jedem Tipp ist auf Wunsch wieder aktiv (Stand wie vorher). Service Worker `wir-v13`.
