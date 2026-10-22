@@ -887,6 +887,20 @@
     } catch (_) { for (let y = 0; y < 92; y++) out[y + 1] = y + 1; }
     return out;
   })();
+  // Markierungen bei 25/50/75 % (nach Fläche, volles Herz): kurze Striche innen am linken und rechten Rand
+  (function drawTicks() {
+    let ctx, p;
+    try { ctx = document.createElement('canvas').getContext('2d'); p = new Path2D(HEART); } catch (_) { return; }
+    const marks = [0.25, 0.5, 0.75].map(share => {
+      const y = cutY(4, share);
+      let l = 50, r = 50;
+      while (l > 0 && ctx.isPointInPath(p, l - 0.25, y)) l -= 0.25;
+      while (r < 100 && ctx.isPointInPath(p, r + 0.25, y)) r += 0.25;
+      const len = share === 0.5 ? 9 : 6;
+      return `<path class="h-tick${share === 0.5 ? ' mid' : ''}" d="M${(l + 1.5).toFixed(2)} ${y.toFixed(2)}h${len}M${(r - 1.5).toFixed(2)} ${y.toFixed(2)}h-${len}"/>`;
+    }).join('');
+    $('loveHeart').querySelector('svg .h-rim').insertAdjacentHTML('beforebegin', `<g class="h-ticks">${marks}</g>`);
+  })();
   function cutY(top, share) {
     const t0 = Math.max(0, Math.floor(top)), total = heartRows[92] - heartRows[t0];
     const want = heartRows[t0] + share * total;

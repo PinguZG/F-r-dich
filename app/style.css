@@ -270,6 +270,8 @@ textarea.mem-input{resize:none;line-height:1.45}
 .h-rim{fill:none;stroke:rgba(255,255,255,.85);stroke-width:2.4}
 .h-shine{fill:none;stroke:rgba(255,255,255,.85);stroke-width:4;stroke-linecap:round;opacity:.75}
 .h-shine2{fill:rgba(255,255,255,.55)}
+.h-tick{fill:none;stroke:rgba(255,255,255,.9);stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 1px rgba(0,0,0,.35))}
+.h-tick.mid{stroke-width:2}
 .h-liquid{transition:transform 1s cubic-bezier(.3,1.25,.5,1)}
 .h-wave{animation:wave 3.4s linear infinite}
 .h-wave.back{opacity:.45;animation-duration:5s;animation-direction:reverse}

@@ -60,7 +60,7 @@ html[data-theme="mondnacht"] .gc-text small.hot,html[data-theme="zuckerwatte"] .
 
 /* ---------- Schach ---------- */
 .board-wrap{border-radius:20px;padding:7px}
-.chess-board{display:grid;grid-template-columns:repeat(8,1fr);border-radius:10px;overflow:hidden;aspect-ratio:1;
+.chess-board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));border-radius:10px;overflow:hidden;aspect-ratio:1;
   box-shadow:inset 0 0 0 1px rgba(var(--shadow),.08)}
 .sq{position:relative;border:none;padding:0;margin:0;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;min-width:0}
 .sq.light{background:var(--board-light)}
@@ -121,7 +121,7 @@ html[data-theme="mondnacht"] .mv.now,html[data-theme="zuckerwatte"] .mv.now{colo
 .sd-start{display:flex;flex-direction:column;gap:10px}
 .sd-bar{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
 .sd-chip{padding:6px 12px;border-radius:16px;background:var(--glass-strong);border:1px solid var(--glass-border);font-size:13px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.sd-grid{display:grid;grid-template-columns:repeat(9,1fr);border-radius:20px;padding:6px;overflow:hidden}
+.sd-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));border-radius:20px;padding:6px;overflow:hidden}
 .sd-cell{position:relative;aspect-ratio:1;min-width:0;border:none;margin:0;padding:0;cursor:pointer;
   background:var(--board-light);color:var(--accent);font:700 clamp(17px,5.4vw,24px)/1 Quicksand,sans-serif;
   box-shadow:inset -1px -1px 0 rgba(var(--shadow),.12)}
@@ -145,7 +145,7 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 .sd-tool:active span{transform:scale(.9)}
 .sd-tool.on{color:var(--ink)}
 .sd-tool.on span{background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 6px 16px rgba(var(--shadow),.35)}
-.sd-pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.sd-pad{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
 .sd-num{display:flex;flex-direction:column;align-items:center;justify-content:center;border:none;cursor:pointer;border-radius:16px;padding:8px 0 5px;
   background:var(--glass-strong);box-shadow:0 5px 12px rgba(var(--shadow),.14);min-width:0;transition:transform .12s}
 .sd-num b{font-size:22px;line-height:1;color:var(--ink)}
@@ -172,12 +172,12 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 /* ---------- Tic Tac Toe ---------- */
 .level-chips{display:flex;gap:8px;justify-content:center;margin-bottom:2px}
 .chip-btn.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink);box-shadow:0 4px 12px rgba(var(--shadow),.25)}
-.ttt-board{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:12px;border-radius:28px;margin:10px auto 0;max-width:360px}
-.ttt-cell{aspect-ratio:1;border:none;border-radius:22px;cursor:pointer;padding:12%;
+.ttt-board{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:12px;border-radius:28px;margin:10px auto 0;max-width:360px}
+.ttt-cell{position:relative;display:block;width:100%;min-width:0;aspect-ratio:1;border:none;border-radius:22px;cursor:pointer;padding:0;overflow:hidden;
   background:var(--glass-strong);box-shadow:inset 0 2px 7px rgba(var(--shadow),.14);transition:transform .12s}
 .ttt-board.playable .ttt-cell:not(:disabled):active{transform:scale(.93)}
 .ttt-cell:disabled{cursor:default;color:inherit;opacity:1}
-.mark{width:100%;height:100%;overflow:visible;fill:none;stroke:var(--mc);stroke-width:13;stroke-linecap:round;
+.mark{position:absolute;left:14%;top:14%;width:72%;height:72%;overflow:visible;fill:none;stroke:var(--mc);stroke-width:13;stroke-linecap:round;
   filter:drop-shadow(0 4px 6px rgba(var(--shadow),.25));animation:markIn .35s cubic-bezier(.3,1.4,.5,1)}
 @keyframes markIn{from{transform:scale(.3);opacity:0}}
 .win-line{position:absolute;inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);pointer-events:none;overflow:visible}
