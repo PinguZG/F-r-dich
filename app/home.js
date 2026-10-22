@@ -151,6 +151,7 @@
     const key = c.me.key + '/' + c.partner.key + '/' + (partner?.avatar || '') + (partner?.name || '');
     if (key === heartKey) return;
     heartKey = key;
+    window.WIR_HEARTS = { me: c.me.hex, partner: c.partner.hex }; // games.js
     document.dispatchEvent(new CustomEvent('wir:hearts', { detail: { me: c.me.hex, partner: c.partner.hex } }));
     $('heartColors').replaceChildren(...HEART_COLORS.map(col => {
       const b = document.createElement('button');

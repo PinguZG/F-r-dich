@@ -19,6 +19,7 @@
 <meta name="apple-mobile-web-app-title" content="Wir">
 <meta name="theme-color" content="#fdeef5">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/games.css">
 </head>
 <body>
 
@@ -57,7 +58,7 @@
   <button class="tab-btn" data-go="s-memories"><span class="tab-ico">📸</span><span class="tab-lbl">Erinnerungen</span></button>
   <button class="tab-btn" data-go="s-plans"><span class="tab-ico">📅</span><span class="tab-lbl">Dates</span></button>
   <button class="tab-btn" data-go="s-openwhen"><span class="tab-ico">💌<i class="nav-dot" id="navOwDot" hidden></i></span><span class="tab-lbl">Öffne wenn</span></button>
-  <button class="tab-btn" data-go="s-wir"><span class="tab-ico">💞</span><span class="tab-lbl">Wir zwei</span></button>
+  <button class="tab-btn" data-go="s-games"><span class="tab-ico">🎲<i class="nav-dot" id="navGameDot" hidden></i></span><span class="tab-lbl">Spiele</span></button>
 </nav>
 
 <!-- ============ Start ============ -->
@@ -104,6 +105,8 @@
   </div>
 
   <div id="homeMeet"></div>
+
+  <button class="opt wir-link" data-go="s-wir" type="button"><span class="ico">💞</span><span><b>Wir zwei</b><small>Anruf, Support, Nachrichten &amp; Verlauf</small></span><span class="chev">›</span></button>
 </section>
 
 <!-- ============ Erinnerungen ============ -->
@@ -253,7 +256,8 @@
 </section>
 
 <!-- ============ Wir zwei ============ -->
-<section class="screen page" id="s-wir" data-title="Wir zwei 💞">
+<section class="screen page sub" id="s-wir" data-tab="s-home" data-title="Wir zwei 💞">
+  <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Wir zwei 💞</h2></div>
   <div class="partner card glass">
     <div class="couple small">
       <div class="avatar md" id="avPartner2"></div>
@@ -272,6 +276,126 @@
   <div class="mem-status ping-status" id="pingStatus"></div>
   <h3 class="list-head">Verlauf</h3>
   <div class="dates pings" id="pings"></div>
+</section>
+
+<!-- ============ Spiele ============ -->
+<section class="screen page" id="s-games" data-title="Spiele 🎲">
+  <article class="game-card glass" data-game="chess">
+    <div class="gc-head">
+      <span class="gc-ico" data-icon="chess"></span>
+      <div class="gc-text"><b>Schach</b><small id="gcChessStatus">…</small></div>
+      <button class="gc-play" data-go="s-chess" type="button" aria-label="Schach spielen">▶</button>
+    </div>
+    <div class="score-tiles" id="gcChessTiles"></div>
+  </article>
+  <article class="game-card glass" data-game="sudoku">
+    <div class="gc-head">
+      <span class="gc-ico" data-icon="sudoku"></span>
+      <div class="gc-text"><b>Sudoku</b><small id="gcSudokuStatus">…</small></div>
+      <button class="gc-play" data-go="s-sudoku" type="button" aria-label="Sudoku spielen">▶</button>
+    </div>
+    <div class="score-tiles" id="gcSudokuTiles"></div>
+  </article>
+  <article class="game-card glass" data-game="ttt">
+    <div class="gc-head">
+      <span class="gc-ico" data-icon="ttt"></span>
+      <div class="gc-text"><b>Tic Tac Toe</b><small id="gcTttStatus">…</small></div>
+      <button class="gc-play" data-go="s-ttt" type="button" aria-label="Tic Tac Toe spielen">▶</button>
+    </div>
+    <div class="score-tiles" id="gcTttTiles"></div>
+  </article>
+</section>
+
+<!-- Schach -->
+<section class="screen page sub" id="s-chess" data-tab="s-games" data-title="Schach">
+  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Schach ♟️</h2></div>
+  <div class="ch-player" id="chTop"></div>
+  <div class="board-wrap glass"><div class="chess-board" id="chBoard"></div></div>
+  <div class="ch-player" id="chBottom"></div>
+  <div class="game-status" id="chStatus"></div>
+  <div class="ch-offer glass" id="chOffer" hidden>
+    <b id="chOfferText">🤝 Remis-Angebot</b>
+    <div class="row" id="chOfferBtns">
+      <button class="pack-btn" id="chDrawDecline" type="button">Weiterspielen</button>
+      <button class="mem-btn" id="chDrawAccept" type="button">Annehmen 🤝</button>
+    </div>
+    <button class="link-btn" id="chDrawWithdraw" type="button" hidden>Angebot zurückziehen</button>
+  </div>
+  <div class="ch-actions" id="chActions">
+    <button class="pack-btn" id="chDrawBtn" type="button">🤝 Remis anbieten</button>
+    <button class="pack-btn" id="chResignBtn" type="button">🏳️ Aufgeben</button>
+  </div>
+  <div class="ch-new" id="chNew" hidden>
+    <button class="mem-btn" id="chNewBtn" type="button">♟️ Neue Partie</button>
+    <div class="row ch-color">
+      <button class="chip-btn" data-color="white" type="button">Ich will Weiß</button>
+      <button class="chip-btn" data-color="black" type="button">Ich will Schwarz</button>
+    </div>
+  </div>
+  <div class="mem-status" id="chMsg"></div>
+  <h3 class="list-head">Züge</h3>
+  <div class="ch-moves glass" id="chMoves"></div>
+  <h3 class="list-head">Unsere Bilanz</h3>
+  <div class="score-tiles" id="chTiles"></div>
+  <div class="dates game-hist" id="chHist"></div>
+</section>
+
+<!-- Sudoku -->
+<section class="screen page sub" id="s-sudoku" data-tab="s-games" data-title="Sudoku">
+  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Sudoku 🔢</h2></div>
+  <div class="sd-start" id="sdStart">
+    <p class="sd-intro">Jedes Rätsel wird neu gemischt und hat genau eine Lösung.</p>
+    <button class="opt sd-level" data-level="easy" type="button"><span class="ico">🌸</span><span><b>Leicht</b><small>10 Punkte + Zeitbonus</small></span></button>
+    <button class="opt sd-level" data-level="medium" type="button"><span class="ico">🌷</span><span><b>Mittel</b><small>25 Punkte + Zeitbonus</small></span></button>
+    <button class="opt sd-level" data-level="hard" type="button"><span class="ico">🌹</span><span><b>Schwer</b><small>50 Punkte + Zeitbonus</small></span></button>
+    <div class="mem-status" id="sdGenMsg"></div>
+  </div>
+  <div class="sd-game" id="sdGame" hidden>
+    <div class="sd-bar">
+      <span class="sd-chip" id="sdLevel">Mittel</span>
+      <span class="sd-chip" id="sdTime">⏱ 0:00</span>
+      <span class="sd-chip" id="sdMist">Fehler 0</span>
+    </div>
+    <div class="sd-grid glass" id="sdGrid"></div>
+    <div class="sd-tools">
+      <button class="sd-tool" id="sdUndo" type="button"><span>↶</span>Rückgängig</button>
+      <button class="sd-tool" id="sdErase" type="button"><span>⌫</span>Radierer</button>
+      <button class="sd-tool" id="sdNotes" type="button" aria-pressed="false"><span>✏️</span>Notizen</button>
+    </div>
+    <div class="sd-pad" id="sdPad"></div>
+    <label class="check sd-err"><input type="checkbox" class="switch" id="sdShowErr"><span>Fehler rot markieren</span></label>
+    <button class="link-btn sd-newlink" id="sdNewBtn" type="button">Neues Rätsel</button>
+  </div>
+  <h3 class="list-head">Rangliste</h3>
+  <div class="sd-rank" id="sdRank"></div>
+</section>
+
+<!-- Tic Tac Toe -->
+<section class="screen page sub" id="s-ttt" data-tab="s-games" data-title="Tic Tac Toe">
+  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Tic Tac Toe ⭕</h2></div>
+  <div class="segmented" role="tablist">
+    <button class="seg on" data-tseg="ai" type="button" role="tab">🤖 Gegen KI</button>
+    <button class="seg" data-tseg="pvp" type="button" role="tab">💞 Gegeneinander</button>
+  </div>
+  <div id="tttAiPane">
+    <div class="level-chips" id="tttLevels">
+      <button class="chip-btn on" data-level="easy" type="button">Leicht</button>
+      <button class="chip-btn" data-level="medium" type="button">Mittel</button>
+      <button class="chip-btn" data-level="hard" type="button">Schwer</button>
+    </div>
+    <div class="score-tiles" id="tttAiTiles"></div>
+    <div class="game-status" id="tttAiStatus"></div>
+    <div class="ttt-board glass" id="tttAiBoard"></div>
+    <button class="mem-btn ttt-again" id="tttAiNew" type="button">Nochmal 💗</button>
+  </div>
+  <div id="tttPvpPane" hidden>
+    <div class="score-tiles" id="tttPvpTiles"></div>
+    <div class="game-status" id="tttPvpStatus"></div>
+    <div class="ttt-board glass" id="tttPvpBoard"></div>
+    <button class="mem-btn ttt-again" id="tttPvpNew" type="button" hidden>Neues Spiel 💗</button>
+    <button class="logout" id="tttPvpResign" type="button" hidden>🏳️ Aufgeben</button>
+    <div class="mem-status" id="tttMsg"></div>
+  </div>
 </section>
 
 <!-- ============ Einstellungen (über den Avatar) ============ -->
@@ -376,6 +500,28 @@
     <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
     <h2 class="sheet-title">In Ordner verschieben</h2>
     <div class="move-list" id="moveList"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="promoSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Umwandeln in …</h2>
+    <div class="promo-list" id="promoList"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="sdDoneSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet sd-done">
+    <div class="sheet-grip"></div>
+    <div class="sd-done-ico">🎉</div>
+    <h2 class="sheet-title">Gelöst!</h2>
+    <div class="sd-done-pts" id="sdDonePts">+0</div>
+    <p class="mem-note" id="sdDoneText"></p>
+    <button class="mem-btn" data-close type="button">Schön 💗</button>
   </div>
 </div>
 
@@ -577,5 +723,7 @@
 <script src="/app.js"></script>
 <script src="/extra.js"></script>
 <script src="/home.js"></script>
+<script src="/lib/chess.js"></script>
+<script src="/games.js"></script>
 </body>
 </html>

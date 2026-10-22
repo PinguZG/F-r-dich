@@ -460,3 +460,65 @@ Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wied
 
 **2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
 `/home/pingu/backups/vor-liebe-update-2026-10-22/`. ⚠️ Alles nach dem 22.10.2026 06:57 geht dabei verloren.
+
+---
+
+# Spiele-Update 22.10.2026
+
+Getestet mit einer lokalen PocketBase 0.40.5 und einer **Kopie der Live-Datenbank**: 43 API-Tests (u. a. Rechte, Zugprüfung, Matt, Remis, en passant, Rochade, Umwandlung, Sudoku-Prüfung) und 42 UI-Prüfungen mit beiden Accounts parallel in Edge auf iPhone-Größe, alle vier Farbwelten, alle bisherigen Bereiche.
+
+## Was neu ist und wo es liegt
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | 🏡 Start · 📸 Erinnerungen · 📅 Dates · 💌 Öffne wenn · 🎲 **Spiele**. Roter Punkt an 🎲, wenn du in Schach/Tic Tac Toe am Zug bist oder ein Remis-Angebot wartet. |
+| **Start → „💞 Wir zwei“** | „Wir zwei“ (Anruf, Support, Nachricht, Verlauf) ist jetzt eine Karte unten auf der Startseite. Liebe/Anruf/Support/Nachricht gibt es dort ohnehin schon. Pushs, die nach „Wir zwei“ führen, funktionieren weiter. |
+| **Spiele** | Drei Glas-Karten mit Icon, Statuszeile und Spielstand-Kacheln (DU / REMIS bzw. UNENTSCHIEDEN / Partnerin) und rundem ▶-Knopf. |
+| **Schach** | Ohne Zeitlimit, asynchron. Figur antippen → Zielfelder (Punkte, Schlagen = Ring) → Zielfeld antippen. Letzter Zug hell markiert, Schach rot am König, Brett aus eigener Sicht, Zugliste mit deutschen Kürzeln (Sf3), geschlagene Figuren + Materialvorteil, Remis anbieten/annehmen/ablehnen/zurückziehen, Aufgeben, Umwandlung mit Auswahl. Mehrere Partien nacheinander (immer eine aktive), Farben wechseln automatisch ab oder „Ich will Weiß/Schwarz“. Bilanz + letzte Partien. Eigene runde SVG-Figuren, Brettfarben pro Farbwelt. |
+| **Sudoku** | Leicht/Mittel/Schwer (38/31/≈25 Vorgaben), jedes Rätsel neu generiert mit garantiert eindeutiger Lösung. Zahlenleiste mit Restanzahl, ✏️ Notizen, Radierer, Rückgängig, Hervorhebung (Zeile/Spalte/Block + gleiche Zahlen), Schalter „Fehler rot markieren“. Speichert automatisch (Handy sofort, Server alle paar Sekunden + beim Schließen). Punkte: 10/25/50 + Zeitbonus (bis zur Zielzeit 10/20/35 min, max. noch einmal so viel) − 2/4/6 pro Fehler, mindestens 20 %. Rangliste für beide (Punkte, gelöst pro Stufe, Bestzeiten). |
+| **Tic Tac Toe** | „Gegen KI“ (Leicht, Mittel, Schwer = Minimax, unschlagbar; wer anfängt wechselt) und „Gegeneinander“ (asynchron, Anfang wechselt). Zeichen in euren Herzfarben, Gewinnlinie wird gezeichnet, Kacheln Du/Unentschieden/Gegner. |
+
+**Pushs** (über `push_queue`, verschickt von wir-push, Tippen öffnet das Spiel):
+„♟️ Du bist am Zug – Daniel spielte Sf3“, „♟️ Schach! Du bist am Zug“, „♟️ Schachmatt“, „♟️ Remis“, „🤝 Remis-Angebot“, „♟️ Du hast gewonnen 🎉 – … hat aufgegeben“, „⭕ Du bist am Zug – … hat gesetzt“, „⭕ Tic Tac Toe – … hat gewonnen“. Noch nicht verschickte Spiel-Pushs werden durch den neuesten ersetzt (keine Flut). wir-push hört jetzt zusätzlich per Realtime auf `push_queue` → Spiel-Pushs kommen sofort.
+
+## Sicherheit (serverseitig)
+
+Alle Züge laufen über Routen in `pocketbase/pb_hooks/wir_spiele.pb.js` (Logik in `spiele_lib.js`, Regeln über `chess.js`):
+`POST /api/games/chess/new | {id}/move | {id}/resign | {id}/draw`, `POST /api/games/ttt/new | {id}/move | {id}/resign | ai`, `POST /api/games/sudoku/finish`.
+- `chess_games`, `ttt_games`, `sudoku_scores`: Anlegen/Ändern/Löschen über die normale API **verboten** (Regel leer = nur Superuser). Lesen nur, wer mitspielt (Rangliste: beide).
+- Zug nur in eigener Partie, nur wenn man am Zug ist, nur legale Züge (Server spielt die ganze Zugliste nach, erkennt Matt/Patt/3-fache Wiederholung/zu wenig Material/50 Züge). Doppeltipp/veralteter Stand → 409.
+- Sudoku-Punkte vergibt der Server: Vorgaben müssen zur Stufe passen und erhalten bleiben, Lösung muss gültig sein.
+- `sudoku_progress`: nur die eigene Person sieht/ändert ihren Stand.
+- `app/lib/chess.js` (Browser) und `pocketbase/pb_hooks/chess.js` (Server) sind dieselbe Datei: chess.js 0.13.4 (BSD-2), nur `export` entfernt.
+
+## Datenbank (nur additiv)
+
+`pocketbase/pb_migrations/1792800000_wir_spiele.js` legt vier neue Collections an, an bestehenden ändert sich nichts: `chess_games`, `ttt_games`, `sudoku_progress` (eindeutig pro Person), `sudoku_scores`. Service Worker: `wir-v9`.
+
+## Sicherung vorher
+
+- Git-Tag **`vor-spiele`** = Commit `b5bbc9f`, auf GitHub gepusht.
+- Datenbank-Backup (SQLite-Backup-Funktion, Integritätsprüfung „ok“): `/home/pingu/backups/vor-spiele-2026-10-22/` mit `data.db`, `auxiliary.db`, `storage/`, `pb_migrations/`, `pb_hooks/` (Stand 22.10.2026 16:52).
+
+## Zurück auf „vor-spiele“
+
+Das Schema wurde nur erweitert, die alte App läuft damit unverändert. **Normalerweise reicht Schritt 1.**
+
+**1. Code zurück (am PC):**
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-spiele -- app push pocketbase/pb_hooks
+git rm -q app/games.js app/games.css app/lib/chess.js pocketbase/pb_hooks/wir_spiele.pb.js pocketbase/pb_hooks/spiele_lib.js pocketbase/pb_hooks/chess.js
+git commit -m "Zurück zur Version vor den Spielen"
+git push
+```
+Das Auto-Deploy holt das innerhalb von 2 Minuten, startet PocketBase und wir-push neu. Danach auf dem Pi die Spiele-Hooks entfernen (das Auto-Deploy löscht keine Dateien) und PocketBase neu starten:
+```bash
+rm /home/pingu/pb/pb_hooks/wir_spiele.pb.js /home/pingu/pb/pb_hooks/spiele_lib.js /home/pingu/pb/pb_hooks/chess.js
+sudo systemctl restart pocketbase
+```
+Die vier Spiele-Collections bleiben einfach ungenutzt stehen. Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wieder vor: `git revert --no-edit HEAD && git push`.
+
+**2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
+`/home/pingu/backups/vor-spiele-2026-10-22/`. ⚠️ Alles nach dem 22.10.2026 16:52 geht dabei verloren.

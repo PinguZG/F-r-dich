@@ -400,9 +400,9 @@ async function doSelections() {
   }
 }
 
-// g) Treffen + Öffne wenn: die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
+// g) Treffen, Öffne wenn, Spiele (chess/ttt): die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
 //    und bündeln dort (notify_prefs wird ignoriert)
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home' };
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', chess: 's-chess', ttt: 's-ttt' };
 
 async function doQueue() {
   const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });
@@ -480,10 +480,11 @@ async function realtime() {
             if (!token) await auth();
             const r = await fetch(PB + '/api/realtime', {
               method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token },
-              body: JSON.stringify({ clientId: JSON.parse(data).clientId, subscriptions: ['pings'] }),
+              body: JSON.stringify({ clientId: JSON.parse(data).clientId, subscriptions: ['pings', 'push_queue'] }),
             });
             if (!r.ok) throw new Error('Realtime-Abo fehlgeschlagen ' + r.status);
-          } else if (ev === 'pings') {
+          } else if (ev === 'pings' || (ev === 'push_queue' && !JSON.parse(data || '{}').record?.sent_at)) {
+            // push_queue: neue bzw. ersetzte, noch nicht verschickte Pushs (Spiele) sofort statt erst beim nächsten Poll
             setTimeout(tick, 300);
           }
         }

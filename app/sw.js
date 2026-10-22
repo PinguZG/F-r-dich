@@ -1,5 +1,5 @@
-const CACHE = 'wir-v8'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/lib/pocketbase.umd.js', '/manifest.json', '/icons/icon-192.png'];
+const CACHE = 'wir-v9'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/games.js', '/games.css', '/lib/chess.js', '/lib/pocketbase.umd.js', '/manifest.json', '/icons/icon-192.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
