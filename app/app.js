@@ -836,15 +836,14 @@
     }
   });
 
-  // ---------- Liebe-Glas: EIN gemeinsames Herz, voll bei 200, in beiden Herzfarben ----------
-  const LOVE_FULL = 200;
+  // ---------- Liebe-Glas: EIN gemeinsames Herz, ab dem ersten Tipp voll, harter Schnitt zwischen beiden Herzfarben ----------
   const LOVE_COOLDOWN = 500;
   const HEART = 'M50 88 C22 68 4 52 4 31 C4 15 15 4 29 4 C38 4 46 9 50 17 C54 9 62 4 71 4 C85 4 96 15 96 31 C96 52 78 68 50 88Z';
   const love = { mine: 0, theirs: 0 };
   const heartHex = { me: '#3b9eff', partner: '#ff5fa2' };
   let midnightTimer = null;
 
-  // Flüssigkeit: oben meine Farbe, unten die der anderen Person, weicher Übergang dazwischen
+  // Flüssigkeit: oben meine Farbe, unten die der anderen Person, harte Kante dazwischen
   $('loveHeart').insertAdjacentHTML('afterbegin', `
 <svg viewBox="0 0 100 92" aria-hidden="true">
   <defs>
@@ -875,6 +874,27 @@
   const shown = { fill: 0, share: 0.5 };
   const target = { fill: 0, share: 0.5 };
   let anim = 0;
+  // Fläche des Herzens pro Zeile (von oben aufsummiert) -> Schnitt so, dass der Anteil der FLÄCHE stimmt
+  const heartRows = (() => {
+    const out = new Float64Array(93);
+    try {
+      const ctx = document.createElement('canvas').getContext('2d'), p = new Path2D(HEART);
+      for (let y = 0; y < 92; y++) {
+        let n = 0;
+        for (let x = 0; x < 100; x += 0.5) if (ctx.isPointInPath(p, x, y + 0.5)) n++;
+        out[y + 1] = out[y] + n;
+      }
+    } catch (_) { for (let y = 0; y < 92; y++) out[y + 1] = y + 1; }
+    return out;
+  })();
+  function cutY(top, share) {
+    const t0 = Math.max(0, Math.floor(top)), total = heartRows[92] - heartRows[t0];
+    const want = heartRows[t0] + share * total;
+    let y = t0;
+    while (y < 92 && heartRows[y + 1] < want) y++;
+    const row = heartRows[y + 1] - heartRows[y];
+    return y + (row ? (want - heartRows[y]) / row : 0);
+  }
   function drawLove() {
     const box = $('loveHeart');
     const top = 92 - shown.fill * 88; // 92 = leer, 4 = randvoll
@@ -882,11 +902,13 @@
     // Verlauf in Koordinaten der Flüssigkeit: 0 = Oberfläche (inkl. Welle), unten = Herzspitze
     const g = box.querySelector('#hl-love');
     g.setAttribute('y2', (88 - top).toFixed(2));
-    const blend = 0.06;
+    // harte Kante: beide Stopps an derselben Stelle (y-Werte in Koordinaten der Flüssigkeit, Verlauf läuft von -6 bis 88 - top)
     const a = Math.min(1, Math.max(0, shown.share));
+    const local = cutY(top, a) - top;
+    const off = Math.min(1, Math.max(0, (local + 6) / (88 - top + 6)));
     const st = g.querySelectorAll('stop');
-    st[1].setAttribute('offset', Math.max(0, a - blend));
-    st[2].setAttribute('offset', Math.min(1, a + blend));
+    st[1].setAttribute('offset', a >= 1 ? 1 : a <= 0 ? 0 : off);
+    st[2].setAttribute('offset', a >= 1 ? 1 : a <= 0 ? 0 : off);
     box.classList.toggle('wet', shown.fill >= 0.42);
   }
   function stepLove() {
@@ -912,13 +934,13 @@
 
   function renderLove() {
     const total = love.mine + love.theirs;
-    target.fill = Math.min(1, total / LOVE_FULL);
+    target.fill = total ? 1 : 0;
     if (total) target.share = love.mine / total;
     if (!anim) anim = requestAnimationFrame(stepLove);
     $('loveTotal').textContent = total;
     $('loveNumMe').textContent = love.mine;
     $('loveNumPartner').textContent = love.theirs;
-    $('loveHeart').classList.toggle('full', total >= LOVE_FULL);
+    $('loveHeart').classList.toggle('full', total > 0);
     const pn = partner?.name || 'Schatz';
     $('wirToday').textContent = love.theirs || love.mine ? `Heute: 💗 ${love.theirs}× von ${pn} · ${love.mine}× von dir` : '';
   }
