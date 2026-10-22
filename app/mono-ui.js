@@ -339,9 +339,13 @@
       { l: pname().toUpperCase(), v: done.filter(x => x.winner && x.winner !== myId()).length, t: 'them' },
     ];
     $('gcMonoTiles').replaceChildren(...tiles.map(t => { const d = el('div', 'score-tile ' + t.t); d.append(el('b', '', String(t.v)), el('small', '', t.l)); return d; }));
-    const dot = $('navGameDot');
-    dot.dataset.m = amWaiting() || (g && S().trade && S().trade.from !== meIdx()) ? '1' : '';
-    dot.hidden = !(dot.dataset.g || dot.dataset.m);
+    // games.js kümmert sich um Punkt am Tab, Hinweis auf Start und Erinnern-Knopf
+    const active = !!g && g.status === 'active';
+    document.dispatchEvent(new CustomEvent('wir:turn', { detail: {
+      k: 'mono',
+      on: amWaiting() || !!(active && S().trade && S().trade.from !== meIdx()),
+      waiting: active && M.waiting(S()).includes(1 - meIdx()),
+    } }));
   }
 
   // ======================================================================

@@ -362,8 +362,60 @@ function monoAct(app, uid, id, body) {
   };
 }
 
+// ======================================================================
+// Erinnern: Push an die Person, die gerade dran ist (höchstens alle 10 Minuten pro Spiel)
+// ======================================================================
+const NUDGE_GAP = 10 * 60 * 1000;
+const NUDGE_TEXT = {
+  chess: ['♟️ Erinnerung: Du bist am Zug', 'wartet auf deinen Schachzug 💗'],
+  ttt: ['⭕ Erinnerung: Du bist am Zug', 'wartet auf dein Kreuzchen 💗'],
+  mono: ['🏙️ Erinnerung: Herzstadt wartet', 'wartet in Herzstadt auf dich 💗'],
+};
+
+// liefert { gameId, other } wenn uid gerade auf die andere Person wartet
+function nudgeTarget(app, uid, game) {
+  if (game === 'chess') {
+    const [g] = app.findRecordsByFilter('chess_games', "status = 'active' && (white = {:u} || black = {:u})", '-created', 1, 0, { u: uid });
+    if (!g) throw conflict('Gerade läuft keine Partie.');
+    const other = g.getString('white') === uid ? g.getString('black') : g.getString('white');
+    if (g.getString('turn') !== other) throw conflict('Du bist doch selbst am Zug 😉');
+    return { gameId: g.id, other };
+  }
+  if (game === 'ttt') {
+    const [g] = app.findRecordsByFilter('ttt_games', "mode = 'pvp' && status = 'active' && (x = {:u} || o = {:u})", '-created', 1, 0, { u: uid });
+    if (!g) throw conflict('Gerade läuft kein Spiel.');
+    const other = g.getString('x') === uid ? g.getString('o') : g.getString('x');
+    if (g.getString('turn') !== other) throw conflict('Du bist doch selbst am Zug 😉');
+    return { gameId: g.id, other };
+  }
+  if (game === 'mono') {
+    const Mono = require(`${__hooks}/mono.js`);
+    const [g] = app.findRecordsByFilter('mono_games', "status = 'active' && (p1 = {:u} || p2 = {:u})", '-created', 1, 0, { u: uid });
+    if (!g) throw conflict('Gerade läuft keine Partie.');
+    const ids = [g.getString('p1'), g.getString('p2')];
+    const me = ids.indexOf(uid), s = readJson(g, 'state', null);
+    if (!s || Mono.waiting(s).indexOf(1 - me) < 0) throw conflict('Gerade wartet niemand auf ' + nameOf(app, ids[1 - me]) + '.');
+    return { gameId: g.id, other: ids[1 - me] };
+  }
+  throw new BadRequestError('Unbekanntes Spiel');
+}
+
+function nudge(app, uid, game) {
+  const { gameId, other } = nudgeTarget(app, uid, game);
+  const prefix = `nudge:${game}:${gameId}:`;
+  const since = new Date(Date.now() - NUDGE_GAP).toISOString().replace('T', ' ');
+  const [last] = app.findRecordsByFilter('push_queue', 'key ~ {:p} && created >= {:t}', '-created', 1, 0, { p: prefix, t: since });
+  if (last) {
+    const left = Math.max(1, Math.ceil((new Date(last.getString('created').replace(' ', 'T')).getTime() + NUDGE_GAP - Date.now()) / 60000));
+    throw new ApiError(429, `Du hast gerade erst erinnert – in ${left} Min. wieder 💗`);
+  }
+  const t = NUDGE_TEXT[game];
+  wir.enqueue(app, { user: other, kind: game, title: t[0], body: `${nameOf(app, uid)} ${t[1]}`, key: prefix + Date.now() });
+  return { ok: true, wait: NUDGE_GAP / 1000 };
+}
+
 module.exports = {
-  push, nameOf, sanDe,
+  push, nameOf, sanDe, nudge,
   monoNew, monoAct,
   chessNew, chessMove, chessResign, chessDraw,
   tttNew, tttMove, tttResign, tttAi,

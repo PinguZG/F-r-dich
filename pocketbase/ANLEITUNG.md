@@ -567,3 +567,18 @@ Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/mono.js && sudo systemctl restart
 # 22.10.2026: 0,5-s-Pause beim Liebe-Herz wieder drin
 
 Die kurz entfernte Pause nach jedem Tipp ist auf Wunsch wieder aktiv (Stand wie vorher). Service Worker `wir-v13`.
+
+---
+
+# 22.10.2026: Am-Zug-Hinweise + Erinnern-Knopf
+
+- Wer in einem Spiel (Schach, Tic Tac Toe, Herzstadt) dran ist, sieht oben auf **Start** einen Hinweis „Du bist am Zug: …“ (antippen → Spiel), einen Punkt am Spiele-Tab, eine Zahl am App-Symbol (wo unterstützt) und – wenn die App gerade woanders offen ist – eine kurze Einblendung. Pushs gab es schon vorher.
+- **🔔 Erinnern**: Wer auf die andere Person wartet, hat im Spiel einen Knopf „🔔 Name erinnern“. Der schickt einen Push („Erinnerung: Du bist am Zug“). Pro Spiel höchstens alle **10 Minuten** (prüft der Server, Antwort 429).
+- Route `POST /api/games/nudge` `{ game: 'chess' | 'ttt' | 'mono' }` in `wir_spiele.pb.js`, Logik `nudge()` in `spiele_lib.js`. Die Pause wird über `push_queue.key = nudge:<spiel>:<partie>:<zeit>` erkannt – **keine Schemaänderung**.
+- Client: `app/games.js` (Abschnitt „Wer ist dran?“), Herzstadt meldet sich per Event `wir:turn` aus `mono-ui.js`. Service Worker `wir-v14`.
+
+Zurück: Git-Tag **`vor-erinnern`** = `87bd2a3`.
+```bash
+git checkout vor-erinnern -- app pocketbase/pb_hooks && git commit -m "Zurück vor Erinnern" && git push
+```
+Keine DB-Änderung, daher kein Backup nötig (Einträge in `push_queue` sind normale Pushs).

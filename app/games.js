@@ -245,6 +245,7 @@
     }
     $('chDrawBtn').disabled = !!offer;
     renderChessMoves();
+    if (started) syncTurns();
 
     const t = chessTally();
     tiles($('chTiles'), [
@@ -788,6 +789,7 @@
     $('tttPvpStatus').classList.toggle('hot', myTttTurn());
     $('tttPvpNew').hidden = g?.status === 'active';
     $('tttPvpResign').hidden = g?.status !== 'active';
+    if (started) syncTurns();
   }
 
   document.querySelectorAll('[data-tseg]').forEach(b => b.addEventListener('click', () => { tttSeg = b.dataset.tseg; renderTtt(); }));
@@ -962,11 +964,102 @@
     ]);
 
     document.querySelector('[data-game="chess"] .gc-play').textContent = cg?.status === 'active' ? '▶' : '+';
-    // mono-ui.js setzt dataset.m für Herzstadt
-    const dot = $('navGameDot');
-    dot.dataset.g = myChessTurn() || myTttTurn() || (cg?.status === 'active' && cg.draw_offer && cg.draw_offer !== myId()) ? '1' : '';
-    dot.hidden = !(dot.dataset.g || dot.dataset.m);
+    syncTurns();
   }
+
+  // ======================================================================
+  // Wer ist dran? Punkt am Tab, App-Symbol, Hinweis auf Start, kurze Einblendung
+  // ======================================================================
+  const TURN_NAME = { chess: 'Schach', ttt: 'Tic Tac Toe', mono: 'Herzstadt' };
+  const TURN_SCREEN = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono' };
+  const turns = {};       // k -> true, wenn ich gerade etwas tun muss
+  const waitsOn = {};     // k -> true, wenn die andere Person dran ist (Erinnern möglich)
+
+  function syncTurns() {
+    const ttt = pvpGame();
+    setTurn('chess', myChessTurn() || !!(cg?.status === 'active' && cg.draw_offer && cg.draw_offer !== myId()),
+      cg?.status === 'active' && chessMine() && !!cg.turn && cg.turn !== myId());
+    setTurn('ttt', myTttTurn(), ttt?.status === 'active' && !!ttt.turn && ttt.turn !== myId());
+  }
+
+  // mono-ui.js meldet Herzstadt per Event
+  document.addEventListener('wir:turn', e => setTurn(e.detail.k, e.detail.on, e.detail.waiting));
+
+  function setTurn(k, on, waiting) {
+    const was = turns[k];
+    turns[k] = !!on;
+    waitsOn[k] = !!waiting;
+    // neu dran, während die App offen ist, aber woanders -> kurz einblenden
+    if (was === false && on && !document.hidden && !isActive(TURN_SCREEN[k])) turnToast(k);
+    renderTurns();
+  }
+
+  function renderTurns() {
+    const mine = Object.keys(TURN_NAME).filter(k => turns[k]);
+    $('navGameDot').hidden = !mine.length;
+    try {
+      if (navigator.setAppBadge) mine.length ? navigator.setAppBadge(mine.length) : navigator.clearAppBadge();
+    } catch (_) { /* nicht unterstützt */ }
+    const b = $('homeTurns');
+    b.hidden = !mine.length;
+    b.dataset.go = mine.length === 1 ? TURN_SCREEN[mine[0]] : 's-games';
+    b.replaceChildren(el('span', 'tb-ico', '🎲'), el('span', 'tb-text', 'Du bist am Zug: ' + mine.map(k => TURN_NAME[k]).join(' · ')), el('span', 'tb-go', '›'));
+    document.querySelectorAll('[data-nudge]').forEach(renderNudge);
+  }
+
+  let toastTimer = 0;
+  function turnToast(k) {
+    let t = $('turnToast');
+    if (!t) {
+      t = el('button', 'turn-toast glass');
+      t.id = 'turnToast'; t.type = 'button';
+      t.addEventListener('click', () => { t.classList.remove('show'); UI.show(t.dataset.go); });
+      document.body.append(t);
+    }
+    t.dataset.go = TURN_SCREEN[k];
+    t.textContent = `🎲 ${TURN_NAME[k]}: Du bist am Zug`;
+    requestAnimationFrame(() => t.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+  }
+  $('homeTurns').addEventListener('click', e => UI.show(e.currentTarget.dataset.go));
+
+  // ---------- Erinnern ----------
+  const NUDGE_GAP = 10 * 60 * 1000;
+  const nudgeKey = k => 'wir-nudge-' + k;
+  const nudgedAt = k => { try { return +localStorage.getItem(nudgeKey(k)) || 0; } catch (_) { return 0; } };
+  let nudgeTimer = 0;
+
+  function renderNudge(b) {
+    const k = b.dataset.nudge;
+    b.hidden = !waitsOn[k];
+    if (b.hidden || b.classList.contains('busy')) return;
+    const left = nudgedAt(k) + NUDGE_GAP - Date.now();
+    b.disabled = left > 0;
+    b.textContent = left > 0 ? `🔔 Erinnert – wieder in ${Math.ceil(left / 60000)} Min.` : `🔔 ${pname()} erinnern`;
+    // Countdown nachziehen
+    if (left > 0) { clearTimeout(nudgeTimer); nudgeTimer = setTimeout(renderTurns, Math.min(left, 30000)); }
+  }
+
+  document.querySelectorAll('[data-nudge]').forEach(b => b.addEventListener('click', async () => {
+    const k = b.dataset.nudge;
+    b.classList.add('busy'); b.disabled = true;
+    b.textContent = '🔔 …';
+    try {
+      await post('/api/games/nudge', { game: k });
+      try { localStorage.setItem(nudgeKey(k), String(Date.now())); } catch (_) {}
+      b.textContent = '💌 Erinnerung geschickt';
+      const r = b.getBoundingClientRect(); UI.burst(r.left + r.width / 2, r.top + r.height / 2, 12);
+      await new Promise(res => setTimeout(res, 1800));
+    } catch (err) {
+      // Server kennt die Pause besser (z. B. anderes Gerät) -> merken
+      if (err?.status === 429) { try { localStorage.setItem(nudgeKey(k), String(Date.now() - NUDGE_GAP + 60000 * (+(/(\d+) Min/.exec(errText(err)) || [0, 10])[1]))); } catch (_) {} }
+      b.textContent = errText(err);
+      await new Promise(res => setTimeout(res, 2500));
+    }
+    b.classList.remove('busy');
+    renderNudge(b);
+  }));
 
   // ======================================================================
   // Start, Live-Updates

@@ -313,3 +313,20 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 .mo-none{font-size:12px;color:var(--ink-faint);font-weight:600}
 .mo-rules ul{padding-left:18px;display:flex;flex-direction:column;gap:8px}
 .mo-rules li{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4}
+
+/* ---------- Am Zug / Erinnern ---------- */
+.turn-banner{display:flex;align-items:center;gap:10px;width:100%;margin-bottom:14px;padding:12px 16px;border-radius:20px;border:1px solid var(--glass-border);
+  font:inherit;font-size:15px;font-weight:700;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 0 0 2px var(--accent),0 8px 20px rgba(var(--shadow),.18)}
+.turn-banner:active{transform:scale(.98)}
+.turn-banner .tb-ico{font-size:22px;animation:beat 1.6s ease-in-out infinite}
+.turn-banner .tb-text{flex:1;min-width:0}
+.turn-banner .tb-go{font-size:22px;color:var(--accent)}
+.turn-toast{position:fixed;z-index:60;width:max-content;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translate(-50%,-160%);max-width:calc(100% - 32px);
+  padding:12px 18px;border-radius:18px;border:1px solid var(--glass-border);font:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;
+  box-shadow:0 0 0 2px var(--accent),0 10px 26px rgba(var(--shadow),.28);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.turn-toast.show{transform:translate(-50%,0)}
+.nudge-btn{display:block;margin:8px auto 0;min-height:40px;padding:8px 18px;border:1px dashed var(--accent);border-radius:999px;background:var(--glass);
+  font:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;max-width:100%}
+.nudge-btn:active{transform:scale(.96)}
+.nudge-btn:disabled{opacity:.6;cursor:default;border-style:solid;border-color:var(--glass-border)}
+.mo-actions + .nudge-btn{margin-top:10px}

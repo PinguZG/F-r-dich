@@ -108,6 +108,12 @@ routerAdd('POST', '/api/games/mono/{id}/act', (e) => {
   return e.json(200, r.rec);
 }, $apis.requireAuth('users'));
 
+// ---------- Erinnern ----------
+routerAdd('POST', '/api/games/nudge', (e) => {
+  const lib = require(`${__hooks}/spiele_lib.js`);
+  return e.json(200, lib.nudge(e.app, e.auth.id, String((e.requestInfo().body || {}).game || '')));
+}, $apis.requireAuth('users'));
+
 // ---------- Sudoku ----------
 routerAdd('POST', '/api/games/sudoku/finish', (e) => {
   const lib = require(`${__hooks}/spiele_lib.js`);
