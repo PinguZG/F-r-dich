@@ -522,3 +522,42 @@ Die vier Spiele-Collections bleiben einfach ungenutzt stehen. Kein `git reset --
 
 **2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
 `/home/pingu/backups/vor-spiele-2026-10-22/`. ⚠️ Alles nach dem 22.10.2026 16:52 geht dabei verloren.
+
+---
+
+# Herzstadt 22.10.2026 (Immobilienspiel)
+
+Eigenes Spiel nach den klassischen Regeln. **Kein** „Monopoly“-Name, keine Original-Straßen oder -Karten (Marke von Hasbro): eigene Straßen, eigene Texte, eigenes Design.
+Getestet: Engine mit 400 Zufallspartien und knapp 2 Mio. Aktionen (nie negatives Geld, Häuserbilanz der Bank stimmt immer, abgelehnte Aktionen ändern nichts), 16 API-Tests, 18 UI-Prüfungen mit beiden Accounts parallel, alle Farbwelten; dazu der Spiele-Test von vorher erneut grün.
+
+## Was es kann
+
+- 40 Felder: 22 Straßen in 8 Farbgruppen, 4 Bahnhöfe, 2 Werke, Steuern, 🎁 Überraschung, 💌 Liebesbrief (je 16 Karten), Gefängnis, Kuschelpause, Ab ins Gefängnis.
+- Kaufen oder **Versteigern** (beide bieten verdeckt, höheres Gebot gewinnt, Gleichstand = bleibt bei der Bank).
+- Miete, doppelte Miete bei ganzer Farbgruppe, Häuser gleichmäßig bauen/verkaufen, Hotels, Bank mit 32 Häusern/12 Hotels, Hypotheken (+10 % beim Ablösen).
+- Pasch = nochmal, dreimal Pasch = Gefängnis; Gefängnis: 50 € / Karte / Pasch (3 Versuche).
+- Schulden: Geld durch Verkaufen/Hypotheken auftreiben, sonst aufgeben → die andere Person gewinnt.
+- Handeln jederzeit: Grundstücke, Geld, Gefängnis-frei-Karten.
+- Der **Server würfelt** und prüft jede Aktion (`/api/games/mono/new`, `/api/games/mono/{id}/act`), Versionsnummer gegen Doppeltipps.
+- Pushs: „🏙️ Du bist am Zug“ (mit Zusammenfassung), „🔨 Versteigerung – dein Gebot“, „⚠️ Du musst zahlen“, „🤝 Tauschangebot“, Spielende.
+
+## Dateien
+
+`app/lib/mono.js` (= `pocketbase/pb_hooks/mono.js`, dieselbe Datei: Brett, Karten, Regeln), `app/mono-ui.js` (Oberfläche), Styles in `app/games.css`, Routen in `pb_hooks/wir_spiele.pb.js`, Laden/Speichern in `spiele_lib.js`, Migration `pb_migrations/1792850000_wir_herzstadt.js` (neue Collection `mono_games`, nur additiv). Service Worker `wir-v11`.
+
+Hinweis: PocketBase hat ein Rate-Limit (300 Anfragen / 10 s pro Gerät) – beim Spielen kommt man da nicht hin.
+
+## Sicherung vorher
+
+Git-Tag **`vor-herzstadt`** = `297c693`; DB-Backup `/home/pingu/backups/vor-herzstadt-2026-10-22/` (17:50, Integritätsprüfung „ok“).
+
+## Zurück auf „vor-herzstadt“
+
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-herzstadt -- app push pocketbase/pb_hooks
+git rm -q app/mono-ui.js app/lib/mono.js pocketbase/pb_hooks/mono.js
+git commit -m "Zurück zur Version vor Herzstadt" && git push
+```
+Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/mono.js && sudo systemctl restart pocketbase`. Die Collection `mono_games` bleibt ungenutzt stehen.

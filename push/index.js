@@ -402,7 +402,7 @@ async function doSelections() {
 
 // g) Treffen, Öffne wenn, Spiele (chess/ttt): die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
 //    und bündeln dort (notify_prefs wird ignoriert)
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', chess: 's-chess', ttt: 's-ttt' };
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', chess: 's-chess', ttt: 's-ttt', mono: 's-mono' };
 
 async function doQueue() {
   const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });

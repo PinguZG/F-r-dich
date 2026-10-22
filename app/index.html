@@ -304,6 +304,43 @@
     </div>
     <div class="score-tiles" id="gcTttTiles"></div>
   </article>
+  <article class="game-card glass" data-game="mono">
+    <div class="gc-head">
+      <span class="gc-ico" data-icon="mono"></span>
+      <div class="gc-text"><b>Herzstadt</b><small id="gcMonoStatus">…</small></div>
+      <button class="gc-play" data-go="s-mono" type="button" aria-label="Herzstadt spielen">▶</button>
+    </div>
+    <div class="score-tiles" id="gcMonoTiles"></div>
+  </article>
+</section>
+
+<!-- Herzstadt (Immobilienspiel) -->
+<section class="screen page sub" id="s-mono" data-tab="s-games" data-title="Herzstadt">
+  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Herzstadt 🏙️</h2><button class="folder-btn" id="moRulesBtn" type="button" aria-label="Regeln">?</button></div>
+  <div id="moNone" hidden>
+    <div class="card glass mo-intro">
+      <div class="mo-intro-ico">🏙️</div>
+      <p>Kauft Straßen, baut Häuser und Hotels, kassiert Miete – wer zuerst pleite ist, verliert. Ihr würfelt abwechselnd, wann ihr wollt.</p>
+      <button class="mem-btn" id="moNewBtn" type="button">Neue Partie 💗</button>
+      <div class="mem-status" id="moNewMsg"></div>
+    </div>
+    <div class="dates game-hist" id="moHist"></div>
+  </div>
+  <div id="moGame" hidden>
+    <div class="mo-players" id="moPlayers"></div>
+    <div class="mo-board-wrap glass"><div class="mo-board" id="moBoard"></div></div>
+    <div class="mo-actions" id="moActions"></div>
+    <div class="mem-status" id="moMsg"></div>
+    <div class="mo-trade glass" id="moTradeBox" hidden></div>
+    <div class="mo-tools">
+      <button class="pack-btn" id="moTradeBtn" type="button">🤝 Handeln</button>
+      <button class="pack-btn" id="moResignBtn" type="button">🏳️ Aufgeben</button>
+    </div>
+    <h3 class="list-head">Meine Grundstücke</h3>
+    <div class="mo-mine" id="moMine"></div>
+    <h3 class="list-head">Verlauf</h3>
+    <div class="mo-log glass" id="moLog"></div>
+  </div>
 </section>
 
 <!-- Schach -->
@@ -525,6 +562,52 @@
   </div>
 </div>
 
+<div class="sheet-wrap" id="moFieldSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet mo-field-sheet" id="moFieldBody"></div>
+</div>
+
+<div class="sheet-wrap" id="moTradeSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet" id="moTradeForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Tauschangebot 🤝</h2>
+    <div class="mo-tr-cols">
+      <div><h3>Du gibst</h3><div class="mo-tr-list" id="moTrGive"></div>
+        <label class="mo-tr-cash">💶 <input class="mem-input" id="moTrGiveCash" type="number" min="0" inputmode="numeric" placeholder="0"> €</label>
+        <label class="check mo-tr-card" id="moTrGiveCardRow"><input type="checkbox" class="switch" id="moTrGiveCard"><span>🔓 Gefängnis-frei</span></label></div>
+      <div><h3 id="moTrGetHead">Du bekommst</h3><div class="mo-tr-list" id="moTrGet"></div>
+        <label class="mo-tr-cash">💶 <input class="mem-input" id="moTrGetCash" type="number" min="0" inputmode="numeric" placeholder="0"> €</label>
+        <label class="check mo-tr-card" id="moTrGetCardRow"><input type="checkbox" class="switch" id="moTrGetCard"><span>🔓 Gefängnis-frei</span></label></div>
+    </div>
+    <p class="mem-note">Grundstücke mit Häusern in ihrer Farbgruppe kann man nicht tauschen.</p>
+    <button class="mem-btn" type="submit">Angebot schicken 💌</button>
+    <div class="err" id="moTrErr"></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="moRulesSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet mo-rules">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">So geht Herzstadt 🏙️</h2>
+    <ul>
+      <li>Jede Person startet mit 1500 €. Über <b>Los</b> gibt es 200 €.</li>
+      <li>Landest du auf einem freien Grundstück, kannst du es <b>kaufen</b>. Sonst wird es <b>versteigert</b> – ihr bietet beide verdeckt, das höhere Gebot gewinnt.</li>
+      <li>Auf fremden Grundstücken zahlst du <b>Miete</b>. Gehört jemandem eine ganze Farbgruppe, ist die Miete doppelt.</li>
+      <li>Mit der ganzen Farbgruppe kannst du <b>Häuser</b> bauen (gleichmäßig, bis 4) und dann ein <b>Hotel</b>. Die Bank hat 32 Häuser und 12 Hotels.</li>
+      <li>Bahnhöfe: 25/50/100/200 € je nach Anzahl. Werke: 4× bzw. mit beiden 10× der Augenzahl.</li>
+      <li><b>Pasch</b> = nochmal würfeln. Drei Pasch hintereinander: ab ins Gefängnis.</li>
+      <li><b>Gefängnis</b>: 50 € zahlen, Karte nutzen oder auf einen Pasch hoffen (3 Versuche, danach 50 € zahlen).</li>
+      <li><b>Hypothek</b>: halber Kaufpreis sofort, keine Miete solange. Ablösen kostet 10 % mehr.</li>
+      <li>Reicht dein Geld nicht, verkaufe Häuser (halber Preis) oder nimm Hypotheken auf. Geht gar nichts mehr: aufgeben – die andere Person gewinnt.</li>
+      <li>Handeln geht jederzeit: Grundstücke, Geld und Gefängnis-frei-Karten.</li>
+    </ul>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lb-x" aria-label="Schließen" type="button">✕</button>
   <img id="lbImg" alt="">
@@ -725,5 +808,7 @@
 <script src="/home.js"></script>
 <script src="/lib/chess.js"></script>
 <script src="/games.js"></script>
+<script src="/lib/mono.js"></script>
+<script src="/mono-ui.js"></script>
 </body>
 </html>

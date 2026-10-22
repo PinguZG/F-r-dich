@@ -300,8 +300,71 @@ function sudokuFinish(app, uid, body) {
   return rec;
 }
 
+// ======================================================================
+// Herzstadt (Immobilienspiel) – Logik in mono.js, hier nur Laden/Speichern/Rechte
+// ======================================================================
+function monoNew(app, uid) {
+  const Mono = require(`${__hooks}/mono.js`);
+  const active = app.findRecordsByFilter('mono_games', "status = 'active'", '', 1, 0);
+  if (active.length) throw conflict('Es läuft schon eine Partie.');
+  const partner = wir.partnerOf(app, uid).id;
+  // wer anfängt, entscheidet der Zufall
+  const first = Math.random() < 0.5 ? uid : partner;
+  const rec = new Record(app.findCollectionByNameOrId('mono_games'));
+  rec.set('p1', first);
+  rec.set('p2', first === uid ? partner : uid);
+  rec.set('status', 'active');
+  const s = Mono.newState(Math.random);
+  s.log.push({ t: Date.now(), m: '🏙️ Neue Partie! ' + nameOf(app, first) + ' fängt an. Jede Person startet mit ' + Mono.START_CASH + ' €.' });
+  rec.set('state', s);
+  app.save(rec);
+  return { rec, partner, partnerStarts: first === partner };
+}
+
+function monoAct(app, uid, id, body) {
+  const Mono = require(`${__hooks}/mono.js`);
+  let rec;
+  try { rec = app.findRecordById('mono_games', id); } catch (_) { throw new NotFoundError('Partie nicht gefunden'); }
+  const ids = [rec.getString('p1'), rec.getString('p2')];
+  const me = ids.indexOf(uid);
+  if (me < 0) throw new ForbiddenError('Nicht deine Partie');
+  if (rec.getString('status') !== 'active') throw conflict('Die Partie ist schon vorbei.');
+  const s = readJson(rec, 'state', null);
+  if (!s) throw new BadRequestError('Spielstand fehlt');
+  if (body.v != null && Number(body.v) !== s.v) throw conflict();
+
+  const before = Mono.waiting(s);
+  const logLen = s.log.length;
+  const tradeBefore = !!s.trade;
+  const names = ids.map(i => nameOf(app, i));
+  try {
+    Mono.act(s, me, body, { rnd: Math.random, names });
+  } catch (err) {
+    if (err && err.status === 409) throw conflict(err.message);
+    throw new BadRequestError(err && err.message ? err.message : 'Ging nicht');
+  }
+  s.v++;
+  rec.set('state', s);
+  if (s.winner != null) { rec.set('status', 'finished'); rec.set('winner', ids[s.winner]); }
+  app.save(rec);
+
+  const other = 1 - me;
+  const after = Mono.waiting(s);
+  // neue Log-Zeilen dieser Aktion (für den Push-Text)
+  const fresh = s.log.slice(logLen).map(l => l.m);
+  return {
+    rec, otherId: ids[other], names,
+    gameOver: s.winner != null, iWon: s.winner === me,
+    // die andere Person muss jetzt etwas tun und musste es vorher nicht (oder es ist ein neues Tauschangebot)
+    notify: after.indexOf(other) >= 0 && before.indexOf(other) < 0,
+    tradeOffer: !tradeBefore && !!s.trade && s.trade.from === me,
+    phase: s.phase, fresh: fresh.length ? fresh : s.log.slice(-2).map(l => l.m),
+  };
+}
+
 module.exports = {
   push, nameOf, sanDe,
+  monoNew, monoAct,
   chessNew, chessMove, chessResign, chessDraw,
   tttNew, tttMove, tttResign, tttAi,
   sudokuFinish, sudokuPoints,

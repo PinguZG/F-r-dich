@@ -87,6 +87,7 @@
   const ICONS = {
     chess: '<svg viewBox="0 0 100 100"><g class="gi-fill">' + PIECE_SHAPES.n + BASE + '</g></svg>',
     sudoku: '<svg viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="16" class="gi-soft"/><path class="gi-line" d="M38 18v64M62 18v64M18 38h64M18 62h64"/><text x="26" y="34" class="gi-txt">1</text><text x="50" y="58" class="gi-txt">5</text><text x="74" y="82" class="gi-txt">9</text></svg>',
+    mono: '<svg viewBox="0 0 100 100"><path class="gi-fill" d="M18 50L50 22l32 28v32a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="gi-heart" d="M50 76c-9-6-15-11-15-18 0-5 4-8 8-8 3 0 5 2 7 4 2-2 4-4 7-4 4 0 8 3 8 8 0 7-6 12-15 18z"/><path class="gi-line" d="M64 30V18h9v20"/></svg>',
     ttt: '<svg viewBox="0 0 100 100"><path class="gi-line" d="M38 16v68M62 16v68M16 38h68M16 62h68"/><path class="gi-x" d="M20 20l12 12M32 20L20 32M68 68l12 12M80 68L68 80"/><circle class="gi-o" cx="50" cy="50" r="7"/><circle class="gi-o" cx="74" cy="26" r="7"/></svg>',
   };
   document.querySelectorAll('[data-icon]').forEach(e => { e.innerHTML = ICONS[e.dataset.icon] || ''; });
@@ -961,7 +962,10 @@
     ]);
 
     document.querySelector('[data-game="chess"] .gc-play').textContent = cg?.status === 'active' ? '▶' : '+';
-    $('navGameDot').hidden = !(myChessTurn() || myTttTurn() || (cg?.status === 'active' && cg.draw_offer && cg.draw_offer !== myId()));
+    // mono-ui.js setzt dataset.m für Herzstadt
+    const dot = $('navGameDot');
+    dot.dataset.g = myChessTurn() || myTttTurn() || (cg?.status === 'active' && cg.draw_offer && cg.draw_offer !== myId()) ? '1' : '';
+    dot.hidden = !(dot.dataset.g || dot.dataset.m);
   }
 
   // ======================================================================

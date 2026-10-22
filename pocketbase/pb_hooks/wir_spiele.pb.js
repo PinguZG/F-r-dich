@@ -81,6 +81,33 @@ routerAdd('POST', '/api/games/ttt/ai', (e) => {
   return e.json(200, lib.tttAi(e.app, e.auth.id, e.requestInfo().body || {}));
 }, $apis.requireAuth('users'));
 
+// ---------- Herzstadt (Immobilienspiel) ----------
+routerAdd('POST', '/api/games/mono/new', (e) => {
+  const lib = require(`${__hooks}/spiele_lib.js`);
+  let r;
+  e.app.runInTransaction((tx) => { r = lib.monoNew(tx, e.auth.id); });
+  const n = lib.nameOf(e.app, e.auth.id);
+  lib.push(e.app, r.partner, 'mono', r.partnerStarts ? '🏙️ Herzstadt – du fängst an!' : '🏙️ Neue Partie Herzstadt',
+    r.partnerStarts ? `${n} hat eine Partie gestartet. Würfel!` : `${n} hat eine Partie gestartet und würfelt zuerst`);
+  return e.json(200, r.rec);
+}, $apis.requireAuth('users'));
+
+routerAdd('POST', '/api/games/mono/{id}/act', (e) => {
+  const lib = require(`${__hooks}/spiele_lib.js`);
+  let r;
+  e.app.runInTransaction((tx) => { r = lib.monoAct(tx, e.auth.id, e.request.pathValue('id'), e.requestInfo().body || {}); });
+  const n = lib.nameOf(e.app, e.auth.id);
+  // kurze Zusammenfassung: die letzten (höchstens 2) Ereignisse ohne Emoji am Anfang
+  const sum = r.fresh.slice(-2).map(m => m.replace(/^[^A-Za-zÄÖÜäöü0-9]+/, '')).join(' · ').slice(0, 180);
+  if (r.gameOver) lib.push(e.app, r.otherId, 'mono', r.iWon ? '🏙️ Herzstadt ist vorbei' : '🏙️ Du hast Herzstadt gewonnen! 🎉', sum);
+  else if (r.tradeOffer) lib.push(e.app, r.otherId, 'mono', '🤝 Tauschangebot in Herzstadt', `${n} möchte mit dir tauschen`);
+  else if (r.notify) {
+    const title = r.phase === 'auction' ? '🔨 Versteigerung – dein Gebot' : r.phase === 'debt' ? '⚠️ Herzstadt: Du musst zahlen' : '🏙️ Du bist am Zug';
+    lib.push(e.app, r.otherId, 'mono', title, sum || `${n} ist fertig`);
+  }
+  return e.json(200, r.rec);
+}, $apis.requireAuth('users'));
+
 // ---------- Sudoku ----------
 routerAdd('POST', '/api/games/sudoku/finish', (e) => {
   const lib = require(`${__hooks}/spiele_lib.js`);
