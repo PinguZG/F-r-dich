@@ -1,8 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
-// Heart Coins + Gutschein-Shop. Coins bucht ausschließlich der Server (Logik in coins_lib.js);
-// coin_wallets, coin_ledger, vouchers sind für Clients schreibgeschützt (Regel leer = nur Superuser).
+// Heart Coins. Coins bucht ausschließlich der Server (Logik in coins_lib.js);
+// coin_wallets und coin_ledger sind für Clients schreibgeschützt (Regel leer = nur Superuser).
 // Gehört nach /home/pingu/pb/pb_hooks/ (zusammen mit coins_lib.js, wir_lib.js).
-// Pushs landen in push_queue (Art "gift"), wir-push verschickt sie.
 
 // ---------- Verdienen: liebevolle Aktionen ----------
 onRecordAfterCreateSuccess((e) => {
@@ -36,30 +35,4 @@ routerAdd('GET', '/api/coins/me', (e) => {
 routerAdd('POST', '/api/coins/daily', (e) => {
   const coins = require(`${__hooks}/coins_lib.js`);
   return e.json(200, coins.daily(e.app, e.auth.id));
-}, $apis.requireAuth('users'));
-
-// ---------- Gutscheine ----------
-routerAdd('POST', '/api/shop/gift', (e) => {
-  const coins = require(`${__hooks}/coins_lib.js`);
-  const r = coins.gift(e.app, e.auth.id, e.requestInfo().body || {});
-  if (!r.dup) {
-    coins.pushGift(e.app, r.partner, `🎁 ${coins.nameOf(e.app, e.auth.id)} hat dir einen Gutschein geschenkt: ${r.rec.getString('name')}`,
-      r.rec.getString('note') || 'Schau in deine Gutscheine 💗');
-  }
-  return e.json(200, { voucher: r.rec, balance: r.balance, dup: r.dup });
-}, $apis.requireAuth('users'));
-
-routerAdd('POST', '/api/vouchers/{id}/redeem', (e) => {
-  const coins = require(`${__hooks}/coins_lib.js`);
-  const v = coins.redeem(e.app, e.auth.id, e.request.pathValue('id'));
-  coins.pushGift(e.app, v.getString('from'), `🎟️ ${coins.nameOf(e.app, e.auth.id)} löst deinen Gutschein ein: ${v.getString('name')}`,
-    'Tippe auf „Erfüllt ✓“, wenn du ihn eingelöst hast 💗');
-  return e.json(200, v);
-}, $apis.requireAuth('users'));
-
-routerAdd('POST', '/api/vouchers/{id}/fulfill', (e) => {
-  const coins = require(`${__hooks}/coins_lib.js`);
-  const r = coins.fulfill(e.app, e.auth.id, e.request.pathValue('id'));
-  coins.pushGift(e.app, r.rec.getString('to'), `✓ ${coins.nameOf(e.app, e.auth.id)} hat deinen Gutschein erfüllt: ${r.rec.getString('name')}`, '💗');
-  return e.json(200, { voucher: r.rec, bonus: r.bonus });
 }, $apis.requireAuth('users'));

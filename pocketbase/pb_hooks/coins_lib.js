@@ -1,4 +1,4 @@
-// Heart Coins + Gutschein-Shop für wir_coins.pb.js (wird dort per require() geladen).
+// Heart Coins für wir_coins.pb.js (wird dort per require() geladen).
 // Jede Coin-Bewegung läuft über book(): in einer Transaktion, mit eindeutigem Idempotenz-Schlüssel,
 // nie unter 0. coin_wallets.balance ist der Cache, coin_ledger die Wahrheit (beide werden immer zusammen geschrieben).
 
@@ -10,12 +10,7 @@ const EARN = {
   love: { amount: 1, max: 200, label: '💗 Liebe gesendet' },
   openwhen: { amount: 25, max: 5, minLen: 40, label: '💌 Öffne-wenn-Brief geschrieben' },
   photo: { amount: 5, max: 5, label: '📸 Foto hochgeladen' },
-  fulfill: { amount: 15, label: '✓ Versprechen gehalten' },
 };
-
-function nameOf(app, id) {
-  try { return app.findRecordById('users', id).getString('name') || 'Dein Schatz'; } catch (_) { return 'Dein Schatz'; }
-}
 
 // 00:00 Uhr in Berlin (heute) als PocketBase-Zeit
 function berlinMidnightPb(now) {
@@ -118,85 +113,4 @@ function me(app, uid) {
   };
 }
 
-// ---------------------------------------------------------------------
-// Gutscheine
-// ---------------------------------------------------------------------
-function cleanKey(k) {
-  const s = String(k || '');
-  if (!/^[A-Za-z0-9_-]{8,64}$/.test(s)) throw new BadRequestError('key fehlt');
-  return s;
-}
-
-function gift(app, uid, body) {
-  const ckey = cleanKey(body.key);
-  const note = String(body.note || '').trim().slice(0, 200);
-  const partner = wir.partnerOf(app, uid);
-  let item;
-  try { item = app.findRecordById('shop_items', String(body.item || '')); } catch (_) { throw new NotFoundError('Gutschein nicht gefunden'); }
-  if (!item.getBool('active')) throw new BadRequestError('Diesen Gutschein gibt es gerade nicht.');
-  const price = item.getInt('price');
-  if (price <= 0) throw new BadRequestError('Preis ungültig');
-  const key = `gift:${uid}:${ckey}`;
-
-  let out;
-  app.runInTransaction((tx) => {
-    // derselbe Kauf nochmal (Doppeltipp, Netzwerk-Wiederholung) -> vorhandenen Gutschein zurückgeben
-    try {
-      const prev = tx.findFirstRecordByFilter('coin_ledger', 'key = {:k}', { k: key });
-      out = { rec: tx.findRecordById('vouchers', prev.getString('ref')), dup: true, balance: findWallet(tx, uid).getInt('balance') };
-      return;
-    } catch (_) { /* neu */ }
-    const v = new Record(tx.findCollectionByNameOrId('vouchers'));
-    v.set('item', item.id);
-    v.set('from', uid);
-    v.set('to', partner.id);
-    v.set('name', item.getString('name'));
-    v.set('emoji', item.getString('emoji'));
-    v.set('description', item.getString('description'));
-    v.set('price', price);
-    v.set('note', note);
-    v.set('status', 'gifted');
-    tx.save(v);
-    const r = book(tx, { user: uid, amount: -price, reason: 'gift', label: `🎁 ${item.getString('name')} für ${partner.getString('name')}`, ref: v.id, key });
-    out = { rec: v, dup: false, balance: r.balance, partner: partner.id };
-  });
-  return out;
-}
-
-function voucherFor(app, id) {
-  try { return app.findRecordById('vouchers', id); } catch (_) { throw new NotFoundError('Gutschein nicht gefunden'); }
-}
-
-function redeem(app, uid, id) {
-  let v;
-  app.runInTransaction((tx) => {
-    v = voucherFor(tx, id);
-    if (v.getString('to') !== uid) throw new ForbiddenError('Das ist nicht dein Gutschein.');
-    if (v.getString('status') !== 'gifted') throw new ApiError(409, 'Schon eingelöst 💗');
-    v.set('status', 'redeemed');
-    v.set('redeemed_at', new DateTime());
-    tx.save(v);
-  });
-  return v;
-}
-
-function fulfill(app, uid, id) {
-  let v, bonus = null;
-  app.runInTransaction((tx) => {
-    v = voucherFor(tx, id);
-    if (v.getString('from') !== uid) throw new ForbiddenError('Nur wer verschenkt hat, kann erfüllen.');
-    if (v.getString('status') !== 'redeemed') throw new ApiError(409, v.getString('status') === 'fulfilled' ? 'Schon erfüllt ✓' : 'Noch nicht eingelöst');
-    v.set('status', 'fulfilled');
-    v.set('fulfilled_at', new DateTime());
-    tx.save(v);
-    bonus = book(tx, { user: uid, amount: EARN.fulfill.amount, reason: 'fulfill', label: `${EARN.fulfill.label}: ${v.getString('name')}`, ref: v.id, key: 'fulfill:' + v.id });
-  });
-  return { rec: v, bonus: bonus && bonus.ok ? EARN.fulfill.amount : 0 };
-}
-
-function pushGift(app, user, title, body) {
-  try { wir.enqueue(app, { user, kind: 'gift', title, body: body || '', url: '/' }); }
-  catch (err) { app.logger().error('gift push', 'error', String(err)); }
-}
-
-module.exports = { START, EARN, nameOf, ensureWallet, book, earn, daily, me, gift, redeem, fulfill, pushGift, countToday, berlinMidnightPb };
+module.exports = { START, EARN, ensureWallet, book, earn, daily, me, countToday, berlinMidnightPb };

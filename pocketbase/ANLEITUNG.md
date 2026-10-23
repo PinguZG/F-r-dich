@@ -651,3 +651,13 @@ Die vier neuen Collections bleiben ungenutzt stehen. Kein `git reset --hard` + `
 
 **2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
 `/home/pingu/backups/vor-shop-2026-10-23/`. ⚠️ Alles nach dem 23.10.2026 06:54 geht dabei verloren.
+
+---
+
+# 23.10.2026: Shop wieder raus
+
+Auf Wunsch sind **Shop und Gutschein-Fach entfernt**. Es bleiben: Coin-Chip, Kontostand, Verdienen (Liebe, Briefe, Fotos, Tagesbonus), Sheet mit **Verlauf** und **Casino (bald verfügbar)**.
+- Entfernt: Routen `/api/shop/gift`, `/api/vouchers/{id}/redeem|fulfill` (jetzt 404), Shop-Bereich und Schenken-Sheet in der App, der +15-Bonus fürs Erfüllen, Push-Art `gift` in wir-push.
+- Datenbank unverändert: `shop_items` und `vouchers` bleiben leer bzw. ungenutzt stehen (live waren noch keine Gutscheine verschenkt). Service Worker `wir-v16`.
+- Shop zurückholen: `git revert --no-edit <commit "Shop wieder raus"> && git push`.
+- Ganz zurück auf „vor-shop“: siehe Abschnitt davor. Bei `git rm` dann nur noch die Dateien angeben, die es noch gibt.
