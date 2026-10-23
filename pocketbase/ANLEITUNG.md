@@ -741,7 +741,7 @@ Getestet mit einer lokalen PocketBase 0.40.5 (Kopie der Live-DB):
 
 | Wo | Was |
 |---|---|
-| **Einstellungen → ganz unten „⌨️ Konsole“** | Für **beide** gleich, mit denselben Daten über beide Personen. Kein Admin-Schalter. Darunter steht ein kurzer Hinweis, dass die App 90 Tage lang Online-Zeiten und geöffnete Bereiche merkt. |
+| **Einstellungen → ganz unten „⌨️ Konsole“** | Für **beide** gleich, mit denselben Daten über beide Personen. Kein Admin-Schalter. (Der Hinweis-Satz darunter wurde am 23.10.2026 auf Wunsch entfernt.) |
 | **Konsole** | Kleines Terminal in der Farbwelt. Ausgabe oben (scrollbar), unten die Eingabezeile `> `. Es gibt keine Hilfe, keine Vorschläge und keine Befehlsliste. Alles andere ergibt „Unbekannter Befehl“. |
 | **Startseite / Wir zwei** | Grüner Punkt (pulsierend) am Profilbild der anderen Person, solange sie online ist |
 | **Push** | „💌 Ida hat deinen Brief geöffnet“ an die schreibende Person, sobald ein Öffne-wenn-Brief zum ersten Mal geöffnet wird. Tippen öffnet „Öffne wenn“. |
