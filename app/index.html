@@ -20,6 +20,7 @@
 <meta name="theme-color" content="#fdeef5">
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/games.css">
+<link rel="stylesheet" href="/coins.css">
 </head>
 <body>
 
@@ -49,6 +50,7 @@
 <!-- ============ App-Rahmen: oben Avatar, unten Navigation ============ -->
 <header class="topbar">
   <button class="avatar sm" id="meBtn" data-go="s-settings" aria-label="Einstellungen"></button>
+  <button class="coin-chip" id="coinChip" type="button" aria-label="Heart Coins"><span class="coin" aria-hidden="true"></span><b id="coinBal">…</b><i class="nav-dot" id="coinDot" hidden></i></button>
   <h1 id="topTitle">Für dich 💌</h1>
   <span class="top-spacer"></span>
 </header>
@@ -492,6 +494,73 @@
 </section>
 
 <!-- ============ Bottom-Sheets ============ -->
+<!-- ============ Heart Coins (coins.js) ============ -->
+<div class="sheet-wrap" id="coinSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet coin-sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <div class="coin-head">
+      <span class="coin big" aria-hidden="true"></span>
+      <div><b id="coinBalBig">…</b><small>Heart Coins</small></div>
+    </div>
+    <div class="segmented" role="tablist">
+      <button class="seg on" data-coin-tab="history" type="button">Verlauf</button>
+      <button class="seg" data-coin-tab="shop" type="button">Shop<i class="seg-dot" id="coinShopDot" hidden></i></button>
+      <button class="seg" data-coin-tab="casino" type="button">Casino</button>
+    </div>
+
+    <div class="coin-pane" data-pane="history">
+      <div class="coin-today" id="coinToday"></div>
+      <details class="coin-how">
+        <summary>So sammelst du Heart Coins</summary>
+        <ul id="coinRules"></ul>
+      </details>
+      <div class="coin-ledger" id="coinLedger"></div>
+      <button class="link-btn" id="coinMore" type="button" hidden>Mehr anzeigen</button>
+    </div>
+
+    <div class="coin-pane" data-pane="shop" hidden>
+      <div class="pill-row">
+        <button class="chip-btn on" data-shop-tab="give" type="button">🎁 Verschenken</button>
+        <button class="chip-btn" data-shop-tab="mine" type="button">🎟️ Gutscheine<span id="vMineCount"></span></button>
+      </div>
+      <div data-shop-pane="give">
+        <p class="coin-intro" id="shopIntro"></p>
+        <div class="shop-grid" id="shopGrid"></div>
+      </div>
+      <div data-shop-pane="mine" hidden>
+        <div id="vForMe"></div>
+        <div id="vFromMe"></div>
+        <details class="coin-how" id="vDoneWrap" hidden>
+          <summary>Eingelöste Gutscheine</summary>
+          <div id="vDone"></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="coin-pane" data-pane="casino" hidden>
+      <div class="casino-soon glass">
+        <div class="cs-ico">🎰</div>
+        <b>Casino – bald verfügbar</b>
+        <p>Blackjack, Roulette, Texas Hold’em und ein Entenrennen kommen bald. Nur mit Spielgeld, nie mit echtem Geld.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="giftSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet gift-sheet" id="giftForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <div id="giftPreview"></div>
+    <input class="mem-input" id="giftNote" maxlength="200" placeholder="Kleiner Gruß dazu (optional)">
+    <button class="mem-btn" id="giftBtn" type="submit">Schenken</button>
+    <div class="mem-status" id="giftStatus"></div>
+  </form>
+</div>
+
 <div class="sheet-wrap" id="msgSheet" hidden>
   <div class="sheet-backdrop" data-close></div>
   <form class="sheet" id="msgForm">
@@ -814,5 +883,6 @@
 <script src="/games.js"></script>
 <script src="/lib/mono.js"></script>
 <script src="/mono-ui.js"></script>
+<script src="/coins.js"></script>
 </body>
 </html>

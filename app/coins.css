@@ -1,0 +1,124 @@
+/* ======================================================================
+   Heart Coins: Chip oben, Sheet (Verlauf / Shop / Casino), Gutscheine
+   ====================================================================== */
+
+/* ---------- Münze ---------- */
+.coin{display:inline-block;flex-shrink:0;width:18px;height:18px;border-radius:50%;position:relative;vertical-align:-3px;
+  background:radial-gradient(circle at 32% 28%,#fff6c9 0 18%,#ffd45c 40%,#f0a92a 78%,#c97c12 100%);
+  box-shadow:inset 0 0 0 1.5px rgba(160,90,0,.35),0 1px 3px rgba(150,80,0,.35)}
+.coin::after{content:'♥';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;line-height:1;color:#e0457b;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+.coin.big{width:46px;height:46px}
+.coin.big::after{font-size:26px}
+
+/* ---------- Chip oben ---------- */
+.coin-chip{position:relative;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px 0 8px;
+  border:1px solid var(--glass-border);border-radius:17px;background:var(--glass-strong);cursor:pointer;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 4px 14px rgba(var(--shadow),.18);
+  font-size:14px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.coin-chip:active{transform:scale(.94)}
+.coin-chip:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+.coin-chip .nav-dot{top:-3px;right:-3px}
+.coin-chip.bump{animation:coinBump .7s ease}
+.coin-chip.bump .coin{animation:coinSpin .7s ease}
+.coin-chip.down{animation:coinDown .4s ease}
+@keyframes coinBump{0%{transform:scale(1)}30%{transform:scale(1.18);box-shadow:0 0 0 4px rgba(255,212,92,.45),0 4px 18px rgba(240,169,42,.5)}100%{transform:scale(1)}}
+@keyframes coinSpin{to{transform:rotateY(360deg)}}
+@keyframes coinDown{50%{transform:scale(.92)}}
+.coin-float{position:fixed;z-index:70;pointer-events:none;transform:translate(-50%,0);font-size:15px;font-weight:700;
+  animation:coinFloat 1.3s ease-out forwards;text-shadow:0 1px 6px rgba(255,255,255,.8)}
+.coin-float.plus{color:#d98a00}
+.coin-float.minus{color:var(--ink-soft)}
+@keyframes coinFloat{0%{opacity:0;transform:translate(-50%,-6px) scale(.7)}20%{opacity:1;transform:translate(-50%,4px) scale(1.15)}100%{opacity:0;transform:translate(-50%,28px) scale(1)}}
+
+.coin-toast{position:fixed;left:50%;top:calc(var(--top-h) + 6px);z-index:65;transform:translate(-50%,-30px);opacity:0;pointer-events:none;
+  padding:10px 16px;border-radius:20px;font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;transition:transform .4s,opacity .4s}
+.coin-toast.show{transform:translate(-50%,0);opacity:1}
+
+/* ---------- Sheet ---------- */
+.coin-sheet{min-height:62vh}
+.coin-head{display:flex;align-items:center;justify-content:center;gap:12px;margin:2px 0 2px}
+.coin-head b{display:block;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.coin-head small{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--ink-soft);text-transform:uppercase}
+.coin-sheet .segmented{margin-bottom:2px}
+.seg{position:relative}
+.seg-dot{position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:#ff3b6b}
+.coin-pane{display:flex;flex-direction:column;gap:12px}
+.coin-sub{font-size:14px;font-weight:700;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase;margin:6px 0 2px}
+.coin-empty{font-size:14px;font-weight:600;color:var(--ink-soft);text-align:center;padding:10px}
+.coin-intro{font-size:14px;font-weight:600;color:var(--ink-soft);text-align:center;line-height:1.4}
+
+/* Heute */
+.coin-today{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ct-head{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--ink-soft)}
+.ct-item{display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 4px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-border)}
+.ct-item span{font-size:18px}
+.ct-item b{font-size:17px;font-variant-numeric:tabular-nums}
+.ct-item small{font-size:11px;font-weight:700;color:var(--ink-soft);text-align:center}
+
+.coin-how{border-radius:16px;background:var(--glass);border:1px solid var(--glass-border);padding:10px 14px}
+.coin-how summary{font-size:14px;font-weight:700;cursor:pointer;color:var(--ink)}
+.coin-how ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.coin-how li{display:grid;grid-template-columns:24px 1fr;gap:2px 8px;font-size:14px;font-weight:600}
+.coin-how li b{grid-column:2;font-size:12px;color:var(--ink-soft)}
+
+.coin-ledger,#vDone{display:flex;flex-direction:column}
+.ledger-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--glass-border)}
+.ledger-row:last-child{border-bottom:none}
+.lr-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.lr-text span{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-text small{font-size:12px;font-weight:600;color:var(--ink-soft)}
+.lr-amt{font-size:16px;font-variant-numeric:tabular-nums}
+.lr-amt.plus{color:#d98a00}
+html[data-theme="gluehwein"] .lr-amt.plus,html[data-theme="mondnacht"] .lr-amt.plus{color:#ffd45c}
+.lr-amt.minus{color:var(--ink-soft)}
+
+/* ---------- Shop ---------- */
+.pill-row{display:flex;gap:8px;justify-content:center}
+.pill-row .chip-btn.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink)}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.shop-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px 12px;border-radius:20px;cursor:pointer;text-align:center;
+  border:1px dashed var(--ink-faint);background:var(--glass-strong);box-shadow:0 6px 16px rgba(var(--shadow),.1);transition:transform .15s}
+.shop-item:active{transform:scale(.96)}
+.si-emoji{font-size:30px;line-height:1}
+.si-name{font-size:13.5px;line-height:1.25;min-height:34px;display:flex;align-items:center}
+.si-price{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;background:var(--chip);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.shop-item.short{opacity:.6}
+
+/* ---------- Gutschein-Karte ---------- */
+.voucher{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 18px 14px 22px;border-radius:20px;overflow:hidden;
+  background:var(--paper) linear-gradient(135deg,rgba(255,255,255,0) 40%,color-mix(in srgb,var(--paper-margin) 22%,transparent));color:var(--paper-ink);
+  box-shadow:0 8px 22px rgba(var(--shadow),.18),inset 0 0 0 1px rgba(255,255,255,.6)}
+/* gezackter Abriss links */
+.voucher::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;
+  background:radial-gradient(circle at 0 8px,var(--bg1) 5px,transparent 5.5px) 0 0/10px 16px repeat-y}
+.voucher::after{content:'';position:absolute;right:-26px;top:-26px;width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent2),transparent 70%);opacity:.35}
+.vc-top{display:flex;align-items:center;gap:10px}
+.vc-emoji{font-size:30px;line-height:1}
+.vc-from{font-family:'Caveat',cursive;font-size:22px;font-weight:700;color:var(--paper-ink);opacity:.8}
+.vc-name{font-size:18px;line-height:1.2}
+.vc-desc{font-size:13.5px;font-weight:600;line-height:1.4;opacity:.85}
+.vc-note{font-family:'Caveat',cursive;font-size:20px;line-height:1.2}
+.vc-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+.vc-state{font-size:13px;font-weight:700;opacity:.75}
+.vc-state.hot{opacity:1;color:var(--accent)}
+.vc-btn.mem-btn{width:auto;min-height:40px;padding:8px 18px;font-size:15px;margin-left:auto}
+.voucher.redeemed{opacity:.92}
+.voucher.big{padding:22px 22px 18px 26px}
+.voucher.big .vc-emoji{font-size:44px}
+.voucher.big .vc-name{font-size:22px}
+#vForMe,#vFromMe{display:flex;flex-direction:column;gap:10px}
+.gift-sheet .voucher.big{margin-top:30px}
+#giftBtn:disabled{opacity:.6}
+
+/* ---------- Casino (bald) ---------- */
+.casino-soon{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 20px;border-radius:24px;text-align:center}
+.cs-ico{font-size:46px;animation:idle 3s ease-in-out infinite}
+.casino-soon b{font-size:18px}
+.casino-soon p{font-size:14px;font-weight:600;color:var(--ink-soft);line-height:1.45}
+
+@media (max-width:360px){
+  .coin-chip{padding:0 9px 0 6px;font-size:13px}
+  .si-name{font-size:12.5px}
+}

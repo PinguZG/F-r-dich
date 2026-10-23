@@ -582,3 +582,72 @@ Zurück: Git-Tag **`vor-erinnern`** = `87bd2a3`.
 git checkout vor-erinnern -- app pocketbase/pb_hooks && git commit -m "Zurück vor Erinnern" && git push
 ```
 Keine DB-Änderung, daher kein Backup nötig (Einträge in `push_queue` sind normale Pushs).
+
+---
+
+# Heart Coins + Gutschein-Shop 23.10.2026 (Etappe 1)
+
+Getestet mit einer lokalen PocketBase 0.40.5 und einer **Kopie der Live-Datenbank**: 35 API-Tests mit beiden Accounts (u. a. 5× parallel Tagesbonus → genau eine Gutschrift, Dreifachtipp beim Verschenken → ein Gutschein und eine Abbuchung, Client kann Konto/Ledger/Gutscheine weder anlegen noch ändern noch löschen, fremdes Ledger unsichtbar, kein negativer Kontostand, Summe Ledger = Kontostand) und UI-Test mit beiden Accounts parallel (Verschenken → Push-Ziel → Einlösen → Realtime beim Schenkenden → Erfüllt ✓), alle bisherigen Bereiche geöffnet, keine Konsolenfehler.
+Das Casino kommt als **Etappe 2**; im Sheet steht dort vorerst „Bald verfügbar“.
+
+## Was neu ist und wo es liegt
+
+| Wo | Was |
+|---|---|
+| **Oben neben dem Avatar** | Coin-Chip mit Kontostand. Bei Gutschrift hüpft er und zeigt „+N“. Roter Punkt, wenn ein Gutschein aufs Einlösen oder Erfüllen wartet. |
+| **Chip antippen** | Bottom-Sheet „Heart Coins“: **Verlauf** (heute verdient, „So sammelst du Heart Coins“, alle Buchungen), **Shop** (🎁 Verschenken / 🎟️ Gutscheine), **Casino** (bald verfügbar). Kein neuer Reiter unten. |
+| **Shop → Verschenken** | Gutschein antippen → Karte „Von Daniel für Ida“, optional ein kleiner Gruß → „Ida schenken“. Man kauft nie für sich selbst. |
+| **Shop → Gutscheine** | „Für dich“: erhaltene Karten mit **Einlösen** (Push an den Schenkenden). „Von dir verschenkt“: bei eingelösten **Erfüllt ✓**. Darunter „Eingelöste Gutscheine“ (Verlauf). |
+
+**Verdienen** (alles bucht der Server):
+- Start: 500 · Tagesbonus beim ersten Öffnen am Tag (Berlin): +20
+- 💗 Liebe senden: +1 pro Tipp (zum Schutz höchstens 200 pro Tag, so viel wie das volle Glas)
+- 💌 Öffne-wenn-Brief ab 40 Zeichen: +25, höchstens 5 pro Tag
+- 📸 Foto (Erinnerungen oder Clay): +5, höchstens 5 pro Tag
+- ✓ Geschenkten Gutschein erfüllen: +15
+Coins kann man **nicht** mit echtem Geld kaufen, es gibt keine Kauf-Option.
+
+**Pushs** (Art `gift` in `push_queue`, Tippen öffnet das Gutschein-Fach): „🎁 Daniel hat dir einen Gutschein geschenkt: Massage 15 min“, „🎟️ Ida löst deinen Gutschein ein: …“, „✓ Daniel hat deinen Gutschein erfüllt: …“.
+
+## Sortiment ändern
+
+Admin-UI → Collections → **shop_items**: `name`, `emoji`, `description`, `price`, `active` (aus = nicht mehr im Shop), `order`. 16 Startgutscheine von 100 bis 800 (Wunsch frei). Schon verschenkte Gutscheine behalten Name/Preis (Kopie in `vouchers`).
+
+## Sicherheit / Technik
+
+- `pocketbase/pb_hooks/wir_coins.pb.js` (Routen + Verdienen-Hooks), Logik in `coins_lib.js`.
+  Routen: `GET /api/coins/me`, `POST /api/coins/daily`, `POST /api/shop/gift {item, note, key}`, `POST /api/vouchers/{id}/redeem`, `POST /api/vouchers/{id}/fulfill`.
+- Jede Buchung läuft über `book()`: **eine Transaktion** schreibt Ledger-Eintrag und Kontostand zusammen, prüft „nicht unter 0“ und hat einen **Idempotenz-Schlüssel** (`coin_ledger.key`, eindeutiger Index, für Clients versteckt). Gleicher Schlüssel nochmal → keine zweite Buchung.
+- `coin_wallets`, `coin_ledger`, `vouchers`, `shop_items`: Anlegen/Ändern/Löschen über die API verboten (nur Superuser/Hooks). Lesen: Konto und Ledger nur die eigenen, Gutscheine nur wer schenkt oder beschenkt wird.
+- Client: `app/coins.js`, `app/coins.css`; Chip + Sheets in `app/index.html`. `push/index.js`: `gift` → `coins:vouchers`. Service Worker `wir-v15`.
+
+## Datenbank (nur additiv)
+
+`pocketbase/pb_migrations/1792900000_wir_coins.js`: neue Collections `coin_wallets`, `coin_ledger`, `shop_items` (+ Startsortiment), `vouchers`. An bestehenden Collections ändert sich nichts. Konten entstehen beim ersten Aufruf (mit Startguthaben).
+
+## Sicherung vorher
+
+- Git-Tag **`vor-shop`** = Commit `91ca702`, auf GitHub gepusht.
+- DB-Backup (SQLite-Backup-Funktion, Integritätsprüfung „ok“): `/home/pingu/backups/vor-shop-2026-10-23/` mit `data.db`, `auxiliary.db`, `storage/`, `pb_migrations/`, `pb_hooks/` (Stand 23.10.2026 06:54).
+
+## Zurück auf „vor-shop“
+
+Das Schema wurde nur erweitert, die alte App läuft damit unverändert. **Normalerweise reicht Schritt 1.**
+
+**1. Code zurück (am PC):**
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-shop -- app push pocketbase/pb_hooks
+git rm -q app/coins.js app/coins.css pocketbase/pb_hooks/wir_coins.pb.js pocketbase/pb_hooks/coins_lib.js
+git commit -m "Zurück zur Version vor dem Shop" && git push
+```
+Das Auto-Deploy holt das innerhalb von 2 Minuten und startet wir-push neu. Danach auf dem Pi die Hooks entfernen (das Auto-Deploy löscht keine Dateien) und PocketBase neu starten:
+```bash
+rm /home/pingu/pb/pb_hooks/wir_coins.pb.js /home/pingu/pb/pb_hooks/coins_lib.js
+sudo systemctl restart pocketbase
+```
+Die vier neuen Collections bleiben ungenutzt stehen. Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wieder vor: `git revert --no-edit HEAD && git push`.
+
+**2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
+`/home/pingu/backups/vor-shop-2026-10-23/`. ⚠️ Alles nach dem 23.10.2026 06:54 geht dabei verloren.
