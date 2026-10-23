@@ -661,3 +661,69 @@ Auf Wunsch sind **Shop und Gutschein-Fach entfernt**. Es bleiben: Coin-Chip, Kon
 - Datenbank unverändert: `shop_items` und `vouchers` bleiben leer bzw. ungenutzt stehen (live waren noch keine Gutscheine verschenkt). Service Worker `wir-v16`.
 - Shop zurückholen: `git revert --no-edit <commit "Shop wieder raus"> && git push`.
 - Ganz zurück auf „vor-shop“: siehe Abschnitt davor. Bei `git rm` dann nur noch die Dateien angeben, die es noch gibt.
+
+---
+
+# Blackjack 23.10.2026 (Casino, nur Spielgeld)
+
+Getestet:
+- **Regeln:** 19 Engine-Tests und 200.000 Zufallsrunden in Node. Die Blackjack-Quote liegt bei 4,6 %, alle Runden wurden korrekt abgerechnet.
+- **API:** 25 Tests gegen eine lokale PocketBase 0.40.5 mit einer Kopie der Live-DB und beiden Accounts:
+  - Dreifachtipp ergibt eine Runde.
+  - Doppeltipp auf „Karte“ wird nur einmal ausgeführt.
+  - Fremde Runden lassen sich nicht spielen.
+  - Stapel und verdeckte Karte sind unsichtbar.
+  - Bei 40 Runden mit Teilen und Verdoppeln stimmt jede Runde mit dem Ledger überein.
+  - Das Tageslimit greift.
+- **UI:** im Browser mit Teilen und Verdoppeln getestet, in der hellen und der dunklen Farbwelt, keine Konsolenfehler.
+
+## Was es kann
+
+- **Wo:** Coin-Chip → Sheet → **Casino** → Blackjack. Der Pfeil zurück führt wieder dorthin. Es gibt keinen neuen Reiter.
+- **Regeln:**
+  - 6 Decks, jede Runde frisch gemischt.
+  - Der Dealer steht auf allen 17 und schaut bei Ass oder Zehn sofort nach Blackjack.
+  - Blackjack zahlt 3:2 (aufgerundet).
+  - Verdoppeln geht mit zwei Karten, auch nach dem Teilen. Ausnahme: geteilte Asse.
+  - Teilen geht einmal pro Runde, bei gleichwertigen Karten (z. B. K + D). Geteilte Asse bekommen je eine Karte.
+  - Keine Versicherung.
+- **Einsatz:** 5–100 Coins über Chips (5/10/25/50/100). Der letzte Einsatz wird gemerkt.
+- **Schutz:** Pro Berliner Tag kann man höchstens **300 Coins** verlieren. Offene Einsätze zählen schon als Verlust. Danach steht auf dem Knopf „Tageslimit erreicht – morgen wieder“. Hinweis unter dem Tisch: „Spielgeld – kein echtes Geld“.
+- **Animationen:** Karten fliegen auf den Tisch, die Dealer-Karte wird umgedreht, Ergebnis-Banner, Herzchen bei Gewinn, der Coin-Chip zählt mit.
+
+## Technik / Sicherheit
+
+- Routen in `pocketbase/pb_hooks/wir_casino.pb.js`:
+  - `GET /api/casino/bj`: aktuelle bzw. letzte Runde, Kontostand, Limits
+  - `POST /api/casino/bj/start {bet, key}`
+  - `POST /api/casino/bj/{id}/act {action: hit|stand|double|split, v}`
+- Logik in `casino_lib.js`, die Regeln liegen rein in `blackjack.js`.
+- **Zufall:** `$security.randomStringWithAlphabet` (kryptografisch sicher), Mischen ohne Verzerrung.
+- **Buchungen:** Einsatz, Verdoppeln, Teilen und Gewinn laufen über `coins.book()`. Jede Buchung hat einen eindeutigen Schlüssel `bj:<runde>:bet|double:<hand>|split:<hand>|payout` und läuft in derselben Transaktion wie der Spielzug. Den Start schützt zusätzlich der Client-Schlüssel (`casino_rounds.ckey`, eindeutig). Jeder Zug prüft die Versionsnummer `v`, ein Doppeltipp gibt 409.
+- **Rechte:** `casino_rounds` kann man über die API weder anlegen noch ändern noch löschen. Lesen darf nur die eigene Person. Die Felder `state` (Stapel und Karten) und `ckey` sind versteckt, nur der Server sieht sie.
+- **Client:** `app/casino.js`, `app/casino.css`, Seite `s-bj` in `app/index.html`. Service Worker `wir-v17`.
+
+## Datenbank (nur additiv)
+
+`pocketbase/pb_migrations/1792950000_wir_casino.js` legt die neue Collection `casino_rounds` an.
+
+## Sicherung vorher
+
+- Git-Tag **`vor-blackjack`** = `0974681`
+- DB-Backup: `/home/pingu/backups/vor-blackjack-2026-10-23/` (07:20, Integritätsprüfung „ok“)
+
+## Zurück auf „vor-blackjack“
+
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-blackjack -- app pocketbase/pb_hooks
+git rm -q app/casino.js app/casino.css pocketbase/pb_hooks/wir_casino.pb.js pocketbase/pb_hooks/casino_lib.js pocketbase/pb_hooks/blackjack.js
+git commit -m "Zurück zur Version vor Blackjack" && git push
+```
+Danach auf dem Pi:
+```bash
+rm /home/pingu/pb/pb_hooks/wir_casino.pb.js /home/pingu/pb/pb_hooks/casino_lib.js /home/pingu/pb/pb_hooks/blackjack.js
+sudo systemctl restart pocketbase
+```
+`casino_rounds` bleibt ungenutzt stehen. Falls Daten kaputt sind: Backup wie oben unter „Zurück zur alten Version → 2.“ mit dem Ordner `vor-blackjack-2026-10-23`.

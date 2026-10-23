@@ -68,7 +68,7 @@ function book(app, o) {
     const w = ensureWallet(tx, o.user);
     const fresh = tx.findRecordById('coin_wallets', w.id); // in der Transaktion neu lesen
     const after = fresh.getInt('balance') + amount;
-    if (after < 0) throw new ApiError(400, 'Nicht genug Heart Coins 💔');
+    if (after < 0) throw new ApiError(400, 'Nicht genug Heart Coins.');
     fresh.set('balance', after);
     tx.save(fresh);
     const entry = newLedger(tx, { ...o, amount, after });

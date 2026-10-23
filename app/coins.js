@@ -1,4 +1,4 @@
-// Heart Coins: Chip oben, Bottom-Sheet mit Verlauf und Casino (bald).
+// Heart Coins: Chip oben, Bottom-Sheet mit Verlauf und Casino (Spiele selbst in casino.js).
 // Kontostand und Buchungen macht nur der Server (pb_hooks/wir_coins.pb.js), hier wird nur angezeigt.
 // Nutzt die PocketBase-Verbindung von app.js.
 (() => {
@@ -168,6 +168,9 @@
     dailyBonus().catch(console.error);
     loadMe().catch(console.error);
   });
+
+  // für casino.js
+  window.WIR_COINS = { openSheet, setBalance };
 
   document.addEventListener('wir:started', () => { if (!started) start(); });
 })();

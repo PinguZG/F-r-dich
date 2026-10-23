@@ -70,11 +70,15 @@
 html[data-theme="gluehwein"] .lr-amt.plus,html[data-theme="mondnacht"] .lr-amt.plus{color:#ffd45c}
 .lr-amt.minus{color:var(--ink-soft)}
 
-/* ---------- Casino (bald) ---------- */
-.casino-soon{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 20px;border-radius:24px;text-align:center}
-.cs-ico{font-size:46px;animation:idle 3s ease-in-out infinite}
-.casino-soon b{font-size:18px}
-.casino-soon p{font-size:14px;font-weight:600;color:var(--ink-soft);line-height:1.45}
+/* ---------- Casino-Bereich im Sheet ---------- */
+.casino-game{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:22px;cursor:pointer;text-align:left;color:var(--ink)}
+.casino-game:active{transform:scale(.97)}
+.cg-ico{width:52px;height:52px;flex-shrink:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 6px 16px rgba(var(--shadow),.3)}
+.cg-text{flex:1;display:flex;flex-direction:column;gap:2px}
+.cg-text b{font-size:17px}
+.cg-text small{font-size:13px;font-weight:600;color:var(--ink-soft)}
+.casino-game .gc-play{pointer-events:none}
 
 @media (max-width:360px){
   .coin-chip{padding:0 9px 0 6px;font-size:13px}

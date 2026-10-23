@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/games.css">
 <link rel="stylesheet" href="/coins.css">
+<link rel="stylesheet" href="/casino.css">
 </head>
 <body>
 
@@ -442,6 +443,45 @@
 </section>
 
 <!-- ============ Einstellungen (über den Avatar) ============ -->
+<!-- Blackjack (casino.js) -->
+<section class="screen page sub" id="s-bj" data-tab="" data-title="Blackjack">
+  <div class="sub-head"><button class="back-btn" id="bjBack" type="button" aria-label="Zurück">←</button><h2>Blackjack 🃏</h2><span class="bj-bal" id="bjBal"></span></div>
+  <div class="bj-table" id="bjTable">
+    <div class="bj-zone">
+      <div class="bj-label">Dealer <span class="bj-score" id="bjDealerScore"></span></div>
+      <div class="bj-cards" id="bjDealer"></div>
+    </div>
+    <div class="bj-banner" id="bjBanner" hidden></div>
+    <div class="bj-hands" id="bjHands"></div>
+    <div class="bj-empty" id="bjEmpty">Setz deinen Einsatz 💗</div>
+  </div>
+
+  <div class="bj-controls" id="bjBetBox">
+    <div class="bj-bet"><small>EINSATZ</small><b id="bjBet">10</b><button class="link-btn" id="bjClear" type="button">zurücksetzen</button></div>
+    <div class="bj-chips" id="bjChips"></div>
+    <button class="mem-btn" id="bjDeal" type="button">Austeilen</button>
+  </div>
+  <div class="bj-controls bj-actions" id="bjActions" hidden>
+    <button class="bj-act" data-act="hit" type="button"><span>＋</span>Karte</button>
+    <button class="bj-act" data-act="stand" type="button"><span>✋</span>Stehen</button>
+    <button class="bj-act" data-act="double" type="button"><span>×2</span>Verdoppeln</button>
+    <button class="bj-act" data-act="split" type="button"><span>⇆</span>Teilen</button>
+  </div>
+  <div class="mem-status" id="bjMsg"></div>
+  <p class="bj-note" id="bjNote">Spielgeld – kein echtes Geld.</p>
+  <details class="coin-how bj-rules">
+    <summary>Regeln</summary>
+    <ul>
+      <li><span>🎯</span><span>Näher an 21 als der Dealer, ohne drüber zu kommen. Bildkarten zählen 10, das Ass 1 oder 11.</span></li>
+      <li><span>✨</span><span>Blackjack (Ass + 10er mit den ersten zwei Karten) zahlt 3:2. Gewinn zahlt 1:1, Gleichstand gibt den Einsatz zurück.</span></li>
+      <li><span>🂠</span><span>Der Dealer zieht bis 16 und bleibt ab 17 stehen (auch bei weicher 17). Hat er Blackjack, ist die Runde sofort vorbei.</span></li>
+      <li><span>×2</span><span>Verdoppeln: mit zwei Karten den Einsatz verdoppeln, du bekommst genau eine Karte.</span></li>
+      <li><span>⇆</span><span>Teilen: zwei gleichwertige Karten (z. B. 8 + 8 oder K + D) werden zwei Hände mit eigenem Einsatz. Einmal pro Runde, geteilte Asse bekommen je nur eine Karte.</span></li>
+      <li><span>🛡️</span><span>Einsatz 5–100 Coins. Pro Tag kannst du höchstens 300 Coins verlieren, dann ist bis morgen Pause.</span></li>
+    </ul>
+  </details>
+</section>
+
 <section class="screen page sub" id="s-settings" data-tab="" data-title="Einstellungen">
   <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einstellungen ⚙️</h2></div>
 
@@ -520,11 +560,12 @@
     </div>
 
     <div class="coin-pane" data-pane="casino" hidden>
-      <div class="casino-soon glass">
-        <div class="cs-ico">🎰</div>
-        <b>Casino – bald verfügbar</b>
-        <p>Blackjack, Roulette, Texas Hold’em und ein Entenrennen kommen bald. Nur mit Spielgeld, nie mit echtem Geld.</p>
-      </div>
+      <button class="casino-game glass" id="bjOpen" type="button">
+        <span class="cg-ico">🃏</span>
+        <span class="cg-text"><b>Blackjack</b><small>Schlag den Dealer – ohne über 21 zu kommen</small></span>
+        <span class="gc-play" aria-hidden="true">▶</span>
+      </button>
+      <p class="coin-intro">Roulette, Texas Hold’em und das Entenrennen kommen später.<br>Nur Spielgeld – kein echtes Geld.</p>
     </div>
   </div>
 </div>
@@ -852,5 +893,6 @@
 <script src="/lib/mono.js"></script>
 <script src="/mono-ui.js"></script>
 <script src="/coins.js"></script>
+<script src="/casino.js"></script>
 </body>
 </html>
