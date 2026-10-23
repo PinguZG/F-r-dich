@@ -727,3 +727,62 @@ rm /home/pingu/pb/pb_hooks/wir_casino.pb.js /home/pingu/pb/pb_hooks/casino_lib.j
 sudo systemctl restart pocketbase
 ```
 `casino_rounds` bleibt ungenutzt stehen. Falls Daten kaputt sind: Backup wie oben unter „Zurück zur alten Version → 2.“ mit dem Ordner `vor-blackjack-2026-10-23`.
+
+---
+
+# Konsole, Aktivitäts-Log, Online-Punkt 23.10.2026
+
+Getestet mit einer lokalen PocketBase 0.40.5 (Kopie der Live-DB):
+- **API:** 26 Tests mit beiden Accounts. Unter anderem: ohne Login 401, Collection direkt weder lesbar noch beschreibbar, zwei Herzschläge ergeben eine Sitzung, unbekannte Bereiche und Ansichten unter 2 s werden verworfen, höchstens 60 Ereignisse pro Herzschlag, Push „Brief geöffnet“ kommt nur einmal, Sudoku-Pushs.
+- **Löschung:** Der Cron löscht einen 91 Tage alten Eintrag, alle anderen bleiben.
+- **Browser:** beide Accounts parallel (Online-Punkt, Konsole, gebündelter Minuten-Herzschlag), keine Konsolenfehler.
+
+## Was neu ist
+
+| Wo | Was |
+|---|---|
+| **Einstellungen → ganz unten „⌨️ Konsole“** | Für **beide** gleich, mit denselben Daten über beide Personen. Kein Admin-Schalter. Darunter steht ein kurzer Hinweis, dass die App 90 Tage lang Online-Zeiten und geöffnete Bereiche merkt. |
+| **Konsole** | Kleines Terminal in der Farbwelt. Ausgabe oben (scrollbar), unten die Eingabezeile `> `. Es gibt keine Hilfe, keine Vorschläge und keine Befehlsliste. Alles andere ergibt „Unbekannter Befehl“. |
+| **Startseite / Wir zwei** | Grüner Punkt (pulsierend) am Profilbild der anderen Person, solange sie online ist |
+| **Push** | „💌 Ida hat deinen Brief geöffnet“ an die schreibende Person, sobald ein Öffne-wenn-Brief zum ersten Mal geöffnet wird. Tippen öffnet „Öffne wenn“. |
+| **Push** | „🧩 Ida hat ein Sudoku angefangen“ (mit Stufe) und „🧩 Ida hat ein Sudoku gelöst“ (Stufe, Zeit, Punkte) an die andere Person. Noch nicht verschickte Sudoku-Pushs werden durch den neuesten ersetzt. |
+
+## Befehle (nur hier dokumentiert)
+
+| Befehl | Ausgabe |
+|---|---|
+| `/online` | pro Person: gerade online ja/nein, zuletzt online, die letzten 12 Sitzungen mit Start, Ende und Dauer |
+| `/log` | Aktivitäts-Log beider Personen, neueste zuerst (60 Einträge), nach Tagen gruppiert: App geöffnet/geschlossen (mit Online-Dauer), besuchte Bereiche mit Dauer (Spiele mit 🎲), 👀 Öffne-wenn-Brief geöffnet (Kategorie), Foto angesehen, Bild im Reiter angesehen, 🎲 Sudoku angefangen/gelöst. Bei Reitern (Dates/Überraschungen) steht der Reitername dabei. |
+| `/log 150` | mehr Einträge (höchstens 300) |
+| `/log ida` / `/log daniel` | nur eine Person (Namensanfang reicht). Kombinierbar: `/log 100 ida` |
+| `/heute` | Zusammenfassung von heute pro Person: wie oft geöffnet, Online-Zeit der abgeschlossenen Sitzungen, die 6 längsten Bereiche |
+| `/clear` | Ausgabe leeren |
+
+## Wie erfasst wird (sparsam)
+
+- Die App sammelt Bereichswechsel (mit Dauer) und Gesehen-Ereignisse im Speicher. Sie schickt sie gebündelt per `POST /api/act/beat`: höchstens einmal pro Minute, sofort beim Schließen bzw. In-den-Hintergrund-Gehen, oder ab 20 gesammelten Ereignissen. Ohne Verbindung bleiben sie liegen und gehen beim nächsten Mal mit (höchstens 150).
+- **Sitzung** = App sichtbar von–bis. Ein Herzschlag verlängert die Sitzung. War man unter 30 s weg, läuft dieselbe Sitzung weiter.
+- **Online:** Die Sitzung ist nicht beendet und der letzte Herzschlag liegt unter 150 s zurück. Die Antwort auf jeden Herzschlag enthält den Online-Status beider Personen, daraus kommt der grüne Punkt. Beim Öffnen der Startseite wird er zusätzlich frisch geholt (`GET /api/act/presence`).
+- **Serverseitig erfasst:** Öffne-wenn-Brief geöffnet (Hook auf `open_when_messages.opened_at`), Sudoku angefangen (neues Rätsel in `sudoku_progress`) und gelöst (`sudoku_scores`).
+- **Server prüft:** nur bekannte Bereiche, Zeiten werden gekappt (höchstens 6 h zurück, nicht in der Zukunft), Text höchstens 120 Zeichen.
+- **Aufbewahrung:** Cron `wir_activity_cleanup` täglich 03:33 löscht alles, was älter als **90 Tage** ist.
+
+## Technik
+
+- Collection `activity` (Migration `pb_migrations/1793000000_wir_activity.js`, nur additiv). Alle API-Regeln sind leer: Lesen und Schreiben geht nur über die Routen, die einen Login verlangen.
+- Routen: `pb_hooks/wir_activity.pb.js` mit `POST /api/act/beat`, `GET /api/act/presence`, `GET /api/console/online`, `GET /api/console/log?limit=&user=`. Logik in `activity_lib.js`.
+- Push-Arten `owread` → Öffne wenn und `sudoku` → Sudoku (`push/index.js`).
+- Client: `app/activity.js`, `app/activity.css`. Service Worker `wir-v18`.
+
+## Sicherung vorher / zurück
+
+Git-Tag **`vor-konsole`** = `92be96a`; DB-Backup `/home/pingu/backups/vor-konsole-2026-10-23/` (11:50, Integritätsprüfung „ok“).
+```bash
+cd Documents/F-r-dich && git checkout main && git pull
+git checkout vor-konsole -- app push pocketbase/pb_hooks
+git rm -q app/activity.js app/activity.css pocketbase/pb_hooks/wir_activity.pb.js pocketbase/pb_hooks/activity_lib.js
+git commit -m "Zurück vor die Konsole" && git push
+# auf dem Pi:
+rm /home/pingu/pb/pb_hooks/wir_activity.pb.js /home/pingu/pb/pb_hooks/activity_lib.js && sudo systemctl restart pocketbase
+```
+Die Collection `activity` bleibt ungenutzt stehen. Sollen die Daten ganz weg, im Admin-UI die Collection `activity` löschen.

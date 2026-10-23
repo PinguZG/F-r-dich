@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="/games.css">
 <link rel="stylesheet" href="/coins.css">
 <link rel="stylesheet" href="/casino.css">
+<link rel="stylesheet" href="/activity.css">
 </head>
 <body>
 
@@ -531,6 +532,23 @@
     <button class="pack-btn" id="packBtn" type="button">🎁 Wieder einpacken</button>
     <button class="logout" id="logoutBtn" type="button">Abmelden</button>
   </div>
+
+  <div class="card glass set-card console-card">
+    <button class="pack-btn" data-go="s-console" type="button">⌨️ Konsole</button>
+    <p class="mem-note">Die App merkt sich 90 Tage lang, wann ihr online wart und was ihr geöffnet habt – für euch beide gleich sichtbar.</p>
+  </div>
+</section>
+
+<!-- Konsole (activity.js) -->
+<section class="screen page sub" id="s-console" data-tab="" data-title="Konsole">
+  <div class="sub-head"><button class="back-btn" data-go="s-settings" aria-label="Zurück">←</button><h2>Konsole</h2></div>
+  <div class="term" id="term">
+    <div class="term-out" id="termOut" aria-live="polite"></div>
+    <form class="term-in" id="termForm" autocomplete="off">
+      <span aria-hidden="true">&gt;&nbsp;</span>
+      <input id="termInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Befehl">
+    </form>
+  </div>
 </section>
 
 <!-- ============ Bottom-Sheets ============ -->
@@ -894,5 +912,6 @@
 <script src="/mono-ui.js"></script>
 <script src="/coins.js"></script>
 <script src="/casino.js"></script>
+<script src="/activity.js"></script>
 </body>
 </html>
