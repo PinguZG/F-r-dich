@@ -1099,3 +1099,17 @@ Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht me
 **Datenbank (nur additiv):** `pb_migrations/1793700000_wir_dates.js` legt `date_events` an (Bilder geschützt wie bei Erinnerungen) und kopiert jedes Treffen als Date der Art „treffen“ (`legacy = meeting:<id>`, nie doppelt) sowie das Clay Date (`legacy = clay`). `meetings`, `clay_photos`, `dates`, `tabs` bleiben unverändert stehen. Der Treffen-Cron (`wir_lib.js` → `meetingTick`) liest jetzt `date_events`.
 
 **Zurück:** `git checkout vor-dates -- app pocketbase/pb_hooks && git commit -m "Zurück vor Dates" && git push` (Backup `/home/pingu/backups/vor-dates-2026-10-26`). `date_events` bleibt dann ungenutzt stehen, die alten Treffen sind unverändert.
+
+# Einkaufsliste 26.10.2026 (Wir `wir-v28`)
+
+| Wo | Was |
+|---|---|
+| **Start → 🛒 Einkaufsliste** | Kachel über „Wir zwei“ (zeigt, wie viele Sachen drauf sind). Kein neuer Reiter unten. |
+| **Liste** | Oben die Listen als Chips (Standard „🛒 Einkauf“, „➕ Liste“ für weitere, z. B. Drogerie; umbenennen/löschen). Darunter alles, was drauf ist, als bunte Kacheln nach Kategorien. **Antippen = gekauft** (wandert zu „Zuletzt verwendet“), **gedrückt halten = Angabe** (2x, bio, 500 g). |
+| **Hinzufügen** | Suche mit Vorschlägen beim Tippen (Enter nimmt den ersten). Katalog mit ~200 gängigen deutschen Artikeln in 12 Kategorien (Obst & Gemüse, Kühlregal, Fleisch & Fisch, Brot, Vorrat, Gewürze & Backen, Süßes, Getränke, Tiefkühl, Haushalt, Drogerie, Sonstiges). Findet die Suche nichts: „➕ <Text>“ legt einen eigenen Artikel an (bleibt im Katalog). „Zuletzt verwendet“: ein Tipp, und er ist wieder drauf. |
+| **Live** | Änderungen erscheinen sofort bei beiden (Realtime). |
+| **Push** | „🛒 Ida hat 3 Sachen auf die Einkaufsliste gesetzt“ mit den Artikeln. Gesammelt (erste Minute) und höchstens alle 10 Minuten (`pb_hooks/grocery_lib.js`). Tippen öffnet die Liste. |
+
+**Datenbank (nur additiv):** `pb_migrations/1793800000_wir_einkauf.js` legt `grocery_lists` (mit „Einkauf“), `grocery_entries` und `grocery_custom` an. Beide dürfen lesen und schreiben, angelegt wird nur mit sich selbst als Autor.
+
+**Zurück:** `git checkout vor-einkauf -- app pocketbase/pb_hooks push && git rm -q app/grocery.js pocketbase/pb_hooks/wir_einkauf.pb.js pocketbase/pb_hooks/grocery_lib.js && git commit -m "Zurück vor Einkauf" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_einkauf.pb.js,grocery_lib.js} && sudo systemctl restart pocketbase`.

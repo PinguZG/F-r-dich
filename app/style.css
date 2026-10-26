@@ -362,3 +362,32 @@
 .dt-pick img{width:100%;height:100%;object-fit:cover;display:block}
 .dt-pick.on{box-shadow:0 0 0 3px var(--accent)}
 .dt-pick.on::after{content:'✓';position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+
+/* ======================================================================
+   Einkaufsliste (grocery.js): bunte Kacheln je Kategorie
+   ====================================================================== */
+.gr-home{margin-top:14px}
+.gr-count{margin-left:auto;font-size:13px;font-weight:800;color:var(--ink-soft)}
+.gr-lists{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.gr-lists::-webkit-scrollbar{display:none}
+.gr-lists .chip-btn{flex:none}
+.gr-lists .chip-btn.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink)}
+.gr-tools{display:flex;gap:4px;justify-content:flex-end}
+.gr-open{margin:10px 0 12px}
+.gr-cat{display:block;width:100%;margin:12px 0 6px;font-size:13px;font-weight:800;color:var(--ink-soft);letter-spacing:.3px;text-align:left;border:none;background:none;font-family:inherit;padding:0}
+.gr-cat.toggle{cursor:pointer;padding:8px 2px;font-size:14px;color:var(--ink)}
+.gr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px}
+.gr-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:78px;padding:8px 3px 7px;border:none;border-radius:18px;cursor:pointer;
+  font:inherit;color:#fff;background:var(--gc,#e0457b);box-shadow:0 4px 12px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s;-webkit-touch-callout:none;user-select:none}
+.gr-tile:active{transform:scale(.93)}
+.gr-tile .gr-emoji{font-size:28px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
+.gr-tile b{font-size:12px;line-height:1.15;text-align:center;word-break:break-word;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.gr-tile small{font-size:10.5px;font-weight:800;background:rgba(255,255,255,.28);border-radius:8px;padding:1px 6px}
+.gr-tile.added{outline:3px solid #fff;outline-offset:-3px;opacity:.6}
+.gr-tile.recent{filter:saturate(.55);opacity:.85}
+.gr-tile.new{background:var(--glass-strong);color:var(--ink);border:2px dashed var(--ink-faint)}
+.gr-tile.new b{text-shadow:none}
+.gr-search{margin:4px 0 6px}
+.gr-head-row{display:flex;align-items:baseline;justify-content:space-between}
+.cat-obst{--gc:#47b36a}.cat-kuehl{--gc:#4aa3df}.cat-fleisch{--gc:#e05a5a}.cat-brot{--gc:#d39b4a}.cat-vorrat{--gc:#c47a3a}.cat-gewuerz{--gc:#a0866a}
+.cat-suess{--gc:#e0619c}.cat-getraenke{--gc:#3fb7b0}.cat-tk{--gc:#6c8fe6}.cat-haushalt{--gc:#8a7be0}.cat-drogerie{--gc:#c46ad6}.cat-sonst{--gc:#8b8f9c}

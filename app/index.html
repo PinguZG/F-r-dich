@@ -118,6 +118,7 @@
 
   <div id="homeMeet"></div>
 
+  <button class="opt wir-link gr-home" data-go="s-grocery" type="button"><span class="ico">🛒</span><span><b>Einkaufsliste</b><small id="homeGroceryInfo">Was braucht ihr?</small></span><span class="chev">›</span></button>
   <button class="opt wir-link" data-go="s-wir" type="button"><span class="ico">💞</span><span><b>Wir zwei</b><small>Anruf, Support, Nachrichten &amp; Verlauf</small></span><span class="chev">›</span></button>
 </section>
 
@@ -611,6 +612,24 @@
   <div class="mem-status" id="bjMsg"></div>
   <p class="bj-note" id="bjNote">Spielgeld – kein echtes Geld.</p>
 </section>
+
+<!-- Einkaufsliste (grocery.js) -->
+<section class="screen page sub" id="s-grocery" data-tab="s-home" data-title="Einkaufsliste">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einkaufsliste</h2><span class="gr-count" id="grOpenCount"></span></div>
+  <div class="gr-lists" id="grLists"></div>
+  <div class="gr-tools" id="grListTools" hidden>
+    <button class="link-btn" id="grRename" type="button">Umbenennen</button>
+    <button class="link-btn" id="grDelete" type="button">Liste löschen</button>
+  </div>
+  <div class="gr-open" id="grOpen"></div>
+  <input class="mem-input gr-search" id="grSearch" type="search" placeholder="🔍 Was braucht ihr? (z. B. Milch)" autocomplete="off" enterkeyhint="done">
+  <div id="grRecentWrap" hidden>
+    <div class="gr-head-row"><h3 class="list-head">Zuletzt verwendet</h3><button class="link-btn" id="grClear" type="button">leeren</button></div>
+    <div class="gr-grid" id="grRecent"></div>
+  </div>
+  <h3 class="list-head">Alle Artikel</h3>
+  <div id="grCatalog"></div>
+</section>
 <!-- ============ Einstellungen (über den Avatar) ============ -->
 <section class="screen page sub" id="s-settings" data-tab="" data-title="Einstellungen">
   <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einstellungen ⚙️</h2></div>
@@ -1096,6 +1115,7 @@
 <script src="/extra.js"></script>
 <script src="/home.js"></script>
 <script src="/dates.js"></script>
+<script src="/grocery.js"></script>
 <script src="/lib/chess.js"></script>
 <script src="/games.js"></script>
 <script src="/lib/mono.js"></script>

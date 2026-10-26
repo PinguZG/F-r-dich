@@ -9,7 +9,7 @@ const RESUME_MS = 180 * 1000;       // offene Sitzung wird bis dahin fortgesetzt
 const REOPEN_MS = 30 * 1000;        // kurz weg und wieder da -> dieselbe Sitzung
 const KEEP_DAYS = 90;
 const AREAS = [
-  's-home', 's-memories', 's-plans', 's-dates', 's-meetings', 's-clay', 's-clay-done', 's-tab', 's-newtab', 's-date',
+  's-home', 's-memories', 's-plans', 's-dates', 's-meetings', 's-clay', 's-clay-done', 's-tab', 's-newtab', 's-date', 's-grocery',
   's-openwhen', 's-wir', 's-games', 's-chess', 's-sudoku', 's-ttt', 's-mono', 's-bj', 's-settings', 's-console',
   's-duo', 's-brain', 's-casino', 's-shop', // Spiele-App (s-games = deren Startseite)
 ];
