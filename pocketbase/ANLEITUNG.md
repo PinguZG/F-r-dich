@@ -969,3 +969,49 @@ Der alte Gutschein-Shop ist raus (live gab es keine Gutscheine, die Collections 
 git checkout vor-spiele-zurueck -- app spiele shared push && git commit -m "Zurück vor Spiele-Rückumzug" && git push
 ```
 Backup: `/home/pingu/backups/vor-spiele-zurueck-2026-10-26/` (21:23, „ok“).
+
+# Etappe 2 (Wir `wir-v23`): neuer Shop, Schach gegen KI, Solitär, Tipps
+
+Getestet lokal mit einer Kopie des Backups: 21 API-Prüfungen (Rechte, Doppelkäufe, Bomben-Limit, Nachtruhe, Prüfung der Ergebnisse) und ein Browser-Test (Shop, Rahmen, Solitär, Stockfish-Zug + Tipp, Aufgeben).
+
+## Shop (Coins oben rechts im Spielebereich → „Shop“)
+
+**Alle Preise und Regeln stehen an EINER Stelle: `pocketbase/pb_hooks/shop_lib.js` (`PRICES`, `GAME_EARN`).** Gekauft wird nur auf dem Server: Login und Guthaben werden geprüft, die Coins atomar über `coin_ledger` abgezogen und der Kauf in `shop_purchases` gespeichert. Vor jedem Kauf erscheint eine Bestätigung mit Preis und Guthaben.
+
+| Was | Preis | Regel |
+|---|---|---|
+| 💡 Tipp Solitär | 5 | nächster sinnvoller Zug oder „kein Zug möglich“ |
+| 💡 Tipp Sudoku | 10 | Server deckt ein sinnvolles Feld auf (zuerst ein falsches, sonst das mit den wenigsten Möglichkeiten) |
+| 💡 Tipp Schach gegen KI | 15 | bester Zug wird markiert (Stockfish volle Stärke). Im Duell gegeneinander gibt es keine Tipps. |
+| 🖼️ Profilrahmen einfach | 150 | Rosa Doppelring, Goldrand, Perlenkette |
+| 🖼️ Profilrahmen besonders | 300 | Herzkranz, Blumenkranz, Mondnacht-Sterne |
+| 🖼️ Profilrahmen animiert | 600 | Pulsierendes Herz, Glitzer, Zuckerwatte-Wirbel |
+| 💣 Herz-Bombe | 80 | 30 Pushs „❤️“ im Abstand von 1,5 s |
+| 💣 Nachrichten-Bombe | 150 | 10 Pushs mit eigenem Text (max. 60 Zeichen, Steuerzeichen raus) |
+
+- Ergebnisse mit Tipp tragen in der Rangliste ein 💡. Die Tipps zählt der Server aus `shop_purchases`.
+- Profilrahmen: einmal kaufen, für immer behalten. Auswählen oder abnehmen geht in den Einstellungen (🖼️ Profilrahmen). Der Rahmen erscheint überall am Profilbild, auch bei der anderen Person, und der Online-Punkt liegt darüber. Direkt über die users-API lässt er sich nicht setzen (Hook in `wir_shop.pb.js`).
+- Bomben: höchstens 3 pro Person und Tag. In der Nachtruhe (23–7 Uhr Berlin) wird die Bombe angenommen und um 7:00 verschickt, der Käufer sieht das vorher. Beim Empfänger erscheint „💣 Daniel hat eine Herz-Bombe gezündet“ mit Herzen, dazu ein Eintrag im `/log`. wir-push verschickt jede Bombe einzeln (eigener tag, kein Topic) und plant künftige Pushs punktgenau ein.
+- Der alte Gutschein-Shop ist ersetzt. `shop_items` und `vouchers` bleiben unverändert in der DB.
+
+**Coins fürs Spielen** (zusätzlich, bestehende EARN-Regeln unverändert, höchstens 15 Spiel-Gutschriften pro Tag): Sudoku gelöst 5/10/20 (Leicht/Mittel/Schwer), Solitär 10 (1 Karte) bzw. 20 (3 Karten), Sieg gegen die KI 3/6/10/15/25 (Anfänger … Meister), Herzspur-Sieg 5 (Etappe 4).
+
+## Schach gegen KI
+
+- **Stockfish 10** (stockfish.js 10.0.2, WebAssembly, 62 KB + 367 KB) in `app/lib/stockfish/`. **Lizenz: GNU GPL v3** (`app/lib/stockfish/COPYING-GPL3.txt`), unverändert aus dem npm-Paket.
+- Läuft als Web Worker und wird erst beim ersten Öffnen geladen. Der Service Worker cacht ihn danach.
+- 5 Stufen (Anfänger, Leicht, Mittel, Stark, Meister), Farbe Weiß/Schwarz/Zufall. Die Partie bleibt beim Schließen erhalten (localStorage).
+- Das Ergebnis prüft der Server: `/api/games/chessai/result` spielt die Zugliste nach, erkennt Matt/Remis und vergibt Coins nur einmal pro Partie. Bilanz beider im Menü ⋯.
+
+## Solitär (Klondike)
+
+- 1 oder 3 Karten ziehen. Ziehen & Ablegen oder Antippen (legt automatisch ab), Rückgängig, Zeit, Züge, „⚡ Ablegen“, sobald alles offen liegt.
+- Die Partie (Seed fürs Mischen) gibt der Server aus. Gespielt wird im Browser, der Stand bleibt im localStorage.
+- Ein Gewinn wird erst nach mindestens 40 s angenommen. Punkte: 40 bzw. 80 + Zeitbonus unter 15 min, −5 pro Tipp.
+- Rangliste für beide, Log-Eintrag und Push „🃏 … hat ein Solitär gelöst“.
+
+## Datenbank (nur additiv)
+
+`pb_migrations/1793300000_wir_shop_neu.js`: `users.frame`, `sudoku_scores.hints`, neue Collections `shop_purchases`, `bombs`, `solitaire_games`, `chessai_games` (für Clients nur lesbar).
+
+**Zurück vor Etappe 2:** `git checkout ebb35b1~2 -- app push pocketbase/pb_hooks && git commit -m "Zurück vor Etappe 2" && git push`. Danach auf dem Pi die neuen Hooks entfernen: `rm /home/pingu/pb/pb_hooks/{wir_shop.pb.js,shop_lib.js,solo_lib.js} && sudo systemctl restart pocketbase`.
