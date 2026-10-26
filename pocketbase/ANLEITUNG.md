@@ -1113,3 +1113,19 @@ Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht me
 **Datenbank (nur additiv):** `pb_migrations/1793800000_wir_einkauf.js` legt `grocery_lists` (mit „Einkauf“), `grocery_entries` und `grocery_custom` an. Beide dürfen lesen und schreiben, angelegt wird nur mit sich selbst als Autor.
 
 **Zurück:** `git checkout vor-einkauf -- app pocketbase/pb_hooks push && git rm -q app/grocery.js pocketbase/pb_hooks/wir_einkauf.pb.js pocketbase/pb_hooks/grocery_lib.js && git commit -m "Zurück vor Einkauf" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_einkauf.pb.js,grocery_lib.js} && sudo systemctl restart pocketbase`.
+
+# Stimmung, Support & Chat 26.10.2026 (Wir `wir-v29`)
+
+| Wo | Was |
+|---|---|
+| **Start → „Wie geht’s euch?“** | Stimmung beider (Emoji, %, „vor 2 Std.“). Antippen öffnet den **Drehregler** (0–100 %, mit dem Finger im Kreis drehen; Farbe und Emoji wandern mit) plus Verlauf der letzten 14 Tage für beide. |
+| **Stimmungs-Push** | Fällt die eigene Stimmung unter 50 %, bekommt die andere Person **einmal** „💗 Daniel geht es gerade nicht so gut“. Erneut erst, wenn zwischendurch ≥ 50 % gespeichert wurde. Entscheidet der Server (`mood_flags`, `pb_hooks/chat_lib.js`). |
+| **🫂 Ich brauche dich** | Auf der Karte (und „Support“ auf Start und in „Wir zwei“): Art wählen (Anruf, Ablenkung, einfach da sein, reden) + kurze Nachricht → sofort Push. Bei der anderen Person bleibt die Anfrage oben sichtbar, bis sie antwortet („Bin da 💗“, „Ruf dich gleich an 📞“, „Bin gleich für dich da ⏳“). Die Antwort kommt per Push zurück. ✕ blendet aus. |
+| **💬 Chat** | Knopf oben rechts mit Ungelesen-Zahl (auch „Chat“ auf Start). Text, Emojis, 📷 Bilder, Enter sendet (Shift+Enter = neue Zeile). **Gedrückt halten** auf einer Nachricht: Reaktion, Antworten, Kopieren, Löschen (eigene). **Doppeltipp** = ❤️. ✓ gesendet, ✓✓ gelesen, „Ida schreibt …“. |
+| **Chat-Push** | Nur wenn die Nachricht 15 s lang nicht gelesen wurde. Mehrere Nachrichten werden zu einem Push gebündelt („💬 Ida (3 Nachrichten)“). |
+
+**Sicherheit:** Chat und Anfragen lesen nur Absender und Empfänger. Den Empfänger, „gelesen“ und Reaktionen setzt nur der Server. Anfragen und Antworten laufen nur über `/api/support…`.
+
+**Datenbank (nur additiv):** `pb_migrations/1793900000_wir_chat.js` legt `moods`, `mood_flags`, `support_requests` und `chat_messages` an.
+
+**Zurück:** `git checkout vor-chat -- app pocketbase/pb_hooks push shared && git rm -q app/care.js app/chat.js pocketbase/pb_hooks/wir_chat.pb.js pocketbase/pb_hooks/chat_lib.js && git commit -m "Zurück vor Chat" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_chat.pb.js,chat_lib.js} && sudo systemctl restart pocketbase`. DB-Sicherung: `/home/pingu/backups/vor-chat-2026-10-26 23:25`.

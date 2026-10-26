@@ -131,7 +131,7 @@
     's-clay': 'Clay Date', 's-clay-done': 'Unsere Figuren', 's-tab': 'Reiter', 's-newtab': 'Neuer Reiter', 's-openwhen': 'Öffne wenn',
     's-wir': 'Wir zwei', 's-games': 'Spiele', 's-chess': 'Schach', 's-sudoku': 'Sudoku', 's-ttt': 'Tic Tac Toe', 's-mono': 'Herzstadt',
     's-bj': 'Blackjack', 's-settings': 'Einstellungen', 's-console': 'Konsole',
-    's-duo': 'Zu zweit', 's-brain': 'Denkspiele', 's-casino': 'Casino', 's-shop': 'Shop', 's-date': 'Date', 's-grocery': 'Einkaufsliste',
+    's-duo': 'Zu zweit', 's-brain': 'Denkspiele', 's-casino': 'Casino', 's-shop': 'Shop', 's-date': 'Date', 's-grocery': 'Einkaufsliste', 's-chat': 'Chat',
   };
   const GAMES = ['s-games', 's-chess', 's-sudoku', 's-ttt', 's-mono', 's-bj', 's-duo', 's-brain', 's-casino', 's-shop'];
 

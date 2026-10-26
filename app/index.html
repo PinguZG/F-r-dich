@@ -60,6 +60,7 @@
   </div>
   <h1 id="topTitle">Für dich 💌</h1>
   <div class="top-right">
+    <button class="chat-top" id="chatBtn" data-go="s-chat" type="button" aria-label="Chat">💬<i class="chat-badge" id="chatBadge" hidden></i></button>
     <button class="coin-chip" id="coinChip" type="button" aria-label="Heart Coins" hidden><span class="coin" aria-hidden="true"></span><b id="coinBal">…</b></button>
   </div>
 </header>
@@ -110,10 +111,20 @@
     <button class="love-send" id="loveBtn" type="button">💗 Liebe senden</button>
     <div class="mini-actions">
       <button class="mini" data-ping="call" type="button"><span>📞</span>Anruf</button>
-      <button class="mini" data-ping="support" type="button"><span>🫂</span>Support</button>
-      <button class="mini" data-msg type="button"><span>✏️</span>Nachricht</button>
+      <button class="mini" data-support type="button"><span>🫂</span>Support</button>
+      <button class="mini" data-go="s-chat" type="button"><span>💬</span>Chat</button>
     </div>
     <div class="mem-status ping-status"></div>
+  </div>
+
+  <div class="card glass care-card">
+    <h3 class="care-head">Wie geht’s euch?</h3>
+    <div class="care-row">
+      <button class="mood-chip" id="moodPartner" type="button"></button>
+      <button class="mood-chip mine" id="moodMine" type="button"></button>
+    </div>
+    <div id="supportBox"></div>
+    <button class="pack-btn care-help" data-support type="button">🫂 Ich brauche dich</button>
   </div>
 
   <div id="homeMeet"></div>
@@ -296,7 +307,7 @@
   <div class="ping-grid">
     <button class="ping-btn glass" data-ping="love" type="button"><span>💗</span>Liebe senden</button>
     <button class="ping-btn glass" data-ping="call" type="button"><span>📞</span>Anruf anfordern</button>
-    <button class="ping-btn glass" data-ping="support" type="button"><span>🫂</span>Mentaler Support</button>
+    <button class="ping-btn glass" data-support type="button"><span>🫂</span>Mentaler Support</button>
     <button class="ping-btn glass" data-msg type="button"><span>✏️</span>Kleine Nachricht</button>
   </div>
   <div class="mem-status ping-status" id="pingStatus"></div>
@@ -630,6 +641,19 @@
   <h3 class="list-head">Alle Artikel</h3>
   <div id="grCatalog"></div>
 </section>
+
+<!-- Chat (chat.js) -->
+<section class="screen page sub chat-page" id="s-chat" data-tab="s-home" data-title="Chat">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Chat 💬</h2></div>
+  <div class="chat-list" id="chatList"></div>
+  <div class="chat-typing" id="chatTyping" hidden></div>
+  <div class="chat-reply" id="chatReply" hidden><span>↩︎</span><span id="chatReplyText"></span><button class="del-x" id="chatReplyX" type="button" aria-label="Antwort abbrechen">✕</button></div>
+  <form class="chat-form glass" id="chatForm" autocomplete="off">
+    <label class="chat-img" aria-label="Bild senden">📷<input class="sr-only" id="chatFile" type="file" accept="image/*"></label>
+    <textarea class="mem-input chat-input" id="chatInput" rows="1" maxlength="2000" placeholder="Nachricht …" enterkeyhint="send"></textarea>
+    <button class="chat-send" type="submit" aria-label="Senden">➤</button>
+  </form>
+</section>
 <!-- ============ Einstellungen (über den Avatar) ============ -->
 <section class="screen page sub" id="s-settings" data-tab="" data-title="Einstellungen">
   <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einstellungen ⚙️</h2></div>
@@ -710,6 +734,53 @@
 </section>
 
 <!-- ============ Bottom-Sheets ============ -->
+<div class="sheet-wrap" id="moodSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet mood-sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Meine Stimmung</h2>
+    <div class="dial-wrap">
+      <svg id="dial" viewBox="0 0 260 260" aria-label="Stimmung einstellen – im Kreis drehen">
+        <circle cx="130" cy="130" r="100" class="dial-track"/>
+        <path id="dialArc" class="dial-arc" d=""/>
+        <circle id="dialKnob" class="dial-knob" cx="130" cy="30" r="17"/>
+      </svg>
+      <div class="dial-center"><span id="dialEmoji">🙂</span><b id="dialVal">50 %</b></div>
+    </div>
+    <p class="mem-note dial-hint">Mit dem Finger im Kreis drehen</p>
+    <button class="mem-btn" id="moodSave" type="button">Speichern</button>
+    <div class="mem-status" id="moodStatus"></div>
+    <h3 class="list-head">Letzte 14 Tage</h3>
+    <svg class="mood-chart" id="moodChart" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+    <div class="mood-legend" id="moodLegend"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="supportSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet" id="supportForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">🫂 Ich brauche dich</h2>
+    <div class="dt-kinds" id="supKinds"></div>
+    <input class="mem-input" id="supMsg" maxlength="200" placeholder="Kurze Nachricht (optional)">
+    <button class="mem-btn" type="submit">Senden 💗</button>
+    <div class="mem-status" id="supStatus"></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="chatActSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <div class="cm-reacts" id="cmReacts"></div>
+    <button class="pack-btn" id="cmReply" type="button">↩︎ Antworten</button>
+    <button class="pack-btn" id="cmCopy" type="button">📋 Kopieren</button>
+    <button class="link-btn" id="cmDel" type="button">Nachricht löschen</button>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="dtFormSheet" hidden>
   <div class="sheet-backdrop" data-close></div>
   <form class="sheet" id="dtForm">
@@ -1116,6 +1187,8 @@
 <script src="/home.js"></script>
 <script src="/dates.js"></script>
 <script src="/grocery.js"></script>
+<script src="/care.js"></script>
+<script src="/chat.js"></script>
 <script src="/lib/chess.js"></script>
 <script src="/games.js"></script>
 <script src="/lib/mono.js"></script>
