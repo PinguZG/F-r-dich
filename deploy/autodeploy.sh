@@ -74,6 +74,9 @@ main() {
   fi
 
   if [ "$restart_pb" = 1 ]; then
+    # PocketBase startet sich nach geänderten Hooks selbst neu (hooksWatch); erst das abwarten, sonst trifft das
+    # SIGTERM von systemd genau diesen Neustart und systemd wartet 90 s bis zum Timeout
+    sleep "${PB_SETTLE:-5}"
     if $SYSTEMCTL restart pocketbase; then
       # läuft PocketBase wieder? (scheitert z. B. eine Migration, beendet es sich sofort)
       local i up=0
