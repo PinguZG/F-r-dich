@@ -411,9 +411,10 @@ async function doSelections() {
   }
 }
 
-// g) Treffen, Öffne wenn (+ gelesen), Spiele (chess/ttt/mono/sudoku), Gutscheine (gift): die PocketBase-Hooks legen sie in push_queue ab,
+// g) Treffen, Öffne wenn (+ gelesen), Sync-Knopf (sync), Schütteln (shake), Spiele (chess/ttt/mono/sudoku), Gutscheine (gift):
+//    die PocketBase-Hooks legen sie in push_queue ab,
 //    und bündeln dort (notify_prefs wird ignoriert). Spiele + Gutscheine gehören zur Spiele-App.
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', owread: 's-openwhen' };
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', owread: 's-openwhen', sync: 's-home', shake: 's-home' };
 const SPIELE_GO = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', sudoku: 's-sudoku', gift: 'shop:vouchers' };
 
 async function doQueue() {

@@ -1,0 +1,62 @@
+/* ======================================================================
+   Effekte für Wir und die Spiele-App (/shared/fx.js): Herz-Regen (Canvas), Wackeln, „You are in sync“,
+   Sync-Knopf. Alles über der App liegt mit pointer-events:none – Eingaben gehen immer durch.
+   ====================================================================== */
+.fx-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:90;pointer-events:none}
+
+/* Wackeln: auf dem body (Wrapper über allen Bildschirmen), nicht auf einzelnen Knöpfen */
+html.fx-wobble body{animation:fxWobble .32s ease-in-out infinite}
+@keyframes fxWobble{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  20%{transform:translate(-7px,3px) rotate(-.8deg)}
+  40%{transform:translate(6px,-4px) rotate(.7deg)}
+  60%{transform:translate(-5px,-2px) rotate(-.5deg)}
+  80%{transform:translate(5px,3px) rotate(.6deg)}
+}
+
+/* „You are in sync“ */
+.fx-sync{position:fixed;inset:0;z-index:91;pointer-events:none;display:flex;align-items:center;justify-content:center;padding:24px;
+  opacity:0;transition:opacity .45s ease}
+.fx-sync.show{opacity:1}
+.fx-sync b{font-family:'Caveat',cursive;font-size:clamp(52px,16vw,92px);font-weight:700;line-height:1;text-align:center;color:#fff;
+  background:linear-gradient(120deg,var(--fx-a,#ff5fa2),var(--fx-b,#3b9eff));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(0,0,0,.25)) drop-shadow(0 0 22px rgba(255,255,255,.65));transform:scale(.6) rotate(-4deg);
+  transition:transform .6s cubic-bezier(.2,1.6,.4,1)}
+.fx-sync.show b{transform:scale(1) rotate(-4deg)}
+
+/* ---------- Sync-Knopf ---------- */
+.sync-card{margin-top:14px;padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.sync-btn{position:relative;width:150px;height:150px;border-radius:50%;border:none;cursor:pointer;padding:0;
+  background:radial-gradient(circle at 35% 30%,var(--glass-strong),var(--chip) 75%);color:var(--ink);
+  box-shadow:0 12px 30px rgba(var(--shadow),.28),inset 0 2px 0 rgba(255,255,255,.4);
+  touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  transition:transform .2s ease,box-shadow .3s ease}
+.sync-btn svg{width:84px;height:78px;overflow:visible;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(var(--shadow),.3));animation:fxPulse 1.6s ease-in-out infinite}
+.sync-btn path{fill:var(--sync-me,#ff5fa2)}
+.sync-btn small{position:absolute;left:0;right:0;bottom:20px;font-size:12px;font-weight:700;color:var(--ink-soft);pointer-events:none;letter-spacing:.3px}
+@keyframes fxPulse{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.08)}}
+/* eigener Ring (Halten) + Ring der anderen Person */
+.sync-btn::before,.sync-btn::after{content:'';position:absolute;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease}
+.sync-btn::before{inset:-7px;border:5px solid var(--sync-me,#ff5fa2);box-shadow:0 0 24px var(--sync-me,#ff5fa2)}
+.sync-btn::after{inset:-18px;border:5px solid var(--sync-partner,#3b9eff);box-shadow:0 0 24px var(--sync-partner,#3b9eff);transform:scale(.92)}
+.sync-btn.holding{transform:scale(.95)}
+.sync-btn.holding::before{opacity:1;animation:fxGlow 1s ease-in-out infinite}
+.sync-btn.partner::after{opacity:1;transform:scale(1);animation:fxGlow 1.2s ease-in-out infinite reverse}
+.sync-btn.holding svg{animation-duration:.8s}
+@keyframes fxGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+.sync-status{min-height:18px;font-size:13px;font-weight:700;color:var(--ink-soft);text-align:center}
+.sync-status.hot{color:var(--ink)}
+
+/* Nachfrage „Schütteln erlauben“ */
+.fx-ask{position:fixed;left:50%;bottom:calc(var(--nav-h,80px) + 16px);z-index:92;transform:translate(-50%,30px);opacity:0;pointer-events:none;
+  width:calc(100% - 32px);max-width:380px;padding:16px;border-radius:22px;display:flex;flex-direction:column;gap:10px;text-align:center;transition:all .35s ease}
+.fx-ask.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.fx-ask b{font-size:16px}
+.fx-ask p{font-size:13.5px;font-weight:600;color:var(--ink-soft);line-height:1.4}
+.fx-ask .row{justify-content:center}
+
+@media (prefers-reduced-motion: reduce){
+  html.fx-wobble body{animation:fxWobbleSoft 1s ease-in-out infinite!important;animation-duration:1s!important;animation-iteration-count:infinite!important}
+  .sync-btn svg{animation:none}
+}
+@keyframes fxWobbleSoft{0%,100%{transform:none}50%{transform:translateX(2px)}}

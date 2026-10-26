@@ -890,3 +890,59 @@ Wir lädt `/shared/…` über die Route in `pb_hooks/wir_shared.pb.js`; `app/sty
 git checkout vor-spiele-app -- app && git commit -m "Wir wieder mit Spielen" && git push
 ```
 (Wir braucht dafür keine `shared/`-Dateien.) Ganz zurück: siehe „Zurück auf vor-spiele-app“ oben.
+
+---
+
+# Sync-Knopf + Schütteln 26.10.2026 (Wir `wir-v21`, Spiele `spiele-v2`)
+
+Gilt für beide gleich und in **beiden Apps**. Getestet mit einer lokalen PocketBase 0.40.5 und einer Kopie des Backups:
+- **API, 21 Tests:** Rechte, Sync nach ≥ 1 s gemeinsamem Halten genau einmal, erst nach Loslassen wieder, 0,5 s reicht nicht, Halten ohne Heartbeat nach 3 s veraltet, Push „hält den Sync-Knopf“ nur wenn die andere Person offline ist und höchstens alle 10 Minuten, AHHHH-Push höchstens alle 30 s, Log-Einträge, `live_state` bleibt bei 2 Datensätzen.
+- **UI, 23 Prüfungen:** Daniel in Wir, Ida gleichzeitig in der Spiele-App und in Wir (eins davon mit „Bewegung reduzieren“). Halten wird live angezeigt, „You are in sync“ erscheint bei allen, Schütteln während Ida Schach spielt: Die App wackelt, das Brett bleibt bedienbar, der Spielstand bleibt unverändert. Mit reduzierter Bewegung wackelt nichts. Keine Konsolenfehler.
+
+## Was es kann
+
+| Wo | Was |
+|---|---|
+| **Start (Wir und Spiele)** | Runder **Sync-Knopf** mit pochendem Herz in deiner Herzfarbe, „Gedrückt halten“. Beim Halten leuchtet ein Ring in deiner Farbe, hält die andere Person gerade, siehst du einen zweiten Ring in ihrer Farbe („Ida hält gerade – halt mit! 💞“). |
+| **Sync** | Halten beide gleichzeitig mindestens 1 s: bei beiden groß **„You are in sync“** + Herzen in beiden Herzfarben über den ganzen Bildschirm (~4 s). Danach erst wieder, wenn ihr beide losgelassen habt. |
+| **Push** | Fängt jemand an zu halten, während die andere Person die App nicht offen hat: „💞 Daniel hält den Sync-Knopf“ (höchstens alle 10 Minuten pro Person). |
+| **Schütteln** | Kräftiges Schütteln (mehrere starke Ausschläge in < 1 s, Gehen reicht nicht) in jeder Ansicht, auch in Spielen. Bei der anderen Person regnen ~3 s lang Herzen in deiner Farbe und die ganze App wackelt (nur wenn ihre App offen ist). Dazu ein Push **„AHHHH“ – „Daniel schüttelt das Handy 💥“** (höchstens alle 30 s, Tippen öffnet Wir). Du selbst siehst einen kleinen Herz-Puff als Bestätigung. |
+| **Einstellungen → 💥 Schütteln** | Schalter „Schütteln erkennen“. Auf dem iPhone fragt Safari dabei einmal nach dem Bewegungssensor. Ist er aus, fragt die App beim ersten Antippen des Sync-Knopfs einmal freundlich nach. Der Zustand wird pro Gerät gemerkt. |
+| **Konsole `/log`** | „💞 In sync 💞 mit Ida“ und „💥 hat geschüttelt 💥“ |
+
+iPhones können im Browser nicht vibrieren, deshalb wackelt nur die Oberfläche. Mit „Bewegung reduzieren“ (iOS-Einstellung) gibt es weniger Herzen und kein Wackeln.
+
+## Technik / Sicherheit
+
+- **Server:** `pb_hooks/wir_sync.pb.js` (Routen), Logik in `sync_lib.js`:
+  - `POST /api/sync/hold {down}`: Heartbeat alle 0,5 s beim Halten. Der Server entscheidet den Sync in einer Transaktion und setzt bei beiden `sync_at`.
+  - `POST /api/shake`: Lebenszeichen höchstens 1×/s.
+  - Pushs über `push_queue` (Arten `sync`, `shake` → Wir, Start).
+  - Log über `activity` (Art `fx`).
+- **Datenbank (nur additiv):** `pb_migrations/1793200000_wir_sync_shake.js` legt `live_state` an.
+  - Genau **ein Datensatz pro Person** (eindeutiger Index), der immer überschrieben wird. Es häuft sich nichts an, ein Cron ist nicht nötig.
+  - Lesen dürfen nur Eingeloggte (für Realtime). Anlegen, Ändern und Löschen geht nur über die Routen.
+  - Die Push-Pausen stehen in versteckten Feldern.
+- **Client:** `shared/fx.js` + `shared/fx.css` (ein Modul für beide Apps):
+  - Herz-Regen per Canvas, höchstens 70 Herzen, läuft nur, solange etwas zu sehen ist.
+  - Wackeln über die Klasse `fx-wobble` auf `<html>`, die Animation läuft auf dem `body`.
+  - Das Overlay hat `pointer-events: none`.
+  - Der Bewegungssensor läuft nur bei sichtbarer App und eingeschaltetem Schütteln.
+  - Der Sync-Knopf erscheint in `#syncSlot`, der Schalter ist `#shakeSwitch`.
+- **Testen lokal:** In der Browser-Konsole `WIR_FX.simulateShake()`. Das gibt es nur außerhalb von `*.ts.net`, live nicht.
+
+## Sicherung vorher
+
+Git-Tag **`vor-sync-schuetteln`** = `86fc393`; DB-Backup `/home/pingu/backups/vor-sync-schuetteln-2026-10-26/` (20:54, Integritätsprüfung „ok“).
+
+## Zurück auf „vor-sync-schuetteln“
+
+```bash
+cd Documents/F-r-dich && git checkout main && git pull
+git checkout vor-sync-schuetteln -- app spiele shared push pocketbase/pb_hooks
+git rm -q shared/fx.js shared/fx.css pocketbase/pb_hooks/wir_sync.pb.js pocketbase/pb_hooks/sync_lib.js
+git commit -m "Zurück vor Sync-Knopf und Schütteln" && git push
+# auf dem Pi (das Auto-Deploy löscht keine Hook-Dateien):
+rm /home/pingu/pb/pb_hooks/wir_sync.pb.js /home/pingu/pb/pb_hooks/sync_lib.js && sudo systemctl restart pocketbase
+```
+`live_state` bleibt ungenutzt stehen (oder im Admin-UI löschen, enthält nur Kurzzeit-Daten). Nur falls Daten kaputt sind: Backup wie unter „Zurück zur alten Version → 2.“ mit dem Ordner `vor-sync-schuetteln-2026-10-26`.

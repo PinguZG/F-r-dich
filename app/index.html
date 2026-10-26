@@ -20,6 +20,7 @@
 <meta name="theme-color" content="#fdeef5">
 <link rel="stylesheet" href="/shared/base.css">
 <link rel="stylesheet" href="/shared/activity.css">
+<link rel="stylesheet" href="/shared/fx.css">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -104,6 +105,8 @@
     </div>
     <div class="mem-status ping-status"></div>
   </div>
+
+  <div id="syncSlot"></div>
 
   <div id="homeMeet"></div>
 
@@ -322,6 +325,12 @@
     <button class="mem-btn" id="pushBtn2" type="button" hidden>🔔 Benachrichtigungen aktivieren</button>
     <p class="mem-note">Einmal aktivieren – dann bekommst du alles: Liebe, Nachrichten, Fotos, Dates, Treffen und Briefe.</p>
   </div>
+  <div class="card glass set-card">
+    <h3>💥 Schütteln</h3>
+    <label class="check"><input type="checkbox" class="switch" id="shakeSwitch"><span>Schütteln erkennen</span></label>
+    <span class="push-state" id="shakeState"></span>
+    <p class="mem-note">Schüttelst du dein Handy kräftig, während die App offen ist, regnet es bei der anderen Person Herzen in deiner Farbe, ihre App wackelt, und sie bekommt einen Push „AHHHH“. Auf dem iPhone fragt Safari einmal nach der Erlaubnis für den Bewegungssensor.</p>
+  </div>
 
   <div class="card glass set-card app-card">
     <button class="pack-btn" id="reloadBtn" type="button">↻ App neu laden</button>
@@ -479,6 +488,7 @@
 <script src="/app.js"></script>
 <script src="/shared/look.js"></script>
 <script src="/shared/push.js"></script>
+<script src="/shared/fx.js"></script>
 <script src="/extra.js"></script>
 <script src="/home.js"></script>
 <script src="/shared/activity.js"></script>

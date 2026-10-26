@@ -159,6 +159,7 @@
         return `${t} ${w}👀 ${what}${x.detail ? ': ' + x.detail : ''}`;
       }
       case 'game': return `${t} ${w}🎲 ${x.detail}`;
+      case 'fx': return `${t} ${w}${x.area === 'shake' ? '💥' : '💞'} ${x.detail}`;
       default: return `${t} ${w}${x.kind} ${x.detail || ''}`;
     }
   }

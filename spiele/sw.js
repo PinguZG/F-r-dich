@@ -1,9 +1,9 @@
-const CACHE = 'spiele-v1'; // bei jeder neuen Version der Spiele-App erhöhen -> Update-Hinweis
+const CACHE = 'spiele-v2'; // bei jeder neuen Version der Spiele-App erhöhen -> Update-Hinweis
 const SHELL = [
   '/', '/index.html', '/style.css', '/games.css', '/coins.css', '/casino.css',
   '/app.js', '/games.js', '/mono-ui.js', '/coins.js', '/shop.js', '/casino.js', '/lib/chess.js', '/lib/mono.js',
   '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js',
-  '/shared/push.js', '/shared/activity.js', '/shared/update.js',
+  '/shared/push.js', '/shared/activity.js', '/shared/update.js', '/shared/fx.js', '/shared/fx.css',
   '/manifest.json', '/icons/icon-192.png',
 ];
 

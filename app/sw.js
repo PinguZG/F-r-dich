@@ -1,6 +1,7 @@
-const CACHE = 'wir-v20'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v21'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
-  '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js'];
+  '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js',
+  '/shared/fx.js', '/shared/fx.css'];
 // Spiele-App (eigene PWA): Spiel-Pushs, die mangels Spiele-Abo über Wir kommen (app: 'spiele'), öffnen sie
 const SPIELE = self.location.hostname.endsWith('.ts.net') ? 'https://' + self.location.hostname + ':8443/' : self.location.protocol + '//' + self.location.hostname + ':8444/';
 
