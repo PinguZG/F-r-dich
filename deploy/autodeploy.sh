@@ -104,18 +104,6 @@ main() {
     if $SYSTEMCTL restart "$svc"; then log "$svc neu gestartet"; else log "FEHLER: Neustart $svc"; rc=1; fi
   done
 
-  # Spiele-App (:8443): Tailscale liefert spiele/ und shared/ direkt aus dem Repo aus -> der Pull reicht.
-  # Hier nur prüfen, dass die Freigabe noch steht (Ordner freigeben darf nur root, siehe ANLEITUNG.md).
-  if echo "$changed" | grep -qE '^(spiele|shared)/'; then
-    log "Spiele-App aktualisiert (spiele/, shared/)"
-  fi
-  if command -v tailscale >/dev/null 2>&1 && [ -d "$REPO/spiele" ]; then
-    local ts; ts="$(tailscale funnel status 2>/dev/null || true)"   # erst einlesen: grep -q + pipefail gäbe sonst SIGPIPE-Fehler
-    if ! grep -q ':8443' <<<"$ts"; then
-      log "FEHLER: Spiele-Freigabe :8443 fehlt – sudo tailscale funnel --bg --https=8443 $REPO/spiele (ANLEITUNG.md)"; rc=1
-    fi
-  fi
-
   if echo "$changed" | grep -qE '^deploy/.*\.(service|timer)$|^push/.*\.service$'; then
     log "Hinweis: systemd-Dateien haben sich geändert – bei Bedarf von Hand neu installieren (ANLEITUNG.md)"
   fi

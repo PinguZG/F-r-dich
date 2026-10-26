@@ -1054,3 +1054,15 @@ Getestet mit zwei Browserfenstern (Daniel + Ida) gegen eine Kopie des Backups: E
 - **Datenbank (nur additiv):** `pb_migrations/1793500000_wir_herzspur.js` legt `trail_matches` an.
 
 **Zurück vor Etappe 4:** die Commits von Etappe 4 per `git revert` zurücknehmen. Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/{wir_herzspur.pb.js,trail_lib.js} && sudo systemctl restart pocketbase`.
+
+# Port 8443 entfernt (separate Spiele-App abgeschaltet)
+
+Alles läuft wieder in Wir. Der Ordner `spiele/` ist aus dem Repo gelöscht, das Auto-Deploy prüft :8443 nicht mehr. `shared/` bleibt (Wir lädt daraus über `/shared/…`).
+Freigabe auf dem Pi beenden (einmalig, sudo):
+```bash
+sudo tailscale funnel --https=8443 off
+tailscale funnel status        # nur noch https://wir.geep-flops.ts.net (443 -> 8090)
+```
+Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht mehr bedient. Auf den iPhones das Spiele-Symbol vom Home-Bildschirm löschen.
+
+**Zurück zur separaten Spiele-App:** siehe oben „Eigene Spiele-App 26.10.2026“ (Tag `vor-spiele-zurueck`).
