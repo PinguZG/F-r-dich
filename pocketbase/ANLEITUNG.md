@@ -786,3 +786,87 @@ git commit -m "Zurück vor die Konsole" && git push
 rm /home/pingu/pb/pb_hooks/wir_activity.pb.js /home/pingu/pb/pb_hooks/activity_lib.js && sudo systemctl restart pocketbase
 ```
 Die Collection `activity` bleibt ungenutzt stehen. Sollen die Daten ganz weg, im Admin-UI die Collection `activity` löschen.
+
+---
+
+# Eigene Spiele-App 26.10.2026 (https://wir.geep-flops.ts.net:8443)
+
+Alle Spiele, Heart Coins, Shop und Casino sind aus Wir in eine eigene PWA **„Spiele“** gezogen. Eigener Origin (Port 8443) = eigenes Symbol auf dem Home-Bildschirm, eigener Service Worker (`spiele-v1`), eigenes Manifest. Backend bleibt **dieselbe PocketBase** (gleiche Accounts, gleiche Daten): Die Spiele-App ruft die API unter https://wir.geep-flops.ts.net auf (CORS: PocketBase erlaubt alle Origins, geprüft).
+
+Getestet mit einer lokalen PocketBase 0.40.5 und einer **Kopie des Backups** (nicht der echten DB), beide Accounts parallel:
+- **API:** 20 Tests: Shop (Dreifachtipp → ein Gutschein, genau eine Abbuchung, Einlösen/Erfüllen nur durch die richtige Person, +15 beim Erfüllen, nichts direkt änderbar), `push_subs.app` (nur `wir`/`spiele`, fremde Abos verboten), neue Bereiche im Aktivitäts-Log, `/shared/` über PocketBase.
+- **Push-Dienst** mit Fake-Endpunkt: Schachzug → nur Spiele-Abo, Anruf-Ping → nur Wir-Abo (auch altes Abo ohne `app`), ohne Spiele-Abo → ersatzweise an Wir.
+- **UI:** 45 Prüfungen in Edge auf iPhone-Größe (Login, alle Spiele, Live-Züge, Coins, Shop mit Einlösen/Erfüllen zwischen beiden, Blackjack, Konsole, Farbwelt im Profil, Push-Ziel per `#go=`), alle vier Farbwelten, keine Konsolenfehler.
+
+## Was wo ist
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | 🏠 Start · 💞 Zu zweit (Schach, Tic Tac Toe, Herzstadt; roter Punkt, wenn du dran bist) · 🧩 Denkspiele (Sudoku; Solitär + Schach gegen KI als „bald“) · 🎰 Casino (Blackjack) · 🎁 Shop (Punkt, wenn ein Gutschein aufs Einlösen/Erfüllen wartet) |
+| **Start** | „Hallo …“, beide Profilbilder (grüner Punkt = online), **Wer ist dran** pro Spiel (antippen → Spiel), Heart-Coins-Karte (Kontostand, heute verdient → Verlauf), **Letzte Aktivitäten** (Züge, Ergebnisse, Sudoku, Gutscheine, eigene Coin-Buchungen) |
+| **Oben** | Avatar → Einstellungen, Coin-Chip → Verlauf |
+| **Einstellungen** | Farbwelt (gespeichert in `users.theme`, gilt auch in Wir), Herzfarbe, Benachrichtigungen (nur für diese App), „Wir öffnen“, App neu laden, Abmelden, ⌨️ Konsole (gleiche Befehle wie in Wir) |
+| **Shop** | Der Gutschein-Shop von 23.10. ist wieder da (Verschenken + Gutschein-Fach, Erfüllen +15). Sortiment weiter in `shop_items`. |
+
+Coins verdient man weiter in Wir (Liebe, Briefe, Fotos); der Tagesbonus kommt beim ersten Öffnen einer der beiden Apps. Gebucht wird nur auf dem Server.
+
+## Dateien
+
+| Wo | Was |
+|---|---|
+| `spiele/` | die Spiele-App: `index.html`, `app.js` (Login, Start, Push-Ziele), `games.js`, `mono-ui.js`, `coins.js`, `shop.js`, `casino.js`, CSS, `lib/chess.js`, `lib/mono.js`, `sw.js`, `manifest.json`, `icons/` |
+| `shared/` | **gemeinsam für beide Apps:** `pocketbase.umd.js`, `base.css` (Farbwelten + Grundbausteine), `ui.js` (Seiten, Sheets, Herzen, Berlin-Zeit), `look.js` (Farbwelt + Herzfarbe), `push.js` (Push-Abo mit App-Kennung), `activity.js` + `activity.css` (Online-Punkt + Konsole), `update.js` (Update-Hinweis) |
+| `pocketbase/pb_hooks/wir_shared.pb.js` | liefert `shared/` für Wir unter `/shared/…` aus |
+| `pocketbase/pb_hooks/wir_coins.pb.js`, `coins_lib.js` | Shop-Routen wieder drin: `POST /api/shop/gift`, `/api/vouchers/{id}/redeem`, `/api/vouchers/{id}/fulfill` |
+| `push/index.js` | Spiel-Pushs (`chess`, `ttt`, `mono`, `sudoku`, `gift`) gehen an Abos mit `app = "spiele"`, alles andere an `app = "wir"` (oder leer = alte Abos). Ohne Spiele-Abo ersatzweise an Wir mit `app: "spiele"` – Wir öffnet dann beim Tippen die Spiele-App. |
+
+## Datenbank (nur additiv)
+
+`pocketbase/pb_migrations/1793100000_wir_spiele_app.js`: neues Feld `push_subs.app` (Auswahl `wir` | `spiele`, optional). Sonst nichts – alle Spiel-, Ranglisten-, Coin- und Herzstadt-Daten bleiben, wie sie sind.
+
+## Ausliefern auf Port 8443 (Tailscale direkt aus dem Repo)
+
+Kein eigener Webserver: Tailscale liefert die Ordner aus dem Repo direkt aus. Ein `git pull` (Auto-Deploy) aktualisiert die App sofort; das Auto-Deploy prüft außerdem bei jedem Update, dass die Freigabe noch steht, und legt sie sonst neu an.
+
+Einmalig (sudo, vom Nutzer):
+```bash
+sudo tailscale set --operator=pingu
+```
+Danach als pingu:
+```bash
+tailscale funnel --bg --https=8443 /home/pingu/F-r-dich/spiele
+tailscale funnel --bg --https=8443 --set-path=/shared /home/pingu/F-r-dich/shared
+tailscale funnel status        # zeigt :443 (Wir) und :8443 (Spiele, / und /shared)
+```
+Abschalten: `tailscale funnel --https=8443 off`.
+
+## Auf dem iPhone
+
+https://wir.geep-flops.ts.net:8443 in Safari öffnen → Teilen → **Zum Home-Bildschirm** → App öffnen → mit dem Wir-Konto anmelden → Avatar → 🔔 **Benachrichtigungen aktivieren**. Ohne das kommen Spiel-Pushs weiter über Wir an (Tippen öffnet dann die Spiele-Seite in Safari).
+
+## Sicherung vorher
+
+- Git-Tag **`vor-spiele-app`** = Commit `d59ceac`, auf GitHub gepusht.
+- DB-Backup (SQLite-Backup-Funktion, Integritätsprüfung „ok“): `/home/pingu/backups/vor-spiele-app-2026-10-26/` mit `data.db`, `auxiliary.db`, `storage/`, `pb_migrations/`, `pb_hooks/` (Stand 26.10.2026 19:54).
+
+## Zurück auf „vor-spiele-app“
+
+Das Schema wurde nur erweitert, die alte Wir-App läuft damit unverändert. **Normalerweise reicht Schritt 1.**
+
+**1. Code zurück (am PC):**
+```bash
+cd Documents/F-r-dich
+git checkout main && git pull
+git checkout vor-spiele-app -- app push pocketbase/pb_hooks deploy
+git rm -rq spiele shared pocketbase/pb_hooks/wir_shared.pb.js
+git commit -m "Zurück zur Version vor der Spiele-App" && git push
+```
+Auf dem Pi danach (das Auto-Deploy löscht keine Hook-Dateien):
+```bash
+rm /home/pingu/pb/pb_hooks/wir_shared.pb.js && sudo systemctl restart pocketbase
+tailscale funnel --https=8443 off
+```
+Wir hat dann wieder Spiele, Coins und Casino (Stand 23.10., ohne Shop). Das Feld `push_subs.app` bleibt ungenutzt stehen. Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wieder vor: `git revert --no-edit HEAD && git push`.
+
+**2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
+`/home/pingu/backups/vor-spiele-app-2026-10-26/`. ⚠️ Alles nach dem 26.10.2026 19:54 geht dabei verloren.

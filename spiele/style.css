@@ -1,0 +1,64 @@
+/* ======================================================================
+   Spiele-App – eigene Styles. Grundlage (Farbwelten, Glas, Knöpfe, Navigation) kommt aus /shared/base.css,
+   Spiele aus games.css, Coins + Shop aus coins.css, Blackjack aus casino.css.
+   ====================================================================== */
+@keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ---------- Login ---------- */
+.lock-title{margin-top:6px}
+
+/* ---------- Start: wer ist dran ---------- */
+.start-card{padding:16px 14px 12px}
+.start-hello{font-family:'Caveat',cursive;font-size:28px;font-weight:700;line-height:1.1;color:var(--ink)}
+.couple{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.couple .person{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:76px}
+.couple .person span{font-size:14px;font-weight:700}
+.couple-vs{font-size:26px;animation:beat 1.8s ease-in-out infinite}
+.turn-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.turn-row{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:8px 14px;border-radius:18px;cursor:pointer;text-align:left;
+  border:1px solid var(--glass-border);background:var(--chip);color:var(--ink);transition:transform .15s}
+.turn-row:active{transform:scale(.97)}
+.turn-row .tr-ico{font-size:22px;width:28px;text-align:center}
+.turn-row b{font-size:15px}
+.turn-row .tr-who{flex:1;min-width:0;text-align:right;font-size:13px;font-weight:700;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.turn-row .tr-go{font-size:20px;color:var(--ink-faint);font-weight:700}
+.turn-row.me{background:linear-gradient(135deg,var(--accent2),var(--accent));border-color:transparent;color:var(--accent-ink);box-shadow:0 8px 18px rgba(var(--shadow),.28)}
+.turn-row.me .tr-who,.turn-row.me .tr-go{color:var(--accent-ink)}
+.turn-row.me .tr-ico{animation:beat 1.6s ease-in-out infinite}
+.turn-row.them .tr-who{color:var(--ink)}
+
+/* ---------- Start: Coins ---------- */
+.coin-card{display:block;width:100%;margin-top:14px;padding:14px;border:none;cursor:pointer;text-align:left;color:var(--ink);transition:transform .15s}
+.coin-card:active{transform:scale(.98)}
+.cc-head{display:flex;align-items:center;gap:12px}
+.cc-head > div{flex:1;min-width:0}
+.cc-head b{display:block;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.cc-head small{font-size:12px;font-weight:700;letter-spacing:1px;color:var(--ink-soft);text-transform:uppercase}
+.cc-go{font-size:13px;font-weight:700;color:var(--ink-soft)}
+.cc-today{margin-top:12px}
+.cc-today:empty{display:none}
+
+/* ---------- Start: letzte Aktivitäten ---------- */
+.feed-row{width:100%;border:none;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:transform .15s}
+.feed-row:active{transform:scale(.98)}
+.feed-row b{font-size:14px;line-height:1.3;word-break:break-word}
+
+/* ---------- Denkspiele: kommt bald ---------- */
+.game-card.soon{opacity:.62}
+.game-card.soon .gc-ico{filter:grayscale(.4)}
+.soon-tag{flex:none;padding:6px 12px;border-radius:14px;background:var(--chip);font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--ink-soft);text-transform:uppercase}
+
+/* ---------- Casino ---------- */
+#s-casino .casino-game{margin-bottom:10px}
+.casino-info{margin:0 0 16px;font-size:13px;font-weight:600;color:var(--ink-soft);text-align:center;line-height:1.4}
+.casino-info:empty{display:none}
+
+/* ---------- Shop ---------- */
+.shop-bal{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:12px;padding:12px;border-radius:20px;border:none;cursor:pointer;color:var(--ink)}
+.shop-bal b{font-size:22px;font-variant-numeric:tabular-nums}
+.shop-bal small{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.5px;text-transform:uppercase}
+#s-shop [data-shop-pane]{display:flex;flex-direction:column;gap:12px}
+#s-shop [data-shop-pane][hidden]{display:none}
+
+/* ---------- Einstellungen ---------- */
+.app-card a.pack-btn{text-decoration:none}

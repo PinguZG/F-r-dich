@@ -133,9 +133,20 @@ async function send(to, category, payload) {
   await deliver(to, category, payload, category === 'pings' ? 'high' : 'normal', category !== 'pings');
 }
 
-// an alle Handys einer Person; liefert die Fehler (abgelaufene Abos werden gelöscht)
-async function deliver(to, category, payload, urgency, useTopic) {
-  const subs = await list('push_subs', { filter: 'user = ' + q(to) });
+// Abos einer Person für eine App: "wir" (auch alte Abos ohne app) oder "spiele" (Spiele-App unter :8443)
+const subsFor = (to, app) => list('push_subs', {
+  filter: `user = ${q(to)} && ` + (app === 'spiele' ? 'app = "spiele"' : '(app = "wir" || app = "")'),
+});
+
+// an alle Handys einer Person (in der passenden App); liefert die Fehler (abgelaufene Abos werden gelöscht).
+// Spiel-Pushs gehen an die Spiele-App; hat die Person sie (noch) nicht mit Push, ersatzweise an Wir –
+// mit app: "spiele", damit Wirs Service Worker beim Tippen die Spiele-App öffnet.
+async function deliver(to, category, payload, urgency, useTopic, app = 'wir') {
+  let subs = await subsFor(to, app);
+  if (!subs.length && app === 'spiele') {
+    subs = await subsFor(to, 'wir');
+    payload = { ...payload, app: 'spiele' };
+  }
   const body = JSON.stringify(payload);
   const errors = [];
   for (const s of subs) {
@@ -144,7 +155,7 @@ async function deliver(to, category, payload, urgency, useTopic) {
         TTL: 24 * 3600, urgency,
         ...(payload.tag && useTopic ? { topic: payload.tag.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 32) } : {}),
       });
-      log('gesendet', category, '->', name(to), JSON.stringify(payload.title));
+      log('gesendet', category, '->', `${name(to)} [${s.app || 'wir'}]`, JSON.stringify(payload.title));
     } catch (e) {
       if (e.statusCode === 404 || e.statusCode === 410) {
         log('Subscription abgelaufen, lösche', s.id);
@@ -400,18 +411,20 @@ async function doSelections() {
   }
 }
 
-// g) Treffen, Öffne wenn (+ gelesen), Spiele (chess/ttt/sudoku): die PocketBase-Hooks (pb_hooks/wir_extra.pb.js) legen sie in push_queue ab,
-//    und bündeln dort (notify_prefs wird ignoriert)
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', chess: 's-chess', ttt: 's-ttt', mono: 's-mono', owread: 's-openwhen', sudoku: 's-sudoku' };
+// g) Treffen, Öffne wenn (+ gelesen), Spiele (chess/ttt/mono/sudoku), Gutscheine (gift): die PocketBase-Hooks legen sie in push_queue ab,
+//    und bündeln dort (notify_prefs wird ignoriert). Spiele + Gutscheine gehören zur Spiele-App.
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', owread: 's-openwhen' };
+const SPIELE_GO = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', sudoku: 's-sudoku', gift: 'shop:vouchers' };
 
 async function doQueue() {
   const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });
   for (const item of due) {
     // erst als verschickt markieren, dann senden -> nie doppelt; Antwort enthält den Stand inkl. letzter Bündelung
     const it = await api('PATCH', '/api/collections/push_queue/records/' + item.id, { sent_at: pbTime(Date.now()) });
+    const spiele = it.kind in SPIELE_GO;
     const errors = await deliver(it.user, 'queue:' + it.kind, {
-      title: it.title, body: it.body || '', go: QUEUE_GO[it.kind] || 's-final', tag: it.kind,
-    }, 'high', true);
+      title: it.title, body: it.body || '', go: (spiele ? SPIELE_GO : QUEUE_GO)[it.kind] || 's-final', tag: it.kind,
+    }, 'high', true, spiele ? 'spiele' : 'wir');
     if (errors.length) {
       await api('PATCH', '/api/collections/push_queue/records/' + it.id, { error: errors.join(' | ').slice(0, 1000) })
         .catch(e => log('Fehler merken fehlgeschlagen', e.message));
