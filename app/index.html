@@ -139,17 +139,44 @@
 
 <!-- ============ Dates (Übersicht) ============ -->
 <section class="screen page" id="s-plans" data-title="Dates 📅">
-  <div class="hub-grid">
-    <button class="hub-card glass" data-go="s-meetings" type="button"><span class="ico">💗</span><b>Treffen</b><small id="planMeetInfo">Nächstes Treffen</small></button>
-    <button class="hub-card glass" data-go="s-dates" type="button"><span class="ico">📅</span><b>Unsere Daten</b><small id="planDatesInfo">Die wichtigsten Tage</small></button>
-    <button class="hub-card glass" data-go="s-clay" type="button"><span class="ico">🧸</span><b>Clay Date</b><small>Such dir aus, was wir bauen</small></button>
-    <button class="hub-card glass" data-go="s-clay-done" type="button"><span class="ico">📁</span><b>Unsere Figuren</b><small>Was wir schon gebaut haben</small></button>
+  <div class="segmented" role="tablist">
+    <button class="seg on" data-dtseg="planned" type="button">Geplant</button>
+    <button class="seg" data-dtseg="past" type="button">Vergangen</button>
+    <button class="seg" data-dtseg="timeline" type="button">Zeitstrahl</button>
   </div>
-  <h3 class="list-head">Unsere Reiter</h3>
+  <button class="mem-btn dt-new" id="dtNewBtn" type="button">➕ Date planen</button>
+  <p class="dt-count" id="dtCount"></p>
+  <div class="dt-list" id="dtList"></div>
+  <div class="dt-timeline" id="dtTimeline" hidden></div>
+
+  <h3 class="list-head">Mehr</h3>
+  <div class="hub-grid">
+    <button class="hub-card glass" data-go="s-dates" type="button"><span class="ico">📅</span><b>Unsere Daten</b><small id="planDatesInfo">Jahrestage &amp; Geburtstage</small></button>
+    <button class="hub-card glass" data-go="s-clay" type="button"><span class="ico">🧸</span><b>Clay-Ideen</b><small>Figuren aussuchen &amp; ansehen</small></button>
+  </div>
+  <h3 class="list-head">Listen &amp; Überraschungen</h3>
   <div class="tab-menu" id="tabMenu"></div>
   <button class="opt opt-new" id="newTabBtn" type="button"><span class="ico">➕</span><span><b>Neuer Reiter</b><small>Movie Date, Ausflug, Wunschliste …</small></span></button>
 </section>
 
+<!-- Ein Date (dates.js) -->
+<section class="screen page sub" id="s-date" data-tab="s-plans" data-title="Date">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2 id="dtdTitle">Date</h2><button class="g-menu-btn" id="dtdEdit" type="button" aria-label="Bearbeiten">✎</button></div>
+  <div class="dtd-meta" id="dtdMeta"></div>
+  <p class="dtd-note glass" id="dtdNote" hidden></p>
+  <div class="dtd-ask glass" id="dtdAsk" hidden>📷 Das Date ist vorbei – magst du Bilder hinzufügen?</div>
+  <div class="dtd-clay" id="dtdClay" hidden>
+    <button class="opt" data-go="s-clay" type="button"><span class="ico">🧸</span><span><b>Ideen</b><small>Was wir bauen können</small></span></button>
+    <button class="opt" data-go="s-clay-done" type="button"><span class="ico">📁</span><span><b>Unsere Figuren</b><small>Was wir schon gebaut haben</small></span></button>
+  </div>
+  <h3 class="list-head">Bilder</h3>
+  <div class="mem-tools upload-row dtd-add">
+    <label class="mem-btn upload-btn">📷 Hochladen<input class="sr-only" id="dtdFile" type="file" accept="image/*" multiple></label>
+    <button class="pack-btn" id="dtdPick" type="button">🔗 Aus Erinnerungen</button>
+  </div>
+  <div class="mem-status" id="dtdStatus"></div>
+  <div class="photos polaroids" id="dtdPhotos"></div>
+</section>
 <!-- Unsere Daten -->
 <section class="screen page sub" id="s-dates" data-tab="s-plans" data-title="Unsere Daten">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Daten 📅</h2></div>
@@ -167,20 +194,6 @@
     <div class="err" id="dateErr"></div>
   </form>
   <div class="engage glass"><span class="ring">💍</span><div><b>Verlobung</b><small>Coming soon …</small></div></div>
-</section>
-
-<!-- Treffen -->
-<section class="screen page sub" id="s-meetings" data-tab="s-plans" data-title="Treffen">
-  <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Treffen 💗</h2></div>
-  <div class="meet-list" id="meetList"></div>
-  <button class="pack-btn add-toggle" id="meetToggle" type="button">➕ Treffen eintragen</button>
-  <form class="card glass add-card" id="meetForm" hidden>
-    <h1 id="meetFormTitle">Nächstes Treffen</h1>
-    <input class="mem-input" id="meetWhen" type="datetime-local" required>
-    <input class="mem-input" id="meetNote" type="text" placeholder="Notiz (optional), z.B. Bahnhof" maxlength="200">
-    <button class="mem-btn" type="submit">Speichern</button>
-    <div class="err" id="meetErr"></div>
-  </form>
 </section>
 
 <!-- Clay Date -->
@@ -678,6 +691,37 @@
 </section>
 
 <!-- ============ Bottom-Sheets ============ -->
+<div class="sheet-wrap" id="dtFormSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <form class="sheet" id="dtForm">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title" id="dtFormTitle">Neues Date 💗</h2>
+    <div class="dt-kinds" id="dtKinds"></div>
+    <div class="row">
+      <input class="mem-input emoji-input" id="dtEmoji" type="text" maxlength="8" placeholder="💗">
+      <input class="mem-input" id="dtTitleIn" type="text" maxlength="100" placeholder="Titel, z. B. Picknick am See">
+    </div>
+    <input class="mem-input" id="dtWhen" type="datetime-local" required>
+    <input class="mem-input" id="dtPlace" type="text" maxlength="120" placeholder="📍 Ort (optional)">
+    <textarea class="mem-input" id="dtNoteIn" rows="3" maxlength="1000" placeholder="Kurze Notiz (optional)"></textarea>
+    <button class="mem-btn" type="submit">Speichern 💗</button>
+    <button class="link-btn" id="dtDel" type="button" hidden>Date löschen</button>
+    <div class="err" id="dtErr"></div>
+  </form>
+</div>
+
+<div class="sheet-wrap" id="dtPickSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Fotos aus Erinnerungen</h2>
+    <div class="dt-pick-grid" id="dtPickGrid"></div>
+    <button class="mem-btn" id="dtPickSave" type="button">Verknüpfen 💗</button>
+  </div>
+</div>
+
 
 <!-- ============ Spiele-Menüs (⋯ im Kopf, games-ui in games.js) ============ -->
 <div class="sheet-wrap g-menu" id="menu-chess" hidden>
@@ -990,7 +1034,7 @@
 
   // alte Bereichsnamen (z. B. aus Push-Nachrichten) -> neue Seiten
   Object.assign(UI.alias, {
-    's-final': 's-home', 's-write': 's-openwhen', 's-notify-extra': 's-settings',
+    's-final': 's-home', 's-write': 's-openwhen', 's-notify-extra': 's-settings', 's-meetings': 's-plans',
   });
 
   window.WIR_APP = { name: 'wir', title: 'Wir' };
@@ -1051,6 +1095,7 @@
 <script src="/shared/fx.js"></script>
 <script src="/extra.js"></script>
 <script src="/home.js"></script>
+<script src="/dates.js"></script>
 <script src="/lib/chess.js"></script>
 <script src="/games.js"></script>
 <script src="/lib/mono.js"></script>

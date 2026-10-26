@@ -97,7 +97,8 @@ function meetingTick(app) {
   if (!eve && !day) return;
 
   const today = berlinDayKey(now, 0), tomorrow = berlinDayKey(now, 1);
-  const meetings = app.findRecordsByFilter('meetings', 'when >= {:from} && when <= {:to}', 'when', 50, 0,
+  // seit 26.10.2026: alle Dates (date_events) statt nur Treffen
+  const meetings = app.findRecordsByFilter('date_events', 'when >= {:from} && when <= {:to}', 'when', 50, 0,
     { from: toPb(now), to: toPb(now + 3 * DAY) });
 
   let eveDay = null, todayDue = false;

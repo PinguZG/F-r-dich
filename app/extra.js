@@ -92,8 +92,8 @@
   cdBox.type = 'button';
   cdBox.hidden = true;
   cdBox.innerHTML = '<span class="cd-ico">💗</span><div><small>Nächstes Treffen</small><div class="cd-num"></div><em></em></div>';
-  cdBox.dataset.go = 's-meetings';
-  const cdEmpty = el('button', 'cd-empty', '+ Nächstes Treffen eintragen');
+  cdBox.dataset.go = 's-plans';
+  const cdEmpty = el('button', 'cd-empty', '+ Nächstes Date planen');
   cdEmpty.type = 'button';
   cdEmpty.hidden = true;
   cdEmpty.addEventListener('click', () => openMeetingForm());
@@ -121,20 +121,18 @@
   document.body.insertBefore(overlay, lightbox);
 
   // ======================================================================
-  // Treffen
+  // Nächstes Date (Countdown auf Start) – seit 26.10.2026 aus date_events (dates.js), Treffen sind dort aufgegangen
   // ======================================================================
   let meetings = [];
-  let editMeeting = null;
 
   async function loadMeetings() {
-    meetings = await pb.collection('meetings').getFullList({
-      filter: pb.filter('when >= {:t}', { t: new Date(startOfTodayMs()) }), sort: 'when', expand: 'author',
+    meetings = await pb.collection('date_events').getFullList({
+      filter: pb.filter('when >= {:t}', { t: new Date(startOfTodayMs()) }), sort: 'when', fields: 'id,title,emoji,when,place,note',
     });
     renderCountdown();
-    renderMeetings();
   }
 
-  // nächstes Treffen: heute (auch wenn schon vorbei) oder in der Zukunft
+  // nächstes Date: heute (auch wenn schon vorbei) oder in der Zukunft
   function nextMeeting() {
     const now = Date.now(), today = berlin(now).key;
     return meetings.find(m => { const ms = pbMs(m.when); return ms > now || berlin(ms).key === today; });
@@ -145,83 +143,17 @@
     const m = nextMeeting();
     cdBox.hidden = !m;
     cdEmpty.hidden = !!m;
-    if (!m) { $('planMeetInfo').textContent = 'Noch keins geplant 💭'; return; }
+    if (!m) return;
     const ms = pbMs(m.when);
     const c = countdownText(ms);
     cdBox.classList.toggle('today', !!c.today);
+    cdBox.querySelector('.cd-ico').textContent = m.emoji || '💗';
+    cdBox.querySelector('small').textContent = m.title && m.title !== 'Treffen' ? 'Nächstes Date: ' + m.title : 'Nächstes Treffen';
     cdBox.querySelector('.cd-num').textContent = c.txt;
-    cdBox.querySelector('em').textContent = fmtWhen(ms) + (m.note ? ' · ' + m.note : '');
-    $('planMeetInfo').textContent = c.txt;
+    cdBox.querySelector('em').textContent = fmtWhen(ms) + (m.place ? ' · ' + m.place : m.note ? ' · ' + m.note : '');
   }
-
-  function renderMeetings() {
-    const list = $('meetList');
-    const now = Date.now();
-    const shown = meetings.filter(m => { const ms = pbMs(m.when); return ms > now || berlin(ms).key === berlin(now).key; });
-    list.replaceChildren(...shown.map(m => {
-      const ms = pbMs(m.when);
-      const d = el('div', 'date');
-      d.innerHTML = '<span class="ico">💗</span><div><b></b><span class="d"></span><em></em></div>';
-      d.querySelector('b').textContent = fmtWhen(ms);
-      d.querySelector('.d').textContent = m.note || '';
-      d.querySelector('em').textContent = countdownText(ms).txt + (m.expand?.author?.name ? ' · von ' + m.expand.author.name : '');
-      const acts = el('div', 'acts');
-      acts.append(
-        delBtn('Treffen ändern', () => openMeetingForm(m), '✎'),
-        delBtn('Treffen löschen', async () => {
-          if (!confirm(`Treffen am ${fmtWhen(ms)} löschen?`)) return;
-          try { await pb.collection('meetings').delete(m.id); await loadMeetings(); }
-          catch (err) { alert('Löschen fehlgeschlagen: ' + errText(err)); }
-        }),
-      );
-      d.append(acts);
-      return d;
-    }));
-    if (!shown.length) list.append(el('div', 'empty-note', 'Noch kein Treffen geplant 💭'));
-  }
-
-  function openMeetingForm(m) {
-    editMeeting = m || null;
-    $('meetErr').textContent = '';
-    $('meetFormTitle').textContent = m ? 'Treffen ändern' : 'Nächstes Treffen';
-    if (m) {
-      $('meetWhen').value = toBerlinInput(pbMs(m.when));
-      $('meetNote').value = m.note || '';
-    } else {
-      $('meetForm').reset();
-      const b = berlin(Date.now() + DAY);
-      $('meetWhen').value = `${b.key}T18:00`;
-    }
-    $('meetForm').hidden = false;
-    UI.show('s-meetings');
-    setTimeout(() => $('meetForm').scrollIntoView({ behavior: 'smooth', block: 'center' }), 350);
-  }
-
-  $('meetToggle').addEventListener('click', () => {
-    if ($('meetForm').hidden || editMeeting) openMeetingForm();
-    else $('meetForm').hidden = true;
-  });
-
-  $('meetForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    $('meetErr').textContent = '';
-    const v = $('meetWhen').value;
-    if (!v) return;
-    const ms = fromBerlinInput(v);
-    if (!editMeeting && ms <= Date.now()) { $('meetErr').textContent = 'Bitte einen Zeitpunkt in der Zukunft wählen'; return; }
-    const data = { when: new Date(ms).toISOString(), note: $('meetNote').value.trim() };
-    try {
-      if (editMeeting) await pb.collection('meetings').update(editMeeting.id, data);
-      else await pb.collection('meetings').create({ ...data, author: myId() });
-      editMeeting = null;
-      $('meetForm').reset();
-      $('meetForm').hidden = true;
-      await loadMeetings();
-      burstAt($('meetList'), 14);
-    } catch (err) {
-      $('meetErr').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
-    }
-  });
+  function openMeetingForm() { window.WIR_DATES?.openForm(); }
+  window.WIR_COUNTDOWN = { reload: () => loadMeetings().catch(console.error) };
 
   // ======================================================================
   // Öffne wenn – Umschalter "Für mich" / "Schreiben"
@@ -484,7 +416,7 @@
       seedCats(),
       loadInbox(),
     ].map(p => p.catch(console.error)));
-    pb.collection('meetings').subscribe('*', debounce(loadMeetings)).catch(console.error);
+    pb.collection('date_events').subscribe('*', debounce(loadMeetings)).catch(console.error);
     if (location.hash === '#open-when') {
       history.replaceState(null, '', location.pathname);
       UI.show('s-openwhen');
@@ -505,7 +437,7 @@
     else if (e.detail === 's-openwhen') setSeg('in');
   });
 
-  setInterval(() => { if (started && !document.hidden) { renderCountdown(); if ($('s-meetings').classList.contains('active')) renderMeetings(); } }, 30000);
+  setInterval(() => { if (started && !document.hidden) renderCountdown(); }, 30000);
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden || !started || !pb.authStore.isValid) return;

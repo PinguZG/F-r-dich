@@ -1084,3 +1084,18 @@ Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht me
   - Bottom-Sheets bleiben über der Bildschirmtastatur (`--kb` aus `visualViewport`), Eingabefelder scrollen beim Antippen in die Mitte.
 
 **Zurück:** `git checkout vor-fixes -- app shared pocketbase/pb_hooks && git commit -m "Zurück vor Fixes" && git push` (Backup `/home/pingu/backups/vor-fixes-2026-10-26`).
+
+# Dates neu 26.10.2026 (Wir `wir-v27`)
+
+| Wo | Was |
+|---|---|
+| **Dates (Reiter unten)** | Umschalter **Geplant** (nächstes zuerst, „in 3 Tagen“/„Morgen“/„Heute“) · **Vergangen** (neuestes zuerst) · **Zeitstrahl** (eure Geschichte von neu nach alt mit Monatsmarken, „Heute 💗“-Marke und Bildstreifen). „➕ Date planen“ öffnet das Formular: Art (Date, Treffen, Essen, Film, Ausflug, Reise, Clay Date, Sonstiges), Emoji, Titel, Zeitpunkt, Ort, Notiz. |
+| **Ein Date** | Antippen → Detail mit Art, Zeit, Ort, Notiz. Bilder: direkt hochladen oder Fotos aus Erinnerungen verknüpfen („🔗 Aus Erinnerungen“, in Erinnerungen bleiben sie). Im Großbild: Verknüpfung lösen bzw. Bild löschen. ✎ = bearbeiten/löschen. |
+| **Automatisch vergangen** | 3 Std. nach Beginn rutscht ein Date zu „Vergangen“. Hat es noch keine Bilder, steht „📷 Bilder hinzufügen?“ an der Karte und im Detail. |
+| **Clay Date** | ist jetzt ein normales Date (Art „clay“). Im Detail gibt es die Unterbereiche Ideen und Unsere Figuren (dieselben Seiten und Daten wie vorher). |
+| **Mehr** | Unsere Daten (Jahrestage), Clay-Ideen. Darunter wie gehabt die Listen & Überraschungen (Reiter). |
+| **Start** | Der Countdown zeigt das nächste Date (Titel, Ort). „+ Nächstes Date planen“ öffnet das Formular. Die Pushs „Morgen/Heute sehen wir uns 💗“ kommen jetzt für alle Dates. |
+
+**Datenbank (nur additiv):** `pb_migrations/1793700000_wir_dates.js` legt `date_events` an (Bilder geschützt wie bei Erinnerungen) und kopiert jedes Treffen als Date der Art „treffen“ (`legacy = meeting:<id>`, nie doppelt) sowie das Clay Date (`legacy = clay`). `meetings`, `clay_photos`, `dates`, `tabs` bleiben unverändert stehen. Der Treffen-Cron (`wir_lib.js` → `meetingTick`) liest jetzt `date_events`.
+
+**Zurück:** `git checkout vor-dates -- app pocketbase/pb_hooks && git commit -m "Zurück vor Dates" && git push` (Backup `/home/pingu/backups/vor-dates-2026-10-26`). `date_events` bleibt dann ungenutzt stehen, die alten Treffen sind unverändert.
