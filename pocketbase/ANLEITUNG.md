@@ -828,17 +828,16 @@ Coins verdient man weiter in Wir (Liebe, Briefe, Fotos); der Tagesbonus kommt be
 
 Kein eigener Webserver: Tailscale liefert die Ordner aus dem Repo direkt aus. Ein `git pull` (Auto-Deploy) aktualisiert die App sofort; das Auto-Deploy prüft außerdem bei jedem Update, dass die Freigabe noch steht, und legt sie sonst neu an.
 
-Einmalig (sudo, vom Nutzer):
+Einmalig (sudo, vom Nutzer – Ordner freigeben darf bei Tailscale nur root; die Freigabe bleibt gespeichert, auch nach Neustarts):
 ```bash
-sudo tailscale set --operator=pingu
+sudo tailscale set --operator=pingu      # erlaubt pingu u. a. "tailscale funnel status"
+sudo tailscale funnel --bg --https=8443 /home/pingu/F-r-dich/spiele
+sudo tailscale funnel --bg --https=8443 --set-path=/shared /home/pingu/F-r-dich/shared
 ```
-Danach als pingu:
 ```bash
-tailscale funnel --bg --https=8443 /home/pingu/F-r-dich/spiele
-tailscale funnel --bg --https=8443 --set-path=/shared /home/pingu/F-r-dich/shared
 tailscale funnel status        # zeigt :443 (Wir) und :8443 (Spiele, / und /shared)
 ```
-Abschalten: `tailscale funnel --https=8443 off`.
+Abschalten: `sudo tailscale funnel --https=8443 off`.
 
 ## Auf dem iPhone
 
@@ -864,9 +863,30 @@ git commit -m "Zurück zur Version vor der Spiele-App" && git push
 Auf dem Pi danach (das Auto-Deploy löscht keine Hook-Dateien):
 ```bash
 rm /home/pingu/pb/pb_hooks/wir_shared.pb.js && sudo systemctl restart pocketbase
-tailscale funnel --https=8443 off
+sudo tailscale funnel --https=8443 off
 ```
 Wir hat dann wieder Spiele, Coins und Casino (Stand 23.10., ohne Shop). Das Feld `push_subs.app` bleibt ungenutzt stehen. Kein `git reset --hard` + `push --force` (sonst bricht das Auto-Deploy ab). Wieder vor: `git revert --no-edit HEAD && git push`.
 
 **2. Nur falls Daten kaputt sind:** wie oben unter „Zurück zur alten Version → 2.“, aber mit dem Ordner
 `/home/pingu/backups/vor-spiele-app-2026-10-26/`. ⚠️ Alles nach dem 26.10.2026 19:54 geht dabei verloren.
+
+## Wir nach dem Umzug (Service Worker `wir-v20`)
+
+Erst nachdem die Spiele-App live lief, wurden aus Wir **Spiele, Coins-Chip, Coin-Sheet und Casino entfernt** (`app/games.*`, `mono-ui.js`, `coins.*`, `casino.*`, `activity.*`, `app/lib/` – liegen jetzt in `spiele/` bzw. `shared/`).
+Getestet lokal mit beiden Accounts: 30 UI-Prüfungen (alle Bereiche, Liebe live, Lightbox, Sheets, Einstellungen, Farbwelten, Konsole, Online-Punkt, alte Push-Ziele), keine Konsolenfehler.
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | 🏡 Start · 📸 Erinnerungen · 📅 Dates · 💌 Öffne wenn · 💞 **Wir zwei** (wieder als Reiter, statt 🎲 Spiele) |
+| **Start** | Kachel **„🎲 Spiele öffnen“** unten (öffnet https://wir.geep-flops.ts.net:8443). Steht „Du bist am Zug: Schach · Tic Tac Toe“ drin und leuchtet, wenn du dran bist. |
+| **Einstellungen** | unverändert; Farbwelt, Herzfarbe, Push und Konsole kommen jetzt aus `shared/` (dieselben Dateien wie in der Spiele-App) |
+| **Coins** | werden weiter in Wir verdient (Liebe, Briefe, Fotos, Tagesbonus beim Öffnen) – angezeigt nur noch in der Spiele-App |
+| **Alte Pushs** | Tippen auf eine alte Spiel-Benachrichtigung öffnet Wir auf Start. Spiel-Pushs ohne Spiele-Abo öffnen die Spiele-App. |
+
+Wir lädt `/shared/…` über die Route in `pb_hooks/wir_shared.pb.js`; `app/style.css` enthält nur noch Wir-eigene Styles, die Grundlage steht in `shared/base.css`.
+
+**Nur Wir zurück auf den Stand mit Spielen (Spiele-App bleibt):**
+```bash
+git checkout vor-spiele-app -- app && git commit -m "Wir wieder mit Spielen" && git push
+```
+(Wir braucht dafür keine `shared/`-Dateien.) Ganz zurück: siehe „Zurück auf vor-spiele-app“ oben.

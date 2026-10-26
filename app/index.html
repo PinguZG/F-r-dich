@@ -18,11 +18,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Wir">
 <meta name="theme-color" content="#fdeef5">
+<link rel="stylesheet" href="/shared/base.css">
+<link rel="stylesheet" href="/shared/activity.css">
 <link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/games.css">
-<link rel="stylesheet" href="/coins.css">
-<link rel="stylesheet" href="/casino.css">
-<link rel="stylesheet" href="/activity.css">
 </head>
 <body>
 
@@ -52,7 +50,6 @@
 <!-- ============ App-Rahmen: oben Avatar, unten Navigation ============ -->
 <header class="topbar">
   <button class="avatar sm" id="meBtn" data-go="s-settings" aria-label="Einstellungen"></button>
-  <button class="coin-chip" id="coinChip" type="button" aria-label="Heart Coins"><span class="coin" aria-hidden="true"></span><b id="coinBal">…</b></button>
   <h1 id="topTitle">Für dich 💌</h1>
   <span class="top-spacer"></span>
 </header>
@@ -62,12 +59,11 @@
   <button class="tab-btn" data-go="s-memories"><span class="tab-ico">📸</span><span class="tab-lbl">Erinnerungen</span></button>
   <button class="tab-btn" data-go="s-plans"><span class="tab-ico">📅</span><span class="tab-lbl">Dates</span></button>
   <button class="tab-btn" data-go="s-openwhen"><span class="tab-ico">💌<i class="nav-dot" id="navOwDot" hidden></i></span><span class="tab-lbl">Öffne wenn</span></button>
-  <button class="tab-btn" data-go="s-games"><span class="tab-ico">🎲<i class="nav-dot" id="navGameDot" hidden></i></span><span class="tab-lbl">Spiele</span></button>
+  <button class="tab-btn" data-go="s-wir"><span class="tab-ico">💞</span><span class="tab-lbl">Wir zwei</span></button>
 </nav>
 
 <!-- ============ Start ============ -->
 <section class="screen page" id="s-home" data-title="Für dich 💌">
-  <button class="turn-banner glass" id="homeTurns" type="button" hidden></button>
   <div class="together card glass">
     <div class="since" id="sinceText">Seit 10. April 2026</div>
     <div class="glow-ring">
@@ -86,7 +82,7 @@
       <div><b id="ts">0</b><small>Sek.</small></div>
     </div>
     <div class="couple">
-      <div class="person"><div class="avatar lg" id="avPartner"></div><span id="namePartner">…</span></div>
+      <div class="person"><div class="avatar lg js-partner-av" id="avPartner"></div><span id="namePartner">…</span></div>
       <span class="couple-heart">💗</span>
       <div class="person"><div class="avatar lg" id="avMe"></div><span id="nameMe">…</span></div>
     </div>
@@ -111,7 +107,7 @@
 
   <div id="homeMeet"></div>
 
-  <button class="opt wir-link" data-go="s-wir" type="button"><span class="ico">💞</span><span><b>Wir zwei</b><small>Anruf, Support, Nachrichten &amp; Verlauf</small></span><span class="chev">›</span></button>
+  <a class="opt spiele-link" id="spieleLink" href="/"><span class="ico">🎲</span><span><b>Spiele öffnen</b><small id="spieleInfo">Schach, Sudoku, Herzstadt, Casino &amp; Shop</small></span><span class="chev">›</span></a>
 </section>
 
 <!-- ============ Erinnerungen ============ -->
@@ -261,11 +257,10 @@
 </section>
 
 <!-- ============ Wir zwei ============ -->
-<section class="screen page sub" id="s-wir" data-tab="s-home" data-title="Wir zwei 💞">
-  <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Wir zwei 💞</h2></div>
+<section class="screen page" id="s-wir" data-title="Wir zwei 💞">
   <div class="partner card glass">
     <div class="couple small">
-      <div class="avatar md" id="avPartner2"></div>
+      <div class="avatar md js-partner-av" id="avPartner2"></div>
       <span class="couple-heart">💗</span>
       <div class="avatar md" id="avMe2"></div>
     </div>
@@ -283,206 +278,7 @@
   <div class="dates pings" id="pings"></div>
 </section>
 
-<!-- ============ Spiele ============ -->
-<section class="screen page" id="s-games" data-title="Spiele 🎲">
-  <article class="game-card glass" data-game="chess">
-    <div class="gc-head">
-      <span class="gc-ico" data-icon="chess"></span>
-      <div class="gc-text"><b>Schach</b><small id="gcChessStatus">…</small></div>
-      <button class="gc-play" data-go="s-chess" type="button" aria-label="Schach spielen">▶</button>
-    </div>
-    <div class="score-tiles" id="gcChessTiles"></div>
-  </article>
-  <article class="game-card glass" data-game="sudoku">
-    <div class="gc-head">
-      <span class="gc-ico" data-icon="sudoku"></span>
-      <div class="gc-text"><b>Sudoku</b><small id="gcSudokuStatus">…</small></div>
-      <button class="gc-play" data-go="s-sudoku" type="button" aria-label="Sudoku spielen">▶</button>
-    </div>
-    <div class="score-tiles" id="gcSudokuTiles"></div>
-  </article>
-  <article class="game-card glass" data-game="ttt">
-    <div class="gc-head">
-      <span class="gc-ico" data-icon="ttt"></span>
-      <div class="gc-text"><b>Tic Tac Toe</b><small id="gcTttStatus">…</small></div>
-      <button class="gc-play" data-go="s-ttt" type="button" aria-label="Tic Tac Toe spielen">▶</button>
-    </div>
-    <div class="score-tiles" id="gcTttTiles"></div>
-  </article>
-  <article class="game-card glass" data-game="mono">
-    <div class="gc-head">
-      <span class="gc-ico" data-icon="mono"></span>
-      <div class="gc-text"><b>Herzstadt</b><small id="gcMonoStatus">…</small></div>
-      <button class="gc-play" data-go="s-mono" type="button" aria-label="Herzstadt spielen">▶</button>
-    </div>
-    <div class="score-tiles" id="gcMonoTiles"></div>
-  </article>
-</section>
-
-<!-- Herzstadt (Immobilienspiel) -->
-<section class="screen page sub" id="s-mono" data-tab="s-games" data-title="Herzstadt">
-  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Herzstadt 🏙️</h2><button class="folder-btn" id="moRulesBtn" type="button" aria-label="Regeln">?</button></div>
-  <div id="moNone" hidden>
-    <div class="card glass mo-intro">
-      <div class="mo-intro-ico">🏙️</div>
-      <p>Kauft Straßen, baut Häuser und Hotels, kassiert Miete – wer zuerst pleite ist, verliert. Ihr würfelt abwechselnd, wann ihr wollt.</p>
-      <button class="mem-btn" id="moNewBtn" type="button">Neue Partie 💗</button>
-      <div class="mem-status" id="moNewMsg"></div>
-    </div>
-    <div class="dates game-hist" id="moHist"></div>
-  </div>
-  <div id="moGame" hidden>
-    <div class="mo-players" id="moPlayers"></div>
-    <div class="mo-board-wrap glass"><div class="mo-board" id="moBoard"></div></div>
-    <div class="mo-actions" id="moActions"></div>
-    <button class="nudge-btn" data-nudge="mono" type="button" hidden></button>
-    <div class="mem-status" id="moMsg"></div>
-    <div class="mo-trade glass" id="moTradeBox" hidden></div>
-    <div class="mo-tools">
-      <button class="pack-btn" id="moTradeBtn" type="button">🤝 Handeln</button>
-      <button class="pack-btn" id="moResignBtn" type="button">🏳️ Aufgeben</button>
-    </div>
-    <h3 class="list-head">Meine Grundstücke</h3>
-    <div class="mo-mine" id="moMine"></div>
-    <h3 class="list-head">Verlauf</h3>
-    <div class="mo-log glass" id="moLog"></div>
-  </div>
-</section>
-
-<!-- Schach -->
-<section class="screen page sub" id="s-chess" data-tab="s-games" data-title="Schach">
-  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Schach ♟️</h2></div>
-  <div class="ch-player" id="chTop"></div>
-  <div class="board-wrap glass"><div class="chess-board" id="chBoard"></div></div>
-  <div class="ch-player" id="chBottom"></div>
-  <div class="game-status" id="chStatus"></div>
-  <button class="nudge-btn" data-nudge="chess" type="button" hidden></button>
-  <div class="ch-offer glass" id="chOffer" hidden>
-    <b id="chOfferText">🤝 Remis-Angebot</b>
-    <div class="row" id="chOfferBtns">
-      <button class="pack-btn" id="chDrawDecline" type="button">Weiterspielen</button>
-      <button class="mem-btn" id="chDrawAccept" type="button">Annehmen 🤝</button>
-    </div>
-    <button class="link-btn" id="chDrawWithdraw" type="button" hidden>Angebot zurückziehen</button>
-  </div>
-  <div class="ch-actions" id="chActions">
-    <button class="pack-btn" id="chDrawBtn" type="button">🤝 Remis anbieten</button>
-    <button class="pack-btn" id="chResignBtn" type="button">🏳️ Aufgeben</button>
-  </div>
-  <div class="ch-new" id="chNew" hidden>
-    <button class="mem-btn" id="chNewBtn" type="button">♟️ Neue Partie</button>
-    <div class="row ch-color">
-      <button class="chip-btn" data-color="white" type="button">Ich will Weiß</button>
-      <button class="chip-btn" data-color="black" type="button">Ich will Schwarz</button>
-    </div>
-  </div>
-  <div class="mem-status" id="chMsg"></div>
-  <h3 class="list-head">Züge</h3>
-  <div class="ch-moves glass" id="chMoves"></div>
-  <h3 class="list-head">Unsere Bilanz</h3>
-  <div class="score-tiles" id="chTiles"></div>
-  <div class="dates game-hist" id="chHist"></div>
-</section>
-
-<!-- Sudoku -->
-<section class="screen page sub" id="s-sudoku" data-tab="s-games" data-title="Sudoku">
-  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Sudoku 🔢</h2></div>
-  <div class="sd-start" id="sdStart">
-    <p class="sd-intro">Jedes Rätsel wird neu gemischt und hat genau eine Lösung.</p>
-    <button class="opt sd-level" data-level="easy" type="button"><span class="ico">🌸</span><span><b>Leicht</b><small>10 Punkte + Zeitbonus</small></span></button>
-    <button class="opt sd-level" data-level="medium" type="button"><span class="ico">🌷</span><span><b>Mittel</b><small>25 Punkte + Zeitbonus</small></span></button>
-    <button class="opt sd-level" data-level="hard" type="button"><span class="ico">🌹</span><span><b>Schwer</b><small>50 Punkte + Zeitbonus</small></span></button>
-    <div class="mem-status" id="sdGenMsg"></div>
-  </div>
-  <div class="sd-game" id="sdGame" hidden>
-    <div class="sd-bar">
-      <span class="sd-chip" id="sdLevel">Mittel</span>
-      <span class="sd-chip" id="sdTime">⏱ 0:00</span>
-      <span class="sd-chip" id="sdMist">Fehler 0</span>
-    </div>
-    <div class="sd-grid glass" id="sdGrid"></div>
-    <div class="sd-tools">
-      <button class="sd-tool" id="sdUndo" type="button"><span>↶</span>Rückgängig</button>
-      <button class="sd-tool" id="sdErase" type="button"><span>⌫</span>Radierer</button>
-      <button class="sd-tool" id="sdNotes" type="button" aria-pressed="false"><span>✏️</span>Notizen</button>
-    </div>
-    <div class="sd-pad" id="sdPad"></div>
-    <label class="check sd-err"><input type="checkbox" class="switch" id="sdShowErr"><span>Fehler rot markieren</span></label>
-    <button class="link-btn sd-newlink" id="sdNewBtn" type="button">Neues Rätsel</button>
-  </div>
-  <h3 class="list-head">Rangliste</h3>
-  <div class="sd-rank" id="sdRank"></div>
-</section>
-
-<!-- Tic Tac Toe -->
-<section class="screen page sub" id="s-ttt" data-tab="s-games" data-title="Tic Tac Toe">
-  <div class="sub-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Tic Tac Toe ⭕</h2></div>
-  <div class="segmented" role="tablist">
-    <button class="seg on" data-tseg="ai" type="button" role="tab">🤖 Gegen KI</button>
-    <button class="seg" data-tseg="pvp" type="button" role="tab">💞 Gegeneinander</button>
-  </div>
-  <div id="tttAiPane">
-    <div class="level-chips" id="tttLevels">
-      <button class="chip-btn on" data-level="easy" type="button">Leicht</button>
-      <button class="chip-btn" data-level="medium" type="button">Mittel</button>
-      <button class="chip-btn" data-level="hard" type="button">Schwer</button>
-    </div>
-    <div class="score-tiles" id="tttAiTiles"></div>
-    <div class="game-status" id="tttAiStatus"></div>
-    <div class="ttt-board glass" id="tttAiBoard"></div>
-    <button class="mem-btn ttt-again" id="tttAiNew" type="button">Nochmal 💗</button>
-  </div>
-  <div id="tttPvpPane" hidden>
-    <div class="score-tiles" id="tttPvpTiles"></div>
-    <div class="game-status" id="tttPvpStatus"></div>
-    <button class="nudge-btn" data-nudge="ttt" type="button" hidden></button>
-    <div class="ttt-board glass" id="tttPvpBoard"></div>
-    <button class="mem-btn ttt-again" id="tttPvpNew" type="button" hidden>Neues Spiel 💗</button>
-    <button class="logout" id="tttPvpResign" type="button" hidden>🏳️ Aufgeben</button>
-    <div class="mem-status" id="tttMsg"></div>
-  </div>
-</section>
-
 <!-- ============ Einstellungen (über den Avatar) ============ -->
-<!-- Blackjack (casino.js) -->
-<section class="screen page sub" id="s-bj" data-tab="" data-title="Blackjack">
-  <div class="sub-head"><button class="back-btn" id="bjBack" type="button" aria-label="Zurück">←</button><h2>Blackjack 🃏</h2><span class="bj-bal" id="bjBal"></span></div>
-  <div class="bj-table" id="bjTable">
-    <div class="bj-zone">
-      <div class="bj-label">Dealer <span class="bj-score" id="bjDealerScore"></span></div>
-      <div class="bj-cards" id="bjDealer"></div>
-    </div>
-    <div class="bj-banner" id="bjBanner" hidden></div>
-    <div class="bj-hands" id="bjHands"></div>
-    <div class="bj-empty" id="bjEmpty">Setz deinen Einsatz 💗</div>
-  </div>
-
-  <div class="bj-controls" id="bjBetBox">
-    <div class="bj-bet"><small>EINSATZ</small><b id="bjBet">10</b><button class="link-btn" id="bjClear" type="button">zurücksetzen</button></div>
-    <div class="bj-chips" id="bjChips"></div>
-    <button class="mem-btn" id="bjDeal" type="button">Austeilen</button>
-  </div>
-  <div class="bj-controls bj-actions" id="bjActions" hidden>
-    <button class="bj-act" data-act="hit" type="button"><span>＋</span>Karte</button>
-    <button class="bj-act" data-act="stand" type="button"><span>✋</span>Stehen</button>
-    <button class="bj-act" data-act="double" type="button"><span>×2</span>Verdoppeln</button>
-    <button class="bj-act" data-act="split" type="button"><span>⇆</span>Teilen</button>
-  </div>
-  <div class="mem-status" id="bjMsg"></div>
-  <p class="bj-note" id="bjNote">Spielgeld – kein echtes Geld.</p>
-  <details class="coin-how bj-rules">
-    <summary>Regeln</summary>
-    <ul>
-      <li><span>🎯</span><span>Näher an 21 als der Dealer, ohne drüber zu kommen. Bildkarten zählen 10, das Ass 1 oder 11.</span></li>
-      <li><span>✨</span><span>Blackjack (Ass + 10er mit den ersten zwei Karten) zahlt 3:2. Gewinn zahlt 1:1, Gleichstand gibt den Einsatz zurück.</span></li>
-      <li><span>🂠</span><span>Der Dealer zieht bis 16 und bleibt ab 17 stehen (auch bei weicher 17). Hat er Blackjack, ist die Runde sofort vorbei.</span></li>
-      <li><span>×2</span><span>Verdoppeln: mit zwei Karten den Einsatz verdoppeln, du bekommst genau eine Karte.</span></li>
-      <li><span>⇆</span><span>Teilen: zwei gleichwertige Karten (z. B. 8 + 8 oder K + D) werden zwei Hände mit eigenem Einsatz. Einmal pro Runde, geteilte Asse bekommen je nur eine Karte.</span></li>
-      <li><span>🛡️</span><span>Einsatz 5–100 Coins. Pro Tag kannst du höchstens 300 Coins verlieren, dann ist bis morgen Pause.</span></li>
-    </ul>
-  </details>
-</section>
-
 <section class="screen page sub" id="s-settings" data-tab="" data-title="Einstellungen">
   <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einstellungen ⚙️</h2></div>
 
@@ -551,42 +347,6 @@
 </section>
 
 <!-- ============ Bottom-Sheets ============ -->
-<!-- ============ Heart Coins (coins.js) ============ -->
-<div class="sheet-wrap" id="coinSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet coin-sheet">
-    <div class="sheet-grip"></div>
-    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
-    <div class="coin-head">
-      <span class="coin big" aria-hidden="true"></span>
-      <div><b id="coinBalBig">…</b><small>Heart Coins</small></div>
-    </div>
-    <div class="segmented" role="tablist">
-      <button class="seg on" data-coin-tab="history" type="button">Verlauf</button>
-      <button class="seg" data-coin-tab="casino" type="button">Casino</button>
-    </div>
-
-    <div class="coin-pane" data-pane="history">
-      <div class="coin-today" id="coinToday"></div>
-      <details class="coin-how">
-        <summary>So sammelst du Heart Coins</summary>
-        <ul id="coinRules"></ul>
-      </details>
-      <div class="coin-ledger" id="coinLedger"></div>
-      <button class="link-btn" id="coinMore" type="button" hidden>Mehr anzeigen</button>
-    </div>
-
-    <div class="coin-pane" data-pane="casino" hidden>
-      <button class="casino-game glass" id="bjOpen" type="button">
-        <span class="cg-ico">🃏</span>
-        <span class="cg-text"><b>Blackjack</b><small>Schlag den Dealer – ohne über 21 zu kommen</small></span>
-        <span class="gc-play" aria-hidden="true">▶</span>
-      </button>
-      <p class="coin-intro">Roulette, Texas Hold’em und das Entenrennen kommen später.<br>Nur Spielgeld – kein echtes Geld.</p>
-    </div>
-  </div>
-</div>
-
 <div class="sheet-wrap" id="msgSheet" hidden>
   <div class="sheet-backdrop" data-close></div>
   <form class="sheet" id="msgForm">
@@ -639,74 +399,6 @@
   </div>
 </div>
 
-<div class="sheet-wrap" id="promoSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet">
-    <div class="sheet-grip"></div>
-    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
-    <h2 class="sheet-title">Umwandeln in …</h2>
-    <div class="promo-list" id="promoList"></div>
-  </div>
-</div>
-
-<div class="sheet-wrap" id="sdDoneSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet sd-done">
-    <div class="sheet-grip"></div>
-    <div class="sd-done-ico">🎉</div>
-    <h2 class="sheet-title">Gelöst!</h2>
-    <div class="sd-done-pts" id="sdDonePts">+0</div>
-    <p class="mem-note" id="sdDoneText"></p>
-    <button class="mem-btn" data-close type="button">Schön 💗</button>
-  </div>
-</div>
-
-<div class="sheet-wrap" id="moFieldSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet mo-field-sheet" id="moFieldBody"></div>
-</div>
-
-<div class="sheet-wrap" id="moTradeSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <form class="sheet" id="moTradeForm">
-    <div class="sheet-grip"></div>
-    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
-    <h2 class="sheet-title">Tauschangebot 🤝</h2>
-    <div class="mo-tr-cols">
-      <div><h3>Du gibst</h3><div class="mo-tr-list" id="moTrGive"></div>
-        <label class="mo-tr-cash">💶 <input class="mem-input" id="moTrGiveCash" type="number" min="0" inputmode="numeric" placeholder="0"> €</label>
-        <label class="check mo-tr-card" id="moTrGiveCardRow"><input type="checkbox" class="switch" id="moTrGiveCard"><span>🔓 Gefängnis-frei</span></label></div>
-      <div><h3 id="moTrGetHead">Du bekommst</h3><div class="mo-tr-list" id="moTrGet"></div>
-        <label class="mo-tr-cash">💶 <input class="mem-input" id="moTrGetCash" type="number" min="0" inputmode="numeric" placeholder="0"> €</label>
-        <label class="check mo-tr-card" id="moTrGetCardRow"><input type="checkbox" class="switch" id="moTrGetCard"><span>🔓 Gefängnis-frei</span></label></div>
-    </div>
-    <p class="mem-note">Grundstücke mit Häusern in ihrer Farbgruppe kann man nicht tauschen.</p>
-    <button class="mem-btn" type="submit">Angebot schicken 💌</button>
-    <div class="err" id="moTrErr"></div>
-  </form>
-</div>
-
-<div class="sheet-wrap" id="moRulesSheet" hidden>
-  <div class="sheet-backdrop" data-close></div>
-  <div class="sheet mo-rules">
-    <div class="sheet-grip"></div>
-    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
-    <h2 class="sheet-title">So geht Herzstadt 🏙️</h2>
-    <ul>
-      <li>Jede Person startet mit 1500 €. Über <b>Los</b> gibt es 200 €.</li>
-      <li>Landest du auf einem freien Grundstück, kannst du es <b>kaufen</b>. Sonst wird es <b>versteigert</b> – ihr bietet beide verdeckt, das höhere Gebot gewinnt.</li>
-      <li>Auf fremden Grundstücken zahlst du <b>Miete</b>. Gehört jemandem eine ganze Farbgruppe, ist die Miete doppelt.</li>
-      <li>Mit der ganzen Farbgruppe kannst du <b>Häuser</b> bauen (gleichmäßig, bis 4) und dann ein <b>Hotel</b>. Die Bank hat 32 Häuser und 12 Hotels.</li>
-      <li>Bahnhöfe: 25/50/100/200 € je nach Anzahl. Werke: 4× bzw. mit beiden 10× der Augenzahl.</li>
-      <li><b>Pasch</b> = nochmal würfeln. Drei Pasch hintereinander: ab ins Gefängnis.</li>
-      <li><b>Gefängnis</b>: 50 € zahlen, Karte nutzen oder auf einen Pasch hoffen (3 Versuche, danach 50 € zahlen).</li>
-      <li><b>Hypothek</b>: halber Kaufpreis sofort, keine Miete solange. Ablösen kostet 10 % mehr.</li>
-      <li>Reicht dein Geld nicht, verkaufe Häuser (halber Preis) oder nimm Hypotheken auf. Geht gar nichts mehr: aufgeben – die andere Person gewinnt.</li>
-      <li>Handeln geht jederzeit: Grundstücke, Geld und Gefängnis-frei-Karten.</li>
-    </ul>
-  </div>
-</div>
-
 <div class="lightbox" id="lightbox">
   <button class="lb-x" aria-label="Schließen" type="button">✕</button>
   <img id="lbImg" alt="">
@@ -714,134 +406,25 @@
   <div class="lb-actions" id="lbActions"></div>
 </div>
 
+<script src="/shared/ui.js"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = UI.wait;
 
-  /* Hintergrund-Herzen */
-  const bg = $('bgHearts');
-  for (let i = 0; i < 10; i++) {
-    const s = document.createElement('span');
-    s.textContent = ['💗','💕','🤍','💖'][i % 4];
-    s.style.left = Math.random() * 100 + '%';
-    s.style.fontSize = 12 + Math.random() * 14 + 'px';
-    s.style.animationDuration = 12 + Math.random() * 12 + 's';
-    s.style.animationDelay = -Math.random() * 22 + 's';
-    bg.appendChild(s);
-  }
-
-  // alte Bereichsnamen (z. B. aus Push-Nachrichten) -> neue Seiten
-  const ALIAS = { 's-final': 's-home', 's-write': 's-openwhen', 's-notify-extra': 's-settings' };
-  const resolve = id => ALIAS[id] || id;
-
-  function show(id){
-    id = resolve(id);
-    const target = $(id);
-    if (!target) return;
-    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s === target));
-    document.querySelectorAll('.sheet-wrap.open').forEach(w => sheet(w.id, false));
-    const inApp = target.classList.contains('page');
-    document.body.classList.toggle('in-app', inApp);
-    if (inApp) {
-      const tab = target.dataset.tab ?? id;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('on', b.dataset.go === tab));
-      // Unterseiten haben ihre eigene Überschrift mit Zurück-Knopf
-      $('topTitle').textContent = target.classList.contains('sub') ? '' : target.dataset.title || '';
-    }
-    document.dispatchEvent(new CustomEvent('wir:show', { detail: id }));
-  }
-
-  function burst(x, y, n = 18){
-    if (reduced()) n = Math.min(n, 4);
-    for (let i = 0; i < n; i++) {
-      const h = document.createElement('span');
-      h.className = 'burst';
-      h.textContent = ['❤️','💖','💕','✨'][i % 4];
-      h.style.left = x + 'px'; h.style.top = y + 'px';
-      const a = Math.random() * Math.PI * 2, d = 80 + Math.random() * 140;
-      h.style.setProperty('--x', Math.cos(a) * d + 'px');
-      h.style.setProperty('--y', Math.sin(a) * d + 'px');
-      h.style.setProperty('--r', (Math.random() * 360 - 180) + 'deg');
-      document.body.appendChild(h);
-      setTimeout(() => h.remove(), 1500);
-    }
-  }
-
-  function shake(el){
-    el.classList.add('shake');
-    setTimeout(() => el.classList.remove('shake'), 450);
-  }
-
-  // actions: [{ label, onClick }] – Knöpfe unter dem Bild
-  function lightbox(src, cap, actions = []){
-    $('lbImg').src = src; $('lbCap').textContent = cap || '';
-    $('lbActions').replaceChildren(...actions.map(a => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'pack-btn';
-      b.textContent = a.label;
-      b.addEventListener('click', e => { e.stopPropagation(); a.onClick(); });
-      return b;
-    }));
-    $('lightbox').classList.add('show');
-  }
-  const closeLightbox = () => $('lightbox').classList.remove('show');
-
-  // ---------- Bottom-Sheets ----------
-  function sheet(id, open = true){
-    const w = $(id);
-    if (open) {
-      w.hidden = false;
-      requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('open')));
-    } else {
-      w.classList.remove('open');
-      setTimeout(() => { if (!w.classList.contains('open')) w.hidden = true; }, 320);
-    }
-  }
-  document.addEventListener('click', e => {
-    const c = e.target.closest('[data-close]');
-    if (c) sheet(c.closest('.sheet-wrap').id, false);
+  // alte Bereichsnamen (z. B. aus Push-Nachrichten) -> neue Seiten; Spiele sind in die Spiele-App umgezogen
+  Object.assign(UI.alias, {
+    's-final': 's-home', 's-write': 's-openwhen', 's-notify-extra': 's-settings',
+    's-games': 's-home', 's-chess': 's-home', 's-sudoku': 's-home', 's-ttt': 's-home', 's-mono': 's-home', 's-bj': 's-home',
   });
 
-  // ---------- Zeit in Europe/Berlin ----------
-  const DAY = 86400000;
-  const bFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
-  // Berliner Uhrzeit als "UTC-Zahl" (zum Rechnen mit Kalendertagen)
-  function berlinWall(ms){
-    const p = Object.fromEntries(bFmt.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
-    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
-  }
-  // Zeitpunkt von 00:00 Uhr (Berlin) des Tages von ms
-  function berlinMidnight(ms = Date.now()){
-    const w = berlinWall(ms), mid = w - (w % DAY);
-    let real = mid - (berlinWall(mid) - mid);
-    real = mid - (berlinWall(real) - real);
-    return real;
-  }
-
-  // Bild verkleinern (längste Seite max px) -> JPEG-Blob
-  function shrink(file, max = 2048, quality = 0.85){
-    return new Promise((res, rej) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        const s = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.width * s);
-        c.height = Math.round(img.height * s);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        c.toBlob(b => b ? res(b) : rej(new Error('Bild konnte nicht umgewandelt werden')), 'image/jpeg', quality);
-      };
-      img.onerror = () => rej(new Error('Bild konnte nicht gelesen werden'));
-      img.src = url;
-    });
-  }
-
-  // für app.js / extra.js / home.js
-  window.UI = { show, resolve, burst, wait, shake, lightbox, closeLightbox, sheet, berlinWall, berlinMidnight, shrink, reduced, DAY };
+  // Adresse der Spiele-App (eigene Home-Bildschirm-App unter :8443; lokal :8444)
+  const live = location.hostname.endsWith('.ts.net');
+  window.WIR_APP = {
+    name: 'wir', title: 'Wir',
+    spieleUrl: live ? 'https://' + location.hostname + ':8443/' : location.protocol + '//' + location.hostname + ':8444/',
+  };
+  $('spieleLink').href = window.WIR_APP.spieleUrl;
 
   /* ---------- Geschenk ---------- */
   let giftOpening = false;
@@ -855,15 +438,15 @@
     const r = $('gift').getBoundingClientRect();
     $('gift').classList.remove('wiggle');
     $('gift').classList.add('boom');
-    burst(r.left + r.width / 2, r.top + r.height / 2, 26);
+    UI.burst(r.left + r.width / 2, r.top + r.height / 2, 26);
     await wait(650);
-    show('s-home');
+    UI.show('s-home');
     $('s-home').scrollTop = 0;
   });
 
   /* Einpacken: zurück zum Geschenk */
   $('packBtn').addEventListener('click', async () => {
-    show('s-gift');
+    UI.show('s-gift');
     await wait(300);
     $('barFill').style.transition = 'none';
     $('barFill').style.width = '0';
@@ -878,15 +461,6 @@
   // Clay-Bilder liegen in img/clay/<name>.jpg und img/clay/<name>_thumb.jpg
   const CLAY = ['Pinguin', 'Dino', 'Hase', 'Shiba', 'Frosch', 'Biene', 'Axolotl', 'Panda', 'Katze', 'Oktopus', 'Avocado', 'Erdbeere'];
 
-  /* ---------- Navigation ---------- */
-  document.addEventListener('click', e => {
-    const b = e.target.closest('[data-go]');
-    if (!b) return;
-    const id = resolve(b.dataset.go);
-    show(id); if ($(id)) $(id).scrollTop = 0;
-  });
-  $('lightbox').addEventListener('click', closeLightbox);
-
   /* Clay Date */
   CLAY.forEach(name => {
     const f = '/img/clay/' + name.toLowerCase();
@@ -896,21 +470,18 @@
     b.innerHTML = '<img alt=""><span></span>';
     b.querySelector('img').src = f + '_thumb.jpg';
     b.querySelector('span').textContent = name;
-    b.addEventListener('click', () => lightbox(f + '.jpg', name));
+    b.addEventListener('click', () => UI.lightbox(f + '.jpg', name));
     $('clay').appendChild(b);
   });
 })();
 </script>
-<script src="/lib/pocketbase.umd.js"></script>
+<script src="/shared/pocketbase.umd.js"></script>
 <script src="/app.js"></script>
+<script src="/shared/look.js"></script>
+<script src="/shared/push.js"></script>
 <script src="/extra.js"></script>
 <script src="/home.js"></script>
-<script src="/lib/chess.js"></script>
-<script src="/games.js"></script>
-<script src="/lib/mono.js"></script>
-<script src="/mono-ui.js"></script>
-<script src="/coins.js"></script>
-<script src="/casino.js"></script>
-<script src="/activity.js"></script>
+<script src="/shared/activity.js"></script>
+<script src="/shared/update.js"></script>
 </body>
 </html>

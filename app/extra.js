@@ -1,7 +1,7 @@
-// Treffen-Countdown, "Öffne wenn …" (Lesen + Schreiben im Briefpapier-Sheet), Benachrichtigungs-Schalter,
-// Update-Hinweis. Läuft neben app.js und nutzt dessen PocketBase-Verbindung.
+// Treffen-Countdown, "Öffne wenn …" (Lesen + Schreiben im Briefpapier-Sheet).
+// Läuft neben app.js und nutzt dessen PocketBase-Verbindung (Update-Hinweis: /shared/update.js).
 (() => {
-  const pb = window.WIR_PB || new PocketBase(window.location.origin);
+  const pb = window.WIR_PB;
   pb.autoCancellation(false);
 
   const $ = id => document.getElementById(id);
@@ -86,7 +86,7 @@
   }
 
   // ======================================================================
-  // DOM: Treffen-Karte (Startseite), Brief-Overlay, Update-Hinweis
+  // DOM: Treffen-Karte (Startseite), Brief-Overlay
   // ======================================================================
   const cdBox = el('button', 'countdown glass');
   cdBox.type = 'button';
@@ -119,12 +119,6 @@
     <button class="mem-btn" id="owLetterClose" type="button">Schließen 💗</button>
   </div>`;
   document.body.insertBefore(overlay, lightbox);
-
-  const updateBar = el('button', 'update-bar', '✨ Neue Version – tippen zum Aktualisieren');
-  updateBar.type = 'button';
-  updateBar.addEventListener('click', reloadApp);
-  document.body.append(updateBar);
-  $('reloadBtn').addEventListener('click', reloadApp);
 
   // ======================================================================
   // Treffen
@@ -464,41 +458,6 @@
       $('owCatErr').textContent = 'Anlegen fehlgeschlagen: ' + errText(err);
     }
   });
-
-  // ======================================================================
-  // Update-Hinweis + neu laden
-  // ======================================================================
-  let swReg = null;
-  async function reloadApp() {
-    updateBar.textContent = '✨ Lädt …';
-    try {
-      if (swReg) {
-        await swReg.update().catch(() => {});
-        swReg.waiting?.postMessage({ type: 'SKIP_WAITING' });
-      }
-    } finally {
-      location.reload();
-    }
-  }
-
-  if ('serviceWorker' in navigator) {
-    const hadController = !!navigator.serviceWorker.controller;
-    const showUpdate = () => updateBar.classList.add('show');
-    navigator.serviceWorker.ready.then(reg => {
-      swReg = reg;
-      if (reg.waiting && hadController) showUpdate();
-      reg.addEventListener('updatefound', () => {
-        const w = reg.installing;
-        w?.addEventListener('statechange', () => {
-          if ((w.state === 'installed' || w.state === 'activated') && hadController) showUpdate();
-        });
-      });
-      // regelmäßig nach einer neuen Version schauen
-      setInterval(() => reg.update().catch(() => {}), 30 * 60000);
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
-    });
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdate(); });
-  }
 
   // ======================================================================
   // Start (sobald app.js eingeloggt hat)

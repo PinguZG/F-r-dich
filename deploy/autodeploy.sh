@@ -102,18 +102,13 @@ main() {
   done
 
   # Spiele-App (:8443): Tailscale liefert spiele/ und shared/ direkt aus dem Repo aus -> der Pull reicht.
-  # Hier nur prüfen, dass die Freigabe noch steht, und sie sonst wieder anlegen (geht als pingu dank tailscale --operator=pingu).
+  # Hier nur prüfen, dass die Freigabe noch steht (Ordner freigeben darf nur root, siehe ANLEITUNG.md).
   if echo "$changed" | grep -qE '^(spiele|shared)/'; then
     log "Spiele-App aktualisiert (spiele/, shared/)"
   fi
   if command -v tailscale >/dev/null 2>&1 && [ -d "$REPO/spiele" ]; then
     if ! tailscale funnel status 2>/dev/null | grep -q ':8443'; then
-      if tailscale funnel --bg --https=8443 "$REPO/spiele" >/dev/null 2>&1 \
-        && tailscale funnel --bg --https=8443 --set-path=/shared "$REPO/shared" >/dev/null 2>&1; then
-        log "Spiele-Freigabe :8443 neu angelegt"
-      else
-        log "FEHLER: Spiele-Freigabe :8443 fehlt und ließ sich nicht anlegen (tailscale set --operator=pingu?)"; rc=1
-      fi
+      log "FEHLER: Spiele-Freigabe :8443 fehlt – sudo tailscale funnel --bg --https=8443 $REPO/spiele (ANLEITUNG.md)"; rc=1
     fi
   fi
 
