@@ -1,9 +1,8 @@
-const CACHE = 'wir-v21'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v22'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
+  '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js',
   '/shared/fx.js', '/shared/fx.css'];
-// Spiele-App (eigene PWA): Spiel-Pushs, die mangels Spiele-Abo über Wir kommen (app: 'spiele'), öffnen sie
-const SPIELE = self.location.hostname.endsWith('.ts.net') ? 'https://' + self.location.hostname + ':8443/' : self.location.protocol + '//' + self.location.hostname + ':8444/';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
@@ -33,7 +32,7 @@ self.addEventListener('push', e => {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     tag: d.tag,
-    data: { go: d.go || 's-final', app: d.app || 'wir' },
+    data: { go: d.go || 's-final' },
   }));
 });
 
@@ -41,10 +40,6 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const go = e.notification.data?.go || 's-final';
-  if (e.notification.data?.app === 'spiele') {
-    e.waitUntil(self.clients.openWindow(SPIELE + '#go=' + encodeURIComponent(go)));
-    return;
-  }
   e.waitUntil((async () => {
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const win = wins.find(c => new URL(c.url).origin === self.location.origin);

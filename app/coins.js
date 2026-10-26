@@ -1,6 +1,5 @@
-// Heart Coins: Chip oben, Karte auf Start, Bottom-Sheet mit Verlauf. Kontostand und Buchungen macht nur der Server
-// (pb_hooks/wir_coins.pb.js), hier wird nur angezeigt. Verdient wird weiter in Wir (Liebe, Briefe, Fotos) und
-// mit dem Tagesbonus beim ersten Öffnen einer der beiden Apps. Nutzt die PocketBase-Verbindung von app.js.
+// Heart Coins: Chip oben rechts im Spielebereich, Bottom-Sheet mit Verlauf + Shop (shop.js). Kontostand und Buchungen macht
+// nur der Server (pb_hooks/wir_coins.pb.js), hier wird nur angezeigt. Nutzt die PocketBase-Verbindung von app.js.
 (() => {
   const pb = window.WIR_PB;
   const $ = id => document.getElementById(id);
@@ -78,19 +77,37 @@
   // ======================================================================
   // Sheet: Verlauf
   // ======================================================================
-  function openSheet() {
+  // Bereiche: Verlauf / Shop (shop.js füllt #shopBox und hört auf 'wir:shop')
+  let tab = 'history';
+  function renderTabs() {
+    document.querySelectorAll('[data-coin-tab]').forEach(b => b.classList.toggle('on', b.dataset.coinTab === tab));
+    document.querySelectorAll('#coinSheet [data-pane]').forEach(p => { p.hidden = p.dataset.pane !== tab; });
+    if (tab === 'shop') document.dispatchEvent(new CustomEvent('wir:shop'));
+  }
+  function openSheet(t) {
+    if (typeof t === 'string') tab = t;
+    renderTabs();
     UI.sheet('coinSheet', true);
     loadMe().catch(console.error);
-    loadLedger(true).catch(console.error);
+    if (tab === 'history') loadLedger(true).catch(console.error);
   }
-  $('coinChip').addEventListener('click', openSheet);
-  document.querySelectorAll('[data-coins-open]').forEach(b => b.addEventListener('click', openSheet));
+  $('coinChip').addEventListener('click', () => openSheet());
+  document.querySelectorAll('[data-coin-tab]').forEach(b => b.addEventListener('click', () => {
+    tab = b.dataset.coinTab; renderTabs();
+    if (tab === 'history') loadLedger(true).catch(console.error);
+  }));
+
+  // Chip oben rechts nur im Spielebereich (Übersicht + alle Spiele)
+  document.addEventListener('wir:show', e => {
+    const p = $(e.detail);
+    $('coinChip').hidden = !(p && (e.detail === 's-games' || p.dataset.area === 'games'));
+  });
 
   const RULES = [
-    ['💗', 'Liebe senden (in Wir)', r => `+${r.love.amount} pro Tipp`],
-    ['💌', 'Öffne-wenn-Brief schreiben (in Wir)', r => `+${r.openwhen.amount} (ab ${r.openwhen.minLen} Zeichen, ${r.openwhen.max}× am Tag)`],
-    ['📸', 'Foto hochladen (in Wir)', r => `+${r.photo.amount} (${r.photo.max}× am Tag)`],
-    ['☀️', 'Eine der Apps am Tag zum ersten Mal öffnen', r => `+${r.daily.amount}`],
+    ['💗', 'Liebe senden', r => `+${r.love.amount} pro Tipp`],
+    ['💌', 'Öffne-wenn-Brief schreiben', r => `+${r.openwhen.amount} (ab ${r.openwhen.minLen} Zeichen, ${r.openwhen.max}× am Tag)`],
+    ['📸', 'Foto hochladen', r => `+${r.photo.amount} (${r.photo.max}× am Tag)`],
+    ['☀️', 'App am Tag zum ersten Mal öffnen', r => `+${r.daily.amount}`],
     ['✓', 'Geschenkten Gutschein erfüllen', r => `+${r.fulfill?.amount || 0}`],
   ];
 
@@ -155,7 +172,7 @@
   });
 
   // für casino.js + shop.js
-  window.WIR_COINS = { openSheet, setBalance, balance: () => balance, when, fmt };
+  window.WIR_COINS = { openSheet, setBalance, balance: () => balance, when, fmt, loadMe };
 
   document.addEventListener('wir:started', () => { if (!started) start(); });
 })();

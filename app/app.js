@@ -1034,23 +1034,6 @@
   }
   $('loveBtn').addEventListener('click', () => sendLove($('loveBtn')));
 
-  // ======================================================================
-  // Spiele (eigene App unter :8443) – Kachel auf Start mit „Du bist am Zug“, Tagesbonus
-  // Push-Benachrichtigungen: /shared/push.js (Abo mit app = "wir")
-  // ======================================================================
-  async function loadSpieleHint() {
-    const mine = pb.filter('status = "active" && turn = {:me}', { me: me() });
-    const [c, t] = await Promise.all([
-      pb.collection('chess_games').getList(1, 1, { filter: mine, fields: 'id' }),
-      pb.collection('ttt_games').getList(1, 1, { filter: mine + ' && mode = "pvp"', fields: 'id' }),
-    ]);
-    const games = [c.totalItems && 'Schach', t.totalItems && 'Tic Tac Toe'].filter(Boolean);
-    $('spieleInfo').textContent = games.length ? '🎲 Du bist am Zug: ' + games.join(' · ') : 'Schach, Sudoku, Herzstadt, Casino & Shop';
-    $('spieleLink').classList.toggle('hot', games.length > 0);
-  }
-  // Heart Coins sammelt man auch hier; den Tagesbonus gibt es beim ersten Öffnen einer der beiden Apps
-  const dailyBonus = () => pb.send('/api/coins/daily', { method: 'POST' });
-
   // ---------- aus einer Benachrichtigung heraus öffnen ----------
   async function goTo(target) {
     if (!target) return;
@@ -1060,6 +1043,7 @@
       if (tabs.some(t => t.id === id)) { openTab(id); return; }
       target = 's-plans';
     }
+    if (target.startsWith('shop')) { UI.show('s-games'); setTimeout(() => window.WIR_COINS?.openSheet('shop'), 300); return; }
     const orig = target;
     target = UI.resolve(target);
     if (!$(target)?.classList.contains('page')) target = 's-home';
@@ -1089,7 +1073,7 @@
   document.addEventListener('wir:show', e => {
     if (!started) return;
     if (e.detail === 's-wir') { pingStatus(''); loadPings().catch(console.error); loadLove().catch(console.error); }
-    if (e.detail === 's-home') { loadLove().catch(console.error); loadSpieleHint().catch(console.error); }
+    if (e.detail === 's-home') loadLove().catch(console.error);
   });
 
   // ======================================================================
@@ -1099,7 +1083,7 @@
     await seedDates().catch(console.error);
     await loadPartner().catch(console.error);
     await Promise.all([
-      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadLove(), loadSpieleHint(), dailyBonus(),
+      memories.load(), clayDone.load(), loadDates(), loadTabs(), loadPings(), loadLove(),
     ].map(p => p.catch(err => console.error(err))));
     started = true;
   }
@@ -1177,8 +1161,6 @@
     loadDates().catch(console.error);
     loadPings().catch(console.error);
     loadLove().catch(console.error);
-    loadSpieleHint().catch(console.error);
-    dailyBonus().catch(console.error);
     loadTabs().then(() => { if ($('s-tab').classList.contains('active')) return renderTab(); }).catch(console.error);
   });
   // neue gesperrte Reiter der anderen Person kommen nicht per Realtime -> ab und zu nachsehen

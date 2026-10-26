@@ -1,7 +1,7 @@
 // Sync-Knopf, Schütteln und Effekte für Wir und die Spiele-App (/shared/fx.js, Styles in /shared/fx.css).
 // - Herz-Regen per Canvas (pointer-events:none, höchstens MAX Herzen, läuft nur solange etwas zu sehen ist)
 // - Wackeln der ganzen App (Klasse auf <html>, Animation auf dem body), „You are in sync“
-// - Sync-Knopf in #syncSlot (falls vorhanden): Halten per Heartbeat an /api/sync/hold, der Server entscheidet den Sync
+// - Sync-Knopf #syncTop (oben neben dem Avatar): Halten per Heartbeat an /api/sync/hold, der Server entscheidet den Sync
 // - Schütteln: DeviceMotion nur bei sichtbarer App, Lebenszeichen ≤1×/s an /api/shake
 // - Realtime auf live_state (ein Datensatz pro Person): Halten/Schütteln/Sync der anderen Person
 // Braucht window.WIR_PB, window.UI und die Herzfarben aus /shared/look.js (window.WIR_HEARTS / 'wir:hearts').
@@ -170,23 +170,12 @@
   }
 
   // ======================================================================
-  // Sync-Knopf (nur wo die Seite ein #syncSlot hat)
+  // Sync-Knopf: kleiner Herz-Knopf oben links neben dem Avatar (#syncTop)
   // ======================================================================
-  const slot = $('syncSlot');
-  let btn = null, statusEl = null;
-  let holding = false, holdTimer = 0, holdBusy = false;
+  const btn = $('syncTop');
+  let holding = false, holdTimer = 0, partnerWas = false;
 
-  if (slot) {
-    slot.classList.add('sync-card', 'card', 'glass');
-    slot.innerHTML = `
-      <button class="sync-btn" type="button" aria-label="Sync-Knopf – gedrückt halten">
-        <svg viewBox="-50 -48 100 92" aria-hidden="true"><path d="M0 40 C-28 20 -46 4 -46 -17 C-46 -33 -35 -44 -21 -44 C-12 -44 -4 -39 0 -31 C4 -39 12 -44 21 -44 C35 -44 46 -33 46 -17 C46 4 28 20 0 40Z"/></svg>
-        <small>Gedrückt halten</small>
-      </button>
-      <div class="sync-status"></div>`;
-    btn = slot.querySelector('.sync-btn');
-    statusEl = slot.querySelector('.sync-status');
-
+  if (btn) {
     btn.addEventListener('contextmenu', e => e.preventDefault());
     btn.addEventListener('selectstart', e => e.preventDefault());
     btn.addEventListener('pointerdown', e => {
@@ -203,6 +192,16 @@
     btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stopHold(); });
   }
 
+  // kurzer Hinweis oben, wenn die andere Person anfängt zu halten (der Ring allein ist klein)
+  let hintBox = null, hintTimer = 0;
+  function hint(text) {
+    if (!hintBox) { hintBox = document.createElement('div'); hintBox.className = 'fx-hint glass'; document.body.append(hintBox); }
+    hintBox.textContent = text;
+    requestAnimationFrame(() => hintBox.classList.add('show'));
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => hintBox.classList.remove('show'), 2600);
+  }
+
   function renderSync() {
     if (!btn) return;
     const h = hearts();
@@ -211,10 +210,9 @@
     const theirs = Date.now() < partnerHoldUntil;
     btn.classList.toggle('holding', holding);
     btn.classList.toggle('partner', theirs);
-    statusEl.classList.toggle('hot', theirs);
-    statusEl.textContent = theirs && holding ? 'Ihr haltet beide … 💞'
-      : theirs ? `${partnerName} hält gerade – halt mit! 💞`
-      : holding ? `Warte auf ${partnerName} …` : `Haltet ihn zusammen gedrückt`;
+    btn.setAttribute('aria-label', theirs ? `${partnerName} hält gerade – halt mit!` : 'Sync-Knopf – gedrückt halten');
+    if (theirs && !partnerWas && !holding) hint(`💞 ${partnerName} hält den Sync-Knopf – halt mit!`);
+    partnerWas = theirs;
   }
 
   async function beatHold(down) {

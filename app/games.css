@@ -326,3 +326,41 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 .nudge-btn:active{transform:scale(.96)}
 .nudge-btn:disabled{opacity:.6;cursor:default;border-style:solid;border-color:var(--glass-border)}
 .mo-actions + .nudge-btn{margin-top:10px}
+
+/* ======================================================================
+   Spiele-Übersicht (drei Gruppen, große ruhige Karten mit Badge) + einheitlicher Spiel-Kopf
+   ====================================================================== */
+.g-group{margin:6px 2px 10px;font-size:15px;font-weight:700;color:var(--ink-soft);letter-spacing:.3px}
+.g-group:not(:first-child){margin-top:22px}
+.g-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.g-card{position:relative;display:grid;grid-template-columns:auto 1fr;align-content:start;column-gap:6px;row-gap:3px;min-height:148px;padding:14px 12px 14px 14px;border-radius:26px;
+  border:1px solid var(--glass-border);cursor:pointer;text-align:left;color:var(--ink);font:inherit;transition:transform .15s,box-shadow .2s}
+.g-card:active{transform:scale(.96)}
+.g-card .gc-ico{width:48px;height:48px;border-radius:17px;margin-bottom:8px}
+.g-card b,.g-card small{grid-column:1/-1}
+.g-card .gc-ico svg{width:34px;height:34px}
+.gc-emoji{font-size:28px}
+.g-card b{font-size:16.5px;line-height:1.2}
+.g-card small{font-size:12.5px;font-weight:600;color:var(--ink-soft);line-height:1.3;min-height:16px}
+.g-badge{grid-column:2;grid-row:1;justify-self:end;align-self:start;padding:4px 9px;border-radius:12px;font-style:normal;font-size:11px;font-weight:700;
+  letter-spacing:.3px;background:var(--chip);color:var(--ink-soft);white-space:nowrap}
+.g-badge:empty{display:none}
+.g-badge.hot{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink);box-shadow:0 4px 12px rgba(var(--shadow),.3)}
+.g-badge.run{background:var(--tile-them,var(--chip));color:var(--ink)}
+.g-badge.new{background:linear-gradient(135deg,#ffd45c,#f0a92a);color:#5a3800}
+.g-card.hot{box-shadow:0 0 0 2px var(--accent),0 10px 26px rgba(var(--shadow),.25)}
+.g-card.soon{opacity:.55;cursor:default}
+.g-card.soon:active{transform:none}
+.g-note{margin:18px 0 0;text-align:center;font-size:12px;font-weight:600;color:var(--ink-faint)}
+@media (max-width:360px){.g-grid{gap:9px}.g-card{min-height:136px;padding:12px 10px 12px 12px}.g-card .gc-ico{width:42px;height:42px}.g-badge{padding:3px 7px;font-size:10px}}
+
+.g-head{margin-bottom:12px}
+.g-head h2{flex:1;min-width:0;font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-menu-btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--glass-strong);color:var(--ink);font-size:22px;font-weight:700;line-height:1;
+  box-shadow:0 4px 14px rgba(var(--shadow),.18);cursor:pointer;flex-shrink:0}
+.g-menu-btn:active{transform:scale(.92)}
+.g-menu-list{display:flex;flex-direction:column;gap:10px}
+.g-menu-list .pack-btn{width:100%}
+.g-menu-list[hidden]{display:none}
+.g-rules{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;font-weight:600;line-height:1.4}
+.g-rules li{display:grid;grid-template-columns:26px 1fr;gap:8px}

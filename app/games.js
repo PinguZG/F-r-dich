@@ -48,6 +48,7 @@
 
   // Spielstand-Kacheln: [{ label, value, tone: 'me' | 'mid' | 'them' }]
   function tiles(box, items) {
+    if (!box) return;
     box.replaceChildren(...items.map(t => {
       const d = el('div', 'score-tile ' + (t.tone || 'mid'));
       d.append(el('b', '', String(t.value)), el('small', '', t.label));
@@ -89,6 +90,8 @@
     sudoku: '<svg viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="16" class="gi-soft"/><path class="gi-line" d="M38 18v64M62 18v64M18 38h64M18 62h64"/><text x="26" y="34" class="gi-txt">1</text><text x="50" y="58" class="gi-txt">5</text><text x="74" y="82" class="gi-txt">9</text></svg>',
     mono: '<svg viewBox="0 0 100 100"><path class="gi-fill" d="M18 50L50 22l32 28v32a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z"/><path class="gi-heart" d="M50 76c-9-6-15-11-15-18 0-5 4-8 8-8 3 0 5 2 7 4 2-2 4-4 7-4 4 0 8 3 8 8 0 7-6 12-15 18z"/><path class="gi-line" d="M64 30V18h9v20"/></svg>',
     ttt: '<svg viewBox="0 0 100 100"><path class="gi-line" d="M38 16v68M62 16v68M16 38h68M16 62h68"/><path class="gi-x" d="M20 20l12 12M32 20L20 32M68 68l12 12M80 68L68 80"/><circle class="gi-o" cx="50" cy="50" r="7"/><circle class="gi-o" cx="74" cy="26" r="7"/></svg>',
+    trail: '<svg viewBox="0 0 100 100"><path class="gi-line" d="M18 80V54h26V30h38"/><path class="gi-x" d="M82 70H58V46"/><circle class="gi-o" cx="82" cy="30" r="6"/></svg>',
+    poker: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" class="gi-soft"/><circle cx="50" cy="50" r="22" class="gi-line"/><path style="fill:var(--accent)" d="M50 62c-7-5-12-9-12-14 0-4 3-6 6-6 3 0 5 2 6 4 1-2 3-4 6-4 3 0 6 2 6 6 0 5-5 9-12 14z"/></svg>',
     cards: '<svg viewBox="0 0 100 100"><rect x="18" y="22" width="40" height="56" rx="8" class="gi-soft" transform="rotate(-12 38 50)"/><rect x="40" y="20" width="40" height="56" rx="8" class="gi-fill" transform="rotate(8 60 48)"/><path class="gi-heart" d="M61 60c-6-4-10-7-10-12 0-3 2-5 5-5 2 0 4 1 5 3 1-2 3-3 5-3 3 0 5 2 5 5 0 5-4 8-10 12z"/></svg>',
     chessai: '<svg viewBox="0 0 100 100"><g class="gi-fill">' + PIECE_SHAPES.k + BASE + '</g><circle class="gi-o" cx="76" cy="24" r="9"/></svg>',
   };
@@ -922,58 +925,43 @@
   });
 
   // ======================================================================
-  // Übersicht
+  // Übersicht: kurze Statuszeile + Badge pro Karte („Du bist dran“, „Läuft“)
   // ======================================================================
+  // Badge setzen: tone 'hot' = du bist dran, 'run' = läuft, '' = keins
+  function badge(id, text, tone) {
+    const b = $(id);
+    if (!b) return;
+    b.textContent = text || '';
+    b.className = 'g-badge' + (tone ? ' ' + tone : '');
+    b.hidden = !text;
+    b.closest('.g-card')?.classList.toggle('hot', tone === 'hot');
+  }
+  window.WIR_BADGE = badge; // mono-ui.js, casino.js
+
   function renderHub() {
     if (!started) return;
     // Schach
     let cs;
     if (cg?.status === 'active') {
       const zug = Math.floor((cg.moves?.length || 0) / 2) + 1;
-      if (cg.draw_offer && cg.draw_offer !== myId()) cs = `🤝 ${pname()} bietet Remis an`;
-      else cs = (cg.turn === myId() ? 'Du bist am Zug' : `${pname()} ist am Zug`) + ` · Zug ${zug}`;
-    } else cs = 'Neue Partie starten';
+      cs = cg.draw_offer && cg.draw_offer !== myId() ? `🤝 ${pname()} bietet Remis an` : `Zug ${zug}`;
+    } else cs = 'Gegeneinander';
     $('gcChessStatus').textContent = cs;
-    $('gcChessStatus').classList.toggle('hot', myChessTurn());
-    const t = chessTally();
-    tiles($('gcChessTiles'), [
-      { label: 'DU', value: t.won, tone: 'me' },
-      { label: 'REMIS', value: t.draw },
-      { label: pname().toUpperCase(), value: t.lost, tone: 'them' },
-    ]);
-
     // Sudoku
-    $('gcSudokuStatus').textContent = sd ? `Sudoku: ${LEVELS[sd.difficulty]}, ${fmtTime(sd.elapsed)} min` : 'Leicht · Mittel · Schwer';
-    const pts = id => sdScores.filter(s => s.user === id).reduce((a, s) => a + s.points, 0);
-    tiles($('gcSudokuTiles'), [
-      { label: 'DU', value: pts(myId()), tone: 'me' },
-      { label: 'GELÖST', value: sdScores.length },
-      { label: pname().toUpperCase(), value: partner() ? pts(partner().id) : 0, tone: 'them' },
-    ]);
-
+    $('gcSudokuStatus').textContent = sd ? `${LEVELS[sd.difficulty]} · ${fmtTime(sd.elapsed)} min` : 'Leicht · Mittel · Schwer';
+    badge('gbSudoku', sd ? 'Läuft' : '', sd ? 'run' : '');
     // Tic Tac Toe
     const g = pvpGame();
-    $('gcTttStatus').textContent = g?.status === 'active'
-      ? (g.turn === myId() ? 'Du bist am Zug' : `${pname()} ist am Zug`)
-      : 'Gegen KI oder gegeneinander';
-    $('gcTttStatus').classList.toggle('hot', myTttTurn());
-    const pvp = tttGames.filter(x => x.mode === 'pvp' && x.status !== 'active');
-    const won = pvp.filter(x => x.winner === myId()).length, lost = pvp.filter(x => x.winner && x.winner !== myId()).length;
-    tiles($('gcTttTiles'), [
-      { label: 'DU', value: won, tone: 'me' },
-      { label: 'UNENTSCHIEDEN', value: pvp.length - won - lost },
-      { label: pname().toUpperCase(), value: lost, tone: 'them' },
-    ]);
-
-    document.querySelector('[data-game="chess"] .gc-play').textContent = cg?.status === 'active' ? '▶' : '+';
+    $('gcTttStatus').textContent = g?.status === 'active' ? 'Gegeneinander' : 'KI oder gegeneinander';
     syncTurns();
   }
 
   // ======================================================================
-  // Wer ist dran? Punkt am Tab, App-Symbol, Hinweis auf Start, kurze Einblendung
+  // Wer ist dran? Punkt am Tab, App-Symbol, Hinweis auf Start, Badge, kurze Einblendung
   // ======================================================================
   const TURN_NAME = { chess: 'Schach', ttt: 'Tic Tac Toe', mono: 'Herzstadt' };
   const TURN_SCREEN = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono' };
+  const TURN_BADGE = { chess: 'gbChess', ttt: 'gbTtt', mono: 'gbMono' };
   const turns = {};       // k -> true, wenn ich gerade etwas tun muss
   const waitsOn = {};     // k -> true, wenn die andere Person dran ist (Erinnern möglich)
 
@@ -996,31 +984,22 @@
     renderTurns();
   }
 
-  const TURN_ICO = { chess: '♟️', ttt: '⭕', mono: '🏙️' };
-
   function renderTurns() {
     const mine = Object.keys(TURN_NAME).filter(k => turns[k]);
-    $('navDuoDot').hidden = !mine.length;
+    $('navGameDot').hidden = !mine.length;
     try {
       if (navigator.setAppBadge) mine.length ? navigator.setAppBadge(mine.length) : navigator.clearAppBadge();
     } catch (_) { /* nicht unterstützt */ }
-    renderTurnList();
+    for (const k of Object.keys(TURN_NAME)) badge(TURN_BADGE[k], turns[k] ? 'Du bist dran' : waitsOn[k] ? 'Läuft' : '', turns[k] ? 'hot' : waitsOn[k] ? 'run' : '');
+    const b = $('homeTurns');
+    if (b) {
+      b.hidden = !mine.length;
+      b.dataset.go = mine.length === 1 ? TURN_SCREEN[mine[0]] : 's-games';
+      b.replaceChildren(el('span', 'tb-ico', '🎲'), el('span', 'tb-text', 'Du bist am Zug: ' + mine.map(k => TURN_NAME[k]).join(' · ')), el('span', 'tb-go', '›'));
+    }
     document.querySelectorAll('[data-nudge]').forEach(renderNudge);
   }
 
-  // Startseite: wer ist in welchem Spiel dran?
-  function renderTurnList() {
-    const box = $('turnList');
-    if (!box) return;
-    box.replaceChildren(...Object.keys(TURN_NAME).map(k => {
-      const row = el('button', 'turn-row' + (turns[k] ? ' me' : waitsOn[k] ? ' them' : ''));
-      row.type = 'button';
-      row.dataset.go = TURN_SCREEN[k];
-      const who = turns[k] ? 'Du bist dran' : waitsOn[k] ? `${pname()} ist dran` : 'Keine Partie offen';
-      row.append(el('span', 'tr-ico', TURN_ICO[k]), el('b', '', TURN_NAME[k]), el('span', 'tr-who', who), el('span', 'tr-go', '›'));
-      return row;
-    }));
-  }
 
   let toastTimer = 0;
   function turnToast(k) {
@@ -1075,6 +1054,19 @@
     renderNudge(b);
   }));
 
+
+  // ======================================================================
+  // Menü ⋯ im Kopf jedes Spiels (Bottom-Sheet); nach einer Aktion schließt es sich
+  // ======================================================================
+  document.addEventListener('click', e => {
+    const m = e.target.closest('[data-menu]');
+    if (m) { UI.sheet(m.dataset.menu); return; }
+    const b = e.target.closest('.g-menu .sheet button');
+    if (b && !b.closest('[data-keep]') && !b.hasAttribute('data-close')) {
+      const w = b.closest('.sheet-wrap');
+      setTimeout(() => UI.sheet(w.id, false), 0);
+    }
+  });
   // ======================================================================
   // Start, Live-Updates
   // ======================================================================

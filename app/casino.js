@@ -222,21 +222,20 @@
   // ======================================================================
   // Navigation
   // ======================================================================
-  // Casino-Seite: heutiger Spielraum unter der Blackjack-Karte
+  // Spiele-Übersicht: Blackjack-Karte (laufende Runde, Tagespause)
   async function loadInfo() {
+    if (!pb.authStore.isValid) return;
     try {
       const res = await pb.send('/api/casino/bj', {});
-      const l = res.limits;
-      $('casinoInfo').textContent = l.lossLeft < l.min
-        ? 'Für heute ist Pause – morgen geht’s weiter 💗'
-        : `Heute noch bis zu ${fmt(l.lossLeft)} Coins Einsatz-Verlust möglich · Einsatz ${l.min}–${l.max}`;
-      $('casinoBjStatus').textContent = res.round?.phase === 'player' ? 'Deine Runde läuft noch – weiterspielen' : 'Schlag den Dealer – ohne über 21 zu kommen';
+      const l = res.limits, live = res.round?.phase === 'player';
+      $('gcBjStatus').textContent = l.lossLeft < l.min ? 'Pause bis morgen 💗' : `Einsatz ${l.min}–${l.max}`;
+      window.WIR_BADGE?.('gbBj', live ? 'Läuft' : '', live ? 'run' : '');
     } catch (_) { /* offline */ }
   }
 
   document.addEventListener('wir:show', e => {
     if (e.detail === 's-bj') { $('bjMsg').textContent = ''; load(); }
-    if (e.detail === 's-casino') loadInfo();
+    if (e.detail === 's-games') loadInfo();
   });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && $('s-bj').classList.contains('active') && !busy) load();

@@ -946,3 +946,26 @@ git commit -m "Zurück vor Sync-Knopf und Schütteln" && git push
 rm /home/pingu/pb/pb_hooks/wir_sync.pb.js /home/pingu/pb/pb_hooks/sync_lib.js && sudo systemctl restart pocketbase
 ```
 `live_state` bleibt ungenutzt stehen (oder im Admin-UI löschen, enthält nur Kurzzeit-Daten). Nur falls Daten kaputt sind: Backup wie unter „Zurück zur alten Version → 2.“ mit dem Ordner `vor-sync-schuetteln-2026-10-26`.
+
+---
+
+# Spiele zurück in Wir 26.10.2026 (Etappe 1, Wir `wir-v22`)
+
+Die separate Spiele-App (:8443) ist wieder in Wir aufgegangen. Vorwärts umgebaut, Sync-Knopf und Schütteln bleiben. Alle Daten sind unverändert.
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | 🏡 Start · 📸 Erinnerungen · 📅 Dates · 💌 Öffne wenn · 🎲 **Spiele** (wie vor der Trennung). „Wir zwei“ ist wieder eine Karte auf Start, darüber der Hinweis „Du bist am Zug: …“. |
+| **Kopf** | links Avatar (→ Einstellungen) und daneben das kleine **Sync-Herz**. Es pulst sanft, beim Halten wächst ein Ring in deiner Farbe, hält die andere Person, leuchtet der Rand in ihrer Farbe (+ kurzer Hinweis oben). Rechts im Spielebereich die **Coins** (Tippen → Verlauf + Shop). |
+| **Spiele** | Übersicht in drei Gruppen: **Zu zweit** (Schach, Tic Tac Toe, Herzstadt, Herzspur*, Poker*), **Denkspiele** (Sudoku, Solitär*, Schach gegen KI*), **Casino** (Blackjack, Poker gegen KI*). Große Karten mit Badge „Du bist dran“ / „Läuft“ (* = kommt in den nächsten Etappen). |
+| **In jedem Spiel** | gleicher Kopf: ← Zurück · Titel · ⋯ Menü (Remis/Aufgeben/Bilanz, Regeln, Handeln, Neues Rätsel, Fehler markieren …) |
+| **Pushs** | Alle Spiel-Pushs gehen wieder an Wir. Abos mit `app = "spiele"` bleiben in der DB, werden aber nicht mehr bedient. |
+| **Alte Spiele-App** | `spiele/` ist nur noch eine Weiterleitungsseite, ihr Service Worker entfernt sich selbst. Port 8443 wird danach abgeschaltet. |
+
+Der alte Gutschein-Shop ist raus (live gab es keine Gutscheine, die Collections bleiben). Der neue Shop kommt in Etappe 2.
+
+**Zurück (am PC):**
+```bash
+git checkout vor-spiele-zurueck -- app spiele shared push && git commit -m "Zurück vor Spiele-Rückumzug" && git push
+```
+Backup: `/home/pingu/backups/vor-spiele-zurueck-2026-10-26/` (21:23, „ok“).
