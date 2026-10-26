@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="/coins.css">
 <link rel="stylesheet" href="/casino.css">
 <link rel="stylesheet" href="/frames.css">
+<link rel="stylesheet" href="/layout.css">
 </head>
 <body>
 
@@ -75,6 +76,7 @@
 
 <!-- ============ Start ============ -->
 <section class="screen page" id="s-home" data-title="Für dich 💌">
+<div class="home-cols">
   <button class="turn-banner glass" id="homeTurns" type="button" hidden></button>
   <div class="together card glass">
     <div class="since" id="sinceText">Seit 10. April 2026</div>
@@ -131,6 +133,7 @@
 
   <button class="opt wir-link gr-home" data-go="s-grocery" type="button"><span class="ico">🛒</span><span><b>Einkaufsliste</b><small id="homeGroceryInfo">Was braucht ihr?</small></span><span class="chev">›</span></button>
   <button class="opt wir-link" data-go="s-wir" type="button"><span class="ico">💞</span><span><b>Wir zwei</b><small>Anruf, Support, Nachrichten &amp; Verlauf</small></span><span class="chev">›</span></button>
+</div>
 </section>
 
 <!-- ============ Erinnerungen ============ -->
@@ -659,19 +662,22 @@
 <!-- Einkaufsliste (grocery.js) -->
 <section class="screen page sub" id="s-grocery" data-tab="s-home" data-title="Einkaufsliste">
   <div class="sub-head g-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einkaufsliste</h2><span class="gr-count" id="grOpenCount"></span></div>
+  <div class="gr-cols"><div class="gr-col">
   <div class="gr-lists" id="grLists"></div>
   <div class="gr-tools" id="grListTools" hidden>
     <button class="link-btn" id="grRename" type="button">Umbenennen</button>
     <button class="link-btn" id="grDelete" type="button">Liste löschen</button>
   </div>
   <div class="gr-open" id="grOpen"></div>
-  <input class="mem-input gr-search" id="grSearch" type="search" placeholder="🔍 Was braucht ihr? (z. B. Milch)" autocomplete="off" enterkeyhint="done">
   <div id="grRecentWrap" hidden>
     <div class="gr-head-row"><h3 class="list-head">Zuletzt verwendet</h3><button class="link-btn" id="grClear" type="button">leeren</button></div>
     <div class="gr-grid" id="grRecent"></div>
   </div>
+  </div><div class="gr-col">
+  <input class="mem-input gr-search" id="grSearch" type="search" placeholder="🔍 Was braucht ihr? (z. B. Milch)" autocomplete="off" enterkeyhint="done">
   <h3 class="list-head">Alle Artikel</h3>
   <div id="grCatalog"></div>
+  </div></div>
 </section>
 
 <!-- Chat (chat.js) -->

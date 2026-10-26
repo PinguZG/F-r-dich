@@ -1143,3 +1143,17 @@ Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht me
 **Datenbank (nur additiv):** `pb_migrations/1794000000_wir_snake.js` legt `snake_games` an (lesen beide, schreiben nur der Server).
 
 **Zurück:** `git checkout vor-snake -- app pocketbase/pb_hooks push shared && git rm -q app/snake.js pocketbase/pb_hooks/wir_snake.pb.js pocketbase/pb_hooks/snake_lib.js && git commit -m "Zurück vor Snake" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_snake.pb.js,snake_lib.js} && sudo systemctl restart pocketbase`. DB-Sicherung: `/home/pingu/backups/vor-snake-2026-10-26 23:33`.
+
+# Tablet & PC 26.10.2026 (Wir `wir-v31`)
+
+Alles in `app/layout.css` (wird zuletzt geladen). Auf dem Handy ändert sich nichts.
+
+| Breite | Was |
+|---|---|
+| **Handy (< 768 px)** | wie bisher, Leiste unten |
+| **Tablet (ab 768 px)** | Seitenleiste links statt Leiste unten. Inhalte bis 640 px breit. Spiele-Übersicht 3 Spalten, Erinnerungen 3 Spalten. Einkaufsliste nebeneinander: links Liste + Zuletzt verwendet, rechts Suche + Katalog. |
+| **PC (ab 1100 px)** | breite Seitenleiste mit Beschriftung. Start in Spalten (bis 3). Spiele zentriert auf max. 560 px. **💬 oben rechts dockt den Chat rechts als Seitenpanel an** (bleibt beim Seitenwechsel offen, ✕ schließt, Zustand wird gemerkt). Tastatur: Enter sendet im Chat, Pfeile/WASD in Snake und Herzspur, Leertaste pausiert Snake. |
+
+Login und Push funktionieren im normalen Browser wie in der App (Push, wo der Browser ihn unterstützt: Chrome/Edge/Firefox, Safari ab macOS 13 / iPadOS 16.4 als Home-Bildschirm-App).
+
+**Zurück:** `git checkout vor-layout -- app && git rm -q app/layout.css && git commit -m "Zurück vor Layout" && git push` (keine DB-Änderung).

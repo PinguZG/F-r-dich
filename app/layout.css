@@ -1,0 +1,59 @@
+/* ======================================================================
+   Tablet + PC (zuletzt geladen). Handy bleibt wie es ist.
+   ab  768 px: Navigation als Seitenleiste links, breitere Inhalte, Einkaufsliste zweispaltig
+   ab 1100 px: breite Seitenleiste mit Beschriftung, Start mehrspaltig, Chat als Seitenpanel (💬 oben rechts),
+               Spiele zentriert in fester Größe
+   ====================================================================== */
+/* Start: auf dem Handy wirkt der Spalten-Container nicht */
+.home-cols{display:contents}
+
+@media (min-width:768px){
+  body{--side-w:92px;--nav-h:0px}
+  .tabbar{left:max(12px,env(safe-area-inset-left));right:auto;top:calc(var(--top-h) + 6px);bottom:max(14px,env(safe-area-inset-bottom));
+    width:var(--side-w);height:auto;max-width:none;margin:0;padding:12px 6px;border-radius:30px;
+    flex-direction:column;justify-content:flex-start;gap:6px;transform:translateX(-150%)}
+  body.in-app .tabbar,body.chat-open .tabbar{transform:none}
+  .tab-btn{flex:0 0 auto;width:100%;height:72px;border-radius:22px}
+  .tab-btn:hover{background:var(--chip)}
+  .tab-lbl{font-size:11px}
+  .page{padding-left:calc(var(--side-w) + max(28px,env(safe-area-inset-left)));padding-right:max(28px,env(safe-area-inset-right));padding-bottom:32px}
+  .page > *{max-width:640px}
+  .chat-page.page{padding-bottom:calc(14px + env(safe-area-inset-bottom) + var(--kb,0px))}
+  /* Spiele: zentriert, nicht riesig */
+  .page.sub[data-area="games"] > *{max-width:560px}
+  .g-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .photos{grid-template-columns:repeat(3,1fr)}
+  .shop-grid{grid-template-columns:repeat(3,1fr)}
+  /* Einkaufsliste: links die Liste, rechts Suche + Katalog */
+  #s-grocery > *{max-width:1080px}
+  .gr-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+  /* Mauszeiger */
+  button,[data-go],.gr-tile,.g-card{cursor:pointer}
+  .g-card:hover,.opt:hover,.gr-tile:hover{filter:brightness(1.04)}
+}
+
+@media (min-width:1100px){
+  body{--side-w:212px}
+  .tab-btn{flex-direction:row;justify-content:flex-start;gap:12px;height:56px;padding:0 12px;border-radius:20px}
+  .tab-btn.on{background:var(--chip)}
+  .tab-btn.on .tab-ico{transform:none}
+  .tab-lbl{font-size:15px;max-width:none}
+  .page > *{max-width:760px}
+  .g-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .photos{grid-template-columns:repeat(4,1fr)}
+  /* Start: Karten in Spalten (Mauerwerk) */
+  #s-home > .home-cols{display:block;max-width:1280px;columns:3 360px;column-gap:20px}
+  .home-cols > *{break-inside:avoid;margin:0 0 16px!important;width:100%}
+  .home-cols > .opt{display:flex}
+  .home-cols > #homeMeet:empty{display:none}
+  .gr-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+
+  /* Chat angedockt rechts (💬 schaltet um, Zustand bleibt gespeichert) */
+  body.chat-docked.in-app #s-chat{opacity:1;pointer-events:auto;transform:none;left:auto;width:400px;z-index:5;
+    padding:calc(var(--top-h) + 6px) 16px 16px;border-left:1px solid var(--glass-border);background:var(--glass);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+  body.chat-docked.in-app .page:not(#s-chat){padding-right:428px}
+  body.chat-docked #s-chat .back-btn{font-size:0}
+  body.chat-docked #s-chat .back-btn::before{content:'✕';font-size:18px}
+  body.chat-docked .chat-top{box-shadow:0 0 0 3px var(--accent)}
+}

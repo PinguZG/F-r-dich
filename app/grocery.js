@@ -71,7 +71,7 @@
     const open = entries.filter(e => !e.done);
     const box = $('grOpen');
     box.replaceChildren();
-    if (!open.length) box.append(el('div', 'empty-note', 'Die Liste ist leer – tippe unten auf etwas, das ihr braucht 🛒'));
+    if (!open.length) box.append(el('div', 'empty-note', 'Die Liste ist leer – tippe auf etwas, das ihr braucht 🛒'));
     for (const [k, name, emoji] of CATS) {
       const items = open.filter(e => (e.cat || 'sonst') === k);
       if (!items.length) continue;

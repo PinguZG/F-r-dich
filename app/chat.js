@@ -12,7 +12,13 @@
   const PAGE = 60;
   let msgs = [], started = false, token = '', replyTo = null, unread = 0, more = true, typingUntil = 0;
 
-  const isOpen = () => $('s-chat').classList.contains('active') && !document.hidden;
+  // PC (ab 1100 px): Chat kann rechts angedockt bleiben, während man woanders ist
+  const wide = matchMedia('(min-width: 1100px)');
+  let docked = false;
+  try { docked = localStorage.getItem('wir-chat-dock') === '1'; } catch (_) {}
+  const dockedNow = () => docked && wide.matches && document.body.classList.contains('in-app');
+  const visible = () => $('s-chat').classList.contains('active') || dockedNow();
+  const isOpen = () => visible() && !document.hidden;
   async function refreshToken() { try { token = await pb.files.getToken(); } catch (_) {} }
 
   async function load(older) {
@@ -191,16 +197,35 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden && started) (isOpen() ? load() : countUnread()).catch?.(() => {}); });
   document.addEventListener('wir:started', () => {
     started = true;
-    countUnread();
+    if (dockedNow() || (docked && wide.matches)) load().catch(console.error); else countUnread();
     pb.collection('chat_messages').subscribe('*', e => {
       const m = e.record;
       if (e.action === 'delete') msgs = msgs.filter(x => x.id !== m.id);
       else { const i = msgs.findIndex(x => x.id === m.id); if (i >= 0) msgs[i] = m; else if (e.action === 'create') msgs.push(m); }
       if (e.action === 'create' && m.from !== myId()) { $('chatTyping').hidden = true; typingUntil = 0; }
-      if ($('s-chat').classList.contains('active')) render();
+      if (visible()) render();
       countUnread();
     }).catch(console.error);
     pb.realtime.subscribe('chat-typing', d => { if (d?.from && d.from !== myId() && isOpen()) showTyping(); }).catch(() => {});
   });
-  window.WIR_CHAT = { open: () => UI.show('s-chat') };
+  function setDock(v) {
+    docked = v;
+    try { localStorage.setItem('wir-chat-dock', v ? '1' : '0'); } catch (_) {}
+    document.body.classList.toggle('chat-docked', v && wide.matches);
+    if (v && started) { load().then(() => { if (unread) markRead(); }).catch(console.error); setTimeout(() => $('chatList').scrollTop = 1e9, 50); }
+    if (!v && $('s-chat').classList.contains('active')) UI.show('s-home');
+  }
+  // Am PC schaltet 💬 (und „Chat“ auf Start) das Seitenpanel um, ✕ im Panel schließt es
+  document.addEventListener('click', e => {
+    if (!wide.matches) return;
+    const back = e.target.closest('#s-chat .back-btn');
+    if (back && docked) { e.stopImmediatePropagation(); e.preventDefault(); setDock(false); return; }
+    if (!e.target.closest('[data-go="s-chat"]')) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    setDock(!dockedNow());
+    if (docked) $('chatInput').focus();
+  }, true);
+  wide.addEventListener('change', () => document.body.classList.toggle('chat-docked', docked && wide.matches));
+  document.body.classList.toggle('chat-docked', docked && wide.matches);
+  window.WIR_CHAT = { open: () => wide.matches ? setDock(true) : UI.show('s-chat') };
 })();
