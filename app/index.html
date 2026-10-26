@@ -299,7 +299,7 @@
     <button class="g-card glass" data-go="s-ttt" data-game="ttt" type="button"><span class="gc-ico" data-icon="ttt"></span><b>Tic Tac Toe</b><small id="gcTttStatus"></small><i class="g-badge" id="gbTtt"></i></button>
     <button class="g-card glass" data-go="s-mono" data-game="mono" type="button"><span class="gc-ico" data-icon="mono"></span><b>Herzstadt</b><small id="gcMonoStatus"></small><i class="g-badge" id="gbMono"></i></button>
     <button class="g-card glass soon" data-game="trail" type="button" disabled><span class="gc-ico" data-icon="trail"></span><b>Herzspur</b><small>Lichtrennen live</small><i class="g-badge">Bald</i></button>
-    <button class="g-card glass soon" data-game="pokerduo" type="button" disabled><span class="gc-ico" data-icon="poker"></span><b>Poker</b><small>Heads-up zu zweit</small><i class="g-badge">Bald</i></button>
+    <button class="g-card glass" data-go="s-poker" data-poker-mode="duo" data-game="pokerduo" type="button"><span class="gc-ico" data-icon="poker"></span><b>Poker</b><small>Heads-up zu zweit</small><i class="g-badge new" id="gbPokerDuo">Neu</i></button>
   </div>
   <h3 class="g-group">🧩 Denkspiele</h3>
   <div class="g-grid">
@@ -310,7 +310,7 @@
   <h3 class="g-group">🎰 Casino</h3>
   <div class="g-grid">
     <button class="g-card glass" data-go="s-bj" data-game="bj" type="button"><span class="gc-ico gc-emoji">🃏</span><b>Blackjack</b><small id="gcBjStatus">Gegen den Dealer</small><i class="g-badge" id="gbBj"></i></button>
-    <button class="g-card glass soon" data-game="pokerai" type="button" disabled><span class="gc-ico gc-emoji">♠️</span><b>Poker</b><small>gegen 1–3 KI</small><i class="g-badge">Bald</i></button>
+    <button class="g-card glass" data-go="s-poker" data-poker-mode="ai" data-game="pokerai" type="button"><span class="gc-ico gc-emoji">♠️</span><b>Poker</b><small>gegen 1–3 KI</small><i class="g-badge new" id="gbPokerAi">Neu</i></button>
   </div>
   <p class="g-note">Nur Spielgeld – kein echtes Geld.</p>
 </section>
@@ -459,6 +459,68 @@
   <div class="mem-status" id="solMsg"></div>
   <h3 class="list-head">Rangliste</h3>
   <div class="coin-ledger" id="solRank"></div>
+</section>
+
+<!-- Poker (poker.js) -->
+<section class="screen page sub" id="s-poker" data-tab="s-games" data-title="Poker" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Poker</h2><button class="g-menu-btn" data-menu="menu-poker" type="button" aria-label="Menü">⋯</button></div>
+  <div class="segmented" role="tablist">
+    <button class="seg" data-pkseg="duo" type="button">💞 Zu zweit</button>
+    <button class="seg on" data-pkseg="ai" type="button">🤖 Gegen KI</button>
+  </div>
+  <div id="pkStart" class="card glass ca-start">
+    <div class="mo-intro-ico">♠️</div>
+    <p class="sd-intro">Texas Hold’em, nur Spielgeld. Du nimmst mit Coins Platz und bekommst Chips – beim Aufstehen werden sie zurückgetauscht.</p>
+    <div id="pkBots">
+      <h3>Gegner</h3>
+      <div class="level-chips">
+        <button class="chip-btn" data-bots="1" type="button">1 KI</button>
+        <button class="chip-btn" data-bots="2" type="button">2 KI</button>
+        <button class="chip-btn" data-bots="3" type="button">3 KI</button>
+      </div>
+      <p class="mem-note">Mimi 🐱 spielt vorsichtig, Bruno 🐻 ist ein Draufgänger, Foxi 🦊 blufft gern mal.</p>
+    </div>
+    <button class="mem-btn" id="pkNew" type="button">Platz nehmen</button>
+    <p class="mem-note" id="pkStartInfo"></p>
+  </div>
+  <div id="pkWait" class="card glass ca-start" hidden>
+    <div class="mo-intro-ico">💌</div>
+    <p id="pkWaitText"></p>
+    <button class="mem-btn" id="pkJoin" type="button" hidden>Platz nehmen 💗</button>
+  </div>
+  <div id="pkTable" hidden>
+    <div class="pk-opp" id="pkOpp"></div>
+    <div class="bj-table pk-felt">
+      <div class="pk-street" id="pkStreet"></div>
+      <div class="pk-board" id="pkBoard"></div>
+      <div class="pk-pot" id="pkPot"></div>
+      <div class="bj-banner" id="pkResult" hidden></div>
+    </div>
+    <div class="pk-mine">
+      <div class="pk-hole" id="pkHole"></div>
+      <div id="pkMe"></div>
+    </div>
+    <div class="pk-actions" id="pkActions" hidden>
+      <div class="pk-row">
+        <button class="pack-btn" id="pkFold" type="button">Passen</button>
+        <button class="pack-btn" id="pkCheck" type="button">Schieben</button>
+        <button class="mem-btn" id="pkCall" type="button">Mitgehen</button>
+      </div>
+      <div class="pk-raise" id="pkRaiseBox">
+        <input type="range" id="pkRaise" min="0" max="0" step="5">
+        <div class="pk-row">
+          <button class="chip-btn" data-pkquick="half" type="button">½ Pot</button>
+          <button class="chip-btn" data-pkquick="pot" type="button">Pot</button>
+          <button class="chip-btn" data-pkquick="all" type="button">All-in</button>
+        </div>
+        <button class="mem-btn" id="pkRaiseBtn" type="button">Erhöhen</button>
+      </div>
+    </div>
+    <div class="game-status" id="pkWaitTurn"></div>
+    <button class="mem-btn" id="pkNext" type="button" hidden>Nächste Hand</button>
+    <pre class="pk-log" id="pkLog"></pre>
+  </div>
+  <div class="mem-status" id="pkMsg"></div>
 </section>
 <!-- Tic Tac Toe -->
 <section class="screen page sub" id="s-ttt" data-tab="s-games" data-title="Tic Tac Toe" data-area="games">
@@ -678,6 +740,22 @@
     <div class="sd-done-pts" id="solDonePts">+0</div>
     <p class="mem-note" id="solDoneText"></p>
     <button class="mem-btn" data-close type="button">Schön 💗</button>
+  </div>
+</div>
+
+<div class="sheet-wrap g-menu" id="menu-poker" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Poker ♠️</h2>
+    <div class="g-menu-list"><button class="pack-btn" id="pkLeave" type="button" hidden>🚪 Aufstehen &amp; auszahlen</button></div>
+    <ul class="g-rules">
+      <li><span>🃏</span><span>Jede Person bekommt 2 Karten, dazu kommen 5 Gemeinschaftskarten. Das beste Blatt aus 5 Karten gewinnt den Pot.</span></li>
+      <li><span>🔁</span><span>Setzrunden vor dem Flop, nach dem Flop (3 Karten), Turn und River. Passen, Schieben, Mitgehen oder Erhöhen (Schieberegler).</span></li>
+      <li><span>🏆</span><span>Reihenfolge: Royal Flush, Straight Flush, Vierling, Full House, Flush, Straße, Drilling, Zwei Paare, Ein Paar, Höchste Karte.</span></li>
+      <li><span>🛡️</span><span>Nur Spielgeld. Platz nehmen kostet 50–200 Coins, zählt zum Casino-Tageslimit (300 Coins Verlust pro Tag).</span></li>
+    </ul>
   </div>
 </div>
 
@@ -944,6 +1022,7 @@
 <script src="/shop.js"></script>
 <script src="/chessai.js"></script>
 <script src="/solitaire.js"></script>
+<script src="/poker.js"></script>
 <script src="/shared/activity.js"></script>
 <script src="/shared/update.js"></script>
 </body>

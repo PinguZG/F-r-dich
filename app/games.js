@@ -979,9 +979,9 @@
   // ======================================================================
   // Wer ist dran? Punkt am Tab, App-Symbol, Hinweis auf Start, Badge, kurze Einblendung
   // ======================================================================
-  const TURN_NAME = { chess: 'Schach', ttt: 'Tic Tac Toe', mono: 'Herzstadt' };
-  const TURN_SCREEN = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono' };
-  const TURN_BADGE = { chess: 'gbChess', ttt: 'gbTtt', mono: 'gbMono' };
+  const TURN_NAME = { chess: 'Schach', ttt: 'Tic Tac Toe', mono: 'Herzstadt', poker: 'Poker' };
+  const TURN_SCREEN = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', poker: 's-poker' };
+  const TURN_BADGE = { chess: 'gbChess', ttt: 'gbTtt', mono: 'gbMono', poker: 'gbPokerDuo' };
   const turns = {};       // k -> true, wenn ich gerade etwas tun muss
   const waitsOn = {};     // k -> true, wenn die andere Person dran ist (Erinnern möglich)
 

@@ -1,7 +1,7 @@
-const CACHE = 'wir-v23'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v24'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
-  '/shop.js', '/chessai.js', '/solitaire.js', '/frames.css',
+  '/shop.js', '/chessai.js', '/solitaire.js', '/frames.css', '/poker.js',
   '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js',
   '/shared/fx.js', '/shared/fx.css'];
 

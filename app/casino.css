@@ -102,3 +102,43 @@
   .pcard{width:58px;height:84px;margin-left:-26px}
   .bj-chip{width:48px;height:48px;font-size:14px}
 }
+
+/* ======================================================================
+   Poker: Gegner oben, Filz mit Board + Pot, eigene Karten unten, Aktionen mit Schieberegler
+   ====================================================================== */
+.pk-opp{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:10px 0}
+.pk-seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:18px;background:var(--glass);border:1px solid var(--glass-border);
+  font-size:13px;transition:box-shadow .2s,opacity .2s}
+.pk-seat.turn{box-shadow:0 0 0 2px var(--accent),0 6px 18px rgba(var(--shadow),.3)}
+.pk-seat.folded,.pk-seat.out{opacity:.5}
+.pk-who{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.pk-who b{font-size:14px}
+.pk-who small{font-size:11px;font-weight:700;color:var(--ink-soft)}
+.pk-dealer{position:absolute;top:6px;right:8px;width:20px;height:20px;border-radius:50%;background:#fff;color:#333;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pk-chips{display:inline-flex;align-items:center;gap:3px;font-weight:700;font-variant-numeric:tabular-nums}
+.pk-chips .coin{width:15px;height:15px}
+.pk-cards{display:flex;gap:3px}
+.pk-cards .pcard,.pk-board .pcard,.pk-hole .pcard{animation:none}
+.pk-cards .pcard{width:30px;height:42px;border-radius:5px}
+.pk-cards .pcard .pc-corner b{font-size:11px}.pk-cards .pcard .pc-corner i{font-size:10px}.pk-cards .pcard .pc-suit{font-size:16px}
+.pk-bet{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--chip)}
+.pk-tag{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+.pk-felt{min-height:0;padding:16px 10px 14px;gap:10px;align-items:center}
+.pk-felt::before,.pk-felt::after{display:none}
+.pk-street{font-size:12px;font-weight:700;letter-spacing:.5px;color:rgba(255,240,210,.8);text-align:center}
+.pk-board{display:flex;justify-content:center;gap:5px;width:100%}
+.pk-board .pcard{width:calc((100% - 20px) / 5);max-width:56px;height:auto;aspect-ratio:5/7}
+.pcard.slot{background:rgba(255,255,255,.08);border:1.5px dashed rgba(255,230,170,.35);box-shadow:none}
+.pk-pot{text-align:center;font-weight:800;font-size:16px;color:#ffe9a8}
+.pk-mine{display:flex;align-items:center;gap:12px;margin-top:12px}
+.pk-hole{display:flex;gap:6px}
+.pk-hole .pcard{width:58px;height:82px}
+.pk-mine #pkMe{flex:1;min-width:0}
+.pk-actions{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.pk-row{display:flex;gap:8px;justify-content:center}
+.pk-row > *{flex:1}
+.pk-raise{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:18px;background:var(--glass);border:1px solid var(--glass-border)}
+.pk-raise input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+.pk-log{margin-top:12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:pre-wrap;text-align:center}
+#pkNext{margin-top:10px}
+.pk-board .pcard,.pk-hole .pcard,.pk-cards .pcard{margin-left:0}

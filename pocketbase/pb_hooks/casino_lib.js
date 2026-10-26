@@ -6,7 +6,7 @@ const coins = require(`${__hooks}/coins_lib.js`);
 const BJ = require(`${__hooks}/blackjack.js`);
 
 const LIMITS = { min: 5, max: 100, dailyLoss: 300 };
-const CASINO_REASONS = ['bj'];
+const CASINO_REASONS = ['bj', 'poker']; // Tageslimit gilt für alle Casino-Spiele
 
 function conflict(msg) { return new ApiError(409, msg || 'Die Runde hat sich inzwischen geändert.'); }
 

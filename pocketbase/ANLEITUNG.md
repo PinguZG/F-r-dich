@@ -1015,3 +1015,23 @@ Getestet lokal mit einer Kopie des Backups: 21 API-Prüfungen (Rechte, Doppelkä
 `pb_migrations/1793300000_wir_shop_neu.js`: `users.frame`, `sudoku_scores.hints`, neue Collections `shop_purchases`, `bombs`, `solitaire_games`, `chessai_games` (für Clients nur lesbar).
 
 **Zurück vor Etappe 2:** `git checkout ebb35b1~2 -- app push pocketbase/pb_hooks && git commit -m "Zurück vor Etappe 2" && git push`. Danach auf dem Pi die neuen Hooks entfernen: `rm /home/pingu/pb/pb_hooks/{wir_shop.pb.js,shop_lib.js,solo_lib.js} && sudo systemctl restart pocketbase`.
+
+# Etappe 3 (Wir `wir-v24`): Poker (Texas Hold’em, nur Spielgeld)
+
+Getestet: Engine mit 4.077 Zufallshänden (2–4 Spieler, zufällige und KI-Aktionen). Die Chips bleiben immer gleich, nichts wird negativ, die Handbewertung stimmt inklusive Kicker. Dazu 14 API-Prüfungen gegen eine Kopie des Backups (verdeckte Karten unsichtbar, nur eigene Karten, Versionsprüfung, Buy-in und Auszahlung stimmen) und ein Browser-Test.
+
+| Wo | Was |
+|---|---|
+| **Spiele → Zu zweit → Poker** | Heads-up gegen die andere Person, asynchron. Einladen → Push „♠️ Daniel lädt dich zum Poker ein“ → Platz nehmen. Danach „♠️ Poker: Du bist dran“ (zählt beim Spiele-Punkt und bei „Du bist am Zug“ mit). |
+| **Spiele → Casino → Poker** | solo gegen 1–3 KI: Mimi 🐱 (vorsichtig), Bruno 🐻 (Draufgänger), Foxi 🦊 (Fuchs, blufft öfter). Die KI schätzt ihre Gewinnchance per Monte-Carlo und entscheidet nach Pot-Odds und Stil. |
+| **Tisch** | Gegner oben (Chips, Einsatz, verdeckte Karten), Filz mit Board und Pot, eigene Karten unten. Passen / Schieben / Mitgehen, Erhöhen mit Schieberegler und ½ Pot / Pot / All-in. Nach jeder Hand zeigt ein Banner die Gewinnerhand („Ida gewinnt 120 mit Zwei Paaren“). Menü ⋯: Aufstehen & auszahlen, Regeln. |
+| **Coins** | Platz nehmen kostet 50–200 Coins (= Chips), Blinds 5/10. Beim Aufstehen oder Spielende werden die Chips 1:1 zurückgetauscht. Ein- und Auszahlung laufen über `coin_ledger` (Grund `poker`) und zählen zum **Casino-Tageslimit** (300 Coins Verlust pro Tag, gemeinsam mit Blackjack). |
+
+**Sicherheit:**
+- Mischen (sicherer Zufall), Austeilen, Setzrunden, Side-Pots, Bewertung und Auszahlung macht nur der Server: `pb_hooks/poker.js` (Regeln) und `poker_lib.js` (Tische/Coins), Routen in `wir_poker.pb.js`.
+- `poker_tables.state` (Stapel und alle Karten) ist versteckt. Gegnerkarten stehen erst beim Showdown in `pub`, die eigenen Karten gibt es nur über `GET /api/poker/{id}`.
+- Jede Aktion prüft die Versionsnummer, ein Doppeltipp gibt 409.
+
+**Datenbank (nur additiv):** `pb_migrations/1793400000_wir_poker.js` legt `poker_tables` an.
+
+**Zurück vor Etappe 3:** im Repo `app/poker.js` und die Poker-Karten entfernen, oder die Commits von Etappe 3 per `git revert` zurücknehmen. Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/{wir_poker.pb.js,poker_lib.js,poker.js} && sudo systemctl restart pocketbase`.
