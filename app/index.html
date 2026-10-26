@@ -326,11 +326,12 @@
     <button class="g-card glass" data-go="s-trail" data-game="trail" type="button"><span class="gc-ico" data-icon="trail"></span><b>Herzspur</b><small id="gcTrailStatus">Lichtrennen live</small><i class="g-badge new" id="gbTrail">Neu</i></button>
     <button class="g-card glass" data-go="s-poker" data-poker-mode="duo" data-game="pokerduo" type="button"><span class="gc-ico" data-icon="poker"></span><b>Poker</b><small>Heads-up zu zweit</small><i class="g-badge new" id="gbPokerDuo">Neu</i></button>
   </div>
-  <h3 class="g-group">🧩 Denkspiele</h3>
+  <h3 class="g-group">🧩 Solo &amp; Denkspiele</h3>
   <div class="g-grid">
     <button class="g-card glass" data-go="s-sudoku" data-game="sudoku" type="button"><span class="gc-ico" data-icon="sudoku"></span><b>Sudoku</b><small id="gcSudokuStatus"></small><i class="g-badge" id="gbSudoku"></i></button>
     <button class="g-card glass" data-go="s-solitaire" data-game="solitaire" type="button"><span class="gc-ico" data-icon="cards"></span><b>Solitär</b><small id="gcSolitaireStatus">Klondike</small><i class="g-badge new" id="gbSolitaire">Neu</i></button>
     <button class="g-card glass" data-go="s-chessai" data-game="chessai" type="button"><span class="gc-ico" data-icon="chessai"></span><b>Schach gegen KI</b><small id="gcChessaiStatus">5 Stufen</small><i class="g-badge new" id="gbChessai">Neu</i></button>
+    <button class="g-card glass" data-go="s-snake" data-game="snake" type="button"><span class="gc-ico gc-emoji">🐍</span><b>Snake</b><small id="gcSnakeStatus">Herzen sammeln</small><i class="g-badge new" id="gbSnake">Neu</i></button>
   </div>
   <h3 class="g-group">🎰 Casino</h3>
   <div class="g-grid">
@@ -484,6 +485,37 @@
   <div class="mem-status" id="solMsg"></div>
   <h3 class="list-head">Rangliste</h3>
   <div class="coin-ledger" id="solRank"></div>
+</section>
+
+<!-- Snake (snake.js) -->
+<section class="screen page sub" id="s-snake" data-tab="s-games" data-title="Snake" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Snake</h2><button class="g-menu-btn" data-menu="menu-snake" type="button" aria-label="Menü">⋯</button></div>
+  <div id="snStart" class="card glass ca-start">
+    <div class="mo-intro-ico">🐍</div>
+    <p class="sd-intro">Sammle Herzen 💗, ohne an die Wand oder in dich selbst zu fahren. Alle 5 Herzen ein Level – und schneller.</p>
+    <button class="mem-btn" id="snStartBtn" type="button">🐍 Los geht’s</button>
+  </div>
+  <div id="snGame" hidden>
+    <div class="sd-bar">
+      <span class="sd-chip" id="snScore">⭐ 0</span>
+      <span class="sd-chip" id="snLevel">Level 1</span>
+      <span class="sd-chip" id="snBest">🏆 0</span>
+      <button class="sd-chip sn-pause" id="snPauseBtn" type="button" aria-label="Pause">⏸</button>
+    </div>
+    <div class="sn-wrap">
+      <canvas class="sn-board" id="snBoard" aria-label="Spielfeld – wischen zum Lenken"></canvas>
+      <div class="sn-overlay" id="snOverlay" hidden><b id="snOverlayText">Pause</b><button class="mem-btn" id="snResume" type="button">Weiter ▶</button></div>
+    </div>
+    <div class="sn-pad" id="snPad">
+      <button data-dir="up" type="button" aria-label="Hoch">▲</button>
+      <button data-dir="left" type="button" aria-label="Links">◀</button>
+      <button data-dir="down" type="button" aria-label="Runter">▼</button>
+      <button data-dir="right" type="button" aria-label="Rechts">▶</button>
+    </div>
+  </div>
+  <div class="mem-status" id="snMsg"></div>
+  <h3 class="list-head">Rangliste</h3>
+  <div class="coin-ledger" id="snRank"></div>
 </section>
 
 <!-- Poker (poker.js) -->
@@ -887,6 +919,35 @@
   </div>
 </div>
 
+<div class="sheet-wrap g-menu" id="menu-snake" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Snake 🐍</h2>
+    <div class="g-menu-list"><button class="pack-btn" id="snNewBtn" type="button">🔄 Neue Runde</button></div>
+    <label class="check"><input type="checkbox" class="switch" id="snPadToggle"><span>Pfeiltasten anzeigen</span></label>
+    <ul class="g-rules">
+      <li><span>👆</span><span>Auf dem Feld in die Richtung wischen – oder Pfeiltasten. Am PC: Pfeile/WASD, Leertaste = Pause.</span></li>
+      <li><span>💗</span><span>Jedes Herz macht die Schlange länger und zählt 10 × Level Punkte. Alle 5 Herzen: nächstes Level, schneller.</span></li>
+      <li><span>⏸</span><span>Verlässt du das Spiel, pausiert es und bleibt gespeichert.</span></li>
+      <li><span>🪙</span><span>Coins pro Runde: ab 100 Punkten 3, ab 250 6, ab 500 10, ab 1000 15.</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="snDoneSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet sd-done">
+    <div class="sheet-grip"></div>
+    <div class="sd-done-ico">🐍</div>
+    <h2 class="sheet-title" id="snDoneTitle">Game over</h2>
+    <div class="sd-done-pts" id="snDonePts">0</div>
+    <p class="mem-note" id="snDoneText"></p>
+    <button class="mem-btn" data-close type="button">Schön 💗</button>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="solDoneSheet" hidden>
   <div class="sheet-backdrop" data-close></div>
   <div class="sheet sd-done">
@@ -1198,6 +1259,7 @@
 <script src="/shop.js"></script>
 <script src="/chessai.js"></script>
 <script src="/solitaire.js"></script>
+<script src="/snake.js"></script>
 <script src="/poker.js"></script>
 <script src="/herzspur.js"></script>
 <script src="/shared/activity.js"></script>

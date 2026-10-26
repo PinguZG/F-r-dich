@@ -1129,3 +1129,17 @@ Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht me
 **Datenbank (nur additiv):** `pb_migrations/1793900000_wir_chat.js` legt `moods`, `mood_flags`, `support_requests` und `chat_messages` an.
 
 **Zurück:** `git checkout vor-chat -- app pocketbase/pb_hooks push shared && git rm -q app/care.js app/chat.js pocketbase/pb_hooks/wir_chat.pb.js pocketbase/pb_hooks/chat_lib.js && git commit -m "Zurück vor Chat" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_chat.pb.js,chat_lib.js} && sudo systemctl restart pocketbase`. DB-Sicherung: `/home/pingu/backups/vor-chat-2026-10-26 23:25`.
+
+# Snake 26.10.2026 (Wir `wir-v30`)
+
+| Wo | Was |
+|---|---|
+| **Spiele → 🧩 Solo & Denkspiele → 🐍 Snake** | Herzen 💗 sammeln, nicht an die Wand oder in sich selbst fahren. Startet bei der ersten Eingabe. Alle 5 Herzen ein Level und schneller. Punkte: 10 × Level pro Herz. |
+| **Steuerung** | Wischen auf dem Feld, Pfeiltasten darunter (⋯-Menü: „Pfeiltasten anzeigen“ an/aus), am PC Pfeile/WASD, Leertaste/Enter = Pause/Weiter. |
+| **Pause** | Verlassen des Spiels oder der App pausiert und speichert die Runde (auch nach Neuladen). Im Hub steht dann „Pausiert“. |
+| **Coins** | Pro Runde ab 100 Punkten 3, ab 250 6, ab 500 10, ab 1000 15. Vergibt nur der Server, genau einmal pro Runde (Schlüssel `game:snake:<id>`), zählt zum Tageslimit der Spiele-Coins. Unplausible Ergebnisse (mehr als ~2 Herzen pro Sekunde) lehnt er ab. |
+| **Rangliste** | Rekord, Runden, bestes Level und gesammelte Herzen für beide. Bei einem neuen Rekord bekommt die andere Person einen Push. |
+
+**Datenbank (nur additiv):** `pb_migrations/1794000000_wir_snake.js` legt `snake_games` an (lesen beide, schreiben nur der Server).
+
+**Zurück:** `git checkout vor-snake -- app pocketbase/pb_hooks push shared && git rm -q app/snake.js pocketbase/pb_hooks/wir_snake.pb.js pocketbase/pb_hooks/snake_lib.js && git commit -m "Zurück vor Snake" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_snake.pb.js,snake_lib.js} && sudo systemctl restart pocketbase`. DB-Sicherung: `/home/pingu/backups/vor-snake-2026-10-26 23:33`.
