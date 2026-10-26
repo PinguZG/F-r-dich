@@ -347,15 +347,15 @@
   // ======================================================================
   // Rangliste (beide)
   // ======================================================================
-  let rank = [], users = [];
+  let ranking = [], users = [];
   async function loadRank() {
-    [rank, users] = await Promise.all([
+    [ranking, users] = await Promise.all([
       pb.collection('solitaire_games').getFullList({ filter: 'status = "won"', sort: '-created' }),
       pb.collection('users').getFullList({ fields: 'id,name' }),
     ]);
     const box = $('solRank');
     box.replaceChildren(...users.map(u => {
-      const mine = rank.filter(x => x.user === u.id);
+      const mine = ranking.filter(x => x.user === u.id);
       const best = d => { const l = mine.filter(x => x.draw === d); return l.length ? fmtTime(Math.min(...l.map(x => x.seconds))) : '–'; };
       const row = el('div', 'ledger-row');
       const t = el('div', 'lr-text');

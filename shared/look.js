@@ -47,6 +47,9 @@
       el.classList.remove('has');
     }
     el.textContent = initial(u);
+    // Profilrahmen aus dem Shop (users.frame)
+    for (const c of [...el.classList]) if (c.startsWith('fr-')) el.classList.remove(c);
+    if (u?.frame) el.classList.add('fr-' + u.frame);
     el.setAttribute('aria-label', (u?.name || '') + (label || ''));
   }
 

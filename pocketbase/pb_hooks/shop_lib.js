@@ -171,7 +171,7 @@ function buyBomb(app, uid, body) {
   if (kind === 'msg') {
     // Steuer- und unsichtbare Zeichen raus (Codepunkte statt RegEx, damit nichts Unsichtbares im Quelltext steht)
     const bad = c => c < 32 || (c >= 0x7f && c <= 0x9f) || (c >= 0x200b && c <= 0x200f) || (c >= 0x2028 && c <= 0x202e) || (c >= 0x2066 && c <= 0x2069);
-    text = Array.from(String(body.text || '')).map(ch => (bad(ch.codePointAt(0)) ? ' ' : ch)).join('').replace(/s+/g, ' ').trim();
+    text = Array.from(String(body.text || '')).map(ch => (bad(ch.codePointAt(0)) || ch.trim() === '' ? ' ' : ch)).join('').split(' ').filter(Boolean).join(' ');
     text = Array.from(text).slice(0, b.maxLen).join('');
     if (!text) throw new BadRequestError('Bitte einen Text eingeben');
   }
