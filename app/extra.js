@@ -243,17 +243,28 @@
     $('owInbox').replaceChildren(el('div', 'empty-note', 'Konnte nicht laden: ' + errText(err)));
   }
 
+  // sofort aus dem Zwischenspeicher zeigen, dann frisch laden
+  const owKey = () => 'wir-ow-cats-' + myId();
+  function cachedInbox() { try { return JSON.parse(localStorage.getItem(owKey()) || 'null'); } catch (_) { return null; } }
   async function loadInbox() {
+    const c0 = cachedInbox();
+    if (c0 && !$('owInbox').children.length) renderInbox(c0);
     const cats = await pb.send('/api/open-when/categories', {});
+    try { localStorage.setItem(owKey(), JSON.stringify(cats)); } catch (_) {}
+    renderInbox(cats);
+  }
+  function renderInbox(cats) {
     $('navOwDot').hidden = !cats.some(c => c.fresh);
     $('owInbox').replaceChildren(...cats.map(c => {
       const b = el('button', 'opt ow-letter-card');
       b.type = 'button';
       b.innerHTML = '<span class="ico">💌</span><span><b></b><small></small></span>';
       b.querySelector('b').textContent = 'Öffne wenn ' + c.title;
-      b.querySelector('small').textContent = c.fresh ? 'Ein neuer Brief wartet' : 'Tippen zum Öffnen';
+      const empty = c.count === 0;
+      b.classList.toggle('empty', empty);
+      b.querySelector('small').textContent = empty ? 'Noch kein Brief – bald 💭' : c.fresh ? 'Ein neuer Brief wartet' : 'Tippen zum Öffnen';
       if (c.fresh) b.querySelector('small').append(el('span', 'ow-dot'));
-      b.addEventListener('click', () => openLetter(c));
+      b.addEventListener('click', () => { if (empty) { UI.shake(b); return; } openLetter(c); });
       return b;
     }));
     if (!cats.length) $('owInbox').append(el('div', 'empty-note', 'Hier ist noch nichts für dich – bald 💭'));

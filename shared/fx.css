@@ -27,21 +27,32 @@ html.fx-wobble body{animation:fxWobble .32s ease-in-out infinite}
 /* ---------- Sync-Knopf oben neben dem Avatar ---------- */
 /* Ringe liegen INNERHALB des Knopfs (nichts überlappt den Avatar): eigener Ring wächst beim Halten vom Herz
    bis an den Rand, der Ring der anderen Person leuchtet als Rand in ihrer Herzfarbe. */
-.sync-top{position:relative;flex-shrink:0;width:42px;height:42px;border-radius:50%;border:none;padding:0;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;background:var(--glass-strong);
-  box-shadow:0 4px 14px rgba(var(--shadow),.2),0 0 0 3px var(--glass-border);
+.sync-top{position:relative;flex-shrink:0;width:48px;height:48px;border-radius:50%;border:none;padding:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),transparent 55%),linear-gradient(145deg,var(--sync-me,#ff5fa2),color-mix(in srgb,var(--sync-me,#ff5fa2) 70%,#000));
+  box-shadow:0 0 0 3px #fff,0 6px 18px color-mix(in srgb,var(--sync-me,#ff5fa2) 55%,transparent);
+  animation:syncGlow 2.6s ease-in-out infinite;
   touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
-  transition:transform .2s ease,box-shadow .3s ease}
-.sync-top svg{position:relative;z-index:1;width:22px;height:20px;overflow:visible;pointer-events:none;animation:fxPulse 2.4s ease-in-out infinite}
-.sync-top path{fill:var(--sync-me,#ff5fa2)}
+  transition:transform .2s ease}
+.sync-top svg{position:relative;z-index:1;width:24px;height:22px;overflow:visible;pointer-events:none;animation:fxPulse 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.sync-top path{fill:#fff}
+@keyframes syncGlow{0%,100%{box-shadow:0 0 0 3px #fff,0 6px 18px color-mix(in srgb,var(--sync-me,#ff5fa2) 45%,transparent)}
+  50%{box-shadow:0 0 0 3px #fff,0 0 22px 4px color-mix(in srgb,var(--sync-me,#ff5fa2) 70%,transparent)}}
 .sync-top::before,.sync-top::after{content:'';position:absolute;border-radius:50%;pointer-events:none}
-.sync-top::before{inset:3px;border:3px solid var(--sync-me,#ff5fa2);opacity:0;transform:scale(.45);
-  transition:transform 1s cubic-bezier(.2,.8,.3,1),opacity .2s ease}
-.sync-top::after{inset:0;box-shadow:0 0 0 3px var(--sync-partner,#3b9eff),0 0 14px 2px var(--sync-partner,#3b9eff);opacity:0;transition:opacity .25s ease}
-.sync-top.holding{transform:scale(.94)}
+/* eigener Ring wächst beim Halten von innen bis an den Rand */
+.sync-top::before{inset:4px;border:3px solid #fff;opacity:0;transform:scale(.4);transition:transform 1s cubic-bezier(.2,.8,.3,1),opacity .2s ease}
+/* Ring der anderen Person: leuchtender Rand in ihrer Herzfarbe */
+.sync-top::after{inset:-1px;box-shadow:0 0 0 4px var(--sync-partner,#3b9eff),0 0 16px 4px var(--sync-partner,#3b9eff);opacity:0;transition:opacity .25s ease}
+.sync-top.holding{transform:scale(.93)}
 .sync-top.holding::before{opacity:1;transform:scale(1)}
 .sync-top.holding svg{animation-duration:.8s}
 .sync-top.partner::after{opacity:1;animation:fxGlow 1.2s ease-in-out infinite}
+/* Hinweis beim ersten Mal */
+.sync-tip{position:fixed;z-index:66;left:max(16px,env(safe-area-inset-left));top:calc(var(--top-h,58px) + 4px);max-width:240px;padding:10px 14px;border-radius:16px;
+  font-size:13.5px;font-weight:700;line-height:1.3;color:var(--ink);opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;pointer-events:auto;cursor:pointer}
+.sync-tip.show{opacity:1;transform:none}
+.sync-tip::before{content:'';position:absolute;top:-7px;left:66px;width:14px;height:14px;background:inherit;transform:rotate(45deg);border-radius:3px}
 @keyframes fxPulse{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.07)}}
 @keyframes fxGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
 .fx-hint{position:fixed;left:50%;top:calc(var(--top-h,58px) + 6px);z-index:65;transform:translate(-50%,-20px);opacity:0;pointer-events:none;

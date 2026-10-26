@@ -42,12 +42,13 @@ routerAdd('GET', '/api/open-when/categories', (e) => {
   const out = [];
   for (const c of cats) {
     const msgs = e.app.findRecordsByFilter('open_when_messages', 'category = {:c} && recipient = {:me}', '', 1000, 0, { c: c.id, me });
-    if (!msgs.length) continue;
+    // seit 26.10.2026 auch leere Kategorien (Anzeige „noch kein Brief“)
     out.push({
       id: c.id,
       title: c.getString('title'),
       order: c.getFloat('order'),
       fresh: msgs.some(m => !m.getString('opened_at')),
+      count: msgs.length,
     });
   }
   return e.json(200, out);

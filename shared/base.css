@@ -112,7 +112,7 @@ button{font-family:inherit;color:inherit}
 .topbar h1{flex:1;text-align:center;font-size:18px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-spacer{width:44px;flex-shrink:0}
 /* Kopf: links Avatar + Sync-Herz, rechts gleich breit (z. B. Coins im Spielebereich) -> Titel bleibt mittig */
-.top-left,.top-right{flex:0 0 92px;display:flex;align-items:center;gap:8px;min-width:0}
+.top-left,.top-right{flex:0 0 98px;display:flex;align-items:center;gap:8px;min-width:0}
 .top-right{justify-content:flex-end}
 .topbar h1{min-width:0}
 @media (max-width:360px){.topbar{gap:8px;padding-left:12px;padding-right:12px}.topbar h1{font-size:16px}}
@@ -323,3 +323,8 @@ textarea.mem-input{resize:none;line-height:1.45}
 
 .sheet-x{position:absolute;top:10px;right:12px;width:40px;height:40px;border-radius:50%;border:none;background:var(--chip);color:inherit;font-size:16px;cursor:pointer;opacity:.85}
 .set-card .mem-status:empty{display:none}
+
+/* ---------- Feinschliff 26.10.2026: schmale Handys, Tastatur ---------- */
+@media (max-width:400px){.tab-lbl{font-size:9.8px;letter-spacing:-.2px}}
+/* Bottom-Sheets über der Bildschirmtastatur halten (--kb setzt ui.js aus visualViewport) */
+.sheet{bottom:var(--kb,0px);max-height:calc(88vh - var(--kb,0px))}

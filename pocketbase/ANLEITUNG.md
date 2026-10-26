@@ -1066,3 +1066,21 @@ tailscale funnel status        # nur noch https://wir.geep-flops.ts.net (443 -> 
 Alte Push-Abos mit `app = "spiele"` bleiben in `push_subs`, werden aber nicht mehr bedient. Auf den iPhones das Spiele-Symbol vom Home-Bildschirm löschen.
 
 **Zurück zur separaten Spiele-App:** siehe oben „Eigene Spiele-App 26.10.2026“ (Tag `vor-spiele-zurueck`).
+
+---
+
+# Fixes 26.10.2026 (Wir `wir-v26`)
+
+- **Blackjack hing:** Seit dem Rückumzug fehlte im Blackjack-Kopf das Guthaben-Element (`#bjBal`), `casino.js` stürzte beim Zeichnen ab, und Austeilen/Aktionen reagierten nicht. Behoben (das Guthaben steht oben rechts im Kopf).
+  - Die Migration `1793600000_wir_bj_reset.js` beendet einmalig alle nicht abgeschlossenen Runden. Offene Einsätze erstattet sie mit eigenem Ledger-Eintrag „🃏 Blackjack: Runde abgebrochen – Einsatz erstattet“ (Schlüssel `bj:<runde>:refund`). Gelöscht wird nichts.
+  - Live gab es beim Backup keine offene Runde.
+- **Profilrahmen:** 6 von 9 Rahmen hatten kein sichtbares Design, weil eine allgemeine Regel spezifischer war und ihren Hintergrund überschrieb. Behoben (`:where()` in `frames.css`). Alle Rahmen sind in jeder Farbwelt geprüft, die Shop-Vorschau ist die echte Darstellung. Gekaufte Rahmen bleiben gekauft.
+- **Bomben:** kein Tageslimit und keine Nachtruhe mehr. Sie gehen sofort raus, so oft man will (nur der Preis begrenzt). Texte im Shop angepasst.
+- **Sync-Herz:** größer (48 px), gefüllt in der eigenen Herzfarbe mit weißem Herz und weißem Rand, sanftes Leuchten. Beim ersten Mal erscheint der Hinweis „Gedrückt halten – gemeinsam in sync 💞“. Die Logik ist unverändert.
+- **Öffne wenn:** Alle Kategorien sind immer sichtbar, auch leere („Noch kein Brief – bald 💭“). Die Liste erscheint sofort aus dem Zwischenspeicher und lädt dann frisch.
+- **Formatierung:** alle 21 Bildschirme automatisch auf SE (375), Standard (390) und Pro Max (430) geprüft.
+  - Die „Du bist am Zug“-Einblendung liegt nicht mehr über dem Kopf.
+  - Titel und Tab-Beschriftungen werden nicht mehr abgeschnitten, kein seitliches Überlaufen in der Spiele-Übersicht.
+  - Bottom-Sheets bleiben über der Bildschirmtastatur (`--kb` aus `visualViewport`), Eingabefelder scrollen beim Antippen in die Mitte.
+
+**Zurück:** `git checkout vor-fixes -- app shared pocketbase/pb_hooks && git commit -m "Zurück vor Fixes" && git push` (Backup `/home/pingu/backups/vor-fixes-2026-10-26`).

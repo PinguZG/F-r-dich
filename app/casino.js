@@ -120,7 +120,8 @@
     $('bjBetBox').hidden = live;
     $('bjActions').hidden = !live;
     const l = data?.limits || { min: 5, max: 100, lossLeft: 300 };
-    $('bjBal').replaceChildren(el('span', 'coin'), document.createTextNode(data ? fmt(data.balance) : '…'));
+    // Guthaben steht oben rechts im Kopf (Coins-Chip), hier nur falls vorhanden
+    $('bjBal')?.replaceChildren(el('span', 'coin'), document.createTextNode(data ? fmt(data.balance) : '…'));
     const top = maxBet();
     bet = Math.max(l.min, Math.min(bet, top));
     $('bjBet').textContent = fmt(bet);

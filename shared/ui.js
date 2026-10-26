@@ -144,5 +144,19 @@
     return err?.response?.message || err?.message || 'unbekannter Fehler';
   }
 
+  // Bildschirmtastatur (iOS): Höhe als --kb, Sheets rutschen darüber, fokussiertes Feld bleibt sichtbar
+  if (window.visualViewport) {
+    const kb = () => {
+      const h = Math.max(0, Math.round(window.innerHeight - visualViewport.height - visualViewport.offsetTop));
+      document.documentElement.style.setProperty('--kb', (h > 80 ? h : 0) + 'px');
+    };
+    visualViewport.addEventListener('resize', kb);
+    visualViewport.addEventListener('scroll', kb);
+  }
+  document.addEventListener('focusin', e => {
+    if (!e.target.matches('input, textarea')) return;
+    setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+  });
+
   window.UI = { show, resolve, alias, burst, wait, shake, lightbox, closeLightbox, sheet, berlinWall, berlinMidnight, shrink, reduced, errText, DAY };
 })();

@@ -1,4 +1,4 @@
-const CACHE = 'wir-v25'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v26'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/shop.js', '/chessai.js', '/solitaire.js', '/frames.css', '/poker.js', '/herzspur.js',

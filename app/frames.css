@@ -4,7 +4,7 @@
    Erzeugt aus tools/frames.cjs (Deko als SVG) – Farben sind in jeder Farbwelt gleich schön.
    ====================================================================== */
 .avatar[class*="fr-"]{overflow:visible;position:relative}
-.avatar[class*="fr-"]::before{content:'';position:absolute;inset:-16%;border-radius:50%;pointer-events:none;z-index:1;background:center/100% 100% no-repeat}
+.avatar:where([class*="fr-"])::before{content:'';position:absolute;inset:-16%;border-radius:50%;pointer-events:none;z-index:1;background:center/100% 100% no-repeat}
 .avatar.is-online[class*="fr-"]::after{z-index:2}
 .fr-rosa{box-shadow:0 0 0 2.5px #fff,0 0 0 5px #ff8fb8,0 0 0 7.5px #fff,0 0 0 9px #ffc2d9,0 4px 14px rgba(var(--shadow),.25)!important}
 .fr-rosa::before{display:none}

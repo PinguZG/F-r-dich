@@ -175,6 +175,20 @@
   const btn = $('syncTop');
   let holding = false, holdTimer = 0, partnerWas = false;
 
+  // kurzer Hinweis beim ersten Mal
+  function firstTip() {
+    if (!btn || store.get('wir-sync-tip')) return;
+    const tip = document.createElement('div');
+    tip.className = 'sync-tip glass';
+    tip.textContent = 'Gedrückt halten – gemeinsam in sync 💞';
+    document.body.append(tip);
+    const off = () => { tip.classList.remove('show'); store.set('wir-sync-tip', '1'); setTimeout(() => tip.remove(), 400); };
+    tip.addEventListener('click', off);
+    btn.addEventListener('pointerdown', off, { once: true });
+    setTimeout(() => tip.classList.add('show'), 900);
+    setTimeout(off, 9000);
+  }
+
   if (btn) {
     btn.addEventListener('contextmenu', e => e.preventDefault());
     btn.addEventListener('selectstart', e => e.preventDefault());
@@ -359,6 +373,7 @@
   async function start() {
     started = true;
     renderSync();
+    firstTip();
     renderShake();
     syncMotion();
     await loadStates().catch(console.error);

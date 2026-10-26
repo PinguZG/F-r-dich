@@ -22,9 +22,7 @@ const PRICES = {
     heart: { name: 'Herz-Bombe', price: 80, count: 30 },
     msg: { name: 'Nachrichten-Bombe', price: 150, count: 10, maxLen: 60 },
   },
-  bombsPerDay: 3,
   bombGapMs: 1500,       // Abstand zwischen zwei Pushs einer Bombe
-  quiet: { from: 23, to: 7 }, // Nachtruhe (Berlin): Bombe wird um 7 Uhr verschickt
 };
 
 // Coins fürs Spielen (zusätzlich zu den bestehenden EARN-Regeln in coins_lib.js)
@@ -56,31 +54,12 @@ function ownedFrames(app, uid) {
   return app.findRecordsByFilter('shop_purchases', "user = {:u} && kind = 'frame'", '', 50, 0, { u: uid }).map(r => r.getString('item'));
 }
 
-function bombsToday(app, uid) {
-  return app.countRecords('shop_purchases', $dbx.exp("user = {:u} AND kind = 'bomb' AND created >= {:t}", { u: uid, t: midnight() }));
-}
-
-// nächster erlaubter Versandzeitpunkt (Nachtruhe 23–7 Uhr Berlin)
-function sendTime(t) {
-  const b = wir.berlin(t);
-  if (b.h >= PRICES.quiet.from || b.h < PRICES.quiet.to) {
-    const day = wir.berlinDayKey(t, b.h >= PRICES.quiet.from ? 1 : 0);
-    // 07:00 Berlin an diesem Tag
-    const guess = Date.parse(day + 'T07:00:00Z');
-    const offset = Date.UTC(wir.berlin(guess).y, wir.berlin(guess).m, wir.berlin(guess).d, wir.berlin(guess).h, wir.berlin(guess).min) - guess;
-    return guess - offset;
-  }
-  return t;
-}
-
 function catalog(app, uid) {
   const w = coins.ensureWallet(app, uid);
   return {
     prices: PRICES, earn: GAME_EARN,
     owned: ownedFrames(app, uid),
     frame: app.findRecordById('users', uid).getString('frame'),
-    bombsToday: bombsToday(app, uid),
-    quietNow: sendTime(now()) > now(), sendAt: sendTime(now()),
     balance: app.findRecordById('coin_wallets', w.id).getInt('balance'),
   };
 }
@@ -176,7 +155,7 @@ function buyBomb(app, uid, body) {
     if (!text) throw new BadRequestError('Bitte einen Text eingeben');
   }
   const partner = wir.partnerOf(app, uid);
-  const at = sendTime(now());
+  const at = now(); // seit 26.10.2026: kein Tageslimit, keine Nachtruhe – geht sofort raus
   let out, bomb = null;
   app.runInTransaction((tx) => {
     try {
@@ -184,7 +163,6 @@ function buyBomb(app, uid, body) {
       out = { dup: true, balance: coins.book(tx, { user: uid, amount: -b.price, reason: 'bomb', key: `bomb:${uid}:${key}` }).balance, bomb: prev.getString('ref') };
       return;
     } catch (_) { /* neu */ }
-    if (bombsToday(tx, uid) >= PRICES.bombsPerDay) throw new ApiError(429, `Höchstens ${PRICES.bombsPerDay} Bomben pro Tag 💣`);
     bomb = new Record(tx.findCollectionByNameOrId('bombs'));
     bomb.set('from', uid); bomb.set('to', partner.id); bomb.set('kind', kind); bomb.set('text', text);
     bomb.set('count', b.count); bomb.set('send_after', at);
@@ -202,9 +180,9 @@ function buyBomb(app, uid, body) {
         sendAfter: at + n * PRICES.bombGapMs, url: '/',
       });
     }
-    require(`${__hooks}/activity_lib.js`).log(app, partner.id, 'fx', 'bomb', `💣 ${b.name} von ${name}` + (at > now() ? ' (kommt um 7 Uhr)' : ''));
+    require(`${__hooks}/activity_lib.js`).log(app, partner.id, 'fx', 'bomb', `💣 ${b.name} von ${name}`);
   }
-  return Object.assign(out, { sendAt: at, delayed: at > now() + 1000 });
+  return Object.assign(out, { sendAt: at, delayed: false });
 }
 
 // ---------- Coins fürs Spielen ----------
@@ -221,4 +199,4 @@ function earnGame(app, uid, game, amount, ref, label) {
   }
 }
 
-module.exports = { PRICES, GAME_EARN, catalog, buyTip, buyFrame, setFrame, buyBomb, tipsFor, ownedFrames, earnGame, sendTime };
+module.exports = { PRICES, GAME_EARN, catalog, buyTip, buyFrame, setFrame, buyBomb, tipsFor, ownedFrames, earnGame };

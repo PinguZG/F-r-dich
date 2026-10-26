@@ -55,17 +55,14 @@
     box.append(grid);
 
     // Bomben
-    const left = cat.prices.bombsPerDay - cat.bombsToday;
     box.append(el('h3', 'coin-sub', '💣 Benachrichtigungs-Bomben'),
-      el('p', 'shop-hint', `Ganz viele Pushs hintereinander an ${partnerName()}. Heute noch ${Math.max(0, left)} von ${cat.prices.bombsPerDay}.`
-        + (cat.quietNow ? ` Gerade ist Nachtruhe – deine Bombe geht um ${hm(cat.sendAt)} Uhr los.` : '')));
+      el('p', 'shop-hint', `Ganz viele Pushs hintereinander an ${partnerName()} – geht sofort los, so oft du willst.`));
     const hb = cat.prices.bombs.heart, mb = cat.prices.bombs.msg;
     const heart = el('button', 'bomb-item glass');
     heart.type = 'button';
     heart.append(el('span', 'bi-ico', '❤️'), el('span', 'bi-text'), el('span', 'si-price'));
     heart.querySelector('.bi-text').append(el('b', '', hb.name), el('small', '', `${hb.count}× „❤️“`));
     heart.querySelector('.si-price').append(el('span', 'coin'), document.createTextNode(fmt(hb.price)));
-    heart.disabled = left <= 0;
     heart.addEventListener('click', () => buyBomb('heart'));
     const msg = el('div', 'bomb-item glass msg');
     const top = el('div', 'bi-row');
@@ -75,7 +72,7 @@
     const inp = el('input', 'mem-input');
     inp.id = 'bombText'; inp.maxLength = mb.maxLen; inp.placeholder = `Dein Text (max. ${mb.maxLen} Zeichen)`;
     const go = el('button', 'mem-btn', '💣 Zünden');
-    go.type = 'button'; go.disabled = left <= 0;
+    go.type = 'button';
     go.addEventListener('click', () => buyBomb('msg', inp.value));
     msg.append(top, inp, go);
     box.append(heart, msg, el('div', 'mem-status', ''));
@@ -130,7 +127,7 @@
       window.WIR_COINS?.setBalance(r.balance);
       window.WIR_FX?.puff(window.innerWidth / 2, window.innerHeight / 2, ['#ff5fa2', '#e0457b'], 20);
       await loadCatalog();
-      status(r.delayed ? `💣 Angenommen – wegen Nachtruhe geht sie um ${hm(r.sendAt)} Uhr los.` : `💣 Gezündet! ${partnerName()} bekommt gleich ${b.count} Pushs.`);
+      status(`💣 Gezündet! ${partnerName()} bekommt gleich ${b.count} Pushs.`);
     } catch (err) {
       if (err?.status !== 0) bombKey = '';
       status(errText(err));
