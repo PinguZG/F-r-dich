@@ -1035,3 +1035,22 @@ Getestet: Engine mit 4.077 Zufallshänden (2–4 Spieler, zufällige und KI-Akti
 **Datenbank (nur additiv):** `pb_migrations/1793400000_wir_poker.js` legt `poker_tables` an.
 
 **Zurück vor Etappe 3:** im Repo `app/poker.js` und die Poker-Karten entfernen, oder die Commits von Etappe 3 per `git revert` zurücknehmen. Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/{wir_poker.pb.js,poker_lib.js,poker.js} && sudo systemctl restart pocketbase`.
+
+# Etappe 4 (Wir `wir-v25`): Herzspur (Lichtrennen zu zweit, live)
+
+Getestet mit zwei Browserfenstern (Daniel + Ida) gegen eine Kopie des Backups: Einladung, Mitfahren, Countdown, Live-Frames beim Gast, Runde entschieden mit gleichem Stand auf beiden Geräten, Abbruch.
+
+| Wo | Was |
+|---|---|
+| **Spiele → Zu zweit → Herzspur** | „🏁 Herausfordern“ → Push „🏁 Daniel will Herzspur spielen“ → „💗 Mitfahren“. Beide brauchen die App offen. |
+| **Spiel** | Raster 24×34. Jede Person fährt eine Spur in ihrer Herzfarbe. Lenken per Wischen auf dem Feld oder mit den Pfeiltasten (auch Tastatur-Pfeile), umdrehen geht nicht. Wand oder Spur = Runde verloren, Herz-Explosion beim Crash. Fahren beide gleichzeitig gegen etwas, ist die Runde unentschieden. |
+| **Match** | Best of 5: wer zuerst 3 Runden hat. Der Sieg bringt Heart Coins (Grund `game`, nur einmal pro Match über den Ledger-Schlüssel). Statistik Siege/Niederlagen auf der Lobby-Karte und in der Übersicht, Log-Einträge für beide. |
+| **Abbruch** | App schließen, in den Hintergrund oder auf eine andere Seite wechseln beendet das Match sauber. Kommt 6 s lang nichts von der anderen Seite, wird ebenfalls abgebrochen („Verbindung weg“). |
+
+**Technik:**
+- Das Gerät der einladenden Person (Host, `p1`) rechnet mit festen **10 Ticks/s** und schickt nach jedem Tick die Köpfe. Das andere Gerät schickt nur Richtungswechsel. Synchroner Start mit 3-s-Countdown vom Host.
+- Nachrichten laufen über `POST /api/trail/{id}/msg`. PocketBase reicht sie als **Realtime-Nachricht** (Topic `trail/<id>`) nur an die andere Person des Matches weiter. Nichts davon wird in der Datenbank gespeichert, ein eigener WebSocket-Dienst ist nicht nötig.
+- Spielstand, Gewinner und Coins nur über `/api/trail/{id}/result` (nur der Host). Routen in `pb_hooks/wir_herzspur.pb.js` + `trail_lib.js`.
+- **Datenbank (nur additiv):** `pb_migrations/1793500000_wir_herzspur.js` legt `trail_matches` an.
+
+**Zurück vor Etappe 4:** die Commits von Etappe 4 per `git revert` zurücknehmen. Auf dem Pi danach: `rm /home/pingu/pb/pb_hooks/{wir_herzspur.pb.js,trail_lib.js} && sudo systemctl restart pocketbase`.

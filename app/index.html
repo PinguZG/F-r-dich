@@ -298,7 +298,7 @@
     <button class="g-card glass" data-go="s-chess" data-game="chess" type="button"><span class="gc-ico" data-icon="chess"></span><b>Schach</b><small id="gcChessStatus"></small><i class="g-badge" id="gbChess"></i></button>
     <button class="g-card glass" data-go="s-ttt" data-game="ttt" type="button"><span class="gc-ico" data-icon="ttt"></span><b>Tic Tac Toe</b><small id="gcTttStatus"></small><i class="g-badge" id="gbTtt"></i></button>
     <button class="g-card glass" data-go="s-mono" data-game="mono" type="button"><span class="gc-ico" data-icon="mono"></span><b>Herzstadt</b><small id="gcMonoStatus"></small><i class="g-badge" id="gbMono"></i></button>
-    <button class="g-card glass soon" data-game="trail" type="button" disabled><span class="gc-ico" data-icon="trail"></span><b>Herzspur</b><small>Lichtrennen live</small><i class="g-badge">Bald</i></button>
+    <button class="g-card glass" data-go="s-trail" data-game="trail" type="button"><span class="gc-ico" data-icon="trail"></span><b>Herzspur</b><small id="gcTrailStatus">Lichtrennen live</small><i class="g-badge new" id="gbTrail">Neu</i></button>
     <button class="g-card glass" data-go="s-poker" data-poker-mode="duo" data-game="pokerduo" type="button"><span class="gc-ico" data-icon="poker"></span><b>Poker</b><small>Heads-up zu zweit</small><i class="g-badge new" id="gbPokerDuo">Neu</i></button>
   </div>
   <h3 class="g-group">🧩 Denkspiele</h3>
@@ -521,6 +521,28 @@
     <pre class="pk-log" id="pkLog"></pre>
   </div>
   <div class="mem-status" id="pkMsg"></div>
+</section>
+
+<!-- Herzspur (herzspur.js) -->
+<section class="screen page sub" id="s-trail" data-tab="s-games" data-title="Herzspur" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Herzspur</h2><button class="g-menu-btn" data-menu="menu-trail" type="button" aria-label="Menü">⋯</button></div>
+  <div id="trLobby" class="card glass ca-start">
+    <div class="mo-intro-ico">🏁</div>
+    <p id="trLobbyText"></p>
+    <button class="mem-btn" id="trInvite" type="button">🏁 Herausfordern</button>
+    <button class="mem-btn" id="trAccept" type="button" hidden>💗 Mitfahren</button>
+    <p class="mem-note" id="trStats"></p>
+  </div>
+  <div id="trGame" hidden>
+    <div class="tr-top"><span class="sd-chip" id="trScore">0 : 0</span><span class="tr-status" id="trStatus"></span></div>
+    <div class="tr-wrap glass"><canvas id="trCanvas"></canvas><div class="tr-count" id="trCount" hidden>3</div></div>
+    <div class="tr-pad">
+      <button class="tr-key" data-trdir="u" type="button" aria-label="hoch">▲</button>
+      <button class="tr-key" data-trdir="l" type="button" aria-label="links">◀</button>
+      <button class="tr-key" data-trdir="d" type="button" aria-label="runter">▼</button>
+      <button class="tr-key" data-trdir="r" type="button" aria-label="rechts">▶</button>
+    </div>
+  </div>
 </section>
 <!-- Tic Tac Toe -->
 <section class="screen page sub" id="s-ttt" data-tab="s-games" data-title="Tic Tac Toe" data-area="games">
@@ -755,6 +777,22 @@
       <li><span>🔁</span><span>Setzrunden vor dem Flop, nach dem Flop (3 Karten), Turn und River. Passen, Schieben, Mitgehen oder Erhöhen (Schieberegler).</span></li>
       <li><span>🏆</span><span>Reihenfolge: Royal Flush, Straight Flush, Vierling, Full House, Flush, Straße, Drilling, Zwei Paare, Ein Paar, Höchste Karte.</span></li>
       <li><span>🛡️</span><span>Nur Spielgeld. Platz nehmen kostet 50–200 Coins, zählt zum Casino-Tageslimit (300 Coins Verlust pro Tag).</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="sheet-wrap g-menu" id="menu-trail" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Herzspur 🏁</h2>
+    <div class="g-menu-list"><button class="pack-btn" id="trCancel" type="button" hidden>🚪 Match beenden</button></div>
+    <ul class="g-rules">
+      <li><span>💗</span><span>Ihr fahrt beide eine Lichtspur in eurer Herzfarbe. Wer gegen die Wand oder eine Spur fährt, verliert die Runde.</span></li>
+      <li><span>👆</span><span>Lenken per Wischen auf dem Spielfeld oder mit den Pfeilen. Umdrehen geht nicht.</span></li>
+      <li><span>🏆</span><span>Best of 5: Wer zuerst 3 Runden gewinnt, gewinnt das Match und bekommt ein paar Heart Coins.</span></li>
+      <li><span>📶</span><span>Live: Beide brauchen die App offen. Wer sie schließt, beendet das Match.</span></li>
     </ul>
   </div>
 </div>
@@ -1023,6 +1061,7 @@
 <script src="/chessai.js"></script>
 <script src="/solitaire.js"></script>
 <script src="/poker.js"></script>
+<script src="/herzspur.js"></script>
 <script src="/shared/activity.js"></script>
 <script src="/shared/update.js"></script>
 </body>

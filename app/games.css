@@ -421,3 +421,18 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 .frame-chip small{font-size:11px;font-weight:700}
 .frame-chip.on{background:var(--chip);color:var(--ink)}
 .bomb-toast{white-space:normal;max-width:calc(100% - 32px);text-align:center}
+
+/* ---------- Herzspur ---------- */
+.tr-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tr-top .sd-chip{font-size:18px;font-weight:800}
+.tr-status{flex:1;font-size:13px;font-weight:700;color:var(--ink-soft);text-align:right}
+.tr-wrap{position:relative;display:flex;justify-content:center;padding:6px;border-radius:20px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 40%,#1a0612),color-mix(in srgb,var(--accent) 18%,#0b0308))}
+#trCanvas{display:block;border-radius:12px;touch-action:none}
+.tr-count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Caveat',cursive;font-size:96px;font-weight:700;color:#fff;
+  text-shadow:0 4px 24px rgba(0,0,0,.4);pointer-events:none}
+.tr-pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:8px;justify-content:center;margin-top:12px;
+  grid-template-areas:". u ." "l d r"}
+.tr-key{border:none;border-radius:18px;background:var(--glass-strong);box-shadow:0 4px 12px rgba(var(--shadow),.2);font-size:22px;color:var(--ink);cursor:pointer;touch-action:none}
+.tr-key:active{transform:scale(.92);background:var(--chip)}
+.tr-key[data-trdir="u"]{grid-area:u}.tr-key[data-trdir="l"]{grid-area:l}.tr-key[data-trdir="d"]{grid-area:d}.tr-key[data-trdir="r"]{grid-area:r}
