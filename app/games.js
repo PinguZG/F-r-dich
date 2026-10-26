@@ -37,7 +37,7 @@
   const fmtDay = s => { const d = new Date(String(s).replace(' ', 'T')); return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.`; };
 
   function avatar(u, cls = 'sm') {
-    const a = el('span', 'avatar ' + cls);
+    const a = el('span', 'avatar ' + cls + (u?.frame ? ' fr-' + u.frame : ''));
     a.textContent = (u?.name || '?').charAt(0).toUpperCase();
     if (u?.avatar) {
       a.style.backgroundImage = `url("${pb.files.getURL(u, u.avatar, { thumb: '200x200' })}")`;
@@ -84,6 +84,8 @@
     s.innerHTML = `<use href="#pc-${type}"/>`;
     return s;
   }
+
+  window.WIR_CHESSUI = { pieceSvg, PIECE_NAME }; // chessai.js
 
   const ICONS = {
     chess: '<svg viewBox="0 0 100 100"><g class="gi-fill">' + PIECE_SHAPES.n + BASE + '</g></svg>',
@@ -640,6 +642,23 @@
   $('sdNotes').addEventListener('click', () => { sdNoteMode = !sdNoteMode; renderSudoku(); });
   $('sdShowErr').addEventListener('change', () => { if (!sd) return; sd.show_errors = $('sdShowErr').checked; renderSudoku(); sdSaveSoon(); });
 
+  // 💡 Tipp (kostet Coins, Server deckt ein sinnvolles Feld auf; Ergebnis bekommt 💡 in der Rangliste)
+  $('sdTip').addEventListener('click', async () => {
+    if (!sd || sdSolved()) return;
+    await sdSave().catch(() => {});
+    const r = await window.WIR_SHOP?.buyTip('sudoku', sd.id, { cells: sd.cells.join('') });
+    if (!r?.hint) return;
+    sdSnap();
+    sd.cells[r.hint.i] = r.hint.v;
+    sd.notes[r.hint.i] = 0;
+    sdSel = r.hint.i;
+    renderSudoku();
+    const c = $('sdGrid').children[r.hint.i];
+    c?.classList.add('tip');
+    setTimeout(() => c?.classList.remove('tip'), 1600);
+    sdSaveSoon();
+    if (sdSolved()) sdFinish();
+  });
   async function sdFinish() {
     const done = sd;
     try {
@@ -695,6 +714,7 @@
     };
     row('Punkte', s => String(s.points), true);
     row('Gelöst', s => String(s.solved));
+    row('davon mit 💡', s => String(sdScores.filter(x => x.user === s.u.id && x.hints > 0).length));
     for (const [l, name] of Object.entries(LEVELS)) row(name, s => s.per[l].n ? `${s.per[l].n}× · ⏱ ${fmtTime(s.per[l].best)}` : '–');
     $('sdRank').replaceChildren(card);
   }
@@ -1070,7 +1090,7 @@
   // ======================================================================
   // Start, Live-Updates
   // ======================================================================
-  async function loadUsers() { users = await pb.collection('users').getFullList({ fields: 'id,name,avatar,collectionId,collectionName,heart_color,created' }); }
+  async function loadUsers() { users = await pb.collection('users').getFullList({ fields: 'id,name,avatar,frame,collectionId,collectionName,heart_color,created' }); }
 
   async function loadAll() {
     await loadUsers().catch(console.error);

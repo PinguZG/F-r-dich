@@ -414,22 +414,33 @@ async function doSelections() {
 // g) Treffen, Öffne wenn (+ gelesen), Sync-Knopf (sync), Schütteln (shake), Spiele (chess/ttt/mono/sudoku), Gutscheine (gift):
 //    die PocketBase-Hooks legen sie in push_queue ab,
 //    und bündeln dort (notify_prefs wird ignoriert). Spiele + Gutscheine gehören zur Spiele-App.
-const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', owread: 's-openwhen', sync: 's-home', shake: 's-home' };
-const SPIELE_GO = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', sudoku: 's-sudoku', gift: 'shop:vouchers', shop: 'shop:mine' };
+const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-home', owread: 's-openwhen', sync: 's-home', shake: 's-home', bomb: 's-home' };
+const SPIELE_GO = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', sudoku: 's-sudoku', solitaire: 's-solitaire', poker: 's-poker', trail: 's-trail', gift: 'shop:vouchers', shop: 'shop:mine' };
 
+let queueTimer = null;
 async function doQueue() {
   const due = await list('push_queue', { filter: `sent_at = "" && send_after <= ${q(pbTime(Date.now()))}`, sort: 'send_after' });
   for (const item of due) {
     // erst als verschickt markieren, dann senden -> nie doppelt; Antwort enthält den Stand inkl. letzter Bündelung
     const it = await api('PATCH', '/api/collections/push_queue/records/' + item.id, { sent_at: pbTime(Date.now()) });
     const spiele = it.kind in SPIELE_GO;
+    // Bomben: jede Nachricht einzeln (eigener tag, kein Topic – sonst ersetzt iOS sie)
+    const bomb = it.kind === 'bomb';
     const errors = await deliver(it.user, 'queue:' + it.kind, {
-      title: it.title, body: it.body || '', go: (spiele ? SPIELE_GO : QUEUE_GO)[it.kind] || 's-final', tag: it.kind,
-    }, 'high', true, 'wir'); // Spiele sind seit 26.10.2026 wieder in Wir – alte Spiele-App-Abos werden nicht mehr bedient
+      title: it.title, body: it.body || '', go: (spiele ? SPIELE_GO : QUEUE_GO)[it.kind] || 's-final', tag: bomb ? 'bomb-' + it.key : it.kind,
+    }, 'high', !bomb, 'wir'); // Spiele sind seit 26.10.2026 wieder in Wir – alte Spiele-App-Abos werden nicht mehr bedient
     if (errors.length) {
       await api('PATCH', '/api/collections/push_queue/records/' + it.id, { error: errors.join(' | ').slice(0, 1000) })
         .catch(e => log('Fehler merken fehlgeschlagen', e.message));
     }
+  }
+  // nächster geplanter Push (z. B. Bomben im 1,5-s-Abstand, Nachtruhe bis 7 Uhr) punktgenau statt erst beim nächsten Poll
+  clearTimeout(queueTimer);
+  const [next] = await list('push_queue', { filter: `sent_at = "" && send_after > ${q(pbTime(Date.now()))}`, sort: 'send_after' })
+    .then(r => r.slice(0, 1)).catch(() => []);
+  if (next) {
+    const wait = ms(next.send_after) - Date.now() + 50;
+    if (wait < POLL_MS) queueTimer = setTimeout(tick, Math.max(wait, 200));
   }
 }
 

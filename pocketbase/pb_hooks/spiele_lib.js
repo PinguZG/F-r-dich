@@ -295,8 +295,11 @@ function sudokuFinish(app, uid, body) {
   rec.set('seconds', seconds);
   rec.set('mistakes', mistakes);
   rec.set('points', sudokuPoints(diff, seconds, mistakes));
+  const shop = require(`${__hooks}/shop_lib.js`);
+  rec.set('hints', shop.tipsFor(app, uid, 'sudoku', prog.id));
   app.save(rec);
   app.delete(prog);
+  shop.earnGame(app, uid, 'sudoku', shop.GAME_EARN.sudoku[diff], rec.id, '🧩 Sudoku gelöst (' + ({ easy: 'Leicht', medium: 'Mittel', hard: 'Schwer' })[diff] + ')');
   return rec;
 }
 

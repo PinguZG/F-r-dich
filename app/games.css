@@ -364,3 +364,60 @@ html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
 .g-menu-list[hidden]{display:none}
 .g-rules{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;font-weight:600;line-height:1.4}
 .g-rules li{display:grid;grid-template-columns:26px 1fr;gap:8px}
+.sd-cell.tip{animation:sdTip 1.6s ease}
+@keyframes sdTip{0%,60%{box-shadow:inset 0 0 0 3px #ffd45c;background:rgba(255,212,92,.35)}100%{box-shadow:none}}
+
+/* Schach gegen KI */
+.ca-start{display:flex;flex-direction:column;gap:12px;text-align:center}
+.ca-start h3{font-size:14px;color:var(--ink-soft);margin-top:4px}
+.ca-start .level-chips{justify-content:center;flex-wrap:wrap}
+.ca-start .chip-btn.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink)}
+.ca-name{justify-content:center}
+.chess-board .sq.hint{box-shadow:inset 0 0 0 4px #ffd45c}
+.ca-moves{font-size:13px;font-weight:700;padding:10px 14px;margin-top:8px;min-height:40px;white-space:pre-wrap}
+#caTip small{font-size:12px}
+
+/* ---------- Solitär ---------- */
+.sol-board{position:relative;width:100%;margin-top:10px;touch-action:none;-webkit-user-select:none;user-select:none;min-height:300px}
+#solSlots{position:absolute;inset:0;pointer-events:none}
+.sol-slot{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:8px;border:2px dashed var(--ink-faint);opacity:.45;
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--ink-soft)}
+.sol-slot.found::after{content:'A';font-size:16px;opacity:.6}
+.sol-slot.stock{pointer-events:auto;cursor:pointer;opacity:.7}
+.sol-slot.hint,.sol-card.hint{box-shadow:0 0 0 3px #ffd45c,0 0 14px #ffd45c!important}
+.sol-card{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);border-radius:7px;cursor:pointer;will-change:transform;
+  transition:transform .22s cubic-bezier(.2,.8,.3,1);touch-action:none;-webkit-touch-callout:none}
+.sol-card.dragging{transition:none;filter:drop-shadow(0 10px 14px rgba(0,0,0,.25))}
+.sc-face,.sc-back{position:absolute;inset:0;border-radius:7px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sc-face{background:#fffdfb;color:#2b2330;box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 0 0 1px rgba(0,0,0,.08);display:none}
+.sol-card.red .sc-face{color:#d6264f}
+.sc-back{background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 1px 3px rgba(0,0,0,.2),inset 0 0 0 2px rgba(255,255,255,.75);
+  background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.35) 2px,transparent 2.5px),linear-gradient(135deg,var(--accent2),var(--accent));background-size:8px 8px,100% 100%}
+.sol-card.up .sc-face{display:block}
+.sol-card.up .sc-back{display:none}
+.sc-corner{position:absolute;left:3px;top:2px;display:flex;flex-direction:column;align-items:center;line-height:.95}
+.sc-corner b{font-size:calc(var(--cw) * .32);font-weight:700}
+.sc-corner i{font-style:normal;font-size:calc(var(--cw) * .28)}
+.sc-suit{position:absolute;right:4px;bottom:2px;font-size:calc(var(--cw) * .52);line-height:1}
+
+/* ---------- Shop im Coin-Sheet ---------- */
+.shop-hint{font-size:13px;font-weight:600;color:var(--ink-soft);line-height:1.4;margin-top:-4px}
+.frame-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.frame-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px 10px;border-radius:20px;border:1px solid var(--glass-border);cursor:pointer;color:var(--ink);font:inherit}
+.frame-item .avatar{pointer-events:none}
+.frame-item b{font-size:12.5px;line-height:1.2;text-align:center}
+.frame-item small{font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.frame-item.on{box-shadow:0 0 0 2px var(--accent)}
+.bomb-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:20px;border:1px solid var(--glass-border);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.bomb-item:disabled{opacity:.5}
+.bomb-item.msg{flex-direction:column;align-items:stretch;cursor:default}
+.bi-row{display:flex;align-items:center;gap:12px}
+.bi-ico{font-size:28px}
+.bi-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.bi-text small{font-size:12px;font-weight:600;color:var(--ink-soft)}
+.tip-list .lr-amt{display:inline-flex;align-items:center;gap:4px}
+.frame-pick{display:flex;flex-wrap:wrap;gap:12px}
+.frame-chip{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 6px;border:none;background:none;cursor:pointer;font:inherit;color:var(--ink-soft);border-radius:16px;min-width:64px}
+.frame-chip small{font-size:11px;font-weight:700}
+.frame-chip.on{background:var(--chip);color:var(--ink)}
+.bomb-toast{white-space:normal;max-width:calc(100% - 32px);text-align:center}

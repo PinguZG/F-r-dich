@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="/games.css">
 <link rel="stylesheet" href="/coins.css">
 <link rel="stylesheet" href="/casino.css">
+<link rel="stylesheet" href="/frames.css">
 </head>
 <body>
 
@@ -303,8 +304,8 @@
   <h3 class="g-group">🧩 Denkspiele</h3>
   <div class="g-grid">
     <button class="g-card glass" data-go="s-sudoku" data-game="sudoku" type="button"><span class="gc-ico" data-icon="sudoku"></span><b>Sudoku</b><small id="gcSudokuStatus"></small><i class="g-badge" id="gbSudoku"></i></button>
-    <button class="g-card glass soon" data-game="solitaire" type="button" disabled><span class="gc-ico" data-icon="cards"></span><b>Solitär</b><small>Klondike</small><i class="g-badge">Bald</i></button>
-    <button class="g-card glass soon" data-game="chessai" type="button" disabled><span class="gc-ico" data-icon="chessai"></span><b>Schach gegen KI</b><small>5 Stufen</small><i class="g-badge">Bald</i></button>
+    <button class="g-card glass" data-go="s-solitaire" data-game="solitaire" type="button"><span class="gc-ico" data-icon="cards"></span><b>Solitär</b><small id="gcSolitaireStatus">Klondike</small><i class="g-badge new" id="gbSolitaire">Neu</i></button>
+    <button class="g-card glass" data-go="s-chessai" data-game="chessai" type="button"><span class="gc-ico" data-icon="chessai"></span><b>Schach gegen KI</b><small id="gcChessaiStatus">5 Stufen</small><i class="g-badge new" id="gbChessai">Neu</i></button>
   </div>
   <h3 class="g-group">🎰 Casino</h3>
   <div class="g-grid">
@@ -389,6 +390,7 @@
       <button class="sd-tool" id="sdUndo" type="button"><span>↶</span>Rückgängig</button>
       <button class="sd-tool" id="sdErase" type="button"><span>⌫</span>Radierer</button>
       <button class="sd-tool" id="sdNotes" type="button" aria-pressed="false"><span>✏️</span>Notizen</button>
+      <button class="sd-tool" id="sdTip" type="button"><span>💡</span>Tipp</button>
     </div>
     <div class="sd-pad" id="sdPad"></div>
   </div>
@@ -396,6 +398,68 @@
   <div class="sd-rank" id="sdRank"></div>
 </section>
 
+
+<!-- Schach gegen KI (chessai.js, Stockfish) -->
+<section class="screen page sub" id="s-chessai" data-tab="s-games" data-title="Schach gegen KI" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Schach gegen KI</h2><button class="g-menu-btn" data-menu="menu-chessai" type="button" aria-label="Menü">⋯</button></div>
+  <div id="caStart" class="card glass ca-start">
+    <div class="mo-intro-ico">🤖</div>
+    <h3>Stufe</h3>
+    <div class="level-chips ca-levels" id="caLevels">
+      <button class="chip-btn" data-level="1" type="button">Anfänger</button>
+      <button class="chip-btn" data-level="2" type="button">Leicht</button>
+      <button class="chip-btn" data-level="3" type="button">Mittel</button>
+      <button class="chip-btn" data-level="4" type="button">Stark</button>
+      <button class="chip-btn" data-level="5" type="button">Meister</button>
+    </div>
+    <h3>Deine Farbe</h3>
+    <div class="level-chips" id="caColors">
+      <button class="chip-btn on" data-color="w" type="button">Weiß</button>
+      <button class="chip-btn" data-color="b" type="button">Schwarz</button>
+      <button class="chip-btn" data-color="r" type="button">Zufall</button>
+    </div>
+    <button class="mem-btn" id="caStartBtn" type="button">♟️ Los geht’s</button>
+  </div>
+  <div id="caGame" hidden>
+    <div class="ch-player ca-name"><b id="caAi">🤖</b></div>
+    <div class="board-wrap glass"><div class="chess-board" id="caBoard"></div></div>
+    <div class="ch-player ca-name"><b id="caYou">Du</b></div>
+    <div class="game-status" id="caStatus"></div>
+    <div class="sd-tools"><button class="sd-tool" id="caTip" type="button"><span>💡</span><small>Tipp</small></button></div>
+    <div class="ch-moves glass ca-moves" id="caMoves"></div>
+  </div>
+  <div class="mem-status" id="caMsg"></div>
+</section>
+
+<!-- Solitär (solitaire.js) -->
+<section class="screen page sub" id="s-solitaire" data-tab="s-games" data-title="Solitär" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Solitär</h2><button class="g-menu-btn" data-menu="menu-solitaire" type="button" aria-label="Menü">⋯</button></div>
+  <div id="solStart" class="card glass ca-start">
+    <div class="mo-intro-ico">🃏</div>
+    <p class="sd-intro">Klondike: Lege alle Karten nach Farbe von Ass bis König ab. Antippen legt automatisch ab, ziehen geht auch.</p>
+    <div class="level-chips" id="solDraw">
+      <button class="chip-btn" data-draw="1" type="button">1 Karte ziehen</button>
+      <button class="chip-btn" data-draw="3" type="button">3 Karten ziehen</button>
+    </div>
+    <button class="mem-btn" id="solStartBtn" type="button">🃏 Mischen &amp; los</button>
+  </div>
+  <div id="solGame" hidden>
+    <div class="sd-bar">
+      <span class="sd-chip" id="solDrawInfo"></span>
+      <span class="sd-chip" id="solTime">⏱ 0:00</span>
+      <span class="sd-chip" id="solMoves">Züge 0</span>
+    </div>
+    <div class="sol-board" id="solBoard"><div id="solSlots"></div></div>
+    <div class="sd-tools">
+      <button class="sd-tool" id="solUndo" type="button"><span>↶</span>Rückgängig</button>
+      <button class="sd-tool" id="solTip" type="button"><span>💡</span><small>Tipp</small></button>
+      <button class="sd-tool" id="solAuto" type="button" hidden><span>⚡</span>Ablegen</button>
+    </div>
+  </div>
+  <div class="mem-status" id="solMsg"></div>
+  <h3 class="list-head">Rangliste</h3>
+  <div class="coin-ledger" id="solRank"></div>
+</section>
 <!-- Tic Tac Toe -->
 <section class="screen page sub" id="s-ttt" data-tab="s-games" data-title="Tic Tac Toe" data-area="games">
   <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Tic Tac Toe</h2><button class="g-menu-btn" data-menu="menu-ttt" type="button" aria-label="Menü">⋯</button></div>
@@ -462,6 +526,11 @@
       <button class="link-btn" id="avatarRemove" type="button" hidden>Bild entfernen</button>
     </div>
     <div class="mem-status" id="avatarStatus"></div>
+  </div>
+
+  <div class="card glass set-card">
+    <h3>🖼️ Profilrahmen</h3>
+    <div id="frameSet"></div>
   </div>
 
   <div class="card glass set-card">
@@ -568,6 +637,47 @@
       <label class="check sd-err" data-keep><input type="checkbox" class="switch" id="sdShowErr"><span>Fehler rot markieren</span></label>
       <button class="pack-btn" id="sdNewBtn" type="button">🔄 Neues Rätsel</button>
     </div>
+  </div>
+</div>
+
+<div class="sheet-wrap g-menu" id="menu-chessai" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Schach gegen KI 🤖</h2>
+    <div class="g-menu-list"><button class="pack-btn" id="caResign" type="button" hidden>🏳️ Aufgeben</button></div>
+    <h3 class="list-head">Bilanz</h3>
+    <div class="coin-ledger" id="caTally"></div>
+    <p class="mem-note">Engine: Stockfish 10 (GPL-3), läuft direkt auf deinem Handy.</p>
+  </div>
+</div>
+
+<div class="sheet-wrap g-menu" id="menu-solitaire" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <button class="sheet-x" data-close type="button" aria-label="Schließen">✕</button>
+    <h2 class="sheet-title">Solitär 🃏</h2>
+    <div class="g-menu-list"><button class="pack-btn" id="solNewBtn" type="button">🔄 Neue Partie</button></div>
+    <ul class="g-rules">
+      <li><span>🎯</span><span>Alle Karten nach Farbe von Ass bis König auf die vier Ablagestapel oben rechts.</span></li>
+      <li><span>🔻</span><span>Im Spielfeld absteigend und abwechselnd rot/schwarz anlegen. Auf leere Spalten nur Könige.</span></li>
+      <li><span>👆</span><span>Antippen legt die Karte automatisch ab, du kannst sie auch ziehen. Stapel oben links antippen zum Ziehen.</span></li>
+      <li><span>⭐</span><span>Punkte: 1 Karte 40, 3 Karten 80 + Zeitbonus (unter 15 min), −5 pro Tipp.</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="solDoneSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet sd-done">
+    <div class="sheet-grip"></div>
+    <div class="sd-done-ico">🎉</div>
+    <h2 class="sheet-title">Gelöst!</h2>
+    <div class="sd-done-pts" id="solDonePts">+0</div>
+    <p class="mem-note" id="solDoneText"></p>
+    <button class="mem-btn" data-close type="button">Schön 💗</button>
   </div>
 </div>
 
@@ -831,6 +941,9 @@
 <script src="/mono-ui.js"></script>
 <script src="/coins.js"></script>
 <script src="/casino.js"></script>
+<script src="/shop.js"></script>
+<script src="/chessai.js"></script>
+<script src="/solitaire.js"></script>
 <script src="/shared/activity.js"></script>
 <script src="/shared/update.js"></script>
 </body>
