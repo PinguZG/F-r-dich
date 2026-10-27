@@ -415,7 +415,7 @@ async function doSelections() {
 //    die PocketBase-Hooks legen sie in push_queue ab,
 //    und bündeln dort (notify_prefs wird ignoriert). Spiele + Gutscheine gehören zur Spiele-App.
 const QUEUE_GO = { openwhen: 's-openwhen', meeting: 's-plans', owread: 's-openwhen', sync: 's-home', shake: 's-home', bomb: 's-home', grocery: 's-grocery',
-  mood: 's-home', supportreq: 's-home', supportans: 's-home', chat: 's-chat' };
+  mood: 's-home', supportreq: 's-home', supportans: 's-home', chat: 's-chat', draw: 's-draw' };
 const SPIELE_GO = { chess: 's-chess', ttt: 's-ttt', mono: 's-mono', sudoku: 's-sudoku', solitaire: 's-solitaire', snake: 's-snake', poker: 's-poker', trail: 's-trail', gift: 'shop:vouchers', shop: 'shop:mine' };
 
 let queueTimer = null;

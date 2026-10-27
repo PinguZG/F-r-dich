@@ -1197,3 +1197,25 @@ Getestet lokal mit Kopie der Live-DB in zwei Fenstern (Daniel + Ida, 15 Prüfung
 
 **Sicherung:** Tag `vor-dates-anpassbar` (= `c7772d1`), DB-Backup `/home/pingu/backups/vor-dates-anpassbar-2026-10-27/` (08:44, „ok“).
 **Zurück:** `git checkout vor-dates-anpassbar -- app && git commit -m "Zurück vor Dates-Bearbeiten" && git push` (neue Felder bleiben ungenutzt stehen).
+
+# Zusammen zeichnen 27.10.2026 (Etappe 3, Wir `wir-v34`)
+
+Getestet lokal mit Kopie der Live-DB: Daniel (PC, Maus) + Ida (Handy, Touch) gleichzeitig, 28 Prüfungen – Live-Strich + Cursor beim anderen, alle Werkzeuge, Rückgängig/Wiederholen pro Person, Füllen, Quick-Shape, Ebenen live, Pipette, Sperre (auch serverseitig 423), direkte API-Schreibzugriffe verboten (403), Umbenennen, In Erinnerungen, Vorschaubild, Löschen bei beiden.
+
+| Wo | Was |
+|---|---|
+| **Start → 🎨 Zeichnen**, **Wir zwei → 🎨 Zeichnen** | Galerie eurer Bilder (Vorschau, wer zuletzt, wann) + „＋ Neues Bild“. Alte Bilder öffnen und weitermalen. |
+| **Zeichenfläche** | Vollbild. Oben: ‹ Galerie · Name · ↶ ↷ · Werkzeug · Ebenen · Farbe · ⋯. Links: Größe und Deckkraft. |
+| **Werkzeuge** | Stift, Bleistift (körnig), Marker, Airbrush, Radierer, Füllen. Apple Pencil: Druck (`PointerEvent.pressure`), Handballen wird ignoriert. Linien werden geglättet. |
+| **Gesten** | Am Strichende halten = gerade Linie (bzw. Ellipse, wenn der Strich fast geschlossen ist), danach ziehen verschiebt das Ende. Lange halten ohne Bewegung = Pipette. 2 Finger: zoomen/verschieben/drehen, 2 Finger tippen = rückgängig, 3 Finger tippen = wiederholen, 2× mit 2 Fingern tippen = einpassen. PC: Mausrad/Trackpad zoomt (Strg/Pinch), mittlere Maustaste verschiebt, Strg+Z / Strg+Y, „0“ = einpassen. |
+| **Farbe** | Feld + Farbton-Regler + Hex, gespeicherte Palette (＋ speichert, lange halten entfernt), zuletzt genutzt. |
+| **Ebenen** | bis 12: hinzufügen, löschen, ein/aus, Reihenfolge, Deckkraft – gilt für beide. |
+| **⋯** | Umbenennen, Ganzes Bild, **Ansicht sperren** (nur bei dir: kein Zoomen/Verschieben), **Bild sperren** (für beide sichtbar, niemand kann zeichnen), Als PNG, In Erinnerungen, Löschen (mit Bestätigung). |
+| **Push** | „🎨 Daniel hat ein neues Bild angefangen“ bzw. „… zeichnet an „Bild 3““, wenn nach ≥ 20 Min. Pause wieder gezeichnet wird. Gebündelt, höchstens alle 15 Min. pro Person (`pb_hooks/zeichnen_lib.js`). |
+
+**Technik / Sicherheit:** Jeder Strich ist ein Datensatz in `drawing_strokes` (Punkte x, y, Druck; Werkzeug, Farbe, Größe, Deckkraft, fester Zufallswert). Geschrieben wird nur über `/api/draw/…` (`pb_hooks/wir_zeichnen.pb.js`): Sperre, Ebene und Größe werden geprüft, die Reihenfolge (`seq`) vergibt der Server in einer Transaktion. Rückgängig setzt `undone`, nichts wird gelöscht. Live-Punkte und Cursor laufen über `/api/draw/{id}/live` als Realtime-Nachricht nur an die andere Person (nicht gespeichert). Lesen dürfen nur eure zwei Konten.
+
+**Datenbank (nur additiv):** `pb_migrations/1794200000_wir_zeichnen.js` legt `drawings` und `drawing_strokes` an.
+
+**Sicherung:** Tag `vor-zeichnen` (= `ca79b95`), DB-Backup `/home/pingu/backups/vor-zeichnen-2026-10-27/` (09:27, „ok“).
+**Zurück:** `git checkout vor-zeichnen -- app push pocketbase/pb_hooks/activity_lib.js shared && git rm -q app/draw.js app/draw.css pocketbase/pb_hooks/wir_zeichnen.pb.js pocketbase/pb_hooks/zeichnen_lib.js && git commit -m "Zurück vor Zeichnen" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_zeichnen.pb.js,zeichnen_lib.js} && sudo systemctl restart pocketbase`. Die Bilder bleiben in der DB.

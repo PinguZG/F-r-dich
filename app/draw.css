@@ -1,0 +1,100 @@
+/* ======================================================================
+   Zusammen zeichnen (draw.js): Galerie + Zeichenfläche im Vollbild, oben schmale Leiste, links die Regler
+   ====================================================================== */
+/* Galerie */
+.dw-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.dw-card{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:24px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;transition:transform .15s}
+.dw-card:active{transform:scale(.97)}
+.dw-thumb{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.dw-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dw-lock{position:absolute;top:6px;right:6px;font-size:16px}
+.dw-card b{font-size:14.5px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-card small{font-size:11.5px;font-weight:600;color:var(--ink-soft);padding:0 4px}
+.dw-new{align-items:center;justify-content:center;min-height:200px;border:2px dashed var(--ink-faint);background:transparent;box-shadow:none}
+.dw-plus{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;
+  background:var(--a1-grad);color:var(--accent-ink);box-shadow:0 10px 24px rgba(var(--shadow),.3)}
+@media (min-width:768px){.dw-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1100px){.dw-gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Vollbild: Kopf + Leiste der App ausblenden */
+body.drawing .topbar,body.drawing .tabbar{display:none}
+.draw-page.page{padding:0!important;overflow:hidden;transform:none;touch-action:none}
+.draw-page.page > *{max-width:none}
+.dw-stage{position:absolute;inset:0;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--bg2) 70%,#fff),var(--bg3))}
+#dwCanvas{display:block;touch-action:none}
+.dw-cursor{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;pointer-events:none;
+  background:var(--c,#3b9eff);box-shadow:0 0 0 3px #fff,0 0 12px var(--c,#3b9eff);transition:transform .08s linear}
+
+/* oben: schmale Leiste */
+.dw-top{position:absolute;z-index:3;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));top:calc(env(safe-area-inset-top) + 8px);
+  height:52px;border-radius:26px;display:flex;align-items:center;gap:2px;padding:0 6px;background:var(--glass-strong)}
+.dw-btn{flex:none;width:42px;height:42px;border:none;border-radius:50%;background:none;color:var(--ink);font-size:20px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.dw-btn:active{background:var(--chip)}
+.dw-btn .ico-line{width:22px;height:22px}
+#dwBack{font-size:30px;line-height:1}
+.dw-title{flex:1;min-width:0;border:none;background:none;font:inherit;font-size:15px;font-weight:700;color:var(--ink);text-align:left;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;padding:0 4px}
+.dw-vl{font-size:14px}
+.dw-color{flex:none;width:32px;height:32px;margin:0 5px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15),0 3px 8px rgba(0,0,0,.2);cursor:pointer}
+@media (max-width:380px){.dw-btn{width:36px}.dw-title{font-size:13.5px}}
+
+/* links: Regler für Größe + Deckkraft */
+.dw-side{position:absolute;z-index:3;left:max(8px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);width:46px;padding:12px 0;border-radius:23px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--glass-strong)}
+.dw-side.off{opacity:.35;pointer-events:none}
+.dw-vr{position:relative;width:46px;height:150px}
+.dw-vr input{position:absolute;left:50%;top:50%;width:150px;height:30px;margin:0;transform:translate(-50%,-50%) rotate(-90deg);
+  -webkit-appearance:none;appearance:none;background:transparent;touch-action:none;cursor:pointer}
+.dw-vr input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--chip)}
+.dw-vr input::-moz-range-track{height:6px;border-radius:3px;background:var(--chip)}
+.dw-vr input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3),0 0 0 2px var(--accent)}
+.dw-vr input::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--accent)}
+.dw-dotbox{width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+.dw-dot{display:block;border-radius:50%;border:1.5px solid var(--ink-faint)}
+@media (max-height:620px){.dw-vr{height:110px}.dw-vr input{width:110px}}
+
+.dw-lockbar{position:absolute;z-index:3;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);padding:10px 18px;border-radius:20px;
+  background:var(--glass-strong);font-size:14px;font-weight:700;box-shadow:0 8px 20px rgba(var(--shadow),.2)}
+.draw-page.locked .dw-side{opacity:.35;pointer-events:none}
+.dw-toast{position:absolute;z-index:4;left:50%;top:calc(env(safe-area-inset-top) + 72px);transform:translateX(-50%);padding:8px 16px;border-radius:18px;
+  background:rgba(20,10,20,.78);color:#fff;font-size:13.5px;font-weight:700;pointer-events:none;white-space:nowrap}
+
+/* Werkzeuge */
+.dw-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:4px}
+.dw-tool{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:20px;border:1px solid var(--glass-border);
+  background:var(--glass-strong);font:inherit;color:var(--ink);cursor:pointer}
+.dw-tool span{font-size:28px}
+.dw-tool b{font-size:13px}
+.dw-tool.on{background:var(--a1-grad);color:var(--accent-ink);border-color:transparent}
+
+/* Farbe */
+.dw-colorhead{display:flex;align-items:center;gap:12px}
+.dw-colornow{flex:none;width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+#dwHex{font-family:ui-monospace,monospace;text-transform:lowercase}
+.dw-svbox{position:relative;border-radius:18px;overflow:hidden;touch-action:none}
+#dwSV{display:block;width:100%;height:180px;touch-action:none;cursor:crosshair}
+.dw-svknob{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4);pointer-events:none}
+.dw-hue{-webkit-appearance:none;appearance:none;width:100%;height:28px;border-radius:14px;
+  background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.dw-hue::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.dw-hue::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:none}
+.dw-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:8px}
+.dw-sw{aspect-ratio:1;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12);cursor:pointer;-webkit-touch-callout:none}
+.dw-sw.on{box-shadow:0 0 0 3px var(--accent)}
+.dw-sw.add{background:var(--chip);color:var(--ink);font-size:18px;font-weight:700}
+.dw-color-sheet .list-head{margin:10px 2px 6px}
+
+/* Ebenen */
+.dw-layers{display:flex;flex-direction:column;gap:8px}
+.dw-layer{display:flex;align-items:center;gap:8px;padding:8px;border-radius:18px;background:var(--glass-strong);border:2px solid transparent}
+.dw-layer.on{border-color:var(--accent)}
+.dw-eye{flex:none;width:36px;height:36px;border:none;border-radius:50%;background:var(--chip);font-size:16px;cursor:pointer}
+.dw-lprev{flex:none;width:34px;height:45px;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+.dw-lmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.dw-lname{border:none;background:none;font:inherit;font-size:14.5px;font-weight:700;color:var(--ink);text-align:left;padding:2px 0;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-lmid input{width:100%;accent-color:var(--accent)}
+.dw-ltools{display:flex;gap:2px}
+.dw-ltools button{width:32px;height:32px;border:none;border-radius:50%;background:none;color:var(--ink);font-size:14px;cursor:pointer}
+.dw-ltools button:disabled{opacity:.25}

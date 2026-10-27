@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="/frames.css">
 <link rel="stylesheet" href="/layout.css">
 <link rel="stylesheet" href="/a1.css">
+<link rel="stylesheet" href="/draw.css">
 </head>
 <body>
 
@@ -111,7 +112,7 @@
     <button class="a1-tile glass" data-support type="button"><span class="a1-ti">🫂</span><b>Support</b></button>
     <button class="a1-tile glass" data-shop type="button"><span class="a1-ti">🛍️</span><b>Shop</b></button>
     <button class="a1-tile glass" data-ping="call" type="button"><span class="a1-ti">📞</span><b>Anruf</b></button>
-    <button class="a1-tile glass" data-go="s-chat" type="button"><span class="a1-ti">💬</span><b>Chat</b></button>
+    <button class="a1-tile glass" data-go="s-draw" type="button"><span class="a1-ti">🎨</span><b>Zeichnen</b><small id="homeDrawInfo"></small></button>
   </div>
 </div>
 </section>
@@ -296,7 +297,7 @@
     <button class="ping-btn glass" data-ping="love" type="button"><span>💗</span>Liebe</button>
     <button class="ping-btn glass" data-ping="call" type="button"><span>📞</span>Anruf</button>
     <button class="ping-btn glass" data-msg type="button"><span>✏️</span>Nachricht</button>
-    <button class="ping-btn glass" data-go="s-chat" type="button"><span>💬</span>Chat</button>
+    <button class="ping-btn glass" data-go="s-draw" type="button"><span>🎨</span>Zeichnen</button>
   </div>
   <div class="mem-status ping-status" id="pingStatus"></div>
   <h3 class="list-head">Verlauf</h3>
@@ -635,6 +636,34 @@
   </div>
   <div class="mem-status" id="bjMsg"></div>
   <p class="bj-note" id="bjNote"></p>
+</section>
+
+<!-- ============ Zusammen zeichnen (draw.js) ============ -->
+<section class="screen page sub" id="s-draw" data-tab="s-wir" data-title="Zusammen zeichnen">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-wir" aria-label="Zurück">←</button><h2>Zusammen zeichnen</h2></div>
+  <div class="dw-gallery" id="dwGallery"></div>
+</section>
+
+<section class="screen page sub draw-page" id="s-canvas" data-tab="s-wir" data-title="Zeichnen">
+  <div class="dw-stage" id="dwStage"><canvas id="dwCanvas"></canvas><div class="dw-cursor" id="dwCursor" hidden></div></div>
+  <div class="dw-top glass">
+    <button class="dw-btn" id="dwBack" type="button" aria-label="Galerie">‹</button>
+    <button class="dw-title" id="dwTitle" type="button">Unser Bild</button>
+    <span class="dw-vl" id="dwViewLockIco" hidden aria-label="Ansicht gesperrt">📌</span>
+    <button class="dw-btn" id="dwUndo" type="button" aria-label="Rückgängig">↶</button>
+    <button class="dw-btn" id="dwRedo" type="button" aria-label="Wiederholen">↷</button>
+    <button class="dw-btn" id="dwToolBtn" type="button" aria-label="Werkzeuge">🖊️</button>
+    <button class="dw-btn" id="dwLayerBtn" type="button" aria-label="Ebenen"><svg class="ico-line" viewBox="0 0 24 24"><path d="M12 4 3 8.5 12 13l9-4.5z"/><path d="m3 12.5 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg></button>
+    <button class="dw-color" id="dwColorBtn" type="button" aria-label="Farbe"></button>
+    <button class="dw-btn" id="dwMore" type="button" aria-label="Mehr">⋯</button>
+  </div>
+  <div class="dw-side glass" id="dwSide">
+    <div class="dw-vr"><input type="range" id="dwSize" min="0" max="100" aria-label="Größe"></div>
+    <div class="dw-dotbox"><i class="dw-dot" id="dwSizeDot"></i></div>
+    <div class="dw-vr"><input type="range" id="dwOpacity" min="2" max="100" aria-label="Deckkraft"></div>
+  </div>
+  <div class="dw-lockbar" id="dwLockBar" hidden></div>
+  <div class="dw-toast" id="dwToast" hidden></div>
 </section>
 
 <!-- Einkaufsliste (grocery.js) -->
@@ -1153,6 +1182,53 @@
   </form>
 </div>
 
+<div class="sheet-wrap" id="dwToolSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <div class="dw-tools" id="dwTools"></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="dwColorSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet dw-color-sheet">
+    <div class="sheet-grip"></div>
+    <div class="dw-colorhead"><i class="dw-colornow" id="dwColorNow"></i><input class="mem-input" id="dwHex" maxlength="7" spellcheck="false" autocomplete="off"></div>
+    <div class="dw-svbox"><canvas id="dwSV" width="300" height="200"></canvas><i class="dw-svknob" id="dwSVKnob"></i></div>
+    <input class="dw-hue" type="range" id="dwHue" min="0" max="359" aria-label="Farbton">
+    <h3 class="list-head">Palette</h3>
+    <div class="dw-palette" id="dwPalette"></div>
+    <div id="dwRecentWrap"><h3 class="list-head">Zuletzt</h3><div class="dw-palette" id="dwRecent"></div></div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="dwLayerSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <h2 class="sheet-title">Ebenen</h2>
+    <div class="dw-layers" id="dwLayers"></div>
+    <button class="pack-btn" id="dwAddLayer" type="button">＋ Ebene</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="dwMoreSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <div class="row"><input class="mem-input" id="dwRename" maxlength="80" placeholder="Name"><button class="pack-btn" id="dwRenameSave" type="button">✓</button></div>
+    <div class="g-menu-list">
+      <button class="pack-btn" id="dwMoreFit" type="button">⤢ Ganzes Bild</button>
+      <button class="pack-btn" id="dwMoreView" type="button">📌 Ansicht sperren</button>
+      <button class="pack-btn" id="dwMoreLock" type="button">🔒 Bild sperren</button>
+      <button class="pack-btn" id="dwMoreExport" type="button">⬇️ Als PNG</button>
+      <button class="pack-btn" id="dwMoreMem" type="button">📸 In Erinnerungen</button>
+      <button class="link-btn dt-del" id="dwMoreDel" type="button">🗑 Bild löschen</button>
+    </div>
+  </div>
+</div>
+
 <div class="sheet-wrap" id="memUpSheet" hidden>
   <div class="sheet-backdrop" data-close></div>
   <div class="sheet">
@@ -1267,6 +1343,7 @@
 <script src="/poker.js"></script>
 <script src="/herzspur.js"></script>
 <script src="/shared/activity.js"></script>
+<script src="/draw.js"></script>
 <script src="/a1.js"></script>
 <script src="/shared/update.js"></script>
 </body>

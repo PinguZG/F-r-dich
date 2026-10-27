@@ -10,7 +10,7 @@ const REOPEN_MS = 30 * 1000;        // kurz weg und wieder da -> dieselbe Sitzun
 const KEEP_DAYS = 90;
 const AREAS = [
   's-home', 's-memories', 's-plans', 's-dates', 's-meetings', 's-clay', 's-clay-done', 's-tab', 's-newtab', 's-date', 's-grocery', 's-chat', 's-snake',
-  's-openwhen', 's-wir', 's-games', 's-chess', 's-sudoku', 's-ttt', 's-mono', 's-bj', 's-settings', 's-console',
+  's-openwhen', 's-wir', 's-games', 's-chess', 's-sudoku', 's-ttt', 's-mono', 's-bj', 's-settings', 's-console', 's-draw', 's-canvas',
   's-duo', 's-brain', 's-casino', 's-shop', // Spiele-App (s-games = deren Startseite)
 ];
 const SEEN = ['photo', 'tab'];

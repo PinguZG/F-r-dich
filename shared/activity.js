@@ -129,7 +129,7 @@
   const AREA = {
     's-home': 'Start', 's-memories': 'Erinnerungen', 's-plans': 'Dates', 's-dates': 'Unsere Daten', 's-meetings': 'Treffen',
     's-clay': 'Clay Date', 's-clay-done': 'Unsere Figuren', 's-tab': 'Reiter', 's-newtab': 'Neuer Reiter', 's-openwhen': 'Öffne wenn',
-    's-wir': 'Wir zwei', 's-games': 'Spiele', 's-chess': 'Schach', 's-sudoku': 'Sudoku', 's-ttt': 'Tic Tac Toe', 's-mono': 'Herzstadt',
+    's-wir': 'Wir zwei', 's-draw': 'Zeichnen', 's-canvas': 'Zeichnen', 's-games': 'Spiele', 's-chess': 'Schach', 's-sudoku': 'Sudoku', 's-ttt': 'Tic Tac Toe', 's-mono': 'Herzstadt',
     's-bj': 'Blackjack', 's-settings': 'Einstellungen', 's-console': 'Konsole',
     's-duo': 'Zu zweit', 's-brain': 'Denkspiele', 's-casino': 'Casino', 's-shop': 'Shop', 's-date': 'Date', 's-grocery': 'Einkaufsliste', 's-chat': 'Chat', 's-snake': 'Snake',
   };
