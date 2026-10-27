@@ -1182,3 +1182,18 @@ cd Documents/F-r-dich && git checkout main && git pull
 git checkout vor-redesign-a1 -- app shared && git commit -m "Alte Oberfläche (vor A1)" && git push
 ```
 Nach ≤ 2 Min. ist sie live (Update-Banner). Alle Daten bleiben, auch spätere (Dates-Felder, Zeichnungen bleiben einfach ungenutzt in der DB). Wer Pfirsich/Lavendel gewählt hatte, sieht in der alten Oberfläche Rosé. Wieder zu A1: `git revert --no-edit HEAD && git push`.
+
+# Dates vollständig anpassbar 27.10.2026 (Etappe 2, Wir `wir-v33`)
+
+Getestet lokal mit Kopie der Live-DB in zwei Fenstern (Daniel + Ida, 15 Prüfungen: eigene Art, ohne Uhrzeit, Bilder hochladen, Titelbild, Reihenfolge, Geplant/Vergangen folgt dem Datum, Clay Date bearbeitbar, Löschen – alles live beim anderen).
+
+| Wo | Was |
+|---|---|
+| **Date → ✎** (oder „+“ in Dates) | Bottom-Sheet: Art (8 feste + eigene, „＋ Eigene“ legt eine an, ✕ entfernt sie), Emoji, Name, Datum, Uhrzeit (Schalter „Ohne Uhrzeit“), Ort, Notiz. Bei bestehenden Dates: Bilder-Leiste mit ‹ › (Reihenfolge), ★ (Titelbild), ✕ (lösen/löschen), „📷 Hochladen“, „🔗 Erinnerungen“. „🗑 Date löschen“ mit Bestätigung. Gilt für alle Dates inkl. Clay Date und übernommene Treffen. |
+| **Detail** | Titelbild oben, Bilder in gespeicherter Reihenfolge; Großbild: „★ Titelbild“, „Lösen/Löschen“ |
+| **Übersicht/Zeitstrahl** | Titelbild als Symbol bzw. Karte. Ohne Uhrzeit: nur Tag, vergangen ab dem Folgetag. |
+
+**Datenbank (nur additiv):** `pb_migrations/1794100000_wir_dates_edit.js`: `date_events.all_day`, `kind_label`, `kind_emoji`, `cover`, `img_order`, neue Collection `date_kinds` (beide lesen/schreiben, Anlegen nur mit sich als Autor). Eigene Arten speichern `kind = "sonstiges"` → alte Oberfläche zeigt sie als „Sonstiges“.
+
+**Sicherung:** Tag `vor-dates-anpassbar` (= `c7772d1`), DB-Backup `/home/pingu/backups/vor-dates-anpassbar-2026-10-27/` (08:44, „ok“).
+**Zurück:** `git checkout vor-dates-anpassbar -- app && git commit -m "Zurück vor Dates-Bearbeiten" && git push` (neue Felder bleiben ungenutzt stehen).

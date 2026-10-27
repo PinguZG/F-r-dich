@@ -128,7 +128,7 @@
 
   async function loadMeetings() {
     meetings = await pb.collection('date_events').getFullList({
-      filter: pb.filter('when >= {:t}', { t: new Date(startOfTodayMs()) }), sort: 'when', fields: 'id,title,emoji,when,place,note',
+      filter: pb.filter('when >= {:t}', { t: new Date(startOfTodayMs()) }), sort: 'when', fields: 'id,title,emoji,when,place,note,all_day',
     });
     renderCountdown();
   }
@@ -146,12 +146,12 @@
     cdEmpty.hidden = !!m;
     if (!m) return;
     const ms = pbMs(m.when);
-    const c = countdownText(ms);
+    const c = m.all_day && berlin(ms).key !== berlin(Date.now()).key ? { txt: (d => `Noch ${d} ${d === 1 ? 'Tag' : 'Tage'} 💗`)(Math.max(1, dayDiff(Date.now(), ms))) } : countdownText(ms);
     cdBox.classList.toggle('today', !!c.today);
     cdBox.querySelector('.cd-ico').textContent = m.emoji || '💗';
     cdBox.querySelector('small').textContent = m.title && m.title !== 'Treffen' ? 'Nächstes Date: ' + m.title : 'Nächstes Treffen';
     cdBox.querySelector('.cd-num').textContent = c.txt;
-    cdBox.querySelector('em').textContent = fmtWhen(ms) + (m.place ? ' · ' + m.place : m.note ? ' · ' + m.note : '');
+    cdBox.querySelector('em').textContent = (m.all_day ? fmtWhen(ms).split(' um ')[0] : fmtWhen(ms)) + (m.place ? ' · ' + m.place : m.note ? ' · ' + m.note : '');
   }
   function openMeetingForm() { window.WIR_DATES?.openForm(); }
   window.WIR_COUNTDOWN = { reload: () => loadMeetings().catch(console.error) };

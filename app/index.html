@@ -154,12 +154,13 @@
 <!-- Ein Date (dates.js) -->
 <section class="screen page sub" id="s-date" data-tab="s-plans" data-title="Date">
   <div class="sub-head g-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2 id="dtdTitle">Date</h2><button class="g-menu-btn" id="dtdEdit" type="button" aria-label="Bearbeiten">✎</button></div>
+  <img class="dtd-cover" id="dtdCover" alt="" hidden>
   <div class="dtd-meta" id="dtdMeta"></div>
   <p class="dtd-note glass" id="dtdNote" hidden></p>
-  <div class="dtd-ask glass" id="dtdAsk" hidden>📷 Das Date ist vorbei – magst du Bilder hinzufügen?</div>
+  <div class="dtd-ask glass" id="dtdAsk" hidden>📷 Bilder hinzufügen?</div>
   <div class="dtd-clay" id="dtdClay" hidden>
-    <button class="opt" data-go="s-clay" type="button"><span class="ico">🧸</span><span><b>Ideen</b><small>Was wir bauen können</small></span></button>
-    <button class="opt" data-go="s-clay-done" type="button"><span class="ico">📁</span><span><b>Unsere Figuren</b><small>Was wir schon gebaut haben</small></span></button>
+    <button class="opt" data-go="s-clay" type="button"><span class="ico">🧸</span><span><b>Ideen</b></span></button>
+    <button class="opt" data-go="s-clay-done" type="button"><span class="ico">📁</span><span><b>Unsere Figuren</b></span></button>
   </div>
   <h3 class="list-head">Bilder</h3>
   <div class="mem-tools upload-row dtd-add">
@@ -219,7 +220,7 @@
     <button class="mem-btn" id="tabUnlockNow" type="button">Jetzt freigeben 🎉</button>
   </div>
   <form class="mem-tools" id="entryForm">
-    <input class="mem-input" id="entryTitle" type="text" placeholder="Neuer Eintrag, z.B. Titanic" maxlength="200" required>
+    <input class="mem-input" id="entryTitle" type="text" placeholder="Neuer Eintrag" maxlength="200" required>
     <div class="row">
       <label class="pack-btn file-pick" id="entryPick">🖼️ Bild<input class="sr-only" id="entryFile" type="file" accept="image/*"></label>
       <button class="mem-btn" type="submit">Hinzufügen</button>
@@ -804,11 +805,26 @@
       <input class="mem-input emoji-input" id="dtEmoji" type="text" maxlength="8" placeholder="💗">
       <input class="mem-input" id="dtTitleIn" type="text" maxlength="100" placeholder="Titel">
     </div>
-    <input class="mem-input" id="dtWhen" type="datetime-local" required>
+    <div class="dt-newkind" id="dtNewKind" hidden>
+      <input class="mem-input emoji-input" id="dtKindEmoji" type="text" maxlength="8" placeholder="✨">
+      <input class="mem-input" id="dtKindName" type="text" maxlength="40" placeholder="Neue Art">
+      <button class="pack-btn" id="dtKindAdd" type="button">＋</button>
+    </div>
+    <div class="row dt-when-row">
+      <input class="mem-input" id="dtDate" type="date" required>
+      <input class="mem-input" id="dtTime" type="time">
+    </div>
+    <label class="check"><input type="checkbox" class="switch" id="dtAllDay"><span>Ohne Uhrzeit</span></label>
     <input class="mem-input" id="dtPlace" type="text" maxlength="120" placeholder="📍 Ort">
     <textarea class="mem-input" id="dtNoteIn" rows="3" maxlength="1000" placeholder="Notiz"></textarea>
+    <div class="dt-imgbox" id="dtImgBox" hidden>
+      <h3 class="list-head">Bilder</h3>
+      <div class="dt-strip" id="dtStrip"></div>
+      <div class="row"><label class="pack-btn" for="dtdFile">📷 Hochladen</label><button class="pack-btn" id="dtPick2" type="button">🔗 Erinnerungen</button></div>
+      <div class="mem-status" id="dtImgStatus"></div>
+    </div>
     <button class="mem-btn" type="submit">Speichern 💗</button>
-    <button class="link-btn" id="dtDel" type="button" hidden>Date löschen</button>
+    <button class="link-btn dt-del" id="dtDel" type="button" hidden>🗑 Date löschen</button>
     <div class="err" id="dtErr"></div>
   </form>
 </div>

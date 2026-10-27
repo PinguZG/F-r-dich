@@ -1,7 +1,8 @@
 // Dates (seit 26.10.2026): ein Bereich mit „Geplant“ (nächstes zuerst), „Vergangen“ (neuestes zuerst) und „Zeitstrahl“.
-// Ein Date = date_events: Titel, Art, Zeitpunkt, Ort, Notiz, verknüpfte Erinnerungs-Fotos (photos) + eigene Bilder.
-// Nach seinem Zeitpunkt rutscht ein Date von selbst zu „Vergangen“ und fragt nach Bildern. Clay Date ist eine normale Art
-// (kind "clay") mit Ideen + Figuren als Unterbereich. Treffen sind beim Umzug zu Dates der Art „treffen“ geworden.
+// Ein Date = date_events: Titel, Art, Zeitpunkt (Uhrzeit optional), Ort, Notiz, verknüpfte Erinnerungs-Fotos (photos)
+// + eigene Bilder, Titelbild (cover) und Reihenfolge (img_order). Eigene Arten liegen in date_kinds.
+// Nach seinem Zeitpunkt rutscht ein Date von selbst zu „Vergangen“. Clay Date ist eine normale Art (kind "clay")
+// mit Ideen + Figuren als Unterbereich. Alles ist für beide bearbeitbar, Änderungen kommen per Realtime.
 (() => {
   const pb = window.WIR_PB;
   const $ = id => document.getElementById(id);
@@ -11,52 +12,78 @@
   const pad = n => String(n).padStart(2, '0');
   const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const MON = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-  const fmt = ms => { const d = new Date(ms); return `${WD[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]} ${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-  const toInput = ms => { const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const fmtDay = ms => { const d = new Date(ms); return `${WD[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+  const fmt = (ms, allDay) => { const d = new Date(ms); return fmtDay(ms) + (allDay ? '' : ` · ${pad(d.getHours())}:${pad(d.getMinutes())}`); };
+  const dayInput = ms => { const d = new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const timeInput = ms => { const d = new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const KINDS = {
     date: ['💗', 'Date'], treffen: ['🫶', 'Treffen'], essen: ['🍝', 'Essen'], film: ['🎬', 'Film'], ausflug: ['🌳', 'Ausflug'],
     reise: ['✈️', 'Reise'], clay: ['🧸', 'Clay Date'], sonstiges: ['✨', 'Sonstiges'],
   };
-  let list = [], seg = 'planned', current = null, token = '', started = false;
+  let list = [], customKinds = [], seg = 'planned', current = null, token = '', started = false;
   try { seg = localStorage.getItem('wir-dates-seg') || 'planned'; } catch (_) {}
 
-  const isPast = d => pbMs(d.when) < Date.now() - 3 * 3600000; // 3 Std. nach Beginn gilt ein Date als vergangen
-  const imgCount = d => (d.photos?.length || 0) + (d.images?.length || 0);
+  // ohne Uhrzeit: vergangen ab dem nächsten Tag, sonst 3 Std. nach Beginn
+  const isPast = d => d.all_day
+    ? new Date(new Date(pbMs(d.when)).toDateString()).getTime() + 86400000 <= Date.now()
+    : pbMs(d.when) < Date.now() - 3 * 3600000;
+  const kindName = d => d.kind_label || KINDS[d.kind]?.[1] || 'Date';
+  const icon = d => d.emoji || d.kind_emoji || KINDS[d.kind]?.[0] || '💗';
   async function refreshToken() { try { token = await pb.files.getToken(); } catch (_) {} }
   const imgUrl = (r, f, thumb) => pb.files.getURL(r, f, { thumb, token });
 
+  // alle Bilder eines Dates in der gespeicherten Reihenfolge (Schlüssel "p:<foto>" bzw. "f:<datei>")
+  function items(d) {
+    const arr = [
+      ...(d.expand?.photos || []).map(p => ({ key: 'p:' + p.id, rec: p, file: p.image, linked: p.id, cap: p.caption })),
+      ...(d.images || []).map(f => ({ key: 'f:' + f, rec: d, file: f })),
+    ];
+    const ord = Array.isArray(d.img_order) ? d.img_order : [];
+    const pos = k => { const i = ord.indexOf(k); return i < 0 ? 1e6 : i; };
+    return arr.map((x, i) => ({ ...x, i })).sort((a, b) => pos(a.key) - pos(b.key) || a.i - b.i);
+  }
+  const coverOf = d => { const all = items(d); return all.find(x => x.key === d.cover) || all[0] || null; };
+
   async function load() {
     await refreshToken();
-    list = await pb.collection('date_events').getFullList({ sort: 'when', expand: 'photos,author' });
+    [list, customKinds] = await Promise.all([
+      pb.collection('date_events').getFullList({ sort: 'when', expand: 'photos,author' }),
+      pb.collection('date_kinds').getFullList({ sort: 'created' }).catch(() => []),
+    ]);
     render();
-    if (current) { const c = list.find(x => x.id === current.id); if (c) { current = c; renderDetail(); } }
+    if (current) {
+      const c = list.find(x => x.id === current.id);
+      if (c) { current = c; renderDetail(); if (edit?.id === c.id) { edit = c; renderStrip(); } }
+      else if ($('s-date').classList.contains('active')) { current = null; UI.show('s-plans'); }
+    }
   }
 
   // ======================================================================
   // Übersicht: Geplant / Vergangen / Zeitstrahl
   // ======================================================================
   function thumbs(d, n = 4) {
+    const all = items(d), cov = coverOf(d);
+    const ordered = cov ? [cov, ...all.filter(x => x !== cov && x.key !== cov.key)] : all;
     const box = el('div', 'dt-thumbs');
-    const all = [...(d.expand?.photos || []).map(p => imgUrl(p, p.image, '200x200')), ...(d.images || []).map(f => imgUrl(d, f, '200x200'))];
-    for (const u of all.slice(0, n)) { const i = el('img'); i.loading = 'lazy'; i.alt = ''; i.src = u; box.append(i); }
-    if (all.length > n) box.append(el('span', 'dt-more', '+' + (all.length - n)));
-    return all.length ? box : null;
+    for (const it of ordered.slice(0, n)) { const i = el('img'); i.loading = 'lazy'; i.alt = ''; i.src = imgUrl(it.rec, it.file, '200x200'); box.append(i); }
+    if (ordered.length > n) box.append(el('span', 'dt-more', '+' + (ordered.length - n)));
+    return ordered.length ? box : null;
   }
 
   function card(d) {
     const ms = pbMs(d.when), past = isPast(d);
     const b = el('button', 'dt-card glass' + (past ? ' past' : ''));
     b.type = 'button';
-    const ico = el('span', 'dt-ico', d.emoji || KINDS[d.kind]?.[0] || '💗');
+    const cov = coverOf(d);
+    const ico = el('span', 'dt-ico', icon(d));
+    if (cov) { ico.classList.add('pic'); ico.style.backgroundImage = `url("${imgUrl(cov.rec, cov.file, '200x200')}")`; ico.textContent = ''; }
     const txt = el('div', 'dt-text');
-    txt.append(el('b', '', d.title), el('small', '', fmt(ms) + (d.place ? ' · 📍 ' + d.place : '')));
+    txt.append(el('b', '', d.title), el('small', '', fmt(ms, d.all_day) + (d.place ? ' · 📍 ' + d.place : '')));
     if (!past) {
       const days = Math.round((new Date(new Date(ms).toDateString()) - new Date(new Date().toDateString())) / 86400000);
       txt.append(el('em', 'dt-when', days <= 0 ? 'Heute 💗' : days === 1 ? 'Morgen' : `in ${days} Tagen`));
-    } else if (!imgCount(d)) txt.append(el('em', 'dt-ask', '📷 Bilder hinzufügen?'));
+    } else if (!items(d).length) txt.append(el('em', 'dt-ask', '📷 Bilder hinzufügen?'));
     b.append(ico, txt);
-    const t = thumbs(d);
-    if (t) b.append(t);
     b.addEventListener('click', () => open(d.id));
     return b;
   }
@@ -71,10 +98,10 @@
     if (seg === 'timeline') return renderTimeline();
     const rows = seg === 'planned' ? planned : past;
     $('dtList').replaceChildren(...rows.map(card));
-    if (!rows.length) $('dtList').append(el('div', 'empty-note', seg === 'planned' ? 'Noch nichts geplant – plan euer nächstes Date 💭' : 'Noch keine vergangenen Dates'));
+    if (!rows.length) $('dtList').append(el('div', 'empty-note', seg === 'planned' ? 'Noch nichts geplant' : 'Noch keine vergangenen Dates'));
   }
 
-  // Zeitstrahl: eure Geschichte von oben (neu) nach unten (alt), Monatsmarken, Bilder als Streifen
+  // Zeitstrahl: von oben (neu) nach unten (alt), Monatsmarken, Punkte und Karten mit Bildern
   function renderTimeline() {
     const box = $('dtTimeline');
     const rows = list.slice().reverse();
@@ -89,19 +116,19 @@
       if (mk !== month) { month = mk; out.push(el('div', 'tl-month', mk)); }
       const item = el('button', 'tl-item' + (ms > nowMs ? ' future' : ''));
       item.type = 'button';
-      item.append(el('span', 'tl-dot', d.emoji || KINDS[d.kind]?.[0] || '💗'));
+      item.append(el('span', 'tl-dot', icon(d)));
       const body = el('div', 'tl-body glass');
-      body.append(el('b', '', d.title), el('small', '', fmt(ms) + (d.place ? ' · 📍 ' + d.place : '')));
+      const cov = coverOf(d);
+      if (cov) { const c = el('img', 'tl-cover'); c.alt = ''; c.loading = 'lazy'; c.src = imgUrl(cov.rec, cov.file, '600x0'); body.append(c); }
+      body.append(el('b', '', d.title), el('small', '', fmt(ms, d.all_day) + (d.place ? ' · 📍 ' + d.place : '')));
       if (d.note) body.append(el('p', '', d.note));
-      const t = thumbs(d, 6);
-      if (t) body.append(t);
+      if (items(d).length > 1) { const t = thumbs(d, 6); if (t) body.append(t); }
       item.append(body);
       item.addEventListener('click', () => open(d.id));
       out.push(item);
     }
     if (!nowPlaced) out.push(el('div', 'tl-now', 'Heute 💗'));
     box.replaceChildren(...out);
-    if (!rows.length) box.append(el('div', 'empty-note', 'Euer Zeitstrahl füllt sich mit jedem Date 💗'));
   }
 
   document.querySelectorAll('[data-dtseg]').forEach(b => b.addEventListener('click', () => {
@@ -124,66 +151,84 @@
     const d = current;
     if (!d) return;
     const ms = pbMs(d.when), past = isPast(d);
-    $('dtdTitle').textContent = `${d.emoji || KINDS[d.kind]?.[0] || '💗'} ${d.title}`;
+    $('dtdTitle').textContent = `${icon(d)} ${d.title}`;
+    const cov = coverOf(d);
+    $('dtdCover').hidden = !cov;
+    if (cov) $('dtdCover').src = imgUrl(cov.rec, cov.file, '600x0');
     $('dtdMeta').replaceChildren(
-      el('span', 'sd-chip', KINDS[d.kind]?.[1] || 'Date'),
-      el('span', 'sd-chip', fmt(ms)),
+      el('span', 'sd-chip', kindName(d)),
+      el('span', 'sd-chip', fmt(ms, d.all_day)),
       ...(d.place ? [el('span', 'sd-chip', '📍 ' + d.place)] : []),
     );
     $('dtdNote').textContent = d.note || '';
     $('dtdNote').hidden = !d.note;
-    $('dtdAsk').hidden = !(past && !imgCount(d));
+    const all = items(d);
+    $('dtdAsk').hidden = !(past && !all.length);
     $('dtdClay').hidden = d.kind !== 'clay';
-    const grid = $('dtdPhotos');
-    const items = [
-      ...(d.expand?.photos || []).map(p => ({ src: imgUrl(p, p.image, '600x0'), big: imgUrl(p, p.image), cap: p.caption, linked: p.id })),
-      ...(d.images || []).map(f => ({ src: imgUrl(d, f, '600x0'), big: imgUrl(d, f), file: f })),
-    ];
-    grid.replaceChildren(...items.map(it => {
+    $('dtdPhotos').replaceChildren(...all.map(it => {
       const c = el('div', 'photo polaroid');
-      const pic = el('div', 'pic'); const i = el('img'); i.alt = ''; i.loading = 'lazy'; i.src = it.src; pic.append(i);
-      c.append(pic, el('div', 'pc-cap' + (it.cap ? '' : ' who'), it.cap || (it.linked ? '📸 aus Erinnerungen' : '♡')));
-      c.addEventListener('click', () => UI.lightbox(it.big, it.cap || d.title, [
-        { label: it.linked ? '🔗 Verknüpfung lösen' : '🗑 Bild löschen', onClick: () => removeImg(it) },
+      const pic = el('div', 'pic'); const i = el('img'); i.alt = ''; i.loading = 'lazy'; i.src = imgUrl(it.rec, it.file, '600x0'); pic.append(i);
+      c.append(pic, el('div', 'pc-cap' + (it.cap ? '' : ' who'), it.cap || (it.key === cov?.key ? '★' : '♡')));
+      c.addEventListener('click', () => UI.lightbox(imgUrl(it.rec, it.file), it.cap || d.title, [
+        { label: '★ Titelbild', onClick: () => setCover(d, it.key).then(UI.closeLightbox) },
+        { label: it.linked ? '🔗 Lösen' : '🗑 Löschen', onClick: () => removeImg(d, it) },
       ]));
       return c;
     }));
-    if (!items.length) grid.append(el('div', 'empty-note', past ? 'Noch keine Bilder – füg eure schönsten hinzu 📷' : 'Bilder kannst du nach dem Date hinzufügen 📷'));
+    if (!all.length) $('dtdPhotos').append(el('div', 'empty-note', 'Noch keine Bilder'));
   }
 
-  async function removeImg(it) {
+  // ======================================================================
+  // Bilder: hochladen, aus Erinnerungen, Titelbild, Reihenfolge, entfernen
+  // ======================================================================
+  const save = (d, data) => pb.collection('date_events').update(d.id, data);
+
+  async function setCover(d, key) {
+    try { await save(d, { cover: key }); await load(); } catch (err) { alert('Ging nicht: ' + UI.errText(err)); }
+  }
+  async function move(d, key, dir) {
+    const keys = items(d).map(x => x.key), i = keys.indexOf(key), j = i + dir;
+    if (i < 0 || j < 0 || j >= keys.length) return;
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+    try { await save(d, { img_order: keys }); await load(); } catch (err) { alert('Ging nicht: ' + UI.errText(err)); }
+  }
+  async function removeImg(d, it) {
     if (!confirm(it.linked ? 'Foto von diesem Date lösen? (In Erinnerungen bleibt es.)' : 'Dieses Bild löschen?')) return;
     try {
-      if (it.linked) await pb.collection('date_events').update(current.id, { 'photos-': it.linked });
-      else await pb.collection('date_events').update(current.id, { 'images-': it.file });
+      const data = it.linked ? { 'photos-': it.linked } : { 'images-': it.file };
+      if (d.cover === it.key) data.cover = '';
+      if (Array.isArray(d.img_order)) data.img_order = d.img_order.filter(k => k !== it.key);
+      await save(d, data);
       UI.closeLightbox();
       await load();
     } catch (err) { alert('Ging nicht: ' + UI.errText(err)); }
   }
 
-  // eigene Bilder hochladen
   $('dtdFile').addEventListener('change', async e => {
     const files = [...e.target.files];
-    if (!files.length || !current) return;
+    const d = edit || current;
+    if (!files.length || !d) return;
+    const st = t => { $('dtdStatus').textContent = t; $('dtImgStatus').textContent = t; };
     try {
       for (let i = 0; i < files.length; i++) {
-        $('dtdStatus').textContent = `Lade ${i + 1}/${files.length} hoch …`;
+        st(`Lade ${i + 1}/${files.length} hoch …`);
         const fd = new FormData();
         fd.append('images+', await UI.shrink(files[i]), 'date.jpg');
-        await pb.collection('date_events').update(current.id, fd);
+        await pb.collection('date_events').update(d.id, fd);
       }
-      $('dtdStatus').textContent = 'Hochgeladen ✓';
+      st('');
       await load();
-    } catch (err) { $('dtdStatus').textContent = 'Hochladen fehlgeschlagen: ' + UI.errText(err); }
+    } catch (err) { st('Hochladen fehlgeschlagen: ' + UI.errText(err)); }
     e.target.value = '';
   });
 
-  // aus Erinnerungen verknüpfen
-  let pickSel = new Set();
-  $('dtdPick').addEventListener('click', async () => {
+  let pickSel = new Set(), pickFor = null;
+  async function openPick() {
+    pickFor = edit || current;
+    if (!pickFor) return;
     await refreshToken();
     const photos = await pb.collection('photos').getFullList({ sort: '-created' });
-    pickSel = new Set(current.photos || []);
+    pickSel = new Set(pickFor.photos || []);
     $('dtPickGrid').replaceChildren(...photos.map(p => {
       const b = el('button', 'dt-pick' + (pickSel.has(p.id) ? ' on' : ''));
       b.type = 'button';
@@ -193,65 +238,143 @@
     }));
     if (!photos.length) $('dtPickGrid').append(el('div', 'empty-note', 'Noch keine Fotos in Erinnerungen'));
     UI.sheet('dtPickSheet');
-  });
+  }
+  $('dtdPick').addEventListener('click', openPick);
+  $('dtPick2').addEventListener('click', openPick);
   $('dtPickSave').addEventListener('click', async () => {
-    try { await pb.collection('date_events').update(current.id, { photos: [...pickSel] }); UI.sheet('dtPickSheet', false); await load(); }
+    try { await save(pickFor, { photos: [...pickSel] }); UI.sheet('dtPickSheet', false); await load(); }
     catch (err) { alert('Ging nicht: ' + UI.errText(err)); }
   });
 
-  // ======================================================================
-  // Anlegen / Bearbeiten
-  // ======================================================================
-  let edit = null, kind = 'date';
-  function renderKinds() {
-    $('dtKinds').replaceChildren(...Object.entries(KINDS).map(([k, [e, n]]) => {
-      const b = el('button', 'chip-btn' + (k === kind ? ' on' : ''), `${e} ${n}`);
-      b.type = 'button';
-      b.addEventListener('click', () => {
-        const prevEmoji = KINDS[kind][0];
-        kind = k; renderKinds();
-        if (!$('dtEmoji').value || $('dtEmoji').value === prevEmoji) $('dtEmoji').value = e;
-      });
-      return b;
+  // Bilder-Leiste im Bearbeiten-Sheet: ★ Titelbild, ‹ › Reihenfolge, ✕ entfernen
+  function renderStrip() {
+    const d = edit;
+    $('dtImgBox').hidden = !d;
+    if (!d) return;
+    const all = items(d), cov = coverOf(d);
+    $('dtStrip').replaceChildren(...all.map((it, i) => {
+      const c = el('div', 'dt-si' + (it.key === cov?.key ? ' cover' : ''));
+      const img = el('img'); img.alt = ''; img.loading = 'lazy'; img.src = imgUrl(it.rec, it.file, '200x200');
+      const bar = el('div', 'dt-si-bar');
+      const btn = (t, label, fn, off) => { const b = el('button', '', t); b.type = 'button'; b.setAttribute('aria-label', label); b.disabled = !!off; b.addEventListener('click', fn); return b; };
+      bar.append(
+        btn('‹', 'Nach vorne', () => move(d, it.key, -1), i === 0),
+        btn('★', 'Titelbild', () => setCover(d, it.key)),
+        btn('›', 'Nach hinten', () => move(d, it.key, 1), i === all.length - 1),
+        btn('✕', it.linked ? 'Verknüpfung lösen' : 'Bild löschen', () => removeImg(d, it)),
+      );
+      c.append(img, bar);
+      return c;
     }));
   }
+
+  // ======================================================================
+  // Anlegen / Bearbeiten (Bottom-Sheet)
+  // ======================================================================
+  let edit = null, sel = { kind: 'date', label: '', emoji: '' };
+  const selEmoji = () => sel.emoji || KINDS[sel.kind]?.[0] || '💗';
+  function renderKinds() {
+    const chip = (text, on, fn) => { const b = el('button', 'chip-btn' + (on ? ' on' : ''), text); b.type = 'button'; b.addEventListener('click', fn); return b; };
+    const pick = next => {
+      const prev = selEmoji();
+      sel = next; renderKinds();
+      if (!$('dtEmoji').value || $('dtEmoji').value === prev) $('dtEmoji').value = selEmoji();
+    };
+    $('dtKinds').replaceChildren(
+      ...Object.entries(KINDS).map(([k, [e, n]]) => chip(`${e} ${n}`, !sel.label && sel.kind === k, () => pick({ kind: k, label: '', emoji: '' }))),
+      ...customKinds.map(c => {
+        const b = chip(`${c.emoji || '✨'} ${c.name}`, sel.label === c.name, () => pick({ kind: 'sonstiges', label: c.name, emoji: c.emoji || '✨' }));
+        const x = el('span', 'dk-x', '✕');
+        x.addEventListener('click', async ev => {
+          ev.stopPropagation();
+          if (!confirm(`Art „${c.name}“ entfernen? (Dates behalten sie.)`)) return;
+          await pb.collection('date_kinds').delete(c.id).catch(err => alert(UI.errText(err)));
+          await load(); renderKinds();
+        });
+        b.append(x);
+        return b;
+      }),
+      // eine eigene Art, die es in date_kinds (noch) nicht gibt, trotzdem zeigen
+      ...(sel.label && !customKinds.some(c => c.name === sel.label) ? [chip(`${sel.emoji || '✨'} ${sel.label}`, true, () => {})] : []),
+      chip('＋ Eigene', false, () => { $('dtNewKind').hidden = !$('dtNewKind').hidden; if (!$('dtNewKind').hidden) $('dtKindName').focus(); }),
+    );
+  }
+  $('dtKindAdd').addEventListener('click', async () => {
+    const name = $('dtKindName').value.trim(), emoji = $('dtKindEmoji').value.trim() || '✨';
+    if (!name) return;
+    try {
+      if (!customKinds.some(c => c.name === name)) await pb.collection('date_kinds').create({ name, emoji, author: myId() });
+      await load();
+      $('dtKindName').value = ''; $('dtKindEmoji').value = ''; $('dtNewKind').hidden = true;
+      const prev = selEmoji();
+      sel = { kind: 'sonstiges', label: name, emoji };
+      if (!$('dtEmoji').value || $('dtEmoji').value === prev) $('dtEmoji').value = emoji;
+      renderKinds();
+    } catch (err) { $('dtErr').textContent = UI.errText(err); }
+  });
+
+  function syncTime() { $('dtTime').disabled = $('dtAllDay').checked; $('dtTime').classList.toggle('off', $('dtAllDay').checked); }
+  $('dtAllDay').addEventListener('change', syncTime);
+
   function openForm(d) {
     edit = d || null;
-    kind = d?.kind || 'date';
+    if (d) current = d;
+    sel = d ? { kind: d.kind || 'date', label: d.kind_label || '', emoji: d.kind_emoji || '' } : { kind: 'date', label: '', emoji: '' };
     $('dtFormTitle').textContent = d ? 'Date bearbeiten' : 'Neues Date 💗';
-    $('dtEmoji').value = d?.emoji || KINDS[kind][0];
+    $('dtEmoji').value = d?.emoji || selEmoji();
     $('dtTitleIn').value = d?.title || '';
     const def = new Date(Date.now() + 86400000); def.setHours(18, 0, 0, 0);
-    $('dtWhen').value = toInput(d ? pbMs(d.when) : def.getTime());
+    const ms = d ? pbMs(d.when) : def.getTime();
+    $('dtDate').value = dayInput(ms);
+    $('dtTime').value = d?.all_day ? '' : timeInput(ms);
+    $('dtAllDay').checked = !!d?.all_day;
+    syncTime();
     $('dtPlace').value = d?.place || '';
     $('dtNoteIn').value = d?.note || '';
     $('dtDel').hidden = !d;
-    $('dtErr').textContent = '';
+    $('dtNewKind').hidden = true;
+    $('dtErr').textContent = ''; $('dtImgStatus').textContent = '';
     renderKinds();
+    renderStrip();
     UI.sheet('dtFormSheet');
   }
   $('dtNewBtn').addEventListener('click', () => openForm());
   $('dtdEdit').addEventListener('click', () => openForm(current));
   $('dtForm').addEventListener('submit', async e => {
     e.preventDefault();
+    const day = $('dtDate').value;
+    if (!day) return;
+    const allDay = $('dtAllDay').checked || !$('dtTime').value;
+    const when = new Date(`${day}T${allDay ? '12:00' : $('dtTime').value}`);
     const data = {
-      title: $('dtTitleIn').value.trim() || KINDS[kind][1], emoji: $('dtEmoji').value.trim() || KINDS[kind][0], kind,
-      when: new Date($('dtWhen').value).toISOString(), place: $('dtPlace').value.trim(), note: $('dtNoteIn').value.trim(),
+      title: $('dtTitleIn').value.trim() || sel.label || KINDS[sel.kind][1], emoji: $('dtEmoji').value.trim() || selEmoji(),
+      kind: sel.label ? 'sonstiges' : sel.kind, kind_label: sel.label, kind_emoji: sel.label ? sel.emoji : '',
+      when: when.toISOString(), all_day: allDay, place: $('dtPlace').value.trim(), note: $('dtNoteIn').value.trim(),
     };
     try {
       const r = edit ? await pb.collection('date_events').update(edit.id, data) : await pb.collection('date_events').create({ ...data, author: myId() });
       UI.sheet('dtFormSheet', false);
+      const wasEdit = !!edit;
+      edit = null;
       await load();
       window.WIR_COUNTDOWN?.reload();
-      if (!edit) { const b = $('dtList').getBoundingClientRect(); UI.burst(b.left + b.width / 2, b.top + 40, 16); }
-      if (edit) { current = list.find(x => x.id === r.id); renderDetail(); }
+      // Geplant/Vergangen folgt dem Datum: passenden Umschalter zeigen
+      const d = list.find(x => x.id === r.id);
+      if (d && seg !== 'timeline') { seg = isPast(d) ? 'past' : 'planned'; render(); }
+      if (!wasEdit) { const b = $('dtList').getBoundingClientRect(); UI.burst(b.left + b.width / 2, b.top + 40, 16); }
+      else { current = d || current; renderDetail(); }
     } catch (err) { $('dtErr').textContent = 'Speichern fehlgeschlagen: ' + UI.errText(err); }
   });
   $('dtDel').addEventListener('click', async () => {
     if (!edit || !confirm(`„${edit.title}“ wirklich löschen?`)) return;
-    try { await pb.collection('date_events').delete(edit.id); UI.sheet('dtFormSheet', false); current = null; UI.show('s-plans'); await load(); window.WIR_COUNTDOWN?.reload(); }
-    catch (err) { $('dtErr').textContent = 'Löschen fehlgeschlagen: ' + UI.errText(err); }
+    try {
+      await pb.collection('date_events').delete(edit.id);
+      UI.sheet('dtFormSheet', false); edit = null; current = null; UI.show('s-plans');
+      await load(); window.WIR_COUNTDOWN?.reload();
+    } catch (err) { $('dtErr').textContent = 'Löschen fehlgeschlagen: ' + UI.errText(err); }
   });
+  // Sheet zu -> Bearbeiten beendet
+  $('dtFormSheet').addEventListener('click', e => { if (e.target.closest('[data-close]')) edit = null; });
 
   // ======================================================================
   // Start
@@ -265,6 +388,7 @@
     started = true;
     load().catch(console.error);
     pb.collection('date_events').subscribe('*', () => load().catch(console.error)).catch(console.error);
+    pb.collection('date_kinds').subscribe('*', () => load().catch(console.error)).catch(() => {});
   });
   window.WIR_DATES = { openForm, open, reload: load };
 })();
