@@ -5,7 +5,7 @@
   const updateBar = document.createElement('button');
   updateBar.className = 'update-bar';
   updateBar.type = 'button';
-  updateBar.textContent = '✨ Neue Version – tippen zum Aktualisieren';
+  updateBar.textContent = '✨ Neue Version';
   updateBar.addEventListener('click', reloadApp);
   document.body.append(updateBar);
   document.getElementById('reloadBtn')?.addEventListener('click', reloadApp);

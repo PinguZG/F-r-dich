@@ -1157,3 +1157,28 @@ Alles in `app/layout.css` (wird zuletzt geladen). Auf dem Handy ändert sich nic
 Login und Push funktionieren im normalen Browser wie in der App (Push, wo der Browser ihn unterstützt: Chrome/Edge/Firefox, Safari ab macOS 13 / iPadOS 16.4 als Home-Bildschirm-App).
 
 **Zurück:** `git checkout vor-layout -- app && git rm -q app/layout.css && git commit -m "Zurück vor Layout" && git push` (keine DB-Änderung).
+
+# Redesign A1 · Karten 27.10.2026 (Etappe 1, Wir `wir-v32`)
+
+| Wo | Was |
+|---|---|
+| **Look** | helle Glas-Karten, weiche Farbwolken statt Herzchen, große Rundungen, Verläufe in den Akzentfarben. Alles in `app/a1.css` (zuletzt geladen) + `app/a1.js` (Verdrahtung: „+“ in Erinnerungen, Shop-Kachel). |
+| **Leiste unten** | Start · Erinnerungen · Dates · Spiele · **Wir zwei** (Strich-Symbole, aktiver Reiter im Akzent-Verlauf). Öffne wenn liegt jetzt in „Wir zwei“ (alte Links/Pushs auf `s-openwhen` landen dort). |
+| **Start** | „Zusammen seit … · X Tage“ (ohne Sekunden), nächstes Treffen + Stimmung der anderen Person, Liebe-Glas (Funktion unverändert), Kacheln Öffne wenn / Einkauf / Support / Shop / Anruf / Chat |
+| **Wir zwei** | Ich brauche dich, Stimmung als Ringe (Tippen = Drehregler), Öffne-wenn-Raster, Schicken, Verlauf |
+| **Farbwelten** | neu **Pfirsich** und **Lavendel** (`shared/base.css`, `shared/look.js`, Spielbretter in `app/games.css`). Rosé, Glühwein, Mondnacht, Zuckerwatte unverändert. |
+| **Sync-Knopf** | 48 px, Trefferfläche 56 px, kein Dauerleuchten, sanfter Puls; Ring wächst beim Halten, zweiter Ring in der Herzfarbe der anderen Person. Kein Kontextmenü, kein Scrollen beim Halten. Logik unverändert. |
+| **Texte** | Hilfs- und Erklärzeilen entfernt. |
+
+Keine DB-Änderung in dieser Etappe.
+
+**Sicherung:** Git-Tag `vor-redesign-a1` (= `5df6433`), DB + Fotos + Hooks + **komplette alte Oberfläche** (`oberflaeche/app`, `oberflaeche/shared`) unter `/home/pingu/backups/vor-redesign-a1-2026-10-27/` (Integrität „ok“).
+
+## Zurück zur alten Oberfläche (Daten bleiben)
+
+Am PC (2 Befehle):
+```bash
+cd Documents/F-r-dich && git checkout main && git pull
+git checkout vor-redesign-a1 -- app shared && git commit -m "Alte Oberfläche (vor A1)" && git push
+```
+Nach ≤ 2 Min. ist sie live (Update-Banner). Alle Daten bleiben, auch spätere (Dates-Felder, Zeichnungen bleiben einfach ungenutzt in der DB). Wer Pfirsich/Lavendel gewählt hatte, sieht in der alten Oberfläche Rosé. Wieder zu A1: `git revert --no-edit HEAD && git push`.

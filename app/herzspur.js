@@ -231,11 +231,11 @@
     $('trGame').hidden = !(m && m.status === 'playing');
     $('trInvite').hidden = !!m;
     $('trAccept').hidden = !(m && m.status === 'invited' && m.p2 === myId());
-    $('trLobbyText').textContent = !m ? `Fordere ${p} heraus – ihr fahrt live gegeneinander.`
+    $('trLobbyText').textContent = !m ? `${p} herausfordern`
       : m.status === 'invited' ? (m.p1 === myId() ? `Warte auf ${p} … 🏁` : `${p} will Herzspur spielen!`) : '';
     $('trCancel').hidden = !m;
     size(); draw();
-    window.WIR_BADGE?.('gbTrail', m?.status === 'invited' && m.p2 === myId() ? 'Du bist dran' : m ? 'Läuft' : 'Neu', m?.status === 'invited' && m.p2 === myId() ? 'hot' : m ? 'run' : 'new');
+    window.WIR_BADGE?.('gbTrail', m?.status === 'invited' && m.p2 === myId() ? 'Du bist dran' : m ? 'Läuft' : '', m?.status === 'invited' && m.p2 === myId() ? 'hot' : m ? 'run' : '');
   }
 
   $('trInvite').addEventListener('click', async () => {
@@ -274,7 +274,7 @@
     const rows = await pb.collection('trail_matches').getFullList({ filter: 'status = "done"', sort: '-created' }).catch(() => []);
     const won = rows.filter(r => r.winner === myId()).length;
     $('trStats').textContent = rows.length ? `Siege ${won} · Niederlagen ${rows.length - won}` : 'Noch kein Match gespielt';
-    $('gcTrailStatus').textContent = rows.length ? `${won}:${rows.length - won} Matches` : 'Lichtrennen live';
+    $('gcTrailStatus').textContent = rows.length ? `${won}:${rows.length - won} Matches` : '';
   }
 
   document.addEventListener('wir:show', e => {

@@ -90,7 +90,7 @@
       if (!list.length) {
         const e = document.createElement('div');
         e.className = 'empty-note';
-        e.textContent = filter ? 'Noch keine Fotos in diesem Ordner – lad eins hoch oder verschieb eins hierher 📁' : empty;
+        e.textContent = filter ? 'Noch keine Fotos' : empty;
         grid.append(e);
       }
       if (folders) renderFolders();
@@ -174,7 +174,7 @@
       if (!folderList.length) {
         const e = document.createElement('div');
         e.className = 'empty-note';
-        e.textContent = 'Noch keine Ordner – leg oben unter „➕ Ordner“ einen an.';
+        e.textContent = 'Noch keine Ordner';
         $('moveList').append(e);
       }
       UI.sheet('moveSheet');
@@ -207,7 +207,7 @@
           await pb.collection('photo_folders').delete(f.id);
           filter = '';
           await load();
-          status.textContent = 'Ordner gelöscht – die Fotos sind unter „Alle“ ✓';
+          status.textContent = 'Ordner gelöscht ✓';
         } catch (err) {
           status.textContent = 'Löschen fehlgeschlagen: ' + errText(err);
         }
@@ -330,11 +330,11 @@
 
   const memories = gallery({
     collection: 'photos', grid: $('photos'), status: $('memStatus'), caption: $('caption'), input: $('fileInput'),
-    sortable: true, folders: true, empty: 'Noch keine Fotos – füg das erste hinzu 📷',
+    sortable: true, folders: true, empty: 'Noch keine Fotos',
   });
   const clayDone = gallery({
     collection: 'clay_photos', grid: $('clayPhotos'), status: $('clayStatus'), caption: $('clayCaption'), input: $('clayFile'),
-    sortable: false, folders: false, empty: 'Hier kommen unsere fertigen Figuren hin 🧸',
+    sortable: false, folders: false, empty: 'Noch keine Figuren',
   });
 
   // ======================================================================
@@ -547,7 +547,7 @@
     if (!list.length) {
       const e = document.createElement('div');
       e.className = 'empty-note';
-      e.textContent = 'Noch leer – schreib die erste Idee rein ✨';
+      e.textContent = 'Noch leer';
       $('entries').append(e);
     }
   }
@@ -789,7 +789,7 @@
     if (!items.length) {
       const e = document.createElement('div');
       e.className = 'empty-note';
-      e.textContent = 'Noch nichts geschickt – fang mit Liebe an 💗';
+      e.textContent = 'Noch nichts';
       $('pings').append(e);
     }
   }

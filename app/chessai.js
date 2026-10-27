@@ -237,8 +237,8 @@
       pb.collection('users').getFullList({ fields: 'id,name' }),
     ]);
     renderTally();
-    window.WIR_BADGE?.('gbChessai', g ? 'Läuft' : 'Neu', g ? 'run' : 'new');
-    $('gcChessaiStatus').textContent = g ? `${LEVELS[g.level].name} · Zug ${Math.floor(g.moves.length / 2) + 1}` : '5 Stufen';
+    window.WIR_BADGE?.('gbChessai', g ? 'Läuft' : '', g ? 'run' : '');
+    $('gcChessaiStatus').textContent = g ? `${LEVELS[g.level].name} · Zug ${Math.floor(g.moves.length / 2) + 1}` : '';
   }
   function renderTally() {
     const box = $('caTally');

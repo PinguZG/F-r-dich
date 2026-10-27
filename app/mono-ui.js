@@ -235,7 +235,7 @@
         if (M.raisable(s, me) < pd.amt) items.push(btn('Pleite – aufgeben 🏳️', 'pack-btn', () => resign()));
       } else items.push(el('p', 'mo-hint', `${pname()} muss erst Geld auftreiben …`));
     } else if (s.turn !== me) {
-      items.push(el('p', 'mo-hint', `${pname()} ist dran – du bekommst eine Nachricht, wenn du wieder würfeln darfst 💗`));
+      items.push(el('p', 'mo-hint', `${pname()} ist dran`));
     } else if (s.phase === 'roll') {
       items.push(btn('🎲 Würfeln', 'mem-btn mo-roll', () => act({ type: 'roll' })));
       if (pl.jail) {

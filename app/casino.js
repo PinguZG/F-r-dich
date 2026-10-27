@@ -131,7 +131,7 @@
       ? (data && data.limits.lossLeft < l.min ? 'Tageslimit erreicht – morgen wieder 💗' : 'Zu wenig Heart Coins')
       : (data?.round?.phase === 'done' ? `Nochmal · ${fmt(bet)}` : `Austeilen · ${fmt(bet)}`);
     $('bjChips').querySelectorAll('button').forEach(b => { b.disabled = busy || bet + +b.dataset.v > top; });
-    $('bjNote').textContent = `Spielgeld – kein echtes Geld · Einsatz ${l.min}–${l.max} · heute noch ${fmt(l.lossLeft)} Coins Verlust möglich`;
+    $('bjNote').textContent = `Einsatz ${l.min}–${l.max} · heute noch ${fmt(l.lossLeft)}`;
 
     if (live) {
       const r = data.round, h = r.hands[r.active];

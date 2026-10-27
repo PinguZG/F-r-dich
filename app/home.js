@@ -90,13 +90,11 @@
       s = Math.floor(rest % 60000 / 1000);
     }
     setText('dayCount', total);
-    setText('tY', Y); setText('tM', M); setText('tD', D);
-    setText('th', h); setText('tm', mi); setText('ts', s);
   }
 
   function renderSince() {
     const [y, m, d] = since.split('-').map(Number);
-    $('sinceText').textContent = `Seit ${d}. ${MONTHS[m - 1]} ${y}`;
+    $('sinceText').textContent = `Zusammen seit ${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
     if (document.activeElement !== $('sinceInput')) $('sinceInput').value = since;
     tick();
   }
@@ -123,15 +121,16 @@
         : await pb.collection('shared_settings').create({ key: 'together_since', ...data });
       since = v;
       renderSince();
-      $('sinceStatus').textContent = 'Gespeichert ✓ – gilt für euch beide';
+      $('sinceStatus').textContent = 'Gespeichert ✓';
     } catch (err) {
       $('sinceStatus').textContent = 'Speichern fehlgeschlagen: ' + errText(err);
     }
   });
 
   renderSince();
-  // jede Sekunde, aber nur wenn die App sichtbar ist
-  setInterval(() => { if (!document.hidden) tick(); }, 1000);
+  // Tageszähler: einmal pro Minute reicht (keine laufenden Sekunden)
+  setInterval(() => { if (!document.hidden) tick(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 
   // ======================================================================
   // Start

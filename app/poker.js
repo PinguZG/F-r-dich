@@ -186,7 +186,7 @@
     const duo = data?.duo, ai = data?.ai;
     const duoMine = mode === 'duo' && t ? t : duo;
     const myTurn = !!(duoMine && duoMine.legal) || !!(duo && duo.status === 'waiting' && duo.p1 !== myId());
-    window.WIR_BADGE?.('gbPokerAi', ai ? 'Läuft' : 'Neu', ai ? 'run' : 'new');
+    window.WIR_BADGE?.('gbPokerAi', ai ? 'Läuft' : '', ai ? 'run' : '');
     if (myTurn !== wasTurn) document.dispatchEvent(new CustomEvent('wir:turn', { detail: { k: 'poker', on: myTurn, waiting: !!duo && !myTurn } }));
     wasTurn = myTurn;
   }

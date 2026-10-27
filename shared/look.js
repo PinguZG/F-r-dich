@@ -16,6 +16,8 @@
     gluehwein:   '#3e0d1e',
     mondnacht:   '#210635',
     zuckerwatte: '#F4E7F8',
+    pfirsich:    '#fffaf6',
+    lavendel:    '#f8f2ff',
   };
   function applyTheme(t) {
     if (!THEMES[t]) t = 'rose';

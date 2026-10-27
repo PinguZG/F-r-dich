@@ -237,8 +237,8 @@
       return row;
     }));
     bar();
-    window.WIR_BADGE?.('gbSnake', g && !g.over ? 'Pausiert' : 'Neu', g && !g.over ? 'run' : 'new');
-    $('gcSnakeStatus').textContent = g && !g.over ? `Level ${levelOf(g.hearts)} · pausiert` : best ? `Rekord ${best}` : 'Herzen sammeln';
+    window.WIR_BADGE?.('gbSnake', g && !g.over ? 'Pausiert' : '', g && !g.over ? 'run' : '');
+    $('gcSnakeStatus').textContent = g && !g.over ? `Level ${levelOf(g.hearts)} · pausiert` : best ? `Rekord ${best}` : '';
   }
 
   window.addEventListener('resize', () => { if (g && isActive()) resize(); });

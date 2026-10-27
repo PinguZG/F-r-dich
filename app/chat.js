@@ -99,7 +99,7 @@
       if (dayKey(ms) !== day) { day = dayKey(ms); out.push(el('div', 'cm-day', dayLabel(ms))); }
       out.push(bubble(m));
     }
-    if (!msgs.length) out.push(el('div', 'empty-note', `Schreib ${window.WIR_LOOK?.partner()?.name || 'deinem Schatz'} etwas Liebes 💌`));
+    if (!msgs.length) out.push(el('div', 'empty-note', '💌'));
     box.replaceChildren(...out);
     if (atBottom) box.scrollTop = box.scrollHeight; else if (!stick) box.scrollTop += box.scrollHeight - prevH;
   }

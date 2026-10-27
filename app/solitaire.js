@@ -364,8 +364,8 @@
       row.append(t, el('b', 'lr-amt plus', String(mine.reduce((s, x) => s + x.points, 0))));
       return row;
     }));
-    window.WIR_BADGE?.('gbSolitaire', g ? 'Läuft' : 'Neu', g ? 'run' : 'new');
-    $('gcSolitaireStatus').textContent = g ? `${g.draw === 3 ? '3 Karten' : '1 Karte'} · ${fmtTime(g.secs)}` : 'Klondike';
+    window.WIR_BADGE?.('gbSolitaire', g ? 'Läuft' : '', g ? 'run' : '');
+    $('gcSolitaireStatus').textContent = g ? `${g.draw === 3 ? '3 Karten' : '1 Karte'} · ${fmtTime(g.secs)}` : '';
   }
 
   let started = false;

@@ -18,6 +18,14 @@ html[data-theme="zuckerwatte"]{
   --board-light:#fefaff; --board-dark:#ead2f0; --piece-dark:#5d3470; --piece-light:#fffefe;
   --tile-me:#f9d3e6; --tile-them:#dcdcfa; --tile-mid:rgba(255,255,255,.6);
 }
+html[data-theme="pfirsich"]{
+  --board-light:#fffaf6; --board-dark:#f8c9b2; --piece-dark:#7c3020; --piece-light:#fffdfb;
+  --tile-me:#ffd9c8; --tile-them:#ffe9c9; --tile-mid:#fff3ec;
+}
+html[data-theme="lavendel"]{
+  --board-light:#fcf9ff; --board-dark:#dcc6f6; --piece-dark:#4f2380; --piece-light:#fffdff;
+  --tile-me:#f3d6f0; --tile-them:#e1d8ff; --tile-mid:rgba(255,255,255,.6);
+}
 
 /* ---------- Übersicht ---------- */
 .game-card{border-radius:28px;padding:14px 14px 14px;margin-bottom:14px}
@@ -36,7 +44,7 @@ html[data-theme="zuckerwatte"]{
 .gc-text b{display:block;font-size:18px;color:var(--ink)}
 .gc-text small{display:block;font-size:13px;font-weight:700;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gc-text small.hot{color:var(--accent)}
-html[data-theme="mondnacht"] .gc-text small.hot,html[data-theme="zuckerwatte"] .gc-text small.hot{color:var(--ink)}
+html[data-theme="mondnacht"] .gc-text small.hot,html[data-theme="zuckerwatte"] .gc-text small.hot,html[data-theme="lavendel"] .gc-text small.hot{color:var(--ink)}
 .gc-play{flex:none;width:62px;height:62px;border-radius:50%;border:none;cursor:pointer;font-size:24px;font-weight:700;padding-left:3px;
   background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink);
   box-shadow:0 10px 22px rgba(var(--shadow),.35),inset 0 2px 0 rgba(255,255,255,.35);transition:transform .15s}
@@ -123,6 +131,8 @@ html[data-theme="mondnacht"] .mv.now,html[data-theme="zuckerwatte"] .mv.now{colo
   box-shadow:inset -1px -1px 0 rgba(var(--shadow),.12)}
 html[data-theme="mondnacht"] .sd-cell,html[data-theme="zuckerwatte"] .sd-cell{color:#8a4fa6}
 html[data-theme="gluehwein"] .sd-cell{color:#b4204a}
+html[data-theme="pfirsich"] .sd-cell{color:#d0533f}
+html[data-theme="lavendel"] .sd-cell{color:#8a3fd6}
 .sd-cell.given{color:var(--piece-dark)}
 .sd-cell.br{box-shadow:inset -3px -1px 0 rgba(var(--shadow),.3)}
 .sd-cell.bb{box-shadow:inset -1px -3px 0 rgba(var(--shadow),.3)}

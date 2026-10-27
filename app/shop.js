@@ -143,7 +143,7 @@
     const me = window.WIR_LOOK?.me();
     const owned = cat.prices.frames.filter(f => cat.owned.includes(f.key));
     box.replaceChildren();
-    if (!owned.length) { box.append(el('p', 'mem-note', 'Noch keine Rahmen – im Shop (Spiele → Coins oben rechts) gibt es welche 💗')); return; }
+    if (!owned.length) { box.append(el('p', 'mem-note', 'Noch keine Rahmen')); return; }
     const row = el('div', 'frame-pick');
     for (const f of [{ key: '', name: 'Ohne' }, ...owned]) {
       const b = el('button', 'frame-chip' + (cat.frame === f.key ? ' on' : ''));

@@ -52,10 +52,13 @@
       const dot = el('span', 'mood-dot', v == null ? '❔' : moodEmoji(v));
       dot.style.setProperty('--mc', v == null ? 'var(--chip)' : moodColor(v));
       const t = el('span', 'mood-txt');
-      t.append(el('b', '', label), el('small', '', v == null ? (mine ? 'Tippen zum Setzen' : 'noch nichts gesetzt') : `${v} % · ${ago(pbMs(m.created))}`));
+      t.append(el('b', '', label), el('small', '', v == null ? '–' : `${v} % · ${ago(pbMs(m.created))}`));
       box.append(dot, t);
+      box.style.setProperty('--mv', v == null ? 0 : v);
+      box.style.setProperty('--mc', v == null ? 'var(--chip)' : moodColor(v));
     };
     chip($('moodPartner'), p?.name || 'Schatz', mp, false);
+    document.querySelectorAll('[data-mood-partner]').forEach(b => chip(b, p?.name || 'Schatz', mp, false));
     chip($('moodMine'), 'Du', mm, true);
   }
 
@@ -104,10 +107,11 @@
   }
   $('moodMine').addEventListener('click', openMood);
   $('moodPartner').addEventListener('click', openMood);
+  document.querySelectorAll('[data-mood-partner]').forEach(b => b.addEventListener('click', openMood));
   $('moodSave').addEventListener('click', async () => {
     try {
       await pb.collection('moods').create({ user: myId(), value: Math.round(val) });
-      $('moodStatus').textContent = Math.round(val) < 50 ? `Gespeichert – ${pname()} bekommt Bescheid 💗` : 'Gespeichert ✓';
+      $('moodStatus').textContent = 'Gespeichert ✓';
       await loadMoods(); drawChart();
       setTimeout(() => UI.sheet('moodSheet', false), 900);
     } catch (err) { $('moodStatus').textContent = 'Ging nicht: ' + UI.errText(err); }
@@ -162,7 +166,6 @@
         } else c.append(el('small', '', `Du hast geantwortet: ${ANSWERS[r.answer] || ''}`));
       } else {
         c.append(el('b', '', r.status === 'open' ? `Anfrage gesendet – ${KINDS[r.kind] || ''}` : `💗 ${pname()}: ${ANSWERS[r.answer] || ''}`));
-        c.append(el('small', '', r.status === 'open' ? `Warte auf ${pname()} …` : 'auf deine Anfrage'));
       }
       const x = el('button', 'del-x sup-x', '✕');
       x.type = 'button'; x.setAttribute('aria-label', 'Ausblenden');
@@ -197,7 +200,7 @@
     try {
       await post('/api/support', { kind, message: $('supMsg').value.trim() });
       $('supMsg').value = '';
-      $('supStatus').textContent = `Gesendet – ${pname()} bekommt sofort Bescheid 💗`;
+      $('supStatus').textContent = 'Gesendet 💗';
       await loadSupport();
       setTimeout(() => UI.sheet('supportSheet', false), 900);
     } catch (err) { $('supStatus').textContent = 'Ging nicht: ' + UI.errText(err); }
@@ -206,7 +209,7 @@
   // ======================================================================
   // Start
   // ======================================================================
-  document.addEventListener('wir:show', e => { if (started && e.detail === 's-home') { loadMoods().catch(console.error); loadSupport().catch(console.error); } });
+  document.addEventListener('wir:show', e => { if (started && (e.detail === 's-home' || e.detail === 's-wir')) { loadMoods().catch(console.error); loadSupport().catch(console.error); } });
   document.addEventListener('wir:users', () => { if (started) renderMoodCard(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && started) { loadMoods().catch(console.error); loadSupport().catch(console.error); } });
   document.addEventListener('wir:started', () => {

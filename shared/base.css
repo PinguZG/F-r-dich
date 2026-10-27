@@ -61,6 +61,36 @@ html[data-theme="zuckerwatte"]{
   --chip:rgba(255,255,255,.6);
   --swatch:linear-gradient(135deg,#F4E7F8,#F6BCBA,#E3AADD,#C8A8E9,#C3C7F4);
 }
+/* Pfirsich (27.10.2026): warm, Koralle -> Pfirsich, sehr heller Hintergrund, eher weiße Karten */
+html[data-theme="pfirsich"]{
+  color-scheme: light;
+  --bg1:#fffaf6; --bg2:#fff0e7; --bg3:#ffe1d2;
+  --ink:#8c3b28; --ink-soft:#b46a54; --ink-faint:#e6b8a6;
+  --accent:#f26d5b; --accent2:#f7a072; --accent-ink:#fff;
+  --glass:rgba(255,255,255,.74); --glass-strong:rgba(255,255,255,.92); --glass-border:rgba(255,255,255,.96);
+  --shadow:226,104,82;
+  --input-bg:#fff8f3; --input-ink:#7c3020; --placeholder:#d49b87;
+  --liquid1:#f7a072; --liquid2:#f26d5b;
+  --glow:#f7a072; --glow2:#ffd4bf;
+  --paper:#fffaf5; --paper-line:#f6dacb; --paper-ink:#6e2e1e; --paper-margin:#f3a48c;
+  --chip:#ffece2;
+  --swatch:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b);
+}
+/* Lavendel (27.10.2026): Lila -> Pink, heller lila Hintergrund, Glas mit leicht lila Rand */
+html[data-theme="lavendel"]{
+  color-scheme: light;
+  --bg1:#f8f2ff; --bg2:#efe4ff; --bg3:#e2cffd;
+  --ink:#5a2a8a; --ink-soft:#8a5db6; --ink-faint:#c7aae6;
+  --accent:#b46bff; --accent2:#ff7ab8; --accent-ink:#fff;
+  --glass:rgba(255,255,255,.6); --glass-strong:rgba(255,255,255,.84); --glass-border:rgba(212,182,255,.75);
+  --shadow:140,80,210;
+  --input-bg:#fbf7ff; --input-ink:#4f2380; --placeholder:#a98cd0;
+  --liquid1:#ff7ab8; --liquid2:#b46bff;
+  --glow:#c98bff; --glow2:#ffb8da;
+  --paper:#fffbff; --paper-line:#eadcf7; --paper-ink:#4f2380; --paper-margin:#d3a5ef;
+  --chip:#f1e6ff;
+  --swatch:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8);
+}
 
 /* ---------- Grundlagen ---------- */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
@@ -285,6 +315,8 @@ textarea.mem-input{resize:none;line-height:1.45}
 .swatch[data-theme="gluehwein"] i{background:linear-gradient(135deg,#3e0d1e,#9d0d2f,#b4204a,#e87d87,#eca59d)}
 .swatch[data-theme="mondnacht"] i{background:linear-gradient(135deg,#210635,#420D4B,#7B337E,#6667AB,#F5D5E0)}
 .swatch[data-theme="zuckerwatte"] i{background:linear-gradient(135deg,#F4E7F8,#F6BCBA,#E3AADD,#C8A8E9,#C3C7F4)}
+.swatch[data-theme="pfirsich"] i{background:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b)}
+.swatch[data-theme="lavendel"] i{background:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8)}
 .swatch.on{color:var(--ink)}
 .swatch.on i{transform:scale(1.06);box-shadow:0 0 0 3px var(--bg1),0 0 0 6px var(--accent),0 8px 18px rgba(var(--shadow),.3)}
 .push-state{font-size:14px;font-weight:600;color:var(--ink-soft)}

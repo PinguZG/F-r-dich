@@ -93,7 +93,8 @@
   cdBox.hidden = true;
   cdBox.innerHTML = '<span class="cd-ico">💗</span><div><small>Nächstes Treffen</small><div class="cd-num"></div><em></em></div>';
   cdBox.dataset.go = 's-plans';
-  const cdEmpty = el('button', 'cd-empty', '+ Nächstes Date planen');
+  const cdEmpty = el('button', 'cd-empty');
+  cdEmpty.innerHTML = '<span class="cd-plus">＋</span><small>Date planen</small>';
   cdEmpty.type = 'button';
   cdEmpty.hidden = true;
   cdEmpty.addEventListener('click', () => openMeetingForm());
@@ -159,13 +160,13 @@
   // Öffne wenn – Umschalter "Für mich" / "Schreiben"
   // ======================================================================
   function setSeg(seg) {
-    document.querySelectorAll('.seg').forEach(b => b.classList.toggle('on', b.dataset.seg === seg));
+    document.querySelectorAll('.seg[data-seg]').forEach(b => b.classList.toggle('on', b.dataset.seg === seg));
     $('owInPane').hidden = seg !== 'in';
     $('owWritePane').hidden = seg !== 'write';
     if (seg === 'in') loadInbox().catch(showInboxErr);
     else loadWriter().catch(console.error);
   }
-  document.querySelectorAll('.seg').forEach(b => b.addEventListener('click', () => setSeg(b.dataset.seg)));
+  document.querySelectorAll('.seg[data-seg]').forEach(b => b.addEventListener('click', () => setSeg(b.dataset.seg)));
 
   // ======================================================================
   // Öffne wenn – Empfängerin
@@ -191,10 +192,10 @@
       const b = el('button', 'opt ow-letter-card');
       b.type = 'button';
       b.innerHTML = '<span class="ico">💌</span><span><b></b><small></small></span>';
-      b.querySelector('b').textContent = 'Öffne wenn ' + c.title;
+      b.querySelector('b').textContent = c.title.trim().startsWith('…') ? c.title : '… ' + c.title;
       const empty = c.count === 0;
       b.classList.toggle('empty', empty);
-      b.querySelector('small').textContent = empty ? 'Noch kein Brief – bald 💭' : c.fresh ? 'Ein neuer Brief wartet' : 'Tippen zum Öffnen';
+      b.querySelector('small').textContent = c.fresh ? 'Neu' : '';
       if (c.fresh) b.querySelector('small').append(el('span', 'ow-dot'));
       b.addEventListener('click', () => { if (empty) { UI.shake(b); return; } openLetter(c); });
       return b;
@@ -283,7 +284,7 @@
     const info = el('div');
     const isOpen = openCats.has(c.id);
     const count = mine.length ? `${opened} von ${mine.length} geöffnet` : 'Noch leer – erst mit Brief sichtbar';
-    info.append(el('b', '', `${isOpen ? '▾' : '▸'} ${c.title}`), el('small', '', isOpen ? count : `${count} · Tippen zum Schreiben ✍️`));
+    info.append(el('b', '', `${isOpen ? '▾' : '▸'} ${c.title}`), el('small', '', count));
     head.append(info);
     if (i > 0) head.append(delBtn('Nach oben', () => moveCat(i, -1), '▲'));
     if (i < cats.length - 1) head.append(delBtn('Nach unten', () => moveCat(i, 1), '▼'));
@@ -310,7 +311,7 @@
       for (const m of mine) {
         const b = el('button', 'ow-msg');
         b.type = 'button';
-        b.append(el('p', '', m.text), el('small', '', (m.opened_at ? '✓ geöffnet' : 'noch nicht geöffnet') + ' · tippen zum Bearbeiten'));
+        b.append(el('p', '', m.text), el('small', '', m.opened_at ? '✓ geöffnet' : '–'));
         b.addEventListener('click', () => openLetterSheet(c, m));
         body.append(b);
       }
@@ -409,7 +410,7 @@
     started = true;
     pb.send('/api/wir/partner', {}).then(p => {
       partner = p;
-      if (p.name) $('owWriteIntro').textContent = `Nur ${p.name} kann sie öffnen – immer einen zufälligen Brief.`;
+
     }).catch(console.error);
     await Promise.all([
       loadMeetings(),
@@ -419,7 +420,7 @@
     pb.collection('date_events').subscribe('*', debounce(loadMeetings)).catch(console.error);
     if (location.hash === '#open-when') {
       history.replaceState(null, '', location.pathname);
-      UI.show('s-openwhen');
+      UI.show('s-wir');
       setSeg('in');
     }
   }
@@ -427,7 +428,7 @@
   // Seitenwechsel: passende Bereiche frisch laden
   document.addEventListener('wir:show', e => {
     if (!started) return;
-    if (e.detail === 's-openwhen') setSeg($('owWritePane').hidden ? 'in' : 'write');
+    if (e.detail === 's-wir') setSeg($('owWritePane').hidden ? 'in' : 'write');
     if (e.detail === 's-plans' || e.detail === 's-home') renderCountdown();
   });
 
@@ -435,6 +436,7 @@
   document.addEventListener('wir:go', e => {
     if (e.detail === 's-write') setSeg('write');
     else if (e.detail === 's-openwhen') setSeg('in');
+    if (e.detail === 's-openwhen' || e.detail === 's-write') setTimeout(() => $('owSection')?.scrollIntoView({ block: 'start' }), 60);
   });
 
   setInterval(() => { if (started && !document.hidden) renderCountdown(); }, 30000);

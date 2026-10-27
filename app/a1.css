@@ -1,0 +1,300 @@
+/* ======================================================================
+   Design A1 · Karten (27.10.2026) – wird nach layout.css geladen und überschreibt nur die Optik.
+   Helle Glas-Karten, weiche Farbwolken, große Rundungen, Verläufe in den Akzentfarben der Farbwelt.
+   Farbwerte kommen ausschließlich aus den Variablen der Farbwelt (shared/base.css).
+   Zurück zur alten Oberfläche: siehe ANLEITUNG.md („Redesign A1 → Zurück“).
+   ====================================================================== */
+:root{--r-card:28px;--r-tile:22px;--a1-grad:linear-gradient(135deg,var(--accent2),var(--accent))}
+
+/* ---------- Hintergrund: weiche Farbwolken statt Herzchen ---------- */
+body{background:var(--bg1)}
+body::before{content:'';position:fixed;inset:-15%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(38% 28% at 14% 10%,color-mix(in srgb,var(--accent2) 34%,transparent),transparent 70%),
+    radial-gradient(36% 26% at 92% 24%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),
+    radial-gradient(44% 32% at 82% 90%,color-mix(in srgb,var(--glow2) 40%,transparent),transparent 72%),
+    radial-gradient(40% 30% at 6% 76%,color-mix(in srgb,var(--glow) 20%,transparent),transparent 70%),
+    linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 58%,var(--bg3) 100%);
+  filter:blur(8px)}
+.bg-hearts{display:none}
+
+/* ---------- Glas ---------- */
+.glass{
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
+  border:1px solid var(--glass-border);
+  box-shadow:0 10px 30px rgba(var(--shadow),.10),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.card{border-radius:var(--r-card)}
+@media (max-width:767px){.page > *{max-width:460px}}
+
+/* ---------- Kopf: Avatar + Sync links, Titel mittig, rechts Chat/Coins ---------- */
+body{--top-h:calc(64px + env(safe-area-inset-top))}
+.topbar{gap:10px;padding:env(safe-area-inset-top) 14px 0;
+  background:linear-gradient(var(--bg1) 0%,color-mix(in srgb,var(--bg1) 70%,transparent) 65%,transparent)}
+.topbar h1{font-size:19px;font-weight:700;letter-spacing:.2px}
+.top-left,.top-right{flex:0 0 106px;gap:6px}
+.top-right{min-width:106px}
+.avatar.sm{width:42px;height:42px}
+.avatar{box-shadow:0 4px 12px rgba(var(--shadow),.18),0 0 0 2.5px var(--glass-border)}
+
+.chat-top{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--ink);
+  background:var(--glass-strong);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 4px 14px rgba(var(--shadow),.14)}
+.ico-line{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.chat-top .ico-line{width:22px;height:22px}
+.chat-badge{background:var(--a1-grad);color:var(--accent-ink);border-color:var(--bg1)}
+
+/* ---------- Sync-Knopf: dezent, große Trefferfläche, Ringe statt Dauerleuchten ---------- */
+.sync-top{width:56px;height:56px;margin:0 -4px;padding:0;border:none;background:none;box-shadow:none;animation:none;
+  display:flex;align-items:center;justify-content:center;touch-action:none;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.sync-core{position:relative;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--sync-me,#ff5fa2) 16%,var(--glass-strong));
+  border:1px solid var(--glass-border);box-shadow:0 4px 12px rgba(var(--shadow),.12);
+  transition:transform .25s ease,background .25s ease;pointer-events:none}
+.sync-top svg{width:22px;height:20px;animation:a1SyncPulse 3.2s ease-in-out infinite;filter:none}
+.sync-top path{fill:var(--sync-me,#ff5fa2)}
+/* eigener Ring wächst beim Halten, Ring der anderen Person in ihrer Herzfarbe */
+.sync-top::before,.sync-top::after{content:'';position:absolute;inset:auto;width:48px;height:48px;border-radius:50%;pointer-events:none}
+.sync-top::before{border:3px solid var(--sync-me,#ff5fa2);opacity:0;transform:scale(.7);
+  transition:transform 1s cubic-bezier(.2,.8,.3,1),opacity .2s ease}
+.sync-top::after{box-shadow:0 0 0 3px var(--sync-partner,#3b9eff);opacity:0;transform:scale(1.12);transition:opacity .3s ease}
+.sync-top.holding::before{opacity:1;transform:scale(1.12)}
+.sync-top.holding .sync-core{transform:scale(.92);background:color-mix(in srgb,var(--sync-me,#ff5fa2) 30%,var(--glass-strong))}
+.sync-top.holding svg{animation-duration:1s}
+.sync-top.partner::after{opacity:1;animation:a1PartnerRing 1.6s ease-in-out infinite}
+.sync-top.holding.partner::after{transform:scale(1.26)}
+@keyframes a1SyncPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes a1PartnerRing{0%,100%{opacity:.55}50%{opacity:1}}
+.sync-tip::before{left:60px}
+
+/* ---------- Untere Leiste: schwebend, 5 Symbole mit Beschriftung ---------- */
+.tab-ico{font-size:0;width:44px;height:30px;border-radius:15px;color:inherit}
+.tab-ico .ico-line{width:23px;height:23px}
+.tab-btn{color:var(--ink-soft);gap:3px}
+.tab-lbl{font-size:10.5px;font-weight:700}
+.tab-btn.on{color:var(--ink)}
+.tab-btn.on .tab-ico{background:var(--a1-grad);color:var(--accent-ink);transform:none;box-shadow:0 6px 16px rgba(var(--shadow),.3)}
+.nav-dot{top:-2px;right:4px;background:var(--accent);border-color:var(--glass-strong)}
+@media (max-width:767px){
+  .tabbar{left:14px;right:14px;height:70px;border-radius:30px;padding:0 4px;
+    background:var(--glass-strong);border:1px solid var(--glass-border);
+    box-shadow:0 14px 36px rgba(var(--shadow),.18),inset 0 1px 0 rgba(255,255,255,.5)}
+  .tab-btn{height:64px}
+}
+@media (min-width:768px){
+  .tabbar{border-radius:32px;background:var(--glass-strong);box-shadow:0 14px 36px rgba(var(--shadow),.16)}
+  .tab-btn.on{background:var(--chip)}
+}
+@media (min-width:1100px){
+  .tab-btn.on{color:var(--ink)}
+  .tab-ico{width:40px;height:40px;border-radius:14px}
+}
+
+/* ---------- Unterseiten-Kopf (auch alle Spiele, Einkauf, Chat, Einstellungen, Konsole) ---------- */
+.sub-head{gap:10px;margin-bottom:14px}
+.sub-head h2{font-size:21px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back-btn,.folder-btn,.g-menu-btn{width:44px;height:44px;background:var(--glass-strong);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 4px 14px rgba(var(--shadow),.12);color:var(--ink)}
+.list-head{margin:24px 2px 10px;font-size:13px;letter-spacing:.8px}
+
+/* ---------- Knöpfe, Felder, Chips ---------- */
+.mem-btn{border-radius:26px;background:var(--a1-grad);box-shadow:0 10px 24px rgba(var(--shadow),.26)}
+.pack-btn{background:var(--glass-strong);border:1px solid var(--glass-border);box-shadow:0 4px 14px rgba(var(--shadow),.1)}
+.chip-btn{border-radius:18px;background:var(--chip);min-height:38px;padding:8px 14px}
+.chip-btn.on{background:var(--a1-grad);color:var(--accent-ink)}
+.mem-input{border-radius:18px}
+.segmented{padding:4px;border-radius:26px;background:var(--glass);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.seg{border-radius:22px;height:40px;font-size:14.5px}
+.seg.on{background:var(--a1-grad)}
+.opt,.date,.hub-card,.ow-cat,.entry{border-radius:var(--r-tile);background:var(--glass);border:1px solid var(--glass-border);
+  box-shadow:0 8px 22px rgba(var(--shadow),.08)}
+.opt-new{background:transparent;border:2px dashed var(--ink-faint);box-shadow:none}
+.mem-status:empty{min-height:0}
+
+/* ---------- Bottom-Sheets ---------- */
+.sheet{border-radius:30px 30px 0 0;background:color-mix(in srgb,var(--bg1) 94%,transparent);
+  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-top:1px solid var(--glass-border)}
+.sheet-backdrop{background:rgba(20,4,14,.28)}
+
+/* ---------- Schwebender „+“-Knopf ---------- */
+.a1-fab{position:fixed;z-index:25;right:max(18px,env(safe-area-inset-right));bottom:calc(var(--nav-h) + 22px);
+  width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--a1-grad);color:var(--accent-ink);font-size:30px;font-weight:600;line-height:1;
+  box-shadow:0 12px 28px rgba(var(--shadow),.36),inset 0 1px 0 rgba(255,255,255,.4);transition:transform .15s}
+.a1-fab:active{transform:scale(.92)}
+.screen:not(.active) .a1-fab{display:none}
+@media (min-width:768px){.a1-fab{bottom:max(26px,env(safe-area-inset-bottom));right:max(30px,env(safe-area-inset-right))}}
+@media (min-width:1100px){body.chat-docked .a1-fab{right:430px}}
+
+/* ======================================================================
+   Start
+   ====================================================================== */
+#s-home .home-cols{display:flex;flex-direction:column;gap:14px;width:100%;max-width:460px}
+#s-home .turn-banner{margin:0}
+.a1-since{display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:24px;text-align:left}
+.a1-since .couple{margin:0;gap:0}
+.a1-since .avatar.sm{width:36px;height:36px;font-size:15px}
+.a1-since .avatar + .avatar{margin-left:-10px}
+.since-txt{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;font-size:14px}
+.since-txt small{font-size:14px;font-weight:600;color:var(--ink-soft)}
+.since-txt b{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap}
+.since-txt b::before{content:'· ';color:var(--ink-faint)}
+
+.a1-duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.a1-mini{min-width:0;border-radius:24px;padding:14px;min-height:124px;display:flex;flex-direction:column;justify-content:flex-start}
+/* nächstes Treffen (extra.js legt .countdown + .cd-empty hinein) */
+#homeMeet .countdown{background:none;border:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  padding:0;border-radius:0;flex-direction:column;align-items:flex-start;gap:6px;height:100%}
+#homeMeet .countdown .cd-ico{width:40px;height:40px;border-radius:14px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:22px}
+#homeMeet .countdown div{width:100%}
+#homeMeet .countdown small{font-size:11.5px;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#homeMeet .countdown .cd-num{font-size:16px;line-height:1.2}
+#homeMeet .countdown em{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11.5px;margin-top:2px}
+#homeMeet .cd-empty{margin:0;padding:0;width:100%;flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;color:var(--ink-soft)}
+#homeMeet .cd-empty .cd-plus{width:40px;height:40px;border-radius:14px;background:var(--a1-grad);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-size:24px}
+#homeMeet .cd-empty small{font-size:14px;font-weight:700;color:var(--ink)}
+/* Stimmung der anderen Person */
+.a1-mood .mood-chip{flex:1;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:6px;padding:0;border:none;background:none;width:100%}
+.a1-mood .mood-dot{width:40px;height:40px;font-size:22px;box-shadow:0 0 12px var(--mc)}
+.a1-mood .mood-txt b{font-size:16px}
+.a1-mood .mood-txt small{font-size:11.5px}
+
+/* Liebe-Glas */
+.love-glass{margin:0;padding:16px 16px 14px;border-radius:30px}
+.glass-heart.big{width:210px}
+.glass-heart.big svg{width:210px;height:194px}
+.glass-heart.big .h-num{top:58px}
+.love-split{margin-top:8px}
+.love-who{background:var(--chip);border:none}
+.love-send{height:56px;margin-top:12px;background:var(--a1-grad);box-shadow:0 10px 26px rgba(var(--shadow),.32)}
+.love-glass .ping-status{margin-top:6px}
+
+/* Schnellzugriffe */
+.a1-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.a1-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:96px;padding:12px 6px;
+  border-radius:var(--r-tile);cursor:pointer;font:inherit;color:var(--ink);transition:transform .15s}
+.a1-tile:active{transform:scale(.95)}
+.a1-ti{width:44px;height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:23px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent2) 22%,var(--glass-strong)),color-mix(in srgb,var(--accent) 14%,var(--glass-strong)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.a1-tile b{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.a1-tile small{position:absolute;top:8px;right:8px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  background:var(--a1-grad);color:var(--accent-ink);font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.a1-tile small:empty{display:none}
+
+/* Support-Anfragen auf Start */
+#s-home #supportBox:empty{display:none}
+
+@media (min-width:1100px){
+  #s-home > .home-cols{display:grid;max-width:1080px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;columns:auto}
+  .home-cols > *{margin:0!important}
+  #s-home .turn-banner,#s-home .a1-since{grid-column:1/-1}
+  #s-home .love-glass{grid-row:span 3}
+}
+
+/* ======================================================================
+   Erinnerungen
+   ====================================================================== */
+.folder-bar{gap:8px;padding:2px 2px 12px}
+.folder{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:200px;padding:9px 14px;border-radius:20px;
+  background:var(--glass);border:1px solid var(--glass-border);box-shadow:0 4px 12px rgba(var(--shadow),.08)}
+.folder .f-ico{display:inline;font-size:16px}
+.folder b{font-size:14px}
+.folder small{display:none}
+.folder.on{background:var(--a1-grad);border-color:transparent;box-shadow:0 6px 16px rgba(var(--shadow),.25)}
+.folder.add{flex-direction:row;border:2px dashed var(--ink-faint);background:transparent;box-shadow:none}
+.folder.add b{color:var(--ink-soft)}
+.photos{gap:20px 16px;padding:10px 6px 90px}
+.polaroid{border-radius:6px;box-shadow:0 12px 26px rgba(var(--shadow),.16),0 2px 6px rgba(0,0,0,.06)}
+
+/* ======================================================================
+   Dates
+   ====================================================================== */
+#s-plans .segmented{margin-bottom:10px}
+.dt-card{border-radius:24px;padding:14px;background:var(--glass);box-shadow:0 8px 22px rgba(var(--shadow),.08)}
+.dt-ico{border-radius:16px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent2) 20%,var(--glass-strong)),var(--chip))}
+.dt-timeline::before{width:3px;background:linear-gradient(var(--accent2),var(--accent))}
+.tl-dot{background:var(--glass-strong);border:2px solid var(--accent2);box-shadow:0 0 0 4px var(--bg1)}
+.tl-body{border-radius:20px;background:var(--glass);box-shadow:0 8px 20px rgba(var(--shadow),.08)}
+.tl-body .dt-thumbs img{width:64px;height:64px;border-radius:14px}
+#s-plans{padding-bottom:calc(var(--nav-h) + 96px)}
+
+/* ======================================================================
+   Spiele: Kachel-Raster mit Status-Badges
+   ====================================================================== */
+.g-group{margin:4px 2px 10px;font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft)}
+.g-group:not(:first-child){margin-top:24px}
+.g-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.g-card{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:6px;min-height:118px;padding:14px 6px 10px;border-radius:var(--r-tile)}
+.g-card .gc-ico{width:48px;height:48px;border-radius:16px;margin:0 0 2px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent2) 18%,var(--glass-strong)),var(--chip))}
+.g-card .gc-ico svg{width:32px;height:32px}
+.g-card b{font-size:13.5px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-card small{font-size:11px;line-height:1.25;min-height:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-card small:empty{display:none}
+.g-badge{position:absolute;top:6px;right:6px;padding:3px 7px;font-size:10px;border-radius:10px}
+.g-card.hot{box-shadow:0 0 0 2px var(--accent),0 10px 26px rgba(var(--shadow),.22)}
+@media (max-width:359px){.g-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.coin-chip{border:1px solid var(--glass-border);background:var(--glass-strong)}
+
+/* ======================================================================
+   Wir zwei
+   ====================================================================== */
+#s-wir .partner{border-radius:26px;padding:14px 16px}
+#s-wir .partner b{font-size:20px}
+#s-wir .wir-today{display:block;margin:2px 0 0;text-align:left;font-size:12.5px}
+.a1-support{width:100%;margin-top:14px;display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:26px;border:none;cursor:pointer;
+  background:var(--a1-grad);color:var(--accent-ink);font:inherit;text-align:left;box-shadow:0 12px 28px rgba(var(--shadow),.28);transition:transform .15s}
+.a1-support:active{transform:scale(.97)}
+.a1-support .a1-ti{background:rgba(255,255,255,.25);box-shadow:none}
+.a1-support b{font-size:18px}
+.a1-moodcard{margin-top:14px;padding:16px;text-align:left}
+.a1-h{font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+.a1-moods{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.a1-moods .mood-chip{flex-direction:column;align-items:center;text-align:center;gap:8px;padding:12px 8px;border-radius:22px;background:var(--chip);border:none}
+.a1-moods .mood-dot{position:relative;isolation:isolate;width:84px;height:84px;font-size:32px;box-shadow:none;
+  background:conic-gradient(var(--mc) calc(var(--mv,0) * 1%),color-mix(in srgb,var(--ink-faint) 35%,transparent) 0)}
+.a1-moods .mood-dot::before{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--glass-strong);z-index:-1}
+.a1-moods .mood-txt{align-items:center}
+.a1-moods .mood-txt b{font-size:15px}
+#owSection .segmented{margin-bottom:12px}
+.ow-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ow-grid .opt{flex-direction:column;align-items:flex-start;gap:8px;min-height:108px;padding:14px}
+.ow-grid .opt .ico{font-size:26px}
+.ow-grid .opt b{font-size:14.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ow-grid .opt small{font-size:11.5px;font-weight:800;color:var(--accent)}
+.ow-grid .opt small:empty{display:none}
+#s-wir .ping-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:0}
+#s-wir .ping-btn{min-height:86px;padding:10px 4px;border-radius:22px;font-size:12.5px;gap:6px}
+#s-wir .ping-btn span{font-size:28px}
+
+/* ======================================================================
+   Einkauf, Chat, Shop, Einstellungen, Konsole – angleichen
+   ====================================================================== */
+.chat-form{border-radius:28px;background:var(--glass-strong)}
+.chat-send{background:var(--a1-grad)}
+.cm-row.mine .cm-bubble{background:var(--a1-grad)}
+.cm-bubble{border-radius:22px 22px 22px 8px}
+.cm-row.mine .cm-bubble{border-radius:22px 22px 8px 22px}
+.gr-lists .chip-btn.on,.dt-kinds .chip-btn.on{background:var(--a1-grad)}
+.gr-tile{border-radius:20px}
+.set-card{border-radius:26px;padding:18px}
+.set-card h3{font-size:15px}
+.theme-picker{grid-template-columns:repeat(3,1fr);row-gap:14px}
+.term{border-radius:24px}
+
+/* ---------- schmale Handys ---------- */
+@media (max-width:360px){
+  .top-left,.top-right{flex-basis:98px;min-width:98px}
+  .a1-tiles{gap:8px}
+  .a1-tile{min-height:88px}
+  .a1-ti{width:40px;height:40px;font-size:21px}
+  .glass-heart.big,.glass-heart.big svg{width:190px}
+  .glass-heart.big svg{height:176px}
+  .glass-heart.big .h-num{top:50px}
+  #s-wir .ping-btn span{font-size:24px}
+}
+.sync-top.holding{transform:none}

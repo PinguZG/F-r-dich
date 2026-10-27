@@ -71,7 +71,7 @@
     const open = entries.filter(e => !e.done);
     const box = $('grOpen');
     box.replaceChildren();
-    if (!open.length) box.append(el('div', 'empty-note', 'Die Liste ist leer – tippe auf etwas, das ihr braucht 🛒'));
+    if (!open.length) box.append(el('div', 'empty-note', 'Leer 🛒'));
     for (const [k, name, emoji] of CATS) {
       const items = open.filter(e => (e.cat || 'sonst') === k);
       if (!items.length) continue;
@@ -207,7 +207,7 @@
   // Kachel auf Start
   function homeTile() {
     const n = entries.filter(e => !e.done).length;
-    if ($('homeGroceryInfo')) $('homeGroceryInfo').textContent = n ? `${n} ${n === 1 ? 'Sache' : 'Sachen'} auf „${lists.find(l => l.id === listId)?.name || 'Einkauf'}“` : 'Alles da – oder doch was vergessen?';
+    if ($('homeGroceryInfo')) $('homeGroceryInfo').textContent = n ? String(n) : '';
   }
 
   document.addEventListener('wir:show', e => { if (started && e.detail === 's-grocery') { $('grSearch').value = ''; load().catch(console.error); } });

@@ -202,6 +202,8 @@
     // Loslassen – auch wenn der Finger rausgezogen wurde (Pointer-Capture) oder das System abbricht
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) btn.addEventListener(ev, () => stopHold());
     btn.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    // iOS: kein Lupen-/Kontextmenü und keine Textauswahl beim langen Halten (Pointer-Events kommen trotzdem)
+    btn.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
     btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startHold(); } });
     btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stopHold(); });
   }
@@ -373,7 +375,7 @@
   async function start() {
     started = true;
     renderSync();
-    firstTip();
+    // firstTip(); – Hinweis seit Design A1 aus (keine Hilfstexte)
     renderShake();
     syncMotion();
     await loadStates().catch(console.error);
