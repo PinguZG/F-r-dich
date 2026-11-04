@@ -1432,7 +1432,7 @@ Ersetzt das Zuhause von heute Vormittag (`wir-v35`). Design und Bedienung kommen
 - iPhone: Leistungsmodus standardmäßig (statische Verläufe statt animierter `filter:blur`-Flächen, kein `backdrop-filter`,
   kleine statische Schatten). Volle Effekte nur auf dem Tablet bei stabilen Bildraten.
 - Testmodus sendet sparsam: Klima/Strom einmal pro Minute, Sensoren nur bei Änderung, Herzschlag alle 30 s.
-- Ergebnis des 10-Minuten-Dauertests: siehe unten „Getestet“.
+- Ergebnis des Dauertests: siehe unten „Getestet“.
 
 ## Konfiguration = Freigabeliste: `home/config.jsonc`
 
@@ -1483,6 +1483,15 @@ Wie im Abschnitt „Zuhause (Smart Home) … Schritt für Schritt“ oben (Tails
   Taste), Gerät, Routine, Alle aus – jeweils live beim anderen in 0,3–0,6 s; To-dos (anlegen, abhaken, Zuordnung, wischen = löschen)
   live; Wecker (aussetzen, Tag) live; 9 verbotene Befehle → 400, ohne Login → 401, To-dos ohne Login nicht les-/schreibbar;
   Drehen wechselt Layout; `/#zuhause`; `/log`. Keine Konsolenfehler.
+- **Speicher-Dauertest** (WebKit 27.2, iPhone-13-Emulation, alle Bereiche + Zuhause-Unterseiten, Lampen/Szenen schalten,
+  pro Durchgang zweimal Hintergrund/Vordergrund; Arbeitsspeicher von WebKit-Web- + GPU-Prozess):
+  | | Start | nach 5 Min | nach 10 Min | Realtime-Abos |
+  |---|---|---|---|---|
+  | alte Zuhause-Version (v1, ohne Leistungsmodus) | 209 MB | 347 MB | 419 MB (Spitze 438) | konstant 29 |
+  | neue Version (Leistungsmodus wie auf dem iPhone) | 177 MB | 349 MB | – (Test auf 5 Min gekürzt) | konstant 31 |
+  Keine Abstürze, keine Fehler. Die Abos bleiben über alle Wechsel gleich (keine doppelten). Der Gesamtspeicher wächst in
+  beiden Versionen ähnlich; der Test läuft durch die ganze App, ob das Wachstum von Zuhause oder anderen Bereichen kommt, zeigt er
+  nicht. Der eigentliche Absturz auf dem iPhone ließ sich in der Windows-Emulation nicht nachstellen.
 - **Screenshots:** Handy 390×844 alle Unterseiten (Aurora + Rosé), Tablet hochkant, Tablet quer in Rosé/Glut/Zuckerwatte/Mondnacht,
   übrige App (Login, Start, Erinnerungen, Tic Tac Toe, Sudoku, Einstellungen, Konsole) in Aurora und Rosé.
 
