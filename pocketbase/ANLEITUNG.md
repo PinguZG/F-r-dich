@@ -1,5 +1,7 @@
 # Einrichtung auf dem Pi (PocketBase 0.40.5)
 
+> **Seit 04.11.2026 läuft Wir auf einem VPS** (Tailscale-Name `wir`, x86_64), nicht mehr auf dem Pi. Pfade, Nutzer und Dienste sind gleich geblieben, „auf dem Pi“ heißt in dieser Anleitung also „auf dem Server“ (`ssh pingu@wir`). Details und Rücksetz-Weg: Abschnitt „Umzug auf den VPS 04.11.2026“ ganz unten.
+
 Reihenfolge einhalten. Getestet mit einer lokalen PocketBase 0.40.5.
 
 ## 1. Code holen
@@ -1219,3 +1221,48 @@ Getestet lokal mit Kopie der Live-DB: Daniel (PC, Maus) + Ida (Handy, Touch) gle
 
 **Sicherung:** Tag `vor-zeichnen` (= `ca79b95`), DB-Backup `/home/pingu/backups/vor-zeichnen-2026-10-27/` (09:27, „ok“).
 **Zurück:** `git checkout vor-zeichnen -- app push pocketbase/pb_hooks/activity_lib.js shared && git rm -q app/draw.js app/draw.css pocketbase/pb_hooks/wir_zeichnen.pb.js pocketbase/pb_hooks/zeichnen_lib.js && git commit -m "Zurück vor Zeichnen" && git push`, danach auf dem Pi `rm /home/pingu/pb/pb_hooks/{wir_zeichnen.pb.js,zeichnen_lib.js} && sudo systemctl restart pocketbase`. Die Bilder bleiben in der DB.
+
+---
+
+# Umzug auf den VPS 04.11.2026
+
+Wir läuft jetzt auf einem gemieteten VPS (Debian 13, **x86_64**). Pfade, Nutzer und Dienste sind dieselben wie vorher auf dem Pi:
+`/home/pingu/pb` (PocketBase, `pb_data`, `pb_hooks`, `pb_migrations`), `/home/pingu/F-r-dich`, `/home/pingu/backups`, `/etc/wir-push.env`,
+`pocketbase.service`, `wir-push.service`, `wir-deploy.service` + `.timer`, `/etc/sudoers.d/020_wir-push` + `/etc/sudoers.d/wir-deploy`.
+Die URL bleibt https://wir.geep-flops.ts.net (Tailscale Funnel 443 → 127.0.0.1:8090).
+
+| Gerät | Tailscale-Name | Rolle |
+|---|---|---|
+| VPS | `wir` | live (`ssh pingu@wir`) |
+| Raspberry Pi | `wir-pi` | Rückfallebene, Dienste + Funnel aus (disabled, nichts gelöscht) |
+
+**Wichtig beim Aktualisieren von PocketBase:** Auf dem VPS das Paket `pocketbase_<version>_linux_amd64.zip` nehmen (nicht `arm64` wie auf dem Pi), Checksumme aus `checksums.txt` prüfen.
+Node.js + npm kommen wie auf dem Pi aus apt (Node 20).
+
+**Server-Grundlagen:** ufw (offen sind nur 22/tcp, 41641/udp und `tailscale0`), automatische Sicherheitsupdates ohne Auto-Neustart, SSH nur mit Key, Tailscale SSH an.
+
+**Sicherung vorher:** Tag `vor-vps-umzug` (= `8d40841`), DB-Backup `/home/pingu/backups/vor-vps-umzug-2026-11-04/` auf dem Pi („ok“). Die Daten wurden bei gestoppter PocketBase komplett übertragen (Prüfsummen identisch).
+
+## Zurück auf den Pi (Rücksetz-Weg)
+
+⚠️ Was inzwischen auf dem VPS entstanden ist (Fotos, Pings, Briefe …), muss **vorher** zurück auf den Pi, sonst fehlt es dort.
+
+```bash
+# 1. VPS: alles stoppen, Funnel aus
+sudo systemctl stop wir-deploy.timer wir-push pocketbase
+sudo tailscale funnel reset
+
+# 2. Daten vom VPS auf den Pi (vom PC aus; den alten Stand auf dem Pi vorher beiseitelegen, nicht löschen)
+ssh pingu@wir-pi 'mv /home/pingu/pb/pb_data /home/pingu/pb/pb_data.vor-ruecksetzen-$(date +%F-%H%M)'
+ssh pingu@wir 'cd /home/pingu/pb && tar cf - pb_data' | ssh pingu@wir-pi 'cd /home/pingu/pb && tar xf -'
+```
+3. Tailscale umbenennen: **zuerst** den VPS `wir` → `wir-vps`, **dann** den Pi `wir-pi` → `wir`. Das geht in der Admin-Konsole unter Machines oder auf den Geräten mit `sudo tailscale set --hostname=…` (gleiche Reihenfolge).
+```bash
+# 4. Pi: Dienste + Funnel wieder an
+sudo systemctl enable --now pocketbase wir-push wir-deploy.timer
+sudo tailscale funnel --bg http://127.0.0.1:8090
+tailscale funnel status
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8090/api/health    # 200
+```
+Danach am PC den alten Host-Key entfernen: `ssh-keygen -R wir`.
+Nie beide Server gleichzeitig mit laufendem `wir-push` betreiben, sonst kommen Pushs doppelt.
