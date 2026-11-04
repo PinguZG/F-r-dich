@@ -67,7 +67,7 @@
 .lr-text small{font-size:12px;font-weight:600;color:var(--ink-soft)}
 .lr-amt{font-size:16px;font-variant-numeric:tabular-nums}
 .lr-amt.plus{color:#d98a00}
-html[data-theme="gluehwein"] .lr-amt.plus,html[data-theme="mondnacht"] .lr-amt.plus{color:#ffd45c}
+html[data-theme="gluehwein"] .lr-amt.plus,html[data-theme="mondnacht"] .lr-amt.plus,html[data-theme="glut"] .lr-amt.plus,html[data-theme="rosenacht"] .lr-amt.plus{color:#ffd45c}
 .lr-amt.minus{color:var(--ink-soft)}
 
 /* ---------- Casino-Bereich im Sheet ---------- */

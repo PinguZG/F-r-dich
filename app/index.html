@@ -7,6 +7,7 @@
 <script>
   // Farbwelt sofort setzen (vor dem ersten Zeichnen), Wert kommt später auch aus der DB
   try { const t = localStorage.getItem('wir-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+  try { if (localStorage.getItem('wir-perf') === '1') document.documentElement.classList.add('perf'); } catch (_) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +30,7 @@
 <link rel="stylesheet" href="/layout.css">
 <link rel="stylesheet" href="/a1.css">
 <link rel="stylesheet" href="/draw.css">
+<link rel="stylesheet" href="/zuhause.css">
 </head>
 <body>
 
@@ -69,9 +71,9 @@
 </header>
 
 <nav class="tabbar" aria-label="Navigation">
-  <button class="tab-btn" data-go="s-home"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.8l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-4.2v-6h-5.6v6H5A1.5 1.5 0 0 1 3.5 19z"/></svg></span><span class="tab-lbl">Start</span></button>
+  <button class="tab-btn" data-go="s-home"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.1 5.6 5.7 2.2-5.7 2.2L12 18.8l-2.1-5.6L4.2 11l5.7-2.2z"/><path d="M18.5 16.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><span class="tab-lbl">Start</span></button>
   <button class="tab-btn" data-go="s-memories"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="14" rx="3"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 5.5 9.8 3.5h4.4l1.3 2"/></svg></span><span class="tab-lbl">Erinnerungen</span></button>
-  <button class="tab-btn" data-go="s-plans"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M12 17.6c-1.7-1.1-2.8-2-2.8-3.2 0-.8.6-1.4 1.4-1.4.6 0 1.1.3 1.4.8.3-.5.8-.8 1.4-.8.8 0 1.4.6 1.4 1.4 0 1.2-1.1 2.1-2.8 3.2z"/></svg></span><span class="tab-lbl">Dates</span></button>
+  <button class="tab-btn tab-house" data-go="s-zuhause"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.8l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-4.2v-6h-5.6v6H5A1.5 1.5 0 0 1 3.5 19z"/></svg></span><span class="tab-lbl">Zuhause</span></button>
   <button class="tab-btn" data-go="s-games"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="5.5"/><path d="M7.5 12.5h3M9 11v3"/><circle cx="15.2" cy="11.4" r=".6"/><circle cx="16.8" cy="13.6" r=".6"/></svg><i class="nav-dot" id="navGameDot" hidden></i></span><span class="tab-lbl">Spiele</span></button>
   <button class="tab-btn" data-go="s-wir"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg><i class="nav-dot" id="navOwDot" hidden></i></span><span class="tab-lbl">Wir zwei</span></button>
 </nav>
@@ -107,6 +109,7 @@
   </div>
 
   <div class="a1-tiles">
+    <button class="a1-tile a1-wide glass" data-go="s-plans" type="button"><span class="a1-ti">📅</span><span class="a1-wt"><b>Dates</b><em>Geplant · Vergangen · Zeitstrahl · Clay</em></span></button>
     <button class="a1-tile glass" data-go="s-wir" data-scroll="owSection" type="button"><span class="a1-ti">💌</span><b>Öffne wenn</b></button>
     <button class="a1-tile glass" data-go="s-grocery" type="button"><span class="a1-ti">🛒</span><b>Einkauf</b><small id="homeGroceryInfo"></small></button>
     <button class="a1-tile glass" data-support type="button"><span class="a1-ti">🫂</span><b>Support</b></button>
@@ -115,6 +118,11 @@
     <button class="a1-tile glass" data-go="s-draw" type="button"><span class="a1-ti">🎨</span><b>Zeichnen</b><small id="homeDrawInfo"></small></button>
   </div>
 </div>
+</section>
+
+<!-- ============ Zuhause (zuhause.js, zuhause-data.js, zuhause.css) ============ -->
+<section class="screen page" id="s-zuhause" data-title="Zuhause">
+  <div class="zh" id="zh"></div>
 </section>
 
 <!-- ============ Erinnerungen ============ -->
@@ -131,7 +139,8 @@
 </section>
 
 <!-- ============ Dates (Übersicht) ============ -->
-<section class="screen page" id="s-plans" data-title="Dates">
+<section class="screen page sub" id="s-plans" data-tab="s-home" data-title="Dates">
+  <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Dates 📅</h2></div>
   <div class="segmented" role="tablist">
     <button class="seg on" data-dtseg="planned" type="button">Geplant</button>
     <button class="seg" data-dtseg="past" type="button">Vergangen</button>
@@ -153,7 +162,7 @@
 </section>
 
 <!-- Ein Date (dates.js) -->
-<section class="screen page sub" id="s-date" data-tab="s-plans" data-title="Date">
+<section class="screen page sub" id="s-date" data-tab="s-home" data-title="Date">
   <div class="sub-head g-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2 id="dtdTitle">Date</h2><button class="g-menu-btn" id="dtdEdit" type="button" aria-label="Bearbeiten">✎</button></div>
   <img class="dtd-cover" id="dtdCover" alt="" hidden>
   <div class="dtd-meta" id="dtdMeta"></div>
@@ -172,7 +181,7 @@
   <div class="photos polaroids" id="dtdPhotos"></div>
 </section>
 <!-- Unsere Daten -->
-<section class="screen page sub" id="s-dates" data-tab="s-plans" data-title="Unsere Daten">
+<section class="screen page sub" id="s-dates" data-tab="s-home" data-title="Unsere Daten">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Daten 📅</h2></div>
   <div class="dates" id="dates"></div>
   <button class="pack-btn add-toggle" id="dateToggle" type="button">➕ Neues Datum</button>
@@ -191,14 +200,14 @@
 </section>
 
 <!-- Clay Date -->
-<section class="screen page sub" id="s-clay" data-tab="s-plans" data-title="Clay Date">
+<section class="screen page sub" id="s-clay" data-tab="s-home" data-title="Clay Date">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Clay Date 🧸</h2><button class="folder-btn" data-go="s-clay-done" aria-label="Unsere fertigen Figuren">📁</button></div>
   
   <div class="clay" id="clay"></div>
 </section>
 
 <!-- Clay: fertige Figuren -->
-<section class="screen page sub" id="s-clay-done" data-tab="s-plans" data-title="Unsere Figuren">
+<section class="screen page sub" id="s-clay-done" data-tab="s-home" data-title="Unsere Figuren">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Unsere Figuren 📁</h2></div>
   <div class="mem-tools upload-row">
     <input class="mem-input" id="clayCaption" type="text" placeholder="Bildunterschrift" maxlength="200">
@@ -209,7 +218,7 @@
 </section>
 
 <!-- Eigener Reiter -->
-<section class="screen page sub" id="s-tab" data-tab="s-plans" data-title="Reiter">
+<section class="screen page sub" id="s-tab" data-tab="s-home" data-title="Reiter">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2 id="tabTitle"></h2></div>
   <div class="tab-lock glass" id="tabLock" hidden>
     <b>🔒 Noch geheim</b>
@@ -233,7 +242,7 @@
 </section>
 
 <!-- Neuer Reiter -->
-<section class="screen page sub" id="s-newtab" data-tab="s-plans" data-title="Neuer Reiter">
+<section class="screen page sub" id="s-newtab" data-tab="s-home" data-title="Neuer Reiter">
   <div class="sub-head"><button class="back-btn" data-go="s-plans" aria-label="Zurück">←</button><h2>Neuer Reiter ✨</h2></div>
   <form class="card glass add-card" id="tabForm">
     <h1>Wie soll er heißen?</h1>
@@ -727,6 +736,8 @@
       <button class="swatch" data-theme="zuckerwatte" type="button"><i></i><span>Zuckerwatte</span></button>
       <button class="swatch" data-theme="pfirsich" type="button"><i></i><span>Pfirsich</span></button>
       <button class="swatch" data-theme="lavendel" type="button"><i></i><span>Lavendel</span></button>
+      <button class="swatch" data-theme="glut" type="button"><i></i><span>Glut</span></button>
+      <button class="swatch" data-theme="rosenacht" type="button"><i></i><span>Rosé-Nacht</span></button>
     </div>
   </div>
 
@@ -751,6 +762,11 @@
     <h3>💥 Schütteln</h3>
     <label class="check"><input type="checkbox" class="switch" id="shakeSwitch"><span>Schütteln erkennen</span></label>
     <span class="push-state" id="shakeState"></span>
+  </div>
+
+  <div class="card glass set-card">
+    <h3>⚡ Leistungsmodus</h3>
+    <label class="check"><input type="checkbox" class="switch" id="perfSwitch"><span>Weniger Unschärfe und Leuchten (nur auf diesem Gerät)</span></label>
   </div>
 
   <div class="card glass set-card app-card">
@@ -1344,6 +1360,8 @@
 <script src="/herzspur.js"></script>
 <script src="/shared/activity.js"></script>
 <script src="/draw.js"></script>
+<script src="/zuhause-data.js"></script>
+<script src="/zuhause.js"></script>
 <script src="/a1.js"></script>
 <script src="/shared/update.js"></script>
 </body>

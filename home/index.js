@@ -1,0 +1,339 @@
+// wir-home: Brücke zwischen der Wir-App und Home Assistant. Der Browser redet nie direkt mit Home Assistant.
+// - hält eine dauerhafte WebSocket-Verbindung zu HA (ha.js) – oder simuliert HA im Testmodus (sim.js),
+//   solange HA_URL/HA_TOKEN in /etc/wir-home.env fehlen
+// - schreibt die Zustände der freigegebenen Geräte in die PocketBase-Collection home_state (Realtime an beide Handys)
+// - nimmt Befehle NUR von PocketBase entgegen (POST http://127.0.0.1:8091/cmd, siehe pb_hooks/wir_zuhause.pb.js),
+//   prüft sie gegen die Freigabeliste (config.jsonc) und begrenzt die Rate
+// - 24-h-Verlauf für das Raumklima, Wetter von Open-Meteo (zwischengespeichert)
+'use strict';
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const conf = require('./config');
+const { Sim } = require('./sim');
+
+const env = (k, d) => (process.env[k] ?? d);
+const need = k => { const v = process.env[k]; if (!v) { console.error('Fehlt: ' + k); process.exit(1); } return v; };
+const PB = need('PB_URL').replace(/\/$/, '');
+const PB_EMAIL = need('PB_EMAIL');
+const PB_PASSWORD = need('PB_PASSWORD');
+const PORT = Number(env('HOME_PORT', 8091));
+const CONFIG = env('HOME_CONFIG', path.join(__dirname, 'config.jsonc'));
+// Platzhalter ("", "HIER…") zählen als nicht gesetzt -> Testmodus
+const real = v => !!v && !/^(HIER|<|x+$)/i.test(v.trim());
+const HA_URL = real(env('HA_URL', '')) ? env('HA_URL').trim() : '';
+const HA_TOKEN = real(env('HA_TOKEN', '')) ? env('HA_TOKEN').trim() : '';
+
+const log = (...a) => console.log(new Date().toISOString(), ...a);
+
+// ----------------------------------------------------------------------
+// PocketBase (als Dienst-Superuser)
+// ----------------------------------------------------------------------
+let token = null, tokenAt = 0;
+async function auth() {
+  const r = await fetch(PB + '/api/collections/_superusers/auth-with-password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identity: PB_EMAIL, password: PB_PASSWORD }),
+  });
+  if (!r.ok) throw new Error('PocketBase-Login fehlgeschlagen: ' + r.status);
+  token = (await r.json()).token;
+  tokenAt = Date.now();
+}
+async function api(method, p, body, retry = true) {
+  if (!token || Date.now() - tokenAt > 3600000) await auth();
+  const r = await fetch(PB + p, {
+    method, headers: { Authorization: token, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (r.status === 401 && retry) { token = null; return api(method, p, body, false); }
+  const t = await r.text();
+  if (!r.ok) { const e = new Error(`${method} ${p} -> ${r.status} ${t.slice(0, 200)}`); e.status = r.status; throw e; }
+  return t ? JSON.parse(t) : null;
+}
+
+// home_state: ein Datensatz pro Schlüssel, Schreiben gebündelt (mehrere Änderungen in 80 ms = ein Schreibvorgang)
+const ids = new Map();      // key -> record id
+const cache = new Map();    // key -> zuletzt geschriebene Daten (JSON)
+const dirty = new Map();    // key -> Daten, die noch geschrieben werden müssen
+let flushTimer = null, flushing = false;
+
+async function loadRecords() {
+  for (let page = 1; ; page++) {
+    const res = await api('GET', `/api/collections/home_state/records?page=${page}&perPage=200&skipTotal=1`);
+    for (const r of res.items) { ids.set(r.key, r.id); cache.set(r.key, JSON.stringify(r.data)); }
+    if (res.items.length < 200) break;
+  }
+}
+function put(key, data) {
+  const j = JSON.stringify(data);
+  if (cache.get(key) === j && !dirty.has(key)) return;
+  dirty.set(key, data);
+  if (!flushTimer) flushTimer = setTimeout(flush, 80);
+}
+async function flush() {
+  flushTimer = null;
+  if (flushing) { flushTimer = setTimeout(flush, 80); return; }
+  flushing = true;
+  const batch = [...dirty.entries()];
+  dirty.clear();
+  for (const [key, data] of batch) {
+    const j = JSON.stringify(data);
+    if (cache.get(key) === j) continue;
+    try {
+      if (ids.has(key)) await api('PATCH', `/api/collections/home_state/records/${ids.get(key)}`, { data });
+      else {
+        try { ids.set(key, (await api('POST', '/api/collections/home_state/records', { key, data })).id); }
+        catch (err) {
+          // gibt es schon (z. B. nach Neustart) -> nachladen und aktualisieren
+          const f = encodeURIComponent(`key="${key.replace(/"/g, '')}"`);
+          const r = await api('GET', `/api/collections/home_state/records?filter=${f}&perPage=1`);
+          if (!r.items[0]) throw err;
+          ids.set(key, r.items[0].id);
+          await api('PATCH', `/api/collections/home_state/records/${r.items[0].id}`, { data });
+        }
+      }
+      cache.set(key, j);
+    } catch (err) {
+      log('home_state schreiben', key, err.message);
+      if (!dirty.has(key)) dirty.set(key, data);
+      if (!flushTimer) flushTimer = setTimeout(flush, 5000);
+    }
+  }
+  flushing = false;
+}
+
+// ----------------------------------------------------------------------
+// Konfiguration (wird bei Änderung der Datei neu gelesen)
+// ----------------------------------------------------------------------
+let C = null;
+function readConfig() {
+  const c = conf.load(CONFIG);
+  c.cfg.allowIds = [...c.allow.keys()];
+  if (c.errors.length) log('Konfiguration – übersprungen:', c.errors.join(' | '));
+  return c;
+}
+
+// öffentlicher Teil der Konfiguration für die App (enthält keine Geheimnisse)
+function publicConfig() {
+  const { allowIds, ...rest } = C.cfg;
+  return { ...rest, fehler: C.errors };
+}
+
+// ----------------------------------------------------------------------
+// Verbindung zu Home Assistant (oder Simulator)
+// ----------------------------------------------------------------------
+let backend = null;
+const states = new Map();
+const meta = { mode: 'test', connected: false, error: '', scene: '', scene_at: '', since: new Date().toISOString(), beat: 0 };
+
+// nur die Felder speichern, die die App braucht
+const ATTRS = ['friendly_name', 'brightness', 'color_mode', 'rgb_color', 'color_temp_kelvin', 'min_color_temp_kelvin', 'max_color_temp_kelvin',
+  'supported_color_modes', 'last_triggered', 'unit_of_measurement', 'device_class', 'percentage', 'current',
+  'volume_level', 'is_volume_muted', 'media_title', 'media_series_title', 'media_artist', 'app_name', 'source'];
+function slim(s) {
+  const a = {};
+  for (const k of ATTRS) if (s.attributes && s.attributes[k] !== undefined) a[k] = s.attributes[k];
+  return { state: String(s.state), a, changed: s.last_changed || '' };
+}
+
+function onState(s) {
+  states.set(s.entity_id, s);
+  put(s.entity_id, slim(s));
+  klimaSample(s.entity_id, s.state);
+}
+
+function setMeta(patch) {
+  Object.assign(meta, patch);
+  meta.beat = Date.now();
+  put('_meta', { ...meta });
+}
+
+function startBackend() {
+  if (HA_URL && HA_TOKEN) {
+    const { HA } = require('./ha');
+    backend = new HA(HA_URL, HA_TOKEN, C.cfg);
+    meta.mode = 'live';
+    log('Modus: echt (Home Assistant)');
+  } else {
+    backend = new Sim(C.cfg);
+    meta.mode = 'test';
+    log('Modus: TEST (HA_URL/HA_TOKEN nicht gesetzt) – Home Assistant wird simuliert');
+  }
+  backend.on('state', onState);
+  backend.on('status', st => {
+    if (st.connected !== meta.connected || st.error !== meta.error) log('Status:', st.connected ? 'verbunden' : 'getrennt', st.error || '');
+    setMeta({ connected: st.connected, error: st.error });
+    if (st.connected) klimaBackfill().catch(err => log('Klima-Verlauf', err.message));
+  });
+  backend.start();
+}
+
+// ----------------------------------------------------------------------
+// Raumklima: Werte alle 10 Minuten in den 24-h-Verlauf (_klima)
+// ----------------------------------------------------------------------
+const KEEP_MS = 24 * 3600000, STEP_MS = 10 * 60000;
+let klima = { series: {} };
+const klimaIds = () => [C.cfg.klima.temperatur, C.cfg.klima.luftfeuchte, ...C.cfg.klima.weitere.map(w => w.entity_id)].filter(Boolean);
+
+function klimaSample(id, value, force) {
+  if (!klimaIds().includes(id)) return;
+  const v = parseFloat(value);
+  if (!Number.isFinite(v)) return;
+  const arr = klima.series[id] || (klima.series[id] = []);
+  const now = Date.now();
+  const last = arr[arr.length - 1];
+  if (last && now - last[0] < STEP_MS && !force) { last[1] = Math.round(v * 10) / 10; }   // aktuellen Punkt nachziehen
+  else arr.push([now, Math.round(v * 10) / 10]);
+  klimaTrim();
+  put('_klima', klima);
+}
+function klimaTrim() {
+  const min = Date.now() - KEEP_MS;
+  for (const id of Object.keys(klima.series)) {
+    if (!klimaIds().includes(id)) { delete klima.series[id]; continue; }
+    klima.series[id] = klima.series[id].filter(p => p[0] >= min);
+  }
+}
+// nach dem Start: Lücken aus dem HA-Verlauf (bzw. Simulator) füllen
+async function klimaBackfill() {
+  const missing = klimaIds().filter(id => (klima.series[id] || []).length < 12);
+  if (!missing.length) return;
+  const h = await backend.history(missing, 24);
+  for (const id of missing) {
+    const pts = (h[id] || []);
+    if (!pts.length) continue;
+    // auf 10-Minuten-Schritte verdichten
+    const out = [];
+    for (const p of pts.sort((a, b) => a[0] - b[0])) {
+      const l = out[out.length - 1];
+      if (l && p[0] - l[0] < STEP_MS) l[1] = p[1]; else out.push([p[0], p[1]]);
+    }
+    const merged = [...out, ...(klima.series[id] || [])].sort((a, b) => a[0] - b[0]);
+    klima.series[id] = merged;
+  }
+  klimaTrim();
+  put('_klima', klima);
+}
+
+// ----------------------------------------------------------------------
+// Wetter (Open-Meteo, ohne Schlüssel) – alle 20 Minuten, für beide Geräte zwischengespeichert
+// ----------------------------------------------------------------------
+async function weather() {
+  const w = C.cfg.wetter;
+  if (!w) return;
+  const q = new URLSearchParams({
+    latitude: w.lat, longitude: w.lon, timezone: 'Europe/Berlin', forecast_days: 2,
+    current: 'temperature_2m,apparent_temperature,weather_code,is_day',
+    hourly: 'temperature_2m,weather_code,is_day',
+    daily: 'sunrise,sunset',
+  });
+  const r = await fetch('https://api.open-meteo.com/v1/forecast?' + q, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error('Open-Meteo ' + r.status);
+  const d = await r.json();
+  const nowIso = d.current.time;
+  const start = d.hourly.time.findIndex(t => t > nowIso);
+  const hours = [];
+  for (let i = Math.max(0, start); i < d.hourly.time.length && hours.length < 6; i++) {
+    hours.push({ h: +d.hourly.time[i].slice(11, 13), t: Math.round(d.hourly.temperature_2m[i]), code: d.hourly.weather_code[i], day: d.hourly.is_day[i] });
+  }
+  put('_wetter', {
+    ort: w.ort,
+    now: { t: Math.round(d.current.temperature_2m), feels: Math.round(d.current.apparent_temperature), code: d.current.weather_code, day: d.current.is_day },
+    hours,
+    sunset: (d.daily.sunset || [])[0] || '', sunrise: (d.daily.sunrise || [])[0] || '',
+    at: new Date().toISOString(),
+  });
+}
+
+// ----------------------------------------------------------------------
+// Befehle von PocketBase (nur localhost)
+// ----------------------------------------------------------------------
+const hits = new Map(); // user -> Zeitstempel
+function rateOk(user) {
+  const now = Date.now();
+  const arr = (hits.get(user) || []).filter(t => now - t < 10000);
+  const all = [...hits.values()].reduce((n, a) => n + a.filter(t => now - t < 10000).length, 0);
+  if (arr.length >= 30 || all >= 60) { hits.set(user, arr); return false; }
+  arr.push(now);
+  hits.set(user, arr);
+  return true;
+}
+
+async function handle(cmd) {
+  if (!cmd || typeof cmd.user !== 'string' || !cmd.user) { const e = new Error('Kein Nutzer'); e.status = 401; throw e; }
+  if (!rateOk(cmd.user)) { const e = new Error('Zu viele Befehle – kurz warten'); e.status = 429; throw e; }
+  const { calls, label } = conf.check(C, cmd, states);
+  if (!meta.connected) { const e = new Error(meta.mode === 'test' ? 'Testmodus startet noch' : 'Home Assistant nicht verbunden'); e.status = 503; throw e; }
+  for (const c of calls) {
+    try { await backend.call(c.domain, c.service, c.entity_ids, c.data); }
+    catch (err) { const e = new Error(err.message || 'Fehler von Home Assistant'); e.status = 502; throw e; }
+  }
+  // aktive Szene merken (für die Markierung in der App); Lampe von Hand geändert -> keine Szene mehr aktiv
+  const sz = C.cfg.szenen.find(s => s.key === cmd.scene);
+  if (sz) setMeta({ scene: sz.key, scene_at: new Date().toISOString() });
+  else if (calls[0].domain === 'light' && meta.scene) setMeta({ scene: '', scene_at: '' });
+  return { ok: true, label: sz ? `Szene ${sz.name}` : label };
+}
+
+const server = http.createServer((req, res) => {
+  const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
+  if (req.method !== 'POST' || req.url !== '/cmd') return send(404, { message: 'Nicht gefunden' });
+  let body = '';
+  req.on('data', ch => { body += ch; if (body.length > 10000) req.destroy(); });
+  req.on('end', async () => {
+    let cmd;
+    try { cmd = JSON.parse(body); } catch (_) { return send(400, { message: 'Ungültige Anfrage' }); }
+    try { send(200, await handle(cmd)); }
+    catch (err) {
+      if (err.status === 400) log('abgelehnt:', String(cmd.service).slice(0, 40), String(cmd.entity_id).slice(0, 80), '-', err.message);
+      send(err.status || 500, { message: err.message || 'Fehler' });
+    }
+  });
+});
+
+// ----------------------------------------------------------------------
+// Start
+// ----------------------------------------------------------------------
+async function main() {
+  C = readConfig();
+  for (let i = 0; ; i++) {
+    try { await loadRecords(); break; }
+    catch (err) { log('PocketBase noch nicht bereit:', err.message); await new Promise(r => setTimeout(r, Math.min(30000, 2000 * (i + 1)))); }
+  }
+  try { klima = JSON.parse(cache.get('_klima') || 'null') || { series: {} }; } catch (_) { klima = { series: {} }; }
+  if (!klima.series) klima = { series: {} };
+  klimaTrim();
+  put('_config', publicConfig());
+  setMeta({ connected: false, error: '' });
+  // Datensätze von Geräten, die nicht mehr in der Konfiguration stehen, bleiben liegen – die App zeigt nur Konfiguriertes.
+
+  server.listen(PORT, '127.0.0.1', () => log(`wir-home hört auf 127.0.0.1:${PORT}`));
+  startBackend();
+
+  // Herzschlag: die App erkennt daran, ob der Dienst läuft
+  setInterval(() => setMeta({}), 30000);
+  // Klima: auch ohne Änderung alle 10 Minuten einen Punkt
+  setInterval(() => { for (const id of klimaIds()) { const s = states.get(id); if (s) klimaSample(id, s.state, true); } }, STEP_MS);
+  const wx = () => weather().catch(err => log('Wetter:', err.message));
+  wx(); setInterval(wx, 20 * 60000);
+
+  // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
+  let reloadTimer = null;
+  fs.watchFile(CONFIG, { interval: 5000 }, () => {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      try {
+        C = readConfig();
+        backend.setConfig(C.cfg);
+        put('_config', publicConfig());
+        klimaTrim();
+        log('Konfiguration neu geladen');
+        if (meta.mode === 'test') for (const s of backend.states.values()) onState(s);
+        wx();
+      } catch (err) { log('Konfiguration fehlerhaft, alte bleibt aktiv:', err.message); }
+    }, 500);
+  });
+}
+
+process.on('SIGTERM', () => { flush().finally(() => process.exit(0)); });
+main().catch(err => { console.error(err); process.exit(1); });

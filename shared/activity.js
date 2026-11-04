@@ -132,6 +132,7 @@
     's-wir': 'Wir zwei', 's-draw': 'Zeichnen', 's-canvas': 'Zeichnen', 's-games': 'Spiele', 's-chess': 'Schach', 's-sudoku': 'Sudoku', 's-ttt': 'Tic Tac Toe', 's-mono': 'Herzstadt',
     's-bj': 'Blackjack', 's-settings': 'Einstellungen', 's-console': 'Konsole',
     's-duo': 'Zu zweit', 's-brain': 'Denkspiele', 's-casino': 'Casino', 's-shop': 'Shop', 's-date': 'Date', 's-grocery': 'Einkaufsliste', 's-chat': 'Chat', 's-snake': 'Snake',
+    's-zuhause': 'Zuhause',
   };
   const GAMES = ['s-games', 's-chess', 's-sudoku', 's-ttt', 's-mono', 's-bj', 's-duo', 's-brain', 's-casino', 's-shop'];
 
@@ -159,6 +160,7 @@
         return `${t} ${w}👀 ${what}${x.detail ? ': ' + x.detail : ''}`;
       }
       case 'game': return `${t} ${w}🎲 ${x.detail}`;
+      case 'home': return `${t} ${w}🏠 ${x.detail}`;
       case 'fx': return `${t} ${w}${x.area === 'shake' ? '💥' : '💞'} ${x.detail}`;
       default: return `${t} ${w}${x.kind} ${x.detail || ''}`;
     }

@@ -17,7 +17,7 @@ main() {
   local LOCK="${LOCK:-/tmp/wir-deploy.lock}"
   local SYSTEMCTL="${SYSTEMCTL:-sudo -n /usr/bin/systemctl}"
   # Ordner im Repo -> systemd-Dienst
-  local NODE_APPS="${NODE_APPS:-push:wir-push}"
+  local NODE_APPS="${NODE_APPS:-push:wir-push home:wir-home}"
 
   log() { echo "$*"; }
 
@@ -104,7 +104,7 @@ main() {
     if $SYSTEMCTL restart "$svc"; then log "$svc neu gestartet"; else log "FEHLER: Neustart $svc"; rc=1; fi
   done
 
-  if echo "$changed" | grep -qE '^deploy/.*\.(service|timer)$|^push/.*\.service$'; then
+  if echo "$changed" | grep -qE '^deploy/.*\.(service|timer)$|^(push|home)/.*\.service$'; then
     log "Hinweis: systemd-Dateien haben sich geändert – bei Bedarf von Hand neu installieren (ANLEITUNG.md)"
   fi
   return $rc

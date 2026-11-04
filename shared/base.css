@@ -5,6 +5,22 @@
    App-eigene Styles liegen in app/style.css bzw. spiele/style.css.
    ====================================================================== */
 /* ---------- Farbwelten ---------- */
+/* Gemeinsame Zusatz-Variablen (04.11.2026, Zuhause + Glut/Rosé-Nacht). Standard aus den Grundfarben abgeleitet,
+   jede Farbwelt kann sie unten überschreiben.
+   --accent3/--accent4  weitere Akzente (Klima-Kurve, Routinen, Szenen-Verläufe)
+   --card/--card-line   ruhige Kacheln (Zuhause)          --ok/--warn  Zustände (Sensoren, Verbindung)
+   --cloud1..4          Farbwolken im Hintergrund (a1.css) --sc-ink     Schrift auf aktiver Szene
+   --sc-mix             Deckkraft der Szenen-Verläufe      --orb-off    Kern einer ausgeschalteten Lampe
+   --switch-on          Schalter „an“ (Routinen)           --clock-to   Verlauf-Ende der großen Uhr */
+:root{
+  --accent3:#a46be0; --accent4:#ff9a7a;
+  --card:var(--glass); --card-line:var(--glass-border);
+  --ok:#2fa874; --warn:#d9822b;
+  --cloud1:color-mix(in srgb,var(--accent2) 34%,transparent); --cloud2:color-mix(in srgb,var(--accent) 22%,transparent);
+  --cloud3:color-mix(in srgb,var(--glow2) 40%,transparent);   --cloud4:color-mix(in srgb,var(--glow) 20%,transparent);
+  --sc-ink:var(--accent-ink); --sc-mix:100%; --orb-off:var(--glass-strong);
+  --switch-on:linear-gradient(90deg,var(--accent),var(--accent2)); --clock-to:var(--accent);
+}
 :root, html[data-theme="rose"]{
   color-scheme: light;
   --bg1:#fff4f8; --bg2:#fde3ee; --bg3:#f8cfe2;
@@ -18,6 +34,7 @@
   --paper:#fffaf5; --paper-line:#f5d3df; --paper-ink:#7a2348; --paper-margin:#f7a9c4;
   --chip:#fde3ee;
   --swatch:linear-gradient(135deg,#fde3ee,#f88fb5,#e0457b);
+  --accent3:#a46be0; --accent4:#ff9a7a;
 }
 html[data-theme="gluehwein"]{
   color-scheme: dark;
@@ -32,6 +49,7 @@ html[data-theme="gluehwein"]{
   --paper:#fbefe9; --paper-line:#efcac2; --paper-ink:#4a0f22; --paper-margin:#e87d87;
   --chip:rgba(255,235,235,.1);
   --swatch:linear-gradient(135deg,#3e0d1e,#9d0d2f,#b4204a,#e87d87,#eca59d);
+  --accent3:#f0b37e; --accent4:#c2456a; --ok:#7fdcae; --warn:#ffc27a; --sc-ink:#fff; --sc-mix:72%; --orb-off:rgba(255,235,235,.06); --clock-to:#eca59d;
 }
 html[data-theme="mondnacht"]{
   color-scheme: dark;
@@ -46,6 +64,7 @@ html[data-theme="mondnacht"]{
   --paper:#f8eef3; --paper-line:#e4cde0; --paper-ink:#420D4B; --paper-margin:#c49ad0;
   --chip:rgba(245,213,224,.1);
   --swatch:linear-gradient(135deg,#210635,#420D4B,#7B337E,#6667AB,#F5D5E0);
+  --accent3:#a98be0; --accent4:#c37fb8; --ok:#7fdcae; --warn:#ffc27a; --sc-ink:#fff; --sc-mix:72%; --orb-off:rgba(245,213,224,.06); --clock-to:#c9a9dc;
 }
 html[data-theme="zuckerwatte"]{
   color-scheme: light;
@@ -60,6 +79,7 @@ html[data-theme="zuckerwatte"]{
   --paper:#fffafd; --paper-line:#ead8ef; --paper-ink:#5d3470; --paper-margin:#E3AADD;
   --chip:rgba(255,255,255,.6);
   --swatch:linear-gradient(135deg,#F4E7F8,#F6BCBA,#E3AADD,#C8A8E9,#C3C7F4);
+  --accent3:#9fb0ef; --accent4:#F6BCBA; --ok:#3d9a74; --warn:#c7782a;
 }
 /* Pfirsich (27.10.2026): warm, Koralle -> Pfirsich, sehr heller Hintergrund, eher weiße Karten */
 html[data-theme="pfirsich"]{
@@ -75,6 +95,7 @@ html[data-theme="pfirsich"]{
   --paper:#fffaf5; --paper-line:#f6dacb; --paper-ink:#6e2e1e; --paper-margin:#f3a48c;
   --chip:#ffece2;
   --swatch:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b);
+  --accent3:#e8a23c; --accent4:#e27a9a; --ok:#2f9a6c; --warn:#c96a1f;
 }
 /* Lavendel (27.10.2026): Lila -> Pink, heller lila Hintergrund, Glas mit leicht lila Rand */
 html[data-theme="lavendel"]{
@@ -90,6 +111,50 @@ html[data-theme="lavendel"]{
   --paper:#fffbff; --paper-line:#eadcf7; --paper-ink:#4f2380; --paper-margin:#d3a5ef;
   --chip:#f1e6ff;
   --swatch:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8);
+  --accent3:#7f8cff; --accent4:#ff9ec8; --ok:#2f9a6c; --warn:#c96a1f;
+}
+
+/* Glut (04.11.2026): dunkles Nachtblau, Bernstein/Orange leuchtet, Petrol + Violett als Akzente */
+html[data-theme="glut"]{
+  color-scheme: dark;
+  --bg1:#070a16; --bg2:#090d1c; --bg3:#0f1530;
+  --ink:#f3f1ee; --ink-soft:#a3a9bf; --ink-faint:#646b86;
+  --accent:#ff8f3a; --accent2:#ffb35c; --accent-ink:#1a1206;
+  --accent3:#2fd4c4; --accent4:#9b6bff;
+  --glass:rgba(255,255,255,.055); --glass-strong:rgba(255,255,255,.1); --glass-border:rgba(255,255,255,.09);
+  --shadow:0,0,0;
+  --input-bg:rgba(0,0,0,.35); --input-ink:#f3f1ee; --placeholder:#7d84a0;
+  --liquid1:#ffb35c; --liquid2:#ff6a2b;
+  --glow:#ff9a3c; --glow2:#9b6bff;
+  --paper:#f7f1e8; --paper-line:#e6d9c6; --paper-ink:#2b2030; --paper-margin:#ff9a3c;
+  --chip:rgba(255,255,255,.07);
+  --card:rgba(255,255,255,.045); --card-line:rgba(255,255,255,.08);
+  --ok:#2fd4c4; --warn:#ffb35c;
+  --cloud1:rgba(155,107,255,.12); --cloud2:rgba(255,140,50,.24); --cloud3:rgba(155,107,255,.16); --cloud4:rgba(47,212,196,.14);
+  --sc-ink:#fff; --sc-mix:78%; --orb-off:rgba(255,255,255,.05);
+  --switch-on:#9b6bff; --clock-to:#ffd2a1;
+  --swatch:linear-gradient(135deg,#090d1c,#1b2350,#9b6bff,#ff8f3a,#ffc27a);
+}
+/* Rosé-Nacht (04.11.2026): fast schwarzes Pflaume, Pink + Lila leuchten, Koralle als Wärme */
+html[data-theme="rosenacht"]{
+  color-scheme: dark;
+  --bg1:#0f0711; --bg2:#140a16; --bg3:#1f0e22;
+  --ink:#fbeef5; --ink-soft:#bea3b8; --ink-faint:#7c6378;
+  --accent:#ff6fb5; --accent2:#b45cff; --accent-ink:#fff;
+  --accent3:#c49bff; --accent4:#ff8c78;
+  --glass:rgba(255,255,255,.055); --glass-strong:rgba(255,255,255,.1); --glass-border:rgba(255,200,230,.12);
+  --shadow:0,0,0;
+  --input-bg:rgba(0,0,0,.35); --input-ink:#fbeef5; --placeholder:#8f7489;
+  --liquid1:#ff9cd0; --liquid2:#ff6fb5;
+  --glow:#ff6fb5; --glow2:#c49bff;
+  --paper:#fbf0f6; --paper-line:#efd2e1; --paper-ink:#4a1834; --paper-margin:#ff8fc4;
+  --chip:rgba(255,111,181,.12);
+  --card:rgba(255,255,255,.05); --card-line:rgba(255,200,230,.10);
+  --ok:#6fe3b5; --warn:#ffb36b;
+  --cloud1:rgba(196,155,255,.14); --cloud2:rgba(196,155,255,.18); --cloud3:rgba(255,140,120,.10); --cloud4:rgba(255,111,181,.16);
+  --sc-ink:#fff; --sc-mix:72%; --orb-off:rgba(255,255,255,.05);
+  --switch-on:linear-gradient(90deg,#ff6fb5,#b45cff); --clock-to:#f4c6de;
+  --swatch:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df);
 }
 
 /* ---------- Grundlagen ---------- */
@@ -317,6 +382,8 @@ textarea.mem-input{resize:none;line-height:1.45}
 .swatch[data-theme="zuckerwatte"] i{background:linear-gradient(135deg,#F4E7F8,#F6BCBA,#E3AADD,#C8A8E9,#C3C7F4)}
 .swatch[data-theme="pfirsich"] i{background:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b)}
 .swatch[data-theme="lavendel"] i{background:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8)}
+.swatch[data-theme="glut"] i{background:linear-gradient(135deg,#090d1c,#1b2350,#9b6bff,#ff8f3a,#ffc27a)}
+.swatch[data-theme="rosenacht"] i{background:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df)}
 .swatch.on{color:var(--ink)}
 .swatch.on i{transform:scale(1.06);box-shadow:0 0 0 3px var(--bg1),0 0 0 6px var(--accent),0 8px 18px rgba(var(--shadow),.3)}
 .push-state{font-size:14px;font-weight:600;color:var(--ink-soft)}

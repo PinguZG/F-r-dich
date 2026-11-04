@@ -1,0 +1,70 @@
+// ============================================================================================
+// Zuhause – Konfiguration UND Freigabeliste (keine Geheimnisse hier, die Datei ist öffentlich!)
+//
+// - Nur was hier steht, kann die App sehen und schalten. Alles andere lehnt der Server ab.
+// - Ändern: Datei auf GitHub bearbeiten (Stift-Symbol) -> "Commit changes". Nach ≤ 2 Minuten holt der
+//   Server die Änderung, der Dienst wir-home liest sie neu ein und die App zeigt sie sofort.
+// - Zeilen, die mit // anfangen, sind Kommentare. Sonst normales JSON: Texte in "…", Kommas zwischen Einträgen,
+//   KEIN Komma nach dem letzten Eintrag einer Liste.
+// - entity_id findest du in Home Assistant unter Einstellungen -> Geräte & Dienste -> Entitäten (Spalte "Entitäts-ID").
+// - Symbole ("icon"): bulb flame film book moon power sunrise clock home heart coffee fan stars tv plug
+//                     window door motion battery thermo drop wind bolt leaf music sofa bed spark
+// - Farben als Hex ("#ffb38a"). Szenen ohne "farben" nehmen die Farben der gewählten Farbwelt.
+// Ausführlich: pocketbase/ANLEITUNG.md, Abschnitt "Zuhause".
+// ============================================================================================
+{
+  // Wetter (Open-Meteo, ohne Schlüssel, wird auf dem Server zwischengespeichert)
+  "wetter": { "ort": "Kiel", "lat": 54.3233, "lon": 10.1228 },
+
+  // Name des Raums für die Klima-Karte
+  "raum": "Zimmer",
+
+  // Lampen (genau so viele Kugeln, wie hier stehen; gut sind 1–4). "farbe" = Standardfarbe für das Leuchten,
+  // falls die Lampe selbst keine Farbe meldet.
+  "lampen": [
+    { "name": "Stehlampe",    "entity_id": "light.stehlampe",    "farbe": "#ffb38a" },
+    { "name": "Deckenlicht",  "entity_id": "light.deckenlicht",  "farbe": "#ffe1c9" },
+    { "name": "LED-Streifen", "entity_id": "light.led_streifen", "farbe": "#ff5fa8" }
+  ],
+
+  // Szenen: entity_id ist eine Szene (scene.…) oder ein Skript (script.…).
+  // Sonderfall "aktion": "alle_aus" schaltet alle Lampen oben aus (braucht keine entity_id).
+  "szenen": [
+    { "name": "Gemütlich",  "entity_id": "scene.gemutlich",  "icon": "flame" },
+    { "name": "Filmabend",  "entity_id": "scene.filmabend",  "icon": "film" },
+    { "name": "Lesen",      "entity_id": "scene.lesen",      "icon": "book" },
+    { "name": "Gute Nacht", "entity_id": "scene.gute_nacht", "icon": "moon" },
+    { "name": "Alles aus",  "aktion": "alle_aus",            "icon": "power" }
+  ],
+
+  // Routinen = Automationen in Home Assistant (automation.…). "info" ist frei wählbarer Text.
+  // In der App: Schalter = aktiv/inaktiv, Tippen auf die Zeile = "Jetzt ausführen" + "zuletzt ausgeführt".
+  "routinen": [
+    { "name": "Sanft wecken",     "entity_id": "automation.sanft_wecken",     "info": "Mo–Fr · 6:00",          "icon": "sunrise" },
+    { "name": "Abends dimmen",    "entity_id": "automation.abends_dimmen",    "info": "täglich · 22:00",       "icon": "moon" },
+    { "name": "Gute-Nacht-Timer", "entity_id": "automation.gute_nacht_timer", "info": "Licht aus nach 30 Min", "icon": "clock" }
+  ],
+
+  // Raumklima: Temperatur + Luftfeuchte (mit 24-h-Verlauf). Leer lassen ("") = Karte zeigt nur, was da ist.
+  // "weitere": zusätzliche Werte (z. B. CO₂, Strom) – erscheinen nur, wenn eingetragen.
+  //   { "name": "CO₂", "entity_id": "sensor.zimmer_co2", "einheit": "ppm", "icon": "wind", "max": 2000 }
+  "klima": {
+    "temperatur": "sensor.zimmer_temperatur",
+    "luftfeuchte": "sensor.zimmer_luftfeuchte",
+    "weitere": []
+  },
+
+  // Geräte-Schalter (switch.…, input_boolean.…, fan.…) – erscheinen nur, wenn eingetragen.
+  //   { "name": "Kaffeemaschine", "entity_id": "switch.kaffeemaschine", "icon": "coffee", "farbe": "#ffb38a" }
+  "schalter": [],
+
+  // Fernseher (media_player.…) – Kachel erscheint nur, wenn eingetragen: an/aus, Lautstärke, Play/Pause, App-Auswahl,
+  // zeigt was gerade läuft. "apps" = Quellen genau so geschrieben, wie Home Assistant sie beim Fernseher
+  // unter "Quelle" (source_list) zeigt. Nur diese Apps darf die App auswählen.
+  //   { "name": "Fernseher", "entity_id": "media_player.fernseher", "apps": ["Netflix", "YouTube", "Prime Video"] }
+  "tv": [],
+
+  // Sensoren (binary_sensor.…) – erscheinen nur, wenn eingetragen. "art": fenster | tuer | bewegung | sonstiges
+  //   { "name": "Fenster", "entity_id": "binary_sensor.fenster_zimmer", "art": "fenster" }
+  "sensoren": []
+}

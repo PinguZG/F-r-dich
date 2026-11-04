@@ -1,2 +1,4 @@
 push/node_modules/
+home/node_modules/
+home/export/dist/
 *.env

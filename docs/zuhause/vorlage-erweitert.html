@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Vorlage 2b – Rosé-Nacht erweitert</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#140a16;--card:rgba(255,255,255,.05);--line:rgba(255,200,230,.10);--txt:#fbeef5;--mut:#b49aaf;--pink:#ff6fb5;--lila:#c49bff;--ok:#6fe3b5;--warn:#ffb36b}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;background:#0a050b;overflow:hidden;font-family:Quicksand,system-ui,sans-serif;color:var(--txt)}
+svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.stage{width:1180px;height:820px;position:absolute;left:50%;top:50%;overflow:hidden;border-radius:28px;padding:24px;
+  background:radial-gradient(700px 520px at 30% 50%,rgba(255,111,181,.15),transparent 65%),radial-gradient(600px 500px at 100% 0%,rgba(196,155,255,.15),transparent 60%),radial-gradient(500px 400px at 0% 100%,rgba(255,140,120,.10),transparent 60%),var(--bg);
+  display:grid;grid-template-columns:1fr 372px;grid-template-rows:100%;gap:20px}
+.left{display:grid;grid-template-rows:auto 1fr auto auto;gap:16px;min-height:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.hello{font-size:18px;color:var(--mut);font-weight:500}
+.clock{font-size:88px;font-weight:300;letter-spacing:-3px;line-height:1;margin-top:2px;background:linear-gradient(180deg,#fff,#f4c6de);-webkit-background-clip:text;color:transparent}
+.sub{display:flex;gap:12px;align-items:center;color:var(--mut);font-size:16px;margin-top:8px;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:rgba(255,111,181,.12);color:#ffc2df;font-weight:600;font-size:14px}
+.chip svg{width:17px;height:17px}
+.chip.ok{background:rgba(111,227,181,.10);color:#b9f3dc}.chip.ok::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.nav{display:flex;gap:6px;padding:6px;border-radius:22px;background:var(--card);border:1px solid var(--line)}
+.nav div{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;color:var(--mut)}
+.nav .on{color:#fff;background:linear-gradient(160deg,var(--pink),#b45cff);box-shadow:0 8px 24px -6px rgba(255,111,181,.7)}
+.lh{display:flex;justify-content:space-between;align-items:center}
+.sec{font-size:15px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:8px}
+.mini{display:flex;gap:8px}.mini div{height:40px;padding:0 14px;border-radius:14px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;background:var(--card);border:1px solid var(--line);color:#f3dbe8;cursor:pointer}
+.mini svg{width:18px;height:18px}
+/* orbs */
+.lampzone{display:grid;grid-template-rows:auto 1fr;gap:6px;min-height:0}
+.orbs{display:flex;align-items:center;justify-content:space-around}
+.orb{display:grid;justify-items:center;gap:10px;cursor:pointer;touch-action:none}
+.ring{--c:#ffb38a;width:168px;height:168px;border-radius:50%;position:relative;display:grid;place-items:center}
+.ring svg.arc{position:absolute;inset:0;width:100%;height:100%;transform:rotate(135deg)}
+.arc .tr{stroke:rgba(255,255,255,.07);stroke-width:7}
+.orb:not(.on) .arc .v{opacity:0}.arc .v{stroke:var(--c);stroke-width:7;transition:stroke-dasharray .25s;filter:drop-shadow(0 0 8px var(--c))}
+.core{width:124px;height:124px;border-radius:50%;display:grid;place-items:center;transition:.4s;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.10),rgba(255,255,255,.02) 60%);border:1px solid var(--line);color:var(--mut)}
+.core svg{width:38px;height:38px}
+.orb.on .core{color:#2a0f1c;background:radial-gradient(circle at 35% 30%,#fff 0%,var(--c) 45%,color-mix(in srgb,var(--c) 60%,#000) 100%);border-color:transparent;
+  box-shadow:0 0 44px 4px color-mix(in srgb,var(--c) 65%,transparent),0 0 120px 26px color-mix(in srgb,var(--c) 26%,transparent)}
+.orb h3{font-size:19px;font-weight:600}.orb p{font-size:15px;color:var(--mut);margin-top:-6px}
+/* devices */
+.devs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.dev{--c:#ff6fb5;height:78px;border-radius:22px;padding:0 14px;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--card);border:1px solid var(--line);transition:.35s}
+.dev .di{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.06);color:var(--mut);transition:.35s}
+.dev h4{font-size:15px;font-weight:600;white-space:nowrap}.dev p{font-size:13px;color:var(--mut)}
+.dev.on{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,transparent),rgba(255,255,255,.03));border-color:color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 12px 30px -14px var(--c)}
+.dev.on .di{background:var(--c);color:#2a0f1c;box-shadow:0 0 18px color-mix(in srgb,var(--c) 70%,transparent)}
+/* scenes */
+.scenes{display:flex;gap:12px}
+.sc{flex:1;height:70px;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:16px;font-weight:600;cursor:pointer;background:var(--card);border:1px solid var(--line);color:#f3dbe8;transition:.35s;white-space:nowrap}
+.sc svg{color:var(--a)}
+.sc.on{background:linear-gradient(135deg,color-mix(in srgb,var(--a) 70%,transparent),color-mix(in srgb,var(--b) 55%,transparent));border-color:transparent;color:#fff;box-shadow:0 14px 36px -12px var(--a)}.sc.on svg{color:#fff}
+/* right */
+.right{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:12px;min-height:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:13px 18px;backdrop-filter:blur(18px);min-height:0;overflow:hidden}
+.ttl{font-size:14px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:7px;margin-bottom:6px}.ttl svg{width:17px;height:17px}.ttl .r{margin-left:auto;font-weight:500;font-size:13px}
+.w{display:flex;align-items:center;gap:14px}
+.w svg{width:44px;height:44px;color:#ffc6a8;filter:drop-shadow(0 0 14px rgba(255,170,140,.6))}
+.big{font-size:38px;font-weight:600;line-height:1}.big small{font-size:20px;color:var(--mut)}
+.hours{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--mut)}
+.hours div{display:grid;justify-items:center;gap:4px}.hours b{color:var(--txt);font-size:14px}.hours svg{width:18px;height:18px;color:#ffc6a8}
+.klima{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv{padding:8px 12px;border-radius:18px;background:rgba(255,255,255,.04)}
+.kv .l{font-size:12px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:6px}.kv .l svg{width:15px;height:15px}
+.kv .n{font-size:24px;font-weight:600;margin-top:0}.kv .n small{font-size:14px;color:var(--mut)}
+.kv svg.sp{width:100%;height:20px;margin-top:0}
+.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
+.sens{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:18px;background:rgba(255,255,255,.04)}
+.s .si{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:rgba(111,227,181,.12);color:var(--ok)}
+.s.warn .si{background:rgba(255,179,107,.14);color:var(--warn)}
+.s h5{font-size:14px;font-weight:600}.s p{font-size:12px;color:var(--mut)}
+.s.warn p{color:#ffcf9e}
+.rt{display:flex;align-items:center;gap:12px;padding:5px 0;border-top:1px solid var(--line)}.rt:first-of-type{border-top:0}
+.rt h4{font-size:15px;font-weight:600}.rt p{font-size:13px;color:var(--mut)}
+.ri{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:rgba(196,155,255,.14);color:var(--lila)}
+.sw{margin-left:auto;width:52px;height:30px;border-radius:20px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:.3s;flex:none}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.3s}
+.sw.on{background:linear-gradient(90deg,var(--pink),#b45cff);box-shadow:0 0 16px rgba(255,111,181,.5)}.sw.on::after{left:26px}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <section class="left">
+    <div class="top">
+      <div>
+        <div class="hello" id="hello">Guten Abend, ihr zwei</div>
+        <div class="clock" id="clock">19:42</div>
+        <div class="sub"><span id="date">Mittwoch, 4. November</span><span class="chip"><i data-i="heart"></i><span id="days">208</span> Tage · Wiedersehen in 9 Tagen</span></div>
+      </div>
+      <div style="display:grid;gap:10px;justify-items:end">
+        <div class="nav"><div class="on" data-i="home"></div><div data-i="spark"></div><div data-i="clock"></div><div data-i="chart"></div><div data-i="gear"></div></div>
+        <span class="chip ok">Alles ok · 1 Hinweis</span>
+      </div>
+    </div>
+    <div class="lampzone">
+      <div class="lh"><div class="sec"><i data-i="bulb"></i>Licht</div><div class="mini"><div id="allon"><i data-i="bulb"></i>Alle an</div><div id="alloff"><i data-i="power"></i>Alle aus</div></div></div>
+      <div class="orbs" id="orbs"></div>
+    </div>
+    <div class="devs" id="devs"></div>
+    <div class="scenes" id="scenes"></div>
+  </section>
+
+  <aside class="right">
+    <div class="card">
+      <div class="ttl"><i data-i="pin"></i>Kiel<span class="r">Sonnenuntergang 16:41</span></div>
+      <div class="w"><i data-i="cloudsun"></i><div><div class="big">9°</div><div style="color:var(--mut);font-size:14px;margin-top:3px">Leicht bewölkt · gefühlt 6°</div></div></div>
+      <div class="hours" id="hours"></div>
+    </div>
+    <div class="card">
+      <div class="ttl"><i data-i="thermo"></i>Raumklima<span class="r">Zimmer</span></div>
+      <div class="klima">
+        <div class="kv"><div class="l"><i data-i="thermo"></i>Temperatur</div><div class="n">21,4<small> °C</small></div><svg class="sp" id="sp1" viewBox="0 0 140 26" preserveAspectRatio="none"></svg></div>
+        <div class="kv"><div class="l"><i data-i="drop"></i>Luftfeuchte</div><div class="n">48<small> %</small></div><svg class="sp" id="sp2" viewBox="0 0 140 26" preserveAspectRatio="none"></svg></div>
+        <div class="kv"><div class="l"><i data-i="wind"></i>CO₂</div><div class="n">640<small> ppm</small></div><div class="bar"><i style="width:38%;background:linear-gradient(90deg,var(--ok),#c4f0a0)"></i></div></div>
+        <div class="kv"><div class="l"><i data-i="bolt"></i>Strom heute</div><div class="n">1,8<small> kWh</small></div><div class="bar"><i style="width:55%;background:linear-gradient(90deg,var(--lila),var(--pink))"></i></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ttl"><i data-i="shield"></i>Sensoren</div>
+      <div class="sens">
+        <div class="s warn"><div class="si" data-i="window"></div><div><h5>Fenster</h5><p>offen · 12 Min</p></div></div>
+        <div class="s"><div class="si" data-i="door"></div><div><h5>Tür</h5><p>zu</p></div></div>
+        <div class="s"><div class="si" data-i="motion"></div><div><h5>Bewegung</h5><p>vor 3 Min</p></div></div>
+        <div class="s"><div class="si" data-i="battery"></div><div><h5>Batterien</h5><p>alle über 40 %</p></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ttl"><i data-i="clock"></i>Routinen<span class="r">nächste: 22:00</span></div>
+      <div id="routines"></div>
+    </div>
+  </aside>
+</div>
+<script>
+const I={home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',film:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>',flame:'<path d="M12 2c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 1.5-4.5 3-6 0 2.5 1.5 4 3 4 0-4-1.5-6.5 0-9z"/>',power:'<path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/>',heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',thermo:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',cloudsun:'<path d="M8 3v1M3.5 5.5l.7.7M2 10h1M12.5 5.5l-.7.7M5.5 10a3 3 0 0 1 5.6-1.5"/><path d="M7 20h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 13 3.5 3.5 0 0 0 7 20z"/>',cloud:'<path d="M7 19h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 12 3.5 3.5 0 0 0 7 19z"/>',rain:'<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15zM8 18l-1 3M12 18l-1 3M16 18l-1 3"/>',sunrise:'<path d="M12 3v4M5 10l1.5 1.5M19 10l-1.5 1.5M3 17h18M7 17a5 5 0 0 1 10 0M8 21h8"/>',pin:'<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',window:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 12h16"/>',door:'<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="14.5" cy="12" r=".8"/>',motion:'<circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 2v4M7 12l3-4 4 1 3 3M11 15l-1-4"/>',battery:'<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 11v2M6 10v4M9 10v4M12 10v4"/>',coffee:'<path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"/>',fan:'<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 3 2 1 4l-3 3M14 12c4 0 7 1 7 4 0 2-2 3-4 1l-3-3M12 14c0 4-1 7-4 7-2 0-3-2-1-4l3-3M10 12c-4 0-7-1-7-4 0-2 2-3 4-1l3 3"/>',stars:'<path d="M5 3v4M3 5h4M17 15v4M15 17h4M12 6l1.5 4.5L18 12l-4.5 1.5L12 18l-1.5-4.5L6 12l4.5-1.5z"/>',tv:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>'};
+const svg=n=>`<svg viewBox="0 0 24 24">${I[n]}</svg>`;
+document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=svg(e.dataset.i));
+
+const lamps=[{n:'Stehlampe',c:'#ffb38a',on:true,b:70},{n:'Deckenlicht',c:'#ffe1c9',on:false,b:45},{n:'LED-Streifen',c:'#ff5fa8',on:true,b:58}];
+const O=document.getElementById('orbs'),C=2*Math.PI*78,ARC=C*0.75;
+function render(){O.innerHTML=lamps.map((l,i)=>`<div class="orb ${l.on?'on':''}" data-i="${i}"><div class="ring" style="--c:${l.c}">
+ <svg class="arc" viewBox="0 0 168 168"><circle class="tr" cx="84" cy="84" r="78" stroke-dasharray="${ARC} ${C}"/><circle class="v" cx="84" cy="84" r="78" stroke-dasharray="${ARC*l.b/100} ${C}"/></svg>
+ <div class="core">${svg('bulb')}</div></div><h3>${l.n}</h3><p>${l.on?l.b+' %':'Aus'}</p></div>`).join('')}
+let d=null;
+O.addEventListener('pointerdown',e=>{const t=e.target.closest('.orb');if(!t)return;d={t,y:e.clientY,b:lamps[t.dataset.i].b,m:false};t.setPointerCapture(e.pointerId)});
+O.addEventListener('pointermove',e=>{if(!d)return;const dy=d.y-e.clientY;if(Math.abs(dy)>8)d.m=true;if(!d.m)return;const l=lamps[d.t.dataset.i];l.on=true;l.b=Math.max(1,Math.min(100,Math.round(d.b+dy/2)));
+  d.t.classList.add('on');d.t.querySelector('p').textContent=l.b+' %';d.t.querySelector('.v').setAttribute('stroke-dasharray',`${ARC*l.b/100} ${C}`)});
+O.addEventListener('pointerup',()=>{if(!d)return;if(!d.m){const l=lamps[d.t.dataset.i];l.on=!l.on}d=null;render()});
+document.getElementById('allon').onclick=()=>{lamps.forEach(l=>l.on=true);render()};
+document.getElementById('alloff').onclick=()=>{lamps.forEach(l=>l.on=false);render()};
+render();
+
+const devs=[['Kaffeemaschine','coffee','#ffb38a',false,'Aus'],['Ventilator','fan','#7fd6ff',false,'Aus'],['Lichterkette','stars','#ffd36b',true,'Timer 23:00'],['Fernseher','tv','#c49bff',true,'42 W']];
+const D=document.getElementById('devs');
+D.innerHTML=devs.map(v=>`<div class="dev ${v[3]?'on':''}" style="--c:${v[2]}"><div class="di">${svg(v[1])}</div><div><h4>${v[0]}</h4><p>${v[4]}</p></div></div>`).join('');
+D.onclick=e=>{const t=e.target.closest('.dev');if(!t)return;t.classList.toggle('on');t.querySelector('p').textContent=t.classList.contains('on')?'An':'Aus'};
+
+const sc=[['Gemütlich','flame','#ff8a7a','#ff5fa8'],['Filmabend','film','#b45cff','#5b3cff'],['Lesen','book','#ffd0a8','#ff9a7a'],['Gute Nacht','moon','#8f7bff','#c49bff'],['Alles aus','power','#9a8394','#5a4a57']];
+const S=document.getElementById('scenes');
+S.innerHTML=sc.map((s,i)=>`<div class="sc ${i==0?'on':''}" style="--a:${s[2]};--b:${s[3]}">${svg(s[1])}<span>${s[0]}</span></div>`).join('');
+S.onclick=e=>{const t=e.target.closest('.sc');if(t)S.querySelectorAll('.sc').forEach(x=>x.classList.toggle('on',x===t))};
+
+const rts=[['Sanft wecken','Mo–Fr · 6:00','sunrise',true],['Abends dimmen','täglich · 22:00','moon',true],];
+const R=document.getElementById('routines');
+R.innerHTML=rts.map(r=>`<div class="rt"><div class="ri">${svg(r[2])}</div><div><h4>${r[0]}</h4><p>${r[1]}</p></div><div class="sw ${r[3]?'on':''}"></div></div>`).join('');
+R.onclick=e=>{const s=e.target.closest('.sw');if(s)s.classList.toggle('on')};
+
+document.getElementById('hours').innerHTML=[['20','cloud',8],['21','cloud',8],['22','cloud',7],['23','cloudsun',7],['0','cloud',6],['2','rain',6]].map(h=>`<div>${h[0]} Uhr${svg(h[1])}<b>${h[2]}°</b></div>`).join('');
+function spark(id,arr,col){const mn=Math.min(...arr),mx=Math.max(...arr);const p='M'+arr.map((v,i)=>`${(i/(arr.length-1)*140).toFixed(1)},${(23-(v-mn)/(mx-mn||1)*20).toFixed(1)}`).join(' L');
+ document.getElementById(id).innerHTML=`<path d="${p}" stroke="${col}" stroke-width="2.2" style="filter:drop-shadow(0 0 5px ${col})"/>`}
+spark('sp1',[20.1,19.9,19.8,19.9,20.3,20.9,21.3,21.6,21.8,22.0,22.1,21.9,21.7,21.5,21.6,21.8,21.7,21.4],'#c49bff');
+spark('sp2',[52,53,53,52,50,49,47,46,46,47,48,49,50,49,48,48,47,48],'#7fd6ff');
+
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+ document.getElementById('date').textContent=n.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+ const h=n.getHours();document.getElementById('hello').textContent=(h<11?'Guten Morgen':h<17?'Hallo':h<22?'Guten Abend':'Gute Nacht')+', ihr zwei';
+ document.getElementById('days').textContent=Math.floor((n-new Date(2026,3,10))/864e5)}
+tick();setInterval(tick,10000);
+function fit(){const s=Math.min(innerWidth/1180,innerHeight/820);document.getElementById('stage').style.transform=`translate(-50%,-50%) scale(${s})`}
+fit();addEventListener('resize',fit);
+</script>
+</body>
+</html>

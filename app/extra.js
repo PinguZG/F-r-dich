@@ -154,7 +154,11 @@
     cdBox.querySelector('em').textContent = (m.all_day ? fmtWhen(ms).split(' um ')[0] : fmtWhen(ms)) + (m.place ? ' · ' + m.place : m.note ? ' · ' + m.note : '');
   }
   function openMeetingForm() { window.WIR_DATES?.openForm(); }
-  window.WIR_COUNTDOWN = { reload: () => loadMeetings().catch(console.error) };
+  window.WIR_COUNTDOWN = {
+    reload: () => loadMeetings().catch(console.error),
+    // Zeitpunkt (ms) des nächsten Treffens oder null – für Zuhause (Tablet-Kopf)
+    next: () => { const m = started && nextMeeting(); return m ? pbMs(m.when) : null; },
+  };
 
   // ======================================================================
   // Öffne wenn – Umschalter "Für mich" / "Schreiben"

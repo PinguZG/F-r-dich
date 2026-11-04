@@ -1266,3 +1266,132 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8090/api/health    # 2
 ```
 Danach am PC den alten Host-Key entfernen: `ssh-keygen -R wir`.
 Nie beide Server gleichzeitig mit laufendem `wir-push` betreiben, sonst kommen Pushs doppelt.
+
+---
+
+# Zuhause (Smart Home) + Farbwelten Glut und Rosé-Nacht 04.11.2026 (Wir `wir-v35`)
+
+## Was neu ist
+
+| Wo | Was |
+|---|---|
+| **Leiste unten** | Start · Erinnerungen · **Zuhause** (Haus, Mitte) · Spiele · Wir zwei. Start hat jetzt ein Stern-Symbol. |
+| **Dates** | nicht mehr in der Leiste, sondern als **breite Kachel „📅 Dates“ auf Start** (oben bei den Kacheln). Die Dates-Seite hat einen Zurück-Pfeil, alle Unterseiten (Unsere Daten, Clay, Reiter) gehören jetzt zu „Start“. Push-Links auf Dates funktionieren unverändert, „Nächstes Treffen“ auf Start führt weiter dorthin. |
+| **Zuhause** | Smart-Home-Dashboard. Unter 900 px Breite Handy-Layout (eine Spalte, Szenen seitlich wischbar), ab 900 px Tablet-Layout (Uhr, Begrüßung, „… Tage zusammen · Wiedersehen in …“, große Kugeln, rechts Wetter/Klima/Sensoren/Routinen). Wechselt live beim Drehen. Auf breiten Bildschirmen wird die Seitenleiste in Zuhause schmal. |
+| **Lampen** | Kugel antippen = an/aus, senkrecht wischen = Helligkeit, lange drücken (PC: Rechtsklick) = Sheet/Panel mit Helligkeit, Weißton, 8 Farben. Leuchten immer in der echten Lampenfarbe. „Alle an“ / „Alle aus“. |
+| **Szenen, Routinen** | Szenen tippen (aktive ist markiert). Routinen: Schalter = aktiv/inaktiv, Zeile antippen = Panel mit „Jetzt ausführen“ und „zuletzt ausgeführt“. |
+| **Raumklima, Wetter** | Temperatur + Luftfeuchte mit 24-h-Kurve, Wetter Kiel (Open-Meteo, auf dem Server alle 20 Min. geholt). |
+| **Optional** | Geräte-Schalter, Fernseher (an/aus, Lautstärke, Play/Pause, App-Auswahl, was gerade läuft), Sensoren (Fenster/Tür/Bewegung), weitere Klimawerte (CO₂, Strom …). Erscheinen automatisch, sobald sie in der Konfiguration stehen, sonst unsichtbar. |
+| **Status oben** | „Testmodus“ (gelb), „HA“ (grün = verbunden), „Getrennt“/„Offline“ (rot). Antippen zeigt Details. |
+| **Farbwelten** | neu **Glut** (Nachtblau, Bernstein/Orange, Petrol + Violett) und **Rosé-Nacht** (fast schwarz, Pink + Lila). Auswahl wie bisher unter Einstellungen → Farbwelt, gilt für die ganze App. |
+| **Einstellungen** | **⚡ Leistungsmodus**: weniger Unschärfe und Leuchten, nur auf diesem Gerät (z. B. für ein älteres Wandtablet). |
+| **Konsole `/log`** | Aktionen erscheinen mit 🏠, z. B. `Daniel 🏠 Stehlampe an`, `🏠 Szene Filmabend`, `🏠 Routine Sanft wecken ausgeführt`. |
+
+## Farbwelten-Variablen (shared/base.css)
+
+Neu für **alle** Farbwelten: `--accent3`, `--accent4` (weitere Akzente), `--card`/`--card-line` (Kacheln),
+`--ok`/`--warn`, `--cloud1..4` (Farbwolken im Hintergrund, `a1.css`), `--sc-ink`/`--sc-mix` (aktive Szene),
+`--orb-off` (Kugel aus), `--switch-on`, `--clock-to`. Für die alten Farbwelten sind sie so belegt, dass alles aussieht wie vorher.
+Spielbretter (`games.css`), Sudoku-Ziffern und Coin-Beträge haben eigene Werte für Glut/Rosé-Nacht.
+Die Farbwelt steht weiter in `users.theme` (Text) – „glut“ und „rosenacht“ passen ohne Schemaänderung.
+
+## Konfiguration = Freigabeliste: `home/config.jsonc`
+
+Eine Datei im Repo, **ohne Geheimnisse**, kommentiert: Wetter-Koordinaten, Raumname, Lampen (Name, entity_id,
+Standardfarbe), Szenen, Routinen, Klima, Schalter, Fernseher, Sensoren.
+**Ändern:** auf GitHub die Datei öffnen → Stift → ändern → „Commit changes“. Nach ≤ 2 Min. holt der Server sie,
+`wir-home` startet neu und die App zeigt die Änderung sofort. Ist die Datei kaputt (z. B. Komma vergessen), startet
+der Dienst nicht – Fehler steht in `journalctl -u wir-home -n 30`. Ungültige entity_ids werden übersprungen und im Log genannt.
+
+## Technik und Sicherheit
+
+```
+Handy/Tablet ──(Login)──> PocketBase ──POST /api/home/cmd──> wir-home (Node, 127.0.0.1:8091) ──WebSocket──> Home Assistant
+       ^                       │                                  │
+       └──── Realtime ──── home_state <──── schreibt Zustände ────┘
+```
+- **Der Browser redet nie mit Home Assistant.** HA-Adresse und Token kennt nur `wir-home` (`/etc/wir-home.env`).
+- **Lesen:** Collection `home_state` (Migration `1794300000_wir_zuhause.js`, nur additiv). Lesen/Realtime nur für
+  eingeloggte Nutzer der Collection `users`; anlegen/ändern/löschen ist für alle gesperrt, nur `wir-home` schreibt als Superuser.
+- **Befehle:** `pb_hooks/wir_zuhause.pb.js` (`POST /api/home/cmd`, ohne Login 401) → `wir-home` prüft gegen die
+  Freigabeliste (`home/config.js`): nur eingetragene entity_ids und nur passende Dienste – `light.turn_on/off/toggle`
+  (nur `brightness_pct`, `color_temp_kelvin`, `rgb_color`), `scene.turn_on`, `script.turn_on`,
+  `automation.turn_on/off/trigger`, `switch`/`input_boolean`/`fan` `turn_on/off`, `media_player` `turn_on/off`,
+  `volume_set`, `media_play_pause`, `select_source` (nur Apps aus der Liste). Sensoren sind nur lesbar.
+  Alles andere → 400. **Rate-Limit:** 30 Befehle / 10 s pro Person, 60 insgesamt (→ 429).
+- **Live:** Änderung → `wir-home` → `home_state` → Realtime an beide Geräte (lokal gemessen ~0,7 s inkl. simulierter HA-Verzögerung).
+- **Klima-Verlauf:** `wir-home` speichert alle 10 Min. einen Punkt (24 h) in `home_state` (`_klima`); nach einem Neustart
+  holt es Lücken aus dem HA-Verlauf.
+- Dateien: `home/index.js` (Dienst), `home/ha.js` (HA-WebSocket), `home/sim.js` (Testmodus), `home/config.js`
+  (Prüfung), `home/wir-home.service`, `home/setup.sh`; Client `app/zuhause.js`, `app/zuhause-data.js`
+  (Datenschicht: Transport „wir“, später „ha-direct“), `app/zuhause.css`. Vorlagen + Bilder: `docs/zuhause/`.
+- **Später:** eigenständige Seite für HA (`/config/www`, Wandtablet, ohne Internet) – Gerüst in `home/export/` (README).
+
+## Testmodus
+
+Solange `HA_URL` oder `HA_TOKEN` in `/etc/wir-home.env` leer sind, simuliert `wir-home` Home Assistant komplett
+(Lampen, Szenen, Routinen, Fernseher, Sensoren, Temperatur/Luftfeuchte mit Verlauf, 0,1–0,45 s Verzögerung,
+gelegentlich ein Fehler). Oben in Zuhause steht dann „Testmodus“.
+
+## Nach der Home-Assistant-Installation (Schritt für Schritt)
+
+1. **Pi ins Tailnet:** In HA das Add-on „Tailscale“ installieren und im Tailnet „geep-flops“ anmelden. Den Namen merken
+   (z. B. `homeassistant`). Test vom VPS: `ssh pingu@wir 'curl -s -o /dev/null -w "%{http_code}\n" http://homeassistant:8123/'` → 200.
+2. **Hue einbinden:** HA → Einstellungen → Geräte & Dienste → „Philips Hue“ hinzufügen (Knopf an der Bridge drücken).
+3. **Token erzeugen:** HA → unten links auf deinen Namen (Profil) → Reiter **Sicherheit** → ganz unten
+   **Langlebige Zugriffstoken** → „Token erstellen“, Name `wir-home` → Token **einmal** kopieren (wird nur einmal angezeigt).
+   Tipp: dafür in HA einen eigenen Nutzer „wir-home“ (kein Admin) anlegen und das Token dort erzeugen.
+4. **entity_ids finden:** HA → Einstellungen → Geräte & Dienste → Reiter **Entitäten**, nach „light.“, „scene.“,
+   „automation.“, „sensor.“, „media_player.“ … filtern. Spalte „Entitäts-ID“ abschreiben.
+   Szenen/Automationen legst du in HA unter Einstellungen → Automationen & Szenen an.
+5. **Konfiguration eintragen:** `home/config.jsonc` auf GitHub bearbeiten (entity_ids ersetzen, optionale Bereiche füllen) → Commit.
+6. **Token + Adresse auf dem VPS eintragen** (nie in den Chat, nie ins Repo):
+   ```bash
+   ssh pingu@wir
+   sudo nano /etc/wir-home.env        # HA_URL=http://homeassistant:8123   HA_TOKEN=<Token einfügen>
+   sudo systemctl restart wir-home
+   journalctl -u wir-home -n 20       # erwartet: "Modus: echt (Home Assistant)" und "Status: verbunden"
+   ```
+7. **Testen:** App → Zuhause: oben „HA“ grün. Lampe antippen → echte Lampe schaltet, zweites Handy zeigt es sofort.
+   Steht bei einer Lampe „nicht erreichbar“, stimmt die entity_id nicht. Zurück in den Testmodus: `HA_TOKEN=` leeren, Dienst neu starten.
+
+## Dienst `wir-home` auf dem VPS
+
+Eingerichtet am 04.11.2026 mit `sudo bash ~/F-r-dich/home/setup.sh` (legt `/etc/wir-home.env` mit Platzhaltern an,
+root:root 600 wie `/etc/wir-push.env`, übernimmt `PB_URL/PB_EMAIL/PB_PASSWORD` aus `/etc/wir-push.env` ohne sie
+anzuzeigen, installiert `wir-home.service`, erweitert `/etc/sudoers.d/wir-deploy` um `systemctl restart wir-home`).
+Das Auto-Deploy installiert bei Änderungen in `home/` die Abhängigkeiten (`npm ci`) und startet `wir-home` neu.
+Logs: `journalctl -u wir-home -f`. Token und Adresse erscheinen nie im Log.
+
+## Getestet (lokal, eigene PocketBase mit Kopie der DB, Testpasswörter)
+
+- **API (17 Prüfungen):** ohne Login 401, `home_state` ohne Login nicht lesbar, direkt schreiben 403; Lampe an/Helligkeit/
+  Farbe, Szene, Routine aus/ausführen, alle aus = 200; nicht freigegebene entity_id, falscher Dienst, falsche Domain,
+  `lock.unlock`, Sensor schalten, fremde Werte (`effect`), Helligkeit 500, `homeassistant.restart` = 400; Rate-Limit greift.
+- **Browser, zwei Accounts gleichzeitig (21 Prüfungen):** Tippen/Wischen/Langdruck/Farbe/Weißton, Alle an/aus, Szene,
+  Routine-Schalter + „Jetzt ausführen“, Geräte, Fernseher (an, App, Pause, Lautstärke) – jeweils live beim zweiten Account;
+  Layoutwechsel bei 900 px; keine Konsolenfehler.
+- **Screenshots** Handy 390×844 und Tablet 1180×820 in allen acht Farbwelten, Start/Spiele/Einstellungen/Konsole in Glut + Rosé-Nacht.
+
+## Sicherung vorher
+
+Git-Tag **`vor-zuhause`** (= `b4b5005`), DB-Backup `/home/pingu/backups/vor-zuhause-2026-11-04/` (`data.db`,
+`auxiliary.db` per SQLite-Online-Backup, Integrität „ok“, dazu `storage/`, `pb_hooks/`, `pb_migrations/`).
+
+## Zurück auf „vor-zuhause“
+
+Am PC:
+```bash
+cd Documents/F-r-dich && git checkout main && git pull
+git checkout vor-zuhause -- app shared deploy pocketbase/pb_hooks/activity_lib.js
+git rm -rq home pocketbase/pb_hooks/wir_zuhause.pb.js docs/zuhause
+git commit -m "Zurück vor Zuhause" && git push
+```
+Auf dem VPS (danach, ≤ 2 Min. warten):
+```bash
+sudo systemctl disable --now wir-home
+rm /home/pingu/pb/pb_hooks/wir_zuhause.pb.js && sudo systemctl restart pocketbase
+```
+Die Collection `home_state` bleibt ungenutzt stehen (Migration bleibt im Repo, nichts geht verloren). Wer Glut oder
+Rosé-Nacht gewählt hatte, sieht danach Rosé. Nur falls Daten kaputt sind: DB aus dem Backup zurückspielen wie unter
+„Zurück zur alten Version → 2.“ beschrieben (Ordner `vor-zuhause-2026-11-04`).

@@ -18,6 +18,8 @@
     zuckerwatte: '#F4E7F8',
     pfirsich:    '#fffaf6',
     lavendel:    '#f8f2ff',
+    glut:        '#090d1c',
+    rosenacht:   '#140a16',
   };
   function applyTheme(t) {
     if (!THEMES[t]) t = 'rose';
