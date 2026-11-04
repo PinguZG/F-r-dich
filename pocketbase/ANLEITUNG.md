@@ -1306,7 +1306,7 @@ der Dienst nicht – Fehler steht in `journalctl -u wir-home -n 30`. Ungültige 
 ## Technik und Sicherheit
 
 ```
-Handy/Tablet ──(Login)──> PocketBase ──POST /api/home/cmd──> wir-home (Node, 127.0.0.1:8091) ──WebSocket──> Home Assistant
+Handy/Tablet ──(Login)──> PocketBase ──POST /api/home/cmd──> wir-home (Node, 127.0.0.1:8095) ──WebSocket──> Home Assistant
        ^                       │                                  │
        └──── Realtime ──── home_state <──── schreibt Zustände ────┘
 ```

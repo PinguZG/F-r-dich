@@ -25,7 +25,7 @@ if [ ! -f "$ENV" ]; then
 HA_URL=
 # Langlebiges Zugriffstoken aus Home Assistant (Profil -> Sicherheit -> Langlebige Zugriffstoken)
 HA_TOKEN=
-HOME_PORT=8091
+HOME_PORT=8095
 CONF
 fi
 for k in PB_URL PB_EMAIL PB_PASSWORD; do

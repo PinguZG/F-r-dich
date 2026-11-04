@@ -2,7 +2,7 @@
 // - hält eine dauerhafte WebSocket-Verbindung zu HA (ha.js) – oder simuliert HA im Testmodus (sim.js),
 //   solange HA_URL/HA_TOKEN in /etc/wir-home.env fehlen
 // - schreibt die Zustände der freigegebenen Geräte in die PocketBase-Collection home_state (Realtime an beide Handys)
-// - nimmt Befehle NUR von PocketBase entgegen (POST http://127.0.0.1:8091/cmd, siehe pb_hooks/wir_zuhause.pb.js),
+// - nimmt Befehle NUR von PocketBase entgegen (POST http://127.0.0.1:8095/cmd, siehe pb_hooks/wir_zuhause.pb.js),
 //   prüft sie gegen die Freigabeliste (config.jsonc) und begrenzt die Rate
 // - 24-h-Verlauf für das Raumklima, Wetter von Open-Meteo (zwischengespeichert)
 'use strict';
@@ -17,7 +17,7 @@ const need = k => { const v = process.env[k]; if (!v) { console.error('Fehlt: ' 
 const PB = need('PB_URL').replace(/\/$/, '');
 const PB_EMAIL = need('PB_EMAIL');
 const PB_PASSWORD = need('PB_PASSWORD');
-const PORT = Number(env('HOME_PORT', 8091));
+const PORT = Number(env('HOME_PORT', 8095));
 const CONFIG = env('HOME_CONFIG', path.join(__dirname, 'config.jsonc'));
 // Platzhalter ("", "HIER…") zählen als nicht gesetzt -> Testmodus
 const real = v => !!v && !/^(HIER|<|x+$)/i.test(v.trim());

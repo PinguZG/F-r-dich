@@ -1,5 +1,5 @@
 /// <reference path="../pb_data/types.d.ts" />
-// Zuhause (Smart Home): Befehle aus der App an den Dienst wir-home (home/index.js, nur 127.0.0.1:8091).
+// Zuhause (Smart Home): Befehle aus der App an den Dienst wir-home (home/index.js, nur 127.0.0.1:8095).
 // - nur eingeloggte App-Nutzer (Collection users) – ohne Login 401
 // - wir-home prüft jeden Befehl gegen die Freigabeliste (home/config.jsonc) und hat ein Rate-Limit
 // - erfolgreiche Befehle landen im Aktivitäts-Log (Konsole /log), z. B. "🏠 Stehlampe an"
@@ -17,7 +17,7 @@ routerAdd('POST', '/api/home/cmd', (e) => {
   let res;
   try {
     res = $http.send({
-      url: 'http://127.0.0.1:8091/cmd',
+      url: 'http://127.0.0.1:8095/cmd',
       method: 'POST',
       body: JSON.stringify(cmd),
       headers: { 'content-type': 'application/json' },
