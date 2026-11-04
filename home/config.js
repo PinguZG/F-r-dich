@@ -4,6 +4,8 @@ const fs = require('fs');
 
 const ENTITY_RE = /^[a-z_]+\.[a-z0-9_]+$/;
 const HEX_RE = /^#[0-9a-f]{6}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^(\d{1,2}:\d{2})?$/;
 
 // Erlaubte Dienste pro Bereich (domain) – alles andere wird abgelehnt
 const SERVICES = {
@@ -14,10 +16,15 @@ const SERVICES = {
   switch: ['turn_on', 'turn_off'],
   input_boolean: ['turn_on', 'turn_off'],
   fan: ['turn_on', 'turn_off'],
-  media_player: ['turn_on', 'turn_off', 'volume_set', 'media_play_pause', 'select_source'],
+  media_player: ['turn_on', 'turn_off', 'volume_up', 'volume_down', 'volume_set', 'volume_mute', 'media_play_pause',
+    'media_next_track', 'media_previous_track', 'select_source'],
+  remote: ['send_command', 'turn_on'],
   sensor: [],
   binary_sensor: [],
+  calendar: [],
 };
+// Fernbedienung: nur Navigationstasten
+const REMOTE_KEYS = ['DPAD_UP', 'DPAD_DOWN', 'DPAD_LEFT', 'DPAD_RIGHT', 'DPAD_CENTER', 'BACK', 'HOME', 'MENU', 'SEARCH'];
 
 // nur ganze Kommentarzeilen (// …) entfernen – so bleiben "https://…" in Texten heil
 function parseJsonc(text) {
@@ -42,68 +49,89 @@ function load(file) {
   }
   const color = (c, fb) => (HEX_RE.test(String(c || '')) ? String(c).toLowerCase() : fb);
   const list = v => (Array.isArray(v) ? v : []);
+  const pct = v => Math.max(1, Math.min(100, Math.round(Number(v) || 50)));
 
-  const lampen = list(raw.lampen).slice(0, 8).map((l, i) => ({
-    name: str(l.name) || `Lampe ${i + 1}`,
-    entity_id: entity(l.entity_id, ['light'], `lampen[${i}]`, str(l.name) || `Lampe ${i + 1}`, 'lampe'),
-    farbe: color(l.farbe, '#ffc78f'),
-  })).filter(l => l.entity_id);
+  const lampen = list(raw.lampen).slice(0, 8).map((l, i) => {
+    const name = str(l.name) || `Lampe ${i + 1}`;
+    const t = l.test || {};
+    return {
+      name, entity_id: entity(l.entity_id, ['light'], `lampen[${i}]`, name, 'lampe'),
+      farbe: color(l.farbe, '#ffc78f'),
+      test: { an: !!t.an, helligkeit: pct(t.helligkeit), farbe: color(t.farbe, color(l.farbe, '#ffc78f')) },
+    };
+  }).filter(l => l.entity_id);
 
-  const szenen = list(raw.szenen).slice(0, 10).map((s, i) => {
-    const name = str(s.name) || `Szene ${i + 1}`;
-    const aktion = s.aktion === 'alle_aus' ? 'alle_aus' : '';
-    const id = aktion ? '' : entity(s.entity_id, ['scene', 'script'], `szenen[${i}]`, name, 'szene');
-    const farben = list(s.farben).map(c => color(c, '')).filter(Boolean).slice(0, 2);
-    return { key: 'sz' + i, name, entity_id: id, aktion, icon: str(s.icon, 20) || 'spark', farben };
-  }).filter(s => s.entity_id || s.aktion);
+  const farbnamen = {};
+  for (const [k, v] of Object.entries(raw.farbnamen || {})) if (HEX_RE.test(k)) farbnamen[k.toLowerCase()] = str(v, 20);
 
-  const routinen = list(raw.routinen).slice(0, 12).map((r, i) => ({
-    name: str(r.name) || `Routine ${i + 1}`,
-    entity_id: entity(r.entity_id, ['automation'], `routinen[${i}]`, str(r.name) || `Routine ${i + 1}`, 'routine'),
-    info: str(r.info, 80),
-    icon: str(r.icon, 20) || 'clock',
-  })).filter(r => r.entity_id);
+  const geraete = list(raw.geraete || raw.schalter).slice(0, 12).map((g, i) => {
+    const name = str(g.name) || `Gerät ${i + 1}`;
+    return {
+      name, entity_id: entity(g.entity_id, ['switch', 'input_boolean', 'fan'], `geraete[${i}]`, name, 'geraet'),
+      icon: str(g.icon, 20) || 'bolt', farbe: color(g.farbe, '#ffb35c'),
+      watt: Math.max(0, Number(g.watt) || 0), text_an: str(g.text_an, 30), test_an: !!g.test_an,
+    };
+  }).filter(g => g.entity_id);
+
+  let fernseher = null;
+  if (raw.fernseher && raw.fernseher.entity_id) {
+    const f = raw.fernseher, name = str(f.name) || 'Fernseher';
+    const id = entity(f.entity_id, ['media_player'], 'fernseher', name, 'tv');
+    const remote = f.remote ? entity(f.remote, ['remote'], 'fernseher.remote', name, 'remote') : '';
+    if (id) {
+      fernseher = {
+        name, entity_id: id, remote, max_lautstaerke: Math.max(1, Math.min(100, Number(f.max_lautstaerke) || 50)),
+        apps: list(f.apps).slice(0, 16).map(a => ({ name: str(a.name, 30), farbe: color(a.farbe, '#7b5cff'), start: str(a.start, 200), test: str(a.test, 60) })).filter(a => a.name),
+        quellen: list(f.quellen).slice(0, 8).map(q => ({ name: str(q.name, 20), source: str(q.source || q.name, 40), icon: str(q.icon, 10) || 'tv' })).filter(q => q.name),
+      };
+    }
+  }
+
+  const routinen = list(raw.routinen).slice(0, 8).map((r, i) => {
+    const name = str(r.name) || `Routine ${i + 1}`;
+    return { name, entity_id: entity(r.entity_id, ['automation'], `routinen[${i}]`, name, 'routine'), info: str(r.info, 40), icon: str(r.icon, 20) || 'clock', test_an: !!r.test_an };
+  }).filter(r => r.entity_id);
 
   const k = raw.klima || {};
-  const klima = {
-    temperatur: entity(k.temperatur, ['sensor'], 'klima.temperatur', 'Temperatur', 'klima'),
-    luftfeuchte: entity(k.luftfeuchte, ['sensor'], 'klima.luftfeuchte', 'Luftfeuchte', 'klima'),
-    weitere: list(k.weitere).slice(0, 6).map((w, i) => ({
-      name: str(w.name) || `Wert ${i + 1}`,
-      entity_id: entity(w.entity_id, ['sensor'], `klima.weitere[${i}]`, str(w.name), 'klima'),
-      einheit: str(w.einheit, 12),
-      icon: str(w.icon, 20) || 'spark',
-      max: Number(w.max) > 0 ? Number(w.max) : 0,
-    })).filter(w => w.entity_id),
-  };
-
-  const schalter = list(raw.schalter).slice(0, 12).map((s, i) => ({
-    name: str(s.name) || `Gerät ${i + 1}`,
-    entity_id: entity(s.entity_id, ['switch', 'input_boolean', 'fan'], `schalter[${i}]`, str(s.name) || `Gerät ${i + 1}`, 'schalter'),
-    icon: str(s.icon, 20) || 'plug',
-    farbe: color(s.farbe, '#ffb38a'),
-  })).filter(s => s.entity_id);
+  const klima = {};
+  for (const key of ['temperatur', 'luftfeuchte', 'co2', 'strom_heute', 'leistung']) klima[key] = entity(k[key], ['sensor'], 'klima.' + key, key, 'klima');
 
   const ARTEN = ['fenster', 'tuer', 'bewegung', 'sonstiges'];
-  const sensoren = list(raw.sensoren).slice(0, 12).map((s, i) => ({
+  const sensoren = list(raw.sensoren).slice(0, 8).map((s, i) => ({
     name: str(s.name) || `Sensor ${i + 1}`,
     entity_id: entity(s.entity_id, ['binary_sensor'], `sensoren[${i}]`, str(s.name), 'sensor'),
-    art: ARTEN.includes(s.art) ? s.art : 'sonstiges',
+    art: ARTEN.includes(s.art) ? s.art : 'sonstiges', test_offen_min: Number(s.test_offen_min) || 0,
   })).filter(s => s.entity_id);
 
-  // Fernseher / Mediaplayer: "apps" = erlaubte Quellen für select_source (genau so geschrieben wie in HA)
-  const tv = list(raw.tv).slice(0, 4).map((t, i) => ({
-    name: str(t.name) || `Fernseher ${i + 1}`,
-    entity_id: entity(t.entity_id, ['media_player'], `tv[${i}]`, str(t.name) || `Fernseher ${i + 1}`, 'tv'),
-    apps: list(t.apps).map(a => str(a, 40)).filter(Boolean).slice(0, 12),
-    farbe: color(t.farbe, '#c49bff'),
-  })).filter(t => t.entity_id);
+  const kal = raw.kalender || {};
+  const WER = ['d', 'i', 'g'];
+  const kalender = {
+    quellen: list(kal.quellen).slice(0, 8).map((q, i) => ({ entity_id: entity(q.entity_id, ['calendar'], `kalender.quellen[${i}]`, '', 'kalender'), wer: WER.includes(q.wer) ? q.wer : 'g' })).filter(q => q.entity_id),
+    testtermine: list(kal.testtermine).slice(0, 200).map(t => ({
+      d: DATE_RE.test(t.d) ? t.d : '', s: DATE_RE.test(t.s) ? t.s : '', to: DATE_RE.test(t.to) ? t.to : '',
+      t: TIME_RE.test(t.t || '') ? (t.t || '') : '', e: TIME_RE.test(t.e || '') ? (t.e || '') : '',
+      n: str(t.n, 60), w: WER.includes(t.w) ? t.w : 'g',
+    })).filter(t => t.n && (t.d || (t.s && t.to))),
+  };
+
+  // Szenen: entity_id (scene./script.) oder Aktionen; Aktionen werden beim Laden gegen die Freigabeliste geprüft
+  const tmp = { cfg: { lampen, fernseher, geraete }, allow };
+  const szenen = list(raw.szenen).slice(0, 10).map((s, i) => {
+    const name = str(s.name) || `Szene ${i + 1}`;
+    const id = s.entity_id ? entity(s.entity_id, ['scene', 'script'], `szenen[${i}]`, name, 'szene') : '';
+    const aktionen = [];
+    list(s.aktionen).slice(0, 20).forEach((a, j) => {
+      try { check(tmp, { entity_id: a.entity_id, service: a.service, data: a.data || {} }); aktionen.push({ entity_id: a.entity_id, service: a.service, data: a.data || {} }); }
+      catch (err) { errors.push(`szenen[${i}].aktionen[${j}]: ${err.message}`); }
+    });
+    return { key: 'sz' + i, name, icon: str(s.icon, 20) || 'stars', farbe: color(s.farbe, '#7b5cff'), entity_id: id, aktionen };
+  }).filter(s => s.entity_id || s.aktionen.length);
 
   const w = raw.wetter || {};
   const wetter = Number.isFinite(+w.lat) && Number.isFinite(+w.lon) && w.lat !== '' && w.lon !== ''
     ? { ort: str(w.ort, 40) || 'Wetter', lat: +w.lat, lon: +w.lon } : null;
 
-  const cfg = { wetter, raum: str(raw.raum, 30) || 'Zimmer', lampen, szenen, routinen, klima, schalter, sensoren, tv };
+  const cfg = { wetter, lampen, farbnamen, geraete, fernseher, szenen, routinen, klima, sensoren, kalender };
   return { cfg, allow, errors };
 }
 
@@ -115,73 +143,91 @@ function check(conf, cmd, states) {
   if (!domain || !service || extra !== undefined) bad('Unbekannter Dienst');
   const id = String(cmd.entity_id || '');
   const data = cmd.data && typeof cmd.data === 'object' && !Array.isArray(cmd.data) ? cmd.data : {};
+  const keys = Object.keys(data);
+  const only = (...allowed) => { for (const k of keys) if (!allowed.includes(k)) bad('Wert nicht erlaubt: ' + String(k).slice(0, 30)); };
+  const cfg = conf.cfg;
 
   // Sonderfall: alle Lampen
   if (id === '*lampen') {
     if (domain !== 'light' || !['turn_on', 'turn_off'].includes(service)) bad('Nicht erlaubt');
-    if (Object.keys(data).length) bad('Nicht erlaubt');
-    const ids = conf.cfg.lampen.map(l => l.entity_id);
+    only();
+    const ids = cfg.lampen.map(l => l.entity_id);
     if (!ids.length) bad('Keine Lampen eingetragen');
     return { calls: [{ domain, service, entity_ids: ids, data: {} }], label: `Alle Lampen ${service === 'turn_on' ? 'an' : 'aus'}` };
   }
 
   const ent = conf.allow.get(id);
   if (!ent) bad('Gerät nicht freigegeben');
+  const name = ent.name || id;
+
+  // Sonderfall: App auf dem Fernseher starten (nur Apps aus der Konfiguration)
+  if (domain === 'tv' && service === 'app') {
+    const tv = cfg.fernseher;
+    if (!tv || id !== tv.entity_id) bad('Gerät nicht freigegeben');
+    only('app');
+    const app = tv.apps.find(a => a.name === data.app);
+    if (!app) bad('App nicht freigegeben');
+    const calls = [{ domain: 'media_player', service: 'turn_on', entity_ids: [tv.entity_id], data: {} }];
+    if (app.start && tv.remote) calls.push({ domain: 'remote', service: 'turn_on', entity_ids: [tv.remote], data: { activity: app.start } });
+    else calls.push({ domain: 'media_player', service: 'select_source', entity_ids: [tv.entity_id], data: { source: app.name } });
+    return { calls, label: `${name}: ${app.name}`, app: app.name };
+  }
+
   if (ent.domain !== domain) bad('Dienst passt nicht zum Gerät');
   if (!(SERVICES[domain] || []).includes(service)) bad('Dienst nicht erlaubt');
-  // Sensoren und Klimawerte kann man nur ansehen
-  if (ent.kind === 'klima' || ent.kind === 'sensor') bad('Nur lesbar');
+  if (['klima', 'sensor', 'kalender'].includes(ent.kind)) bad('Nur lesbar');
+  // App-Start über remote.turn_on nur mit tv.app (prüft die App-Liste)
+  if (domain === 'remote' && service === 'turn_on') bad('Dienst nicht erlaubt');
 
   const clean = {};
-  if (domain === 'media_player') {
-    const tv = conf.cfg.tv.find(t => t.entity_id === id);
-    const keys = Object.keys(data);
-    if (service === 'volume_set') {
-      const v = data.volume_level;
-      if (keys.length !== 1 || typeof v !== 'number' || !(v >= 0 && v <= 1)) bad('Lautstärke 0–1');
-      clean.volume_level = Math.round(v * 100) / 100;
-    } else if (service === 'select_source') {
-      if (keys.length !== 1 || typeof data.source !== 'string' || !tv || !tv.apps.includes(data.source)) bad('App nicht freigegeben');
-      clean.source = data.source;
-    } else if (keys.length) bad('Keine Zusatzwerte erlaubt');
-    const name = ent.name || id;
-    const label = {
-      turn_on: `${name} an`, turn_off: `${name} aus`, media_play_pause: `${name} Play/Pause`,
-      volume_set: `${name} Lautstärke ${Math.round((clean.volume_level || 0) * 100)} %`, select_source: `${name}: ${clean.source}`,
-    }[service];
-    return { calls: [{ domain, service, entity_ids: [id], data: clean }], label };
-  }
-  for (const [k, v] of Object.entries(data)) {
-    if (domain !== 'light' || service !== 'turn_on') bad('Keine Zusatzwerte erlaubt');
-    if (k === 'brightness_pct') {
-      if (!Number.isInteger(v) || v < 1 || v > 100) bad('Helligkeit 1–100');
-      clean[k] = v;
-    } else if (k === 'color_temp_kelvin') {
-      if (!Number.isInteger(v) || v < 1500 || v > 9000) bad('Weißton ungültig');
-      clean[k] = v;
-    } else if (k === 'rgb_color') {
-      if (!Array.isArray(v) || v.length !== 3 || !v.every(x => Number.isInteger(x) && x >= 0 && x <= 255)) bad('Farbe ungültig');
-      clean[k] = v.slice();
-    } else {
-      bad('Wert nicht erlaubt: ' + String(k).slice(0, 30));
-    }
-  }
-  if (clean.rgb_color && clean.color_temp_kelvin) bad('Farbe oder Weißton, nicht beides');
-
-  const name = ent.name || id;
   let label = name;
-  if (ent.kind === 'lampe') {
+  if (domain === 'light') {
+    if (service !== 'turn_on') only();
+    for (const [k, v] of Object.entries(data)) {
+      if (k === 'brightness_pct') { if (!Number.isInteger(v) || v < 1 || v > 100) bad('Helligkeit 1–100'); clean[k] = v; }
+      else if (k === 'color_temp_kelvin') { if (!Number.isInteger(v) || v < 1500 || v > 9000) bad('Weißton ungültig'); clean[k] = v; }
+      else if (k === 'rgb_color') { if (!Array.isArray(v) || v.length !== 3 || !v.every(x => Number.isInteger(x) && x >= 0 && x <= 255)) bad('Farbe ungültig'); clean[k] = v.slice(); }
+      else bad('Wert nicht erlaubt: ' + String(k).slice(0, 30));
+    }
+    if (clean.rgb_color && clean.color_temp_kelvin) bad('Farbe oder Weißton, nicht beides');
     if (service === 'turn_off') label = `${name} aus`;
-    else if (service === 'toggle') label = `${name} ${states.get(id)?.state === 'on' ? 'aus' : 'an'}`;
-    else if (clean.rgb_color) label = `${name} Farbe`;
-    else if (clean.color_temp_kelvin) label = `${name} Weißton ${clean.color_temp_kelvin} K`;
+    else if (service === 'toggle') label = `${name} ${states?.get(id)?.state === 'on' ? 'aus' : 'an'}`;
     else if (clean.brightness_pct) label = `${name} ${clean.brightness_pct} %`;
+    else if (clean.rgb_color || clean.color_temp_kelvin) label = `${name} Farbe`;
     else label = `${name} an`;
-  } else if (ent.kind === 'szene') label = `Szene ${name}`;
-  else if (ent.kind === 'routine') label = `Routine ${name} ${{ turn_on: 'aktiv', turn_off: 'inaktiv', trigger: 'ausgeführt' }[service]}`;
-  else if (ent.kind === 'schalter') label = `${name} ${service === 'turn_on' ? 'an' : 'aus'}`;
-
+  } else if (domain === 'media_player') {
+    if (service === 'volume_set') {
+      only('volume_level');
+      if (typeof data.volume_level !== 'number' || !(data.volume_level >= 0 && data.volume_level <= 1)) bad('Lautstärke 0–1');
+      clean.volume_level = Math.round(data.volume_level * 100) / 100;
+    } else if (service === 'volume_mute') {
+      only('is_volume_muted');
+      if (typeof data.is_volume_muted !== 'boolean') bad('Stumm: ja/nein');
+      clean.is_volume_muted = data.is_volume_muted;
+    } else if (service === 'select_source') {
+      only('source');
+      const q = (cfg.fernseher?.quellen || []).find(x => x.source === data.source);
+      if (!q) bad('Quelle nicht freigegeben');
+      clean.source = q.source;
+    } else only();
+    label = {
+      turn_on: `${name} an`, turn_off: `${name} aus`, volume_up: `${name} lauter`, volume_down: `${name} leiser`,
+      volume_set: `${name} Lautstärke`, volume_mute: `${name} ${clean.is_volume_muted ? 'stumm' : 'Ton an'}`,
+      media_play_pause: `${name} Play/Pause`, media_next_track: `${name} weiter`, media_previous_track: `${name} zurück`,
+      select_source: `${name}: ${clean.source}`,
+    }[service];
+  } else if (domain === 'remote') {
+    only('command');
+    if (!REMOTE_KEYS.includes(data.command)) bad('Taste nicht erlaubt');
+    clean.command = data.command;
+    label = `${name}: Taste ${data.command}`;
+  } else {
+    only();
+    if (ent.kind === 'szene') label = `Szene ${name}`;
+    else if (ent.kind === 'routine') label = `Routine ${name} ${{ turn_on: 'aktiv', turn_off: 'inaktiv', trigger: 'ausgeführt' }[service]}`;
+    else label = `${name} ${service === 'turn_on' ? 'an' : 'aus'}`;
+  }
   return { calls: [{ domain, service, entity_ids: [id], data: clean }], label };
 }
 
-module.exports = { load, check, parseJsonc, SERVICES };
+module.exports = { load, check, parseJsonc, SERVICES, REMOTE_KEYS };

@@ -129,7 +129,8 @@ const meta = { mode: 'test', connected: false, error: '', scene: '', scene_at: '
 // nur die Felder speichern, die die App braucht
 const ATTRS = ['friendly_name', 'brightness', 'color_mode', 'rgb_color', 'color_temp_kelvin', 'min_color_temp_kelvin', 'max_color_temp_kelvin',
   'supported_color_modes', 'last_triggered', 'unit_of_measurement', 'device_class', 'percentage', 'current',
-  'volume_level', 'is_volume_muted', 'media_title', 'media_series_title', 'media_artist', 'app_name', 'source'];
+  'volume_level', 'is_volume_muted', 'media_title', 'media_series_title', 'media_artist', 'app_name', 'source',
+  'media_duration', 'media_position', 'media_position_updated_at'];
 function slim(s) {
   const a = {};
   for (const k of ATTRS) if (s.attributes && s.attributes[k] !== undefined) a[k] = s.attributes[k];
@@ -173,7 +174,7 @@ function startBackend() {
 // ----------------------------------------------------------------------
 const KEEP_MS = 24 * 3600000, STEP_MS = 10 * 60000;
 let klima = { series: {} };
-const klimaIds = () => [C.cfg.klima.temperatur, C.cfg.klima.luftfeuchte, ...C.cfg.klima.weitere.map(w => w.entity_id)].filter(Boolean);
+const klimaIds = () => [C.cfg.klima.temperatur, C.cfg.klima.luftfeuchte, C.cfg.klima.co2].filter(Boolean);
 
 function klimaSample(id, value, force) {
   if (!klimaIds().includes(id)) return;
@@ -224,8 +225,8 @@ async function weather() {
   const q = new URLSearchParams({
     latitude: w.lat, longitude: w.lon, timezone: 'Europe/Berlin', forecast_days: 2,
     current: 'temperature_2m,apparent_temperature,weather_code,is_day',
-    hourly: 'temperature_2m,weather_code,is_day',
-    daily: 'sunrise,sunset',
+    hourly: 'temperature_2m,weather_code,is_day,precipitation',
+    daily: 'sunrise,sunset,temperature_2m_min,temperature_2m_max,weather_code',
   });
   const r = await fetch('https://api.open-meteo.com/v1/forecast?' + q, { signal: AbortSignal.timeout(15000) });
   if (!r.ok) throw new Error('Open-Meteo ' + r.status);
@@ -236,13 +237,50 @@ async function weather() {
   for (let i = Math.max(0, start); i < d.hourly.time.length && hours.length < 6; i++) {
     hours.push({ h: +d.hourly.time[i].slice(11, 13), t: Math.round(d.hourly.temperature_2m[i]), code: d.hourly.weather_code[i], day: d.hourly.is_day[i] });
   }
+  // erste Stunde mit Niederschlag in den nächsten 24 h (für "Regen ab 2 Uhr")
+  let regen = '';
+  for (let i = Math.max(0, start - 1); i < Math.min(d.hourly.time.length, start + 24); i++) {
+    if ((d.hourly.precipitation[i] || 0) >= 0.2) { regen = String(+d.hourly.time[i].slice(11, 13)); break; }
+  }
   put('_wetter', {
-    ort: w.ort,
+    ort: w.ort, regen_ab: regen,
+    heute: { min: Math.round(d.daily.temperature_2m_min[0]), max: Math.round(d.daily.temperature_2m_max[0]), code: d.daily.weather_code[0] },
     now: { t: Math.round(d.current.temperature_2m), feels: Math.round(d.current.apparent_temperature), code: d.current.weather_code, day: d.current.is_day },
     hours,
     sunset: (d.daily.sunset || [])[0] || '', sunrise: (d.daily.sunrise || [])[0] || '',
     at: new Date().toISOString(),
   });
+}
+
+// ----------------------------------------------------------------------
+// Kalender: Testmodus = Testtermine aus der Konfiguration; echt = calendar.… aus HA (REST), alle 10 Minuten
+// Format pro Termin: { d, t, e, n, w } oder ganztägig über mehrere Tage { s, to, n, w }
+// ----------------------------------------------------------------------
+async function kalender() {
+  const K = C.cfg.kalender;
+  if (meta.mode === 'test' || !K.quellen.length) { put('_kalender', { termine: K.testtermine, test: meta.mode === 'test' }); return; }
+  const pad = n => String(n).padStart(2, '0');
+  const day = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const now = new Date(), from = new Date(now.getFullYear(), now.getMonth() - 1, 1), to = new Date(now.getFullYear(), now.getMonth() + 3, 1);
+  const out = [];
+  for (const q of K.quellen) {
+    const r = await fetch(`${HA_URL.replace(/\/+$/, '')}/api/calendars/${q.entity_id}?start=${from.toISOString()}&end=${to.toISOString()}`,
+      { headers: { Authorization: 'Bearer ' + HA_TOKEN }, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error('Kalender ' + q.entity_id + ': ' + r.status);
+    for (const ev of await r.json()) {
+      const n = String(ev.summary || '').slice(0, 60);
+      if (ev.start?.date) {
+        const s = ev.start.date, e = new Date(ev.end.date); e.setDate(e.getDate() - 1);
+        const toD = day(e);
+        out.push(toD > s ? { s, to: toD, n, w: q.wer } : { d: s, t: '', e: '', n, w: q.wer });
+      } else {
+        const s = new Date(ev.start.dateTime), e = new Date(ev.end.dateTime);
+        out.push({ d: day(s), t: hm(s), e: hm(e), n, w: q.wer });
+      }
+    }
+  }
+  put('_kalender', { termine: out.slice(0, 400), test: false });
 }
 
 // ----------------------------------------------------------------------
@@ -262,17 +300,24 @@ function rateOk(user) {
 async function handle(cmd) {
   if (!cmd || typeof cmd.user !== 'string' || !cmd.user) { const e = new Error('Kein Nutzer'); e.status = 401; throw e; }
   if (!rateOk(cmd.user)) { const e = new Error('Zu viele Befehle – kurz warten'); e.status = 429; throw e; }
-  const { calls, label } = conf.check(C, cmd, states);
+  // Szene: entweder HA-Szene/Skript oder die Aktionen aus der Konfiguration (jede einzeln gegen die Freigabeliste geprüft)
+  let calls, label;
+  const sz = cmd.scene ? C.cfg.szenen.find(x => x.key === cmd.scene) : null;
+  if (cmd.scene && !sz) { const e = new Error('Szene nicht freigegeben'); e.status = 400; throw e; }
+  if (sz) {
+    calls = sz.entity_id ? conf.check(C, { entity_id: sz.entity_id, service: sz.entity_id.split('.')[0] + '.turn_on' }, states).calls
+      : sz.aktionen.flatMap(a => conf.check(C, a, states).calls);
+    label = `Szene ${sz.name}`;
+  } else ({ calls, label } = conf.check(C, cmd, states));
   if (!meta.connected) { const e = new Error(meta.mode === 'test' ? 'Testmodus startet noch' : 'Home Assistant nicht verbunden'); e.status = 503; throw e; }
   for (const c of calls) {
     try { await backend.call(c.domain, c.service, c.entity_ids, c.data); }
     catch (err) { const e = new Error(err.message || 'Fehler von Home Assistant'); e.status = 502; throw e; }
   }
-  // aktive Szene merken (für die Markierung in der App); Lampe von Hand geändert -> keine Szene mehr aktiv
-  const sz = C.cfg.szenen.find(s => s.key === cmd.scene);
+  // aktive Szene merken (Markierung in der App); Licht von Hand geändert -> keine Szene mehr aktiv (wie in der Vorlage)
   if (sz) setMeta({ scene: sz.key, scene_at: new Date().toISOString() });
   else if (calls[0].domain === 'light' && meta.scene) setMeta({ scene: '', scene_at: '' });
-  return { ok: true, label: sz ? `Szene ${sz.name}` : label };
+  return { ok: true, label };
 }
 
 const server = http.createServer((req, res) => {
@@ -316,6 +361,8 @@ async function main() {
   setInterval(() => { for (const id of klimaIds()) { const s = states.get(id); if (s) klimaSample(id, s.state, true); } }, STEP_MS);
   const wx = () => weather().catch(err => log('Wetter:', err.message));
   wx(); setInterval(wx, 20 * 60000);
+  const kal = () => kalender().catch(err => log('Kalender:', err.message));
+  kal(); setInterval(kal, 10 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
   let reloadTimer = null;
@@ -329,7 +376,7 @@ async function main() {
         klimaTrim();
         log('Konfiguration neu geladen');
         if (meta.mode === 'test') for (const s of backend.states.values()) onState(s);
-        wx();
+        wx(); kal();
       } catch (err) { log('Konfiguration fehlerhaft, alte bleibt aktiv:', err.message); }
     }, 500);
   });

@@ -9,7 +9,8 @@ Sie braucht dann weder den VPS noch Internet.
 
 | Teil | Stand |
 |---|---|
-| `app/zuhause-data.js` | Datenschicht mit festem Interface (`start`, `stop`, `refresh`, `call`, `state`). Transport `wir` ist fertig. Weitere Transports meldet man mit `ZuhauseData.register('ha-direct', factory)` an. |
+| `app/zuhause-data.js` | Datenschicht mit festem Interface (`start`, `stop`, `refresh`, `call`, `todos`, `settings`, `state`). Transport `wir` ist fertig. Weitere Transports meldet man mit `ZuhauseData.register('ha-direct', factory)` an. To-dos/Wecker kann `ha-direct` später auf HA-To-do-Listen bzw. `input_*`-Helfer abbilden. |
+| `home/export/vorlage-css.js` | Erzeugt `app/zuhause-vorlage.css` und `app/zuhause-markup.js` aus der Vorlage – dieselben Dateien braucht auch die Export-Seite. |
 | `home/export/ha-direct.js` | **Platzhalter** für den Transport `ha-direct` mit beschriebenem Interface (wirft noch einen Fehler). |
 | `home/export/build.js` | Baut den Ordner `home/export/dist/zuhause/` aus `app/zuhause*.{js,css}`, `shared/base.css` und `home/config.jsonc`. |
 | `home/config.jsonc` | Dieselbe Konfiguration (Lampen, Szenen, Routinen …) wird in die Seite eingebettet. |

@@ -30,6 +30,10 @@ html[data-theme="glut"]{
   --board-light:#f7f0e6; --board-dark:#e8bb8c; --piece-dark:#2b1a0c; --piece-light:#fffaf3;
   --tile-me:rgba(255,143,58,.28); --tile-them:rgba(47,212,196,.2); --tile-mid:rgba(255,255,255,.06);
 }
+html[data-theme="aurora"]{
+  --board-light:#f2f1f8; --board-dark:#b9b0e6; --piece-dark:#1d1640; --piece-light:#fffefe;
+  --tile-me:rgba(123,92,255,.3); --tile-them:rgba(47,212,196,.22); --tile-mid:rgba(255,255,255,.05);
+}
 html[data-theme="rosenacht"]{
   --board-light:#fbf0f6; --board-dark:#e8b4d4; --piece-dark:#4a1834; --piece-light:#fffbfd;
   --tile-me:rgba(255,111,181,.28); --tile-them:rgba(196,155,255,.24); --tile-mid:rgba(255,255,255,.06);
@@ -143,6 +147,7 @@ html[data-theme="pfirsich"] .sd-cell{color:#d0533f}
 html[data-theme="lavendel"] .sd-cell{color:#8a3fd6}
 html[data-theme="glut"] .sd-cell{color:#b4561a}
 html[data-theme="rosenacht"] .sd-cell{color:#c2187a}
+html[data-theme="aurora"] .sd-cell{color:#5a3fd6}
 .sd-cell.given{color:var(--piece-dark)}
 .sd-cell.br{box-shadow:inset -3px -1px 0 rgba(var(--shadow),.3)}
 .sd-cell.bb{box-shadow:inset -1px -3px 0 rgba(var(--shadow),.3)}

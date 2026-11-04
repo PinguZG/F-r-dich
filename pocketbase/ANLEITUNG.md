@@ -1395,3 +1395,111 @@ rm /home/pingu/pb/pb_hooks/wir_zuhause.pb.js && sudo systemctl restart pocketbas
 Die Collection `home_state` bleibt ungenutzt stehen (Migration bleibt im Repo, nichts geht verloren). Wer Glut oder
 Rosé-Nacht gewählt hatte, sieht danach Rosé. Nur falls Daten kaputt sind: DB aus dem Backup zurückspielen wie unter
 „Zurück zur alten Version → 2.“ beschrieben (Ordner `vor-zuhause-2026-11-04`).
+
+---
+
+# Zuhause (Aurora) + Farbwelt Aurora 04.11.2026 (Wir `wir-v36`)
+
+Ersetzt das Zuhause von heute Vormittag (`wir-v35`). Design und Bedienung kommen 1:1 aus der Vorlage
+`docs/zuhause/dashboard-demo-aurora.html` (Screenshots der Vorlage: `docs/zuhause/`).
+
+## Was neu ist
+
+| Wo | Was |
+|---|---|
+| **Zuhause, Tablet** (quer, ab 900 px) | Vollbild genau wie die Vorlage: Seitenleiste Start · Fernseher · Kalender · Wecker · Einstellungen, unten ein dezentes **Herz = zurück zur Wir-App**. Kopf und Leiste der Wir-App sind dann ausgeblendet. Bildschirmschoner (1/5/10 Min), Nachtdimmung (22–6 Uhr), Weckvorgang (testen). |
+| **Zuhause, Handy** (schmal oder hochkant) | Gleiche Inhalte in einer Spalte, die Unterseiten als wischbare Tab-Reihe oben, Wir-Leiste bleibt. Keine große Uhr, kein Bildschirmschoner. Ziele ≥ 48 px, Text ≥ 15 px. Wechsel beim Drehen sofort. |
+| **Wandtablet-Link** | https://wir.geep-flops.ts.net/#zuhause öffnet Zuhause direkt (bleibt auch nach Neuladen dort). |
+| **Start** | Wetter Kiel (echt, Open-Meteo, „Regen ab …“), Raumklima + CO₂, Strom heute + gerade, Tage zusammen + Wiedersehen, Hinweise (Wecker, Fenster, Tür), Szenen, Licht (Tippen = an/aus, waagerecht wischen = Helligkeit), Fernseher-Karte, Geräte, Routinen. |
+| **Szenen** | schalten mehrere Geräte zugleich, z. B. „Filmabend“: Licht dimmen + Fernseher mit Netflix. Was eine Szene schaltet, steht in der Konfiguration. |
+| **Fernseher** | an/aus, Apps (Fernseher an + App öffnen), Quellen, Fernbedienung (nur Navigationstasten), Lautstärke (+/−, Balken, stumm), Play/Pause, vor/zurück, was gerade läuft. |
+| **Kalender** | Monatsansicht + Tagesliste. Jetzt Testtermine aus der Vorlage, später iCloud über HA (CalDAV). |
+| **To-dos (echt)** | Listen Gemeinsam/Einkauf/Haushalt, live zwischen euren Handys. Tippen = abhaken, Kreis D/I/W tippen = Zuordnung wechseln, **nach links wischen = löschen**, oben hinzufügen. Abgehakte bleiben durchgestrichen sichtbar. |
+| **Wecker** | Serien (z. B. 5:00–6:00 alle 10 Min), Tage, ein/aus, Sonnenaufgang vorher, Ton, „Morgen aussetzen“, „Wecker hinzufügen“, **Uhrzeit antippen = ändern**, **nach links wischen = löschen**. Wird gespeichert und ist bei beiden gleich. Der echte Weckvorgang (Licht hochdimmen, Ton am Tablet) kommt später über HA – jetzt nur „Weckvorgang testen“. |
+| **Farbwelt Aurora** | Einstellungen → Farbwelt → **Aurora** (fast schwarz, Polarlicht Türkis/Violett/Pink). Gilt für die ganze App. In Aurora sieht Zuhause exakt wie die Vorlage aus, in allen anderen Farbwelten gleiches Layout mit deren Farben. Lampen leuchten immer in ihrer echten Farbe. |
+| **Leistungsmodus** | statischer Hintergrund, kein Weichzeichner, kleine Glows. **Automatisch an auf iPhone/iOS**, auf schwachen Geräten und auf dem Tablet, wenn weniger als 45 Bilder/s gemessen werden. Umschaltbar in Zuhause → Einstellungen und in den Einstellungen der Wir-App (gilt nur für dieses Gerät). |
+| **Konsole `/log`** | z. B. `Ida 🏠 Szene Filmabend`, `🏠 Fernseher: YouTube`, `🏠 To-do erledigt: …` |
+
+**Navigation:** unverändert seit heute Vormittag – Start · Erinnerungen · **Zuhause (Mitte)** · Spiele · Wir zwei.
+**Dates** ist die breite Kachel „📅 Dates“ auf Start (seltener genutzt als Erinnerungen und Spiele, und Start zeigt ohnehin schon das nächste Treffen).
+
+## iPhone-Abstürze (WebKit) – was dagegen getan wurde
+
+- Zuhause zeichnet nur, solange es sichtbar ist: beim Verlassen des Bereichs oder wenn die App in den Hintergrund geht, werden
+  Realtime-Abos (home_state, home_todos, home_settings), alle Intervalle, Messungen und Overlays beendet und der Bereich auf
+  `display:none` gesetzt; beim Zurückkehren genau einmal neu gestartet (keine doppelten Abos – im Dauertest geprüft).
+- Alle Ereignisse werden einmal beim ersten Aufbau an Elemente in Zuhause gehängt, nie erneut.
+- iPhone: Leistungsmodus standardmäßig (statische Verläufe statt animierter `filter:blur`-Flächen, kein `backdrop-filter`,
+  kleine statische Schatten). Volle Effekte nur auf dem Tablet bei stabilen Bildraten.
+- Testmodus sendet sparsam: Klima/Strom einmal pro Minute, Sensoren nur bei Änderung, Herzschlag alle 30 s.
+- Ergebnis des 10-Minuten-Dauertests: siehe unten „Getestet“.
+
+## Konfiguration = Freigabeliste: `home/config.jsonc`
+
+Kommentiert, ohne Geheimnisse, auf GitHub bearbeiten → nach ≤ 2 Min. live. Enthält Lampen (+ Startwerte im Testmodus),
+Farbnamen, Geräte (+ Watt), Fernseher (entity_id, `remote`, Apps mit Android-Paketname, Quellen), Szenen (mit `aktionen`
+oder HA-`scene.`/`script.`), Routinen, Klima (Temperatur, Luftfeuchte, CO₂, Strom heute, Leistung), Sensoren, Kalender
+(Quellen `calendar.…` mit d/i/g + Testtermine), Wetter-Koordinaten.
+
+**Erlaubte Dienste** (alles andere → 400, ohne Login → 401, 30 Befehle/10 s pro Person):
+`light.turn_on/off/toggle` (nur `brightness_pct`, `color_temp_kelvin`, `rgb_color`) · `scene.turn_on` · `script.turn_on` ·
+`automation.turn_on/off/trigger` · `switch`/`input_boolean`/`fan` `turn_on/off` · `media_player` `turn_on/turn_off/volume_up/
+volume_down/volume_set/volume_mute/media_play_pause/media_next_track/media_previous_track/select_source` (nur Quellen aus der
+Liste) · `remote.send_command` nur `DPAD_UP/DOWN/LEFT/RIGHT/CENTER, BACK, HOME, MENU, SEARCH` · App-Start nur für Apps aus der
+Liste (intern `remote.turn_on` mit der Activity bzw. `select_source`). Szenen-Aktionen werden beim Laden und beim Ausführen
+gegen dieselbe Liste geprüft.
+
+## Technik
+
+- Dienst `wir-home` (home/): `config.js` (Prüfung), `sim.js` (Testmodus mit Daten/Verhalten der Vorlage), `ha.js` (HA-WebSocket),
+  `index.js` (PocketBase, Szenen, Kalender alle 10 Min über HA-REST `/api/calendars/…`, Wetter alle 20 Min, Klima-Verlauf).
+- PocketBase: `home_state` (nur Server schreibt), neu `home_todos` + `home_settings` (Migration `1794400000_wir_zuhause_todos.js`,
+  nur additiv; lesen/schreiben nur eure zwei Konten). Hook `wir_zuhause.pb.js`: Befehle + Log, To-do-Log.
+- Client: `app/zuhause-vorlage.css` + `app/zuhause-markup.js` werden **automatisch aus der Vorlage erzeugt**
+  (`node home/export/vorlage-css.js`: Präfix `z-`/`zh-` gegen Namenskollisionen, Farben als Variablen). `app/zuhause.css`
+  (Farbwelten, Handy, Leistungsmodus), `app/zuhause.js` (Bedienung + Lebenszyklus), `app/zuhause-data.js` (Datenschicht:
+  Transport „wir“, später „ha-direct“ – siehe `home/export/README.md`).
+- Abweichung von der Vorlage (bewusst): abgehakte To-dos bleiben sichtbar (in der Vorlage versteckte `.done` sie versehentlich),
+  Herz in der Seitenleiste, Texte/Zeiten/Termine kommen vom Server.
+
+## Nach der Home-Assistant-Installation
+
+Wie im Abschnitt „Zuhause (Smart Home) … Schritt für Schritt“ oben (Tailscale-Add-on, Hue, Token, `sudo nano /etc/wir-home.env`
+→ `HA_URL` + `HA_TOKEN`, `sudo systemctl restart wir-home`). Zusätzlich jetzt:
+1. **Fernseher (Xiaomi Android-TV):** Integration „Android TV Remote“ hinzufügen → liefert `media_player.…` und `remote.…`.
+   In `home/config.jsonc` unter `fernseher` beide entity_ids eintragen. Quellen so schreiben, wie HA sie beim Fernseher unter
+   „Quelle“ zeigt; Apps starten über den Paketnamen (`start`), Liste ggf. anpassen.
+2. **Kalender (iCloud):** Integration „CalDAV“ mit iCloud (app-spezifisches Passwort von appleid.apple.com) → `calendar.…`.
+   In `kalender.quellen` eintragen und `wer` setzen (d = Daniel, i = Ida, g = gemeinsam).
+3. **Strom/CO₂/Sensoren:** passende `sensor.…`/`binary_sensor.…` unter `klima` und `sensoren` eintragen (oder leer lassen).
+4. **Szenen:** entweder `aktionen` anpassen oder in HA Szenen anlegen und `"entity_id": "scene.…"` eintragen.
+
+## Getestet (lokal, eigene PocketBase mit DB-Kopie + Testpasswörtern)
+
+- **Vergleich mit der Vorlage** bei 1180×820 in Aurora, alle 10 Seiten/Zustände (Start, Szene Filmabend, Fernseher an/aus,
+  Kalender, Wecker, Weckvorgang, aufgestanden, Einstellungen, Bildschirmschoner): 0,1–1,9 % abweichende Pixel – nur echte
+  Uhrzeit/Wetter/Termine und das Herz. Bilder: `.\screenshots\vergleich2\` (lokal).
+- **Zwei Konten gleichzeitig (36 Prüfungen):** Lampen tippen/wischen, Szene, Fernseher (aus, App, lauter, stumm, Pause, Quelle,
+  Taste), Gerät, Routine, Alle aus – jeweils live beim anderen in 0,3–0,6 s; To-dos (anlegen, abhaken, Zuordnung, wischen = löschen)
+  live; Wecker (aussetzen, Tag) live; 9 verbotene Befehle → 400, ohne Login → 401, To-dos ohne Login nicht les-/schreibbar;
+  Drehen wechselt Layout; `/#zuhause`; `/log`. Keine Konsolenfehler.
+- **Screenshots:** Handy 390×844 alle Unterseiten (Aurora + Rosé), Tablet hochkant, Tablet quer in Rosé/Glut/Zuckerwatte/Mondnacht,
+  übrige App (Login, Start, Erinnerungen, Tic Tac Toe, Sudoku, Einstellungen, Konsole) in Aurora und Rosé.
+
+## Sicherung vorher
+
+Git-Tag **`vor-zuhause-aurora`** (= `647adb8`, Zuhause v1), DB-Backup `/home/pingu/backups/vor-zuhause-aurora-2026-11-04/`
+(SQLite-Online-Backup, „ok“, + `storage/`, `pb_hooks/`, `pb_migrations/`). Der Tag `vor-zuhause` (= Stand ganz ohne Zuhause) bleibt.
+
+## Zurück
+
+**Auf Zuhause v1 (heute Vormittag):**
+```bash
+cd Documents/F-r-dich && git checkout main && git pull
+git checkout vor-zuhause-aurora -- app shared home pocketbase/pb_hooks deploy
+git rm -q app/zuhause-vorlage.css app/zuhause-markup.js home/export/vorlage-css.js
+git commit -m "Zurück auf Zuhause v1" && git push
+```
+**Ganz ohne Zuhause:** siehe Abschnitt „Zurück auf vor-zuhause“ weiter oben.
+Die Collections `home_todos`/`home_settings` bleiben ungenutzt stehen (Migration bleibt im Repo). Wer Aurora gewählt hatte,
+sieht danach Rosé. Daten zurückspielen nur bei Bedarf aus `vor-zuhause-aurora-2026-11-04` (wie unter „Zurück zur alten Version → 2.“).

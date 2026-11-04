@@ -47,3 +47,17 @@ routerAdd('POST', '/api/home/cmd', (e) => {
   }
   return e.json(200, { ok: true, label: out.label || '' });
 }, $apis.requireAuth('users'));
+
+// To-dos (Collection home_todos): Anlegen und Abhaken im Aktivitäts-Log, Ersteller vom Server gesetzt
+onRecordCreateRequest((e) => {
+  e.record.set('created_by', e.auth ? e.auth.id : '');
+  e.next();
+  try { require(`${__hooks}/activity_lib.js`).log(e.app, e.auth.id, 'home', 'zuhause', 'To-do neu: ' + e.record.getString('text')); } catch (_) {}
+}, 'home_todos');
+onRecordUpdateRequest((e) => {
+  const was = e.record.original().getBool('done');
+  e.next();
+  try {
+    if (!was && e.record.getBool('done')) require(`${__hooks}/activity_lib.js`).log(e.app, e.auth.id, 'home', 'zuhause', 'To-do erledigt: ' + e.record.getString('text'));
+  } catch (_) {}
+}, 'home_todos');

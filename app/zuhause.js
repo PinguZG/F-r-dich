@@ -1,685 +1,885 @@
-// Zuhause (04.11.2026): Smart-Home-Dashboard. Daten kommen nur über window.ZuhauseData (zuhause-data.js),
-// nie direkt von Home Assistant. Ein DOM für beide Layouts (zuhause.css schaltet bei 900 px um).
-// Bedienung Lampen: Tippen = an/aus, senkrecht wischen = Helligkeit, lange drücken (oder Rechtsklick) = Sheet/Panel.
+// Zuhause (Aurora, 04.11.2026): Design und Bedienung 1:1 aus docs/zuhause/dashboard-demo-aurora.html,
+// Markup aus zuhause-markup.js, Daten nur über window.ZuhauseData (zuhause-data.js) – nie direkt von Home Assistant.
+// Tablet (quer, ≥ 900 px): Vollbild wie die Vorlage, Bildschirmschoner + Nachtdimmung. Handy: eine Spalte, Tabs oben.
+// Lebenszyklus: Abos, Intervalle und Animationen laufen NUR, solange Zuhause sichtbar ist (Bereich aktiv und App im
+// Vordergrund) – beim Verlassen bzw. im Hintergrund wird alles beendet und beim Zurückkehren genau einmal neu gestartet.
 (() => {
-  const $ = id => document.getElementById(id);
-  const root = $('zh');
-  if (!root || !window.ZuhauseData) return;
+  const host = document.getElementById('zh');
+  if (!host || !window.ZuhauseData || !window.ZH_MARKUP) return;
+  const $ = id => document.getElementById('zh-' + id);
+  const qa = (sel, el = host) => [...el.querySelectorAll(sel)];
 
-  // ---------------------------------------------------------------- Symbole
-  const P = {
-    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
-    spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
-    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
-    moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
-    film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>',
-    book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>',
-    flame: '<path d="M12 2c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 1.5-4.5 3-6 0 2.5 1.5 4 3 4 0-4-1.5-6.5 0-9z"/>',
-    power: '<path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/>',
-    heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
-    thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>',
-    drop: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
-    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    cloudsun: '<path d="M8 3v1M3.5 5.5l.7.7M2 10h1M12.5 5.5l-.7.7M5.5 10a3 3 0 0 1 5.6-1.5"/><path d="M7 20h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 13 3.5 3.5 0 0 0 7 20z"/>',
-    cloudmoon: '<path d="M10.5 3.5A4.5 4.5 0 0 0 4 9a4.4 4.4 0 0 0 .4 1.4"/><path d="M7 20h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 13 3.5 3.5 0 0 0 7 20z"/>',
-    cloud: '<path d="M7 19h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 12 3.5 3.5 0 0 0 7 19z"/>',
-    rain: '<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15zM8 18l-1 3M12 18l-1 3M16 18l-1 3"/>',
-    snow: '<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15z"/><path d="M8 19h.01M12 19h.01M16 19h.01M10 22h.01M14 22h.01"/>',
-    fog: '<path d="M7 13h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 6 3.5 3.5 0 0 0 7 13zM4 17h16M6 21h12"/>',
-    storm: '<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15zM13 15l-2 4h3l-2 4"/>',
-    sunrise: '<path d="M12 3v4M5 10l1.5 1.5M19 10l-1.5 1.5M3 17h18M7 17a5 5 0 0 1 10 0M8 21h8"/>',
-    pin: '<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
-    wind: '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
-    bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
-    shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
-    window: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 12h16"/>',
-    door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="14.5" cy="12" r=".8"/>',
-    motion: '<circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 2v4M7 12l3-4 4 1 3 3M11 15l-1-4"/>',
-    battery: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M22 11v2M6 10v4M9 10v4M12 10v4"/>',
-    coffee: '<path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"/>',
-    fan: '<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 3 2 1 4l-3 3M14 12c4 0 7 1 7 4 0 2-2 3-4 1l-3-3M12 14c0 4-1 7-4 7-2 0-3-2-1-4l3-3M10 12c-4 0-7-1-7-4 0-2 2-3 4-1l3 3"/>',
-    stars: '<path d="M5 3v4M3 5h4M17 15v4M15 17h4M12 6l1.5 4.5L18 12l-4.5 1.5L12 18l-1.5-4.5L6 12l4.5-1.5z"/>',
-    tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
-    plug: '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>',
-    leaf: '<path d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15M5 19l7-7"/>',
-    music: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
-    sofa: '<path d="M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2zM5 18v2M19 18v2"/>',
-    bed: '<path d="M3 18V6M3 14h18v4M21 14v-3a3 3 0 0 0-3-3h-7v6M7 11.5a1.5 1.5 0 1 0 0-.01"/>',
-    play: '<path d="M7 4v16l13-8z"/>',
-    pause: '<path d="M8 4v16M16 4v16"/>',
-    playpause: '<path d="M4 5v14l9-7zM15 5v14M20 5v14"/>',
-    vol: '<path d="M4 9h4l5-4v14l-5-4H4zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
-  };
-  const ic = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || P.spark}</svg>`;
+  // ---------------------------------------------------------------- Symbole (aus der Vorlage)
+  const I = { home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>', cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>', alarm: '<circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2M5 4L2 7M19 4l3 3"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>', moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>', film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>', book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>', flame: '<path d="M12 2c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 1.5-4.5 3-6 0 2.5 1.5 4 3 4 0-4-1.5-6.5 0-9z"/>', power: '<path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/>', heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>', thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>', cloudsun: '<path d="M8 3v1M3.5 5.5l.7.7M2 10h1M12.5 5.5l-.7.7M5.5 10a3 3 0 0 1 5.6-1.5"/><path d="M7 20h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 13 3.5 3.5 0 0 0 7 20z"/>', sunrise: '<path d="M12 3v4M5 10l1.5 1.5M19 10l-1.5 1.5M3 17h18M7 17a5 5 0 0 1 10 0M8 21h8"/>', bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', window: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 12h16"/>', door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="14.5" cy="12" r=".8"/>', coffee: '<path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"/>', fan: '<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 3 2 1 4l-3 3M14 12c4 0 7 1 7 4 0 2-2 3-4 1l-3-3M12 14c0 4-1 7-4 7-2 0-3-2-1-4l3-3M10 12c-4 0-7-1-7-4 0-2 2-3 4-1l3 3"/>', stars: '<path d="M5 3v4M3 5h4M17 15v4M15 17h4M12 6l1.5 4.5L18 12l-4.5 1.5L12 18l-1.5-4.5L6 12l4.5-1.5z"/>', left: '<path d="M15 6l-6 6 6 6"/>', right: '<path d="M9 6l6 6-6 6"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', pause: '<path d="M9 5v14M15 5v14"/>', play: '<path d="M7 4l13 8-13 8z"/>', prev: '<path d="M6 5v14M19 5l-10 7 10 7z"/>', next: '<path d="M18 5v14M5 5l10 7-10 7z"/>', undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', menu: '<path d="M4 6h16M4 12h16M4 18h16"/>', mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>', mute: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/>', hdmi: '<path d="M3 8h18v5l-3 3H6l-3-3z"/><path d="M8 11h8"/>', cast: '<path d="M3 17a4 4 0 0 1 4 4M3 13a8 8 0 0 1 8 8M3 9a12 12 0 0 1 12 12"/><path d="M3 6V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/>', check: '<path d="M5 12l5 5 9-10"/>', plus: '<path d="M12 5v14M5 12h14"/>', sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' };
+  I.cloud = '<path d="M7 19h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 12 3.5 3.5 0 0 0 7 19z"/>';
+  I.rain = '<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15zM8 18l-1 3M12 18l-1 3M16 18l-1 3"/>';
+  const svg = n => `<svg viewBox="0 0 24 24">${I[n] || I.stars}</svg>`;
+  const icons = el => qa('[data-i]', el).forEach(e => { if (!e.querySelector(':scope > svg')) e.insertAdjacentHTML('afterbegin', svg(e.dataset.i)); });
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-  // ---------------------------------------------------------------- Farben
-  const hex = rgb => '#' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-  const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
-  function kelvinRgb(k) {
-    const t = k / 100;
-    const r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
-    const g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
-    const b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
-    return [r, g, b];
-  }
-  const COLORS = ['#ffb38a', '#ffe1c9', '#ff5fa8', '#ff8a7a', '#c49bff', '#7b8cff', '#7fd6ff', '#8ef0c0'];
-  // Szenen ohne eigene Farben: Verläufe aus den Variablen der Farbwelt
-  const SC_PAIRS = [['--accent', '--accent2'], ['--accent2', '--accent3'], ['--accent4', '--accent'], ['--accent3', '--accent2'], ['--accent', '--accent4']];
+  const pad = n => String(n).padStart(2, '0');
 
   // ---------------------------------------------------------------- Zustand
   const T = window.ZuhauseData.create(window.ZH_TRANSPORT || 'wir');
   const S = T.state;
-  let cfgSig = '';
-  const ov = {};          // optimistische Anzeige pro entity_id bis zur Antwort aus Realtime { on, bri, color, t }
-  let sceneOv = null;     // gerade getippte Szene
-  let started = false;
-
-  const ent = id => S.entities[id] || null;
-  const isOn = s => !!s && ['on', 'playing', 'paused', 'idle', 'buffering'].includes(s.state);
-  function lampView(l) {
-    const s = ent(l.entity_id), o = ov[l.entity_id];
-    const na = !s || s.state === 'unavailable' || s.state === 'unknown';
-    let on = isOn(s), bri = s?.a?.brightness != null ? Math.max(1, Math.round(s.a.brightness / 2.55)) : (on ? 100 : 50);
-    let color = l.farbe;
-    const a = s?.a || {};
-    if (a.color_mode === 'color_temp' && a.color_temp_kelvin) color = hex(kelvinRgb(a.color_temp_kelvin));
-    else if (Array.isArray(a.rgb_color) && a.color_mode !== 'onoff' && a.color_mode !== 'brightness') color = hex(a.rgb_color);
-    if (o) { if (o.on != null) on = o.on; if (o.bri != null) bri = o.bri; if (o.color) color = o.color; }
-    return { on, bri, color, na, busy: !!o };
-  }
+  const ov = {};              // optimistische Anzeige pro entity_id { on, b, vol, muted, playing, app, source, t }
+  let sceneOv = null, built = false, active = false, page = 'start';
+  const mqTab = matchMedia('(min-width:900px) and (orientation:landscape)');
+  const isIOS = CSS.supports('-webkit-touch-callout', 'none');   // Funktionsabfrage statt User-Agent
+  const ent = id => (id && S.entities[id]) || null;
+  const cfg = () => S.config;
 
   // ---------------------------------------------------------------- Hilfen
-  const pad = n => String(n).padStart(2, '0');
-  const fmtNum = (v, d = 1) => (Number.isFinite(v) ? v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–');
-  function ago(iso) {
-    const t = Date.parse(iso);
-    if (!Number.isFinite(t)) return '';
-    const s = Math.max(0, (Date.now() - t) / 1000);
-    if (s < 60) return 'gerade eben';
-    if (s < 3600) return `vor ${Math.round(s / 60)} Min`;
-    if (s < 86400) return `vor ${Math.round(s / 3600)} Std`;
-    const d = new Date(t);
-    return d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' }) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  let toastT = 0;
+  function toast(t) {
+    const x = $('toast'); if (!x) return;
+    x.textContent = t; x.classList.add('z-on');
+    clearTimeout(toastT); toastT = setTimeout(() => x.classList.remove('z-on'), 1800);
   }
-  function dur(iso) {
-    const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
-    return m < 60 ? `${m} Min` : `${Math.floor(m / 60)} Std`;
-  }
-  let toastTimer = 0;
-  function toast(msg) {
-    let t = $('zhToast');
-    if (!t) { t = document.createElement('div'); t.id = 'zhToast'; t.className = 'zh-toast'; t.setAttribute('role', 'status'); document.body.append(t); }
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
-  }
-
-  async function call(cmd, el) {
+  async function call(cmd, quiet) {
     try { await T.call(cmd); return true; }
-    catch (err) {
-      toast(err.message || 'Hat nicht geklappt');
-      if (el) UI.shake(el);
-      return false;
-    }
+    catch (err) { if (!quiet) toast(err.message || 'Hat nicht geklappt'); return false; }
   }
-  // Lampen-Befehl mit optimistischer Anzeige
-  async function lampCmd(l, cmd, view, el) {
-    ov[l.entity_id] = { ...view, t: Date.now() };
-    renderLamps();
-    const ok = await call({ entity_id: l.entity_id, ...cmd }, el);
-    // Antwort kommt per Realtime; nach Fehler oder ohne Änderung nach 4 s wieder den echten Zustand zeigen
-    if (!ok) delete ov[l.entity_id];
-    else setTimeout(() => { if (ov[l.entity_id] && Date.now() - ov[l.entity_id].t >= 3900) { delete ov[l.entity_id]; renderLamps(); } }, 4000);
-    renderLamps();
+  // optimistischer Wert, bis die echte Änderung per Realtime ankommt (spätestens nach 4 s wieder Server-Zustand)
+  function optimistic(id, patch) {
+    ov[id] = { ...(ov[id] || {}), ...patch, t: Date.now() };
+    setTimeout(() => { if (ov[id] && Date.now() - ov[id].t >= 3900) { delete ov[id]; if (active) render(); } }, 4000);
+  }
+  const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const hex = rgb => '#' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  function kelvinRgb(k) {
+    const t = k / 100;
+    return [t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592),
+      t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492),
+      t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307];
+  }
+  // Farbname unter der Lampe: aus der Konfiguration, sonst Weißton bzw. Farbton
+  function colorName(c, a) {
+    const n = cfg()?.farbnamen?.[c];
+    if (n) return n;
+    if (a?.color_mode === 'color_temp' && a.color_temp_kelvin) return a.color_temp_kelvin < 3300 ? 'Warmweiß' : a.color_temp_kelvin < 4600 ? 'Neutral' : 'Kaltweiß';
+    const [r, g, b] = hexRgb(c), mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (mx - mn < 40) return 'Weiß';
+    let h = mx === r ? (g - b) / (mx - mn) : mx === g ? 2 + (b - r) / (mx - mn) : 4 + (r - g) / (mx - mn);
+    h = (h * 60 + 360) % 360;
+    return h < 15 ? 'Rot' : h < 45 ? 'Orange' : h < 70 ? 'Gelb' : h < 160 ? 'Grün' : h < 200 ? 'Türkis' : h < 250 ? 'Blau' : h < 290 ? 'Violett' : h < 340 ? 'Pink' : 'Rot';
+  }
+  function lampView(l) {
+    const s = ent(l.entity_id), a = s?.a || {}, o = ov[l.entity_id] || {};
+    let on = s?.state === 'on', b = a.brightness != null ? Math.max(1, Math.round(a.brightness / 2.55)) : 50, c = l.farbe;
+    if (a.color_mode === 'color_temp' && a.color_temp_kelvin) c = hex(kelvinRgb(a.color_temp_kelvin));
+    else if (Array.isArray(a.rgb_color) && !['onoff', 'brightness'].includes(a.color_mode)) c = hex(a.rgb_color);
+    if (o.on != null) on = o.on;
+    if (o.b != null) b = o.b;
+    return { on, b, c, k: colorName(c, a), na: !s || s.state === 'unavailable' };
+  }
+  function tvView() {
+    const tv = cfg()?.fernseher; if (!tv) return null;
+    const s = ent(tv.entity_id), a = s?.a || {}, o = ov[tv.entity_id] || {};
+    const max = tv.max_lautstaerke;
+    let on = !!s && !['off', 'standby', 'unavailable', 'unknown'].includes(s.state);
+    let playing = s?.state === 'playing', vol = Math.round((a.volume_level || 0) * max), muted = !!a.is_volume_muted;
+    let appName = a.app_name || a.source || '';
+    if (o.on != null) on = o.on;
+    if (o.playing != null) playing = o.playing;
+    if (o.vol != null) vol = o.vol;
+    if (o.muted != null) muted = o.muted;
+    if (o.app != null) appName = o.app;
+    const ai = Math.max(0, tv.apps.findIndex(x => x.name === appName));
+    const app = tv.apps[ai] || { name: appName || tv.name, farbe: '#7b5cff', test: '' };
+    return { tv, s, a, on, playing, vol, muted, max, ai, app, source: o.source || a.source || '' };
   }
 
-  // ---------------------------------------------------------------- Aufbau (nur wenn sich die Konfiguration ändert)
+  // ---------------------------------------------------------------- Aufbau (einmal)
   function build() {
-    const c = S.config;
-    const sig = JSON.stringify(c);
-    if (sig === cfgSig) return;
-    cfgSig = sig;
-    if (!c) { root.innerHTML = '<div class="zh-card zh-empty">Zuhause wird geladen …</div>'; return; }
-    const L = c.lampen, K = c.klima;
-    const scene = (s, i) => {
-      const [a, b] = s.farben?.length ? [s.farben[0], s.farben[1] || s.farben[0]]
-        : s.aktion === 'alle_aus' ? ['var(--ink-faint)', 'var(--ink-soft)'] : SC_PAIRS[i % SC_PAIRS.length].map(v => `var(${v})`);
-      return `<button class="zh-sc" type="button" data-sc="${esc(s.key)}" style="--a:${a};--b:${b}">${ic(s.icon)}<span>${esc(s.name)}</span></button>`;
-    };
-    const kl = K.weitere.length
-      ? `<div class="zh-klgrid">
-          ${K.temperatur ? `<div class="zh-kv"><div class="l">${ic('thermo')}Temperatur</div><div class="n" data-v="t">–</div><svg class="zh-spark" data-sp="t" viewBox="0 0 140 26" preserveAspectRatio="none"></svg></div>` : ''}
-          ${K.luftfeuchte ? `<div class="zh-kv"><div class="l">${ic('drop')}Luftfeuchte</div><div class="n" data-v="h">–</div><svg class="zh-spark h" data-sp="h" viewBox="0 0 140 26" preserveAspectRatio="none"></svg></div>` : ''}
-          ${K.weitere.map((w, i) => `<div class="zh-kv"><div class="l">${ic(w.icon)}${esc(w.name)}</div><div class="n" data-v="x${i}">–</div>${w.max ? `<div class="zh-bar"><i data-bar="x${i}"></i></div>` : ''}</div>`).join('')}
-        </div>`
-      : `<div class="zh-klrow"><div><div class="zh-big" data-v="t">–</div><div class="zh-s" data-v="h"></div></div><svg class="zh-spark" data-sp="t" viewBox="0 0 140 40" preserveAspectRatio="none"></svg></div>`;
-
-    root.innerHTML = `
-      <header class="zh-head">
-        <div><div class="zh-hello" data-v="hello"></div><div class="zh-clock" data-v="clock"></div>
-          <div class="zh-sub"><span data-v="date"></span><span class="zh-chip">${ic('heart')}<span data-v="chip"></span></span></div></div>
-        <button class="zh-status" type="button" data-status></button>
-      </header>
-      <div class="zh-top"><button class="zh-status" type="button" data-status></button></div>
-      <section class="zh-lights"${L.length ? '' : ' hidden'}>
-        <div class="zh-sec"><h2>${ic('bulb')}Licht</h2><div class="zh-mini">
-          <button type="button" data-all="on">${ic('bulb')}Alle an</button><button type="button" data-all="off">${ic('power')}Alle aus</button></div></div>
-        <div class="zh-orbs" style="--n:${Math.min(L.length, 4)}">${L.map((l, i) => `
-          <div class="zh-orb" data-lamp="${i}" role="button" tabindex="0" aria-label="${esc(l.name)}">
-            <div class="zh-ring"><svg class="arc" viewBox="0 0 200 200"><circle class="tr" cx="100" cy="100" r="92"/><circle class="v" cx="100" cy="100" r="92"/></svg>
-              <div class="zh-core">${ic('bulb')}</div></div>
-            <h3>${esc(l.name)}</h3><p></p></div>`).join('')}</div>
-        <div class="zh-hint">Tippen = an/aus · hoch/runter wischen = Helligkeit · gedrückt halten = Farbe</div>
-      </section>
-      <section class="zh-tvs"${c.tv?.length ? '' : ' hidden'}>${(c.tv || []).map((t, i) => `
-        <div class="zh-card zh-tv" data-tv="${i}" style="--c:${t.farbe}">
-          <div class="zh-tv-row"><div class="zh-tv-ic">${ic('tv')}</div><div class="zh-tv-txt"><h4>${esc(t.name)}</h4><p data-tvs></p></div>
-            <button class="zh-rbtn" type="button" data-tvpp aria-label="Play/Pause">${ic('playpause')}</button>
-            <button class="zh-rbtn pw" type="button" data-tvpw aria-label="An/Aus">${ic('power')}</button></div>
-          <div class="zh-vol">${ic('vol')}<input type="range" min="0" max="100" step="1" data-tvvol aria-label="Lautstärke"><b data-tvvl></b></div>
-          ${t.apps.length ? `<div class="zh-apps">${t.apps.map(a => `<button class="zh-app" type="button" data-app="${esc(a)}">${esc(a)}</button>`).join('')}</div>` : ''}
-        </div>`).join('')}</section>
-      <section class="zh-devs"${c.schalter.length ? '' : ' hidden'}>${c.schalter.map((d, i) => `
-        <button class="zh-dev" type="button" data-dev="${i}" style="--c:${d.farbe}"><div class="di">${ic(d.icon)}</div><div><h4>${esc(d.name)}</h4><p></p></div></button>`).join('')}</section>
-      <section class="zh-scwrap"${c.szenen.length ? '' : ' hidden'}>
-        <div class="zh-sec"><h2>${ic('spark')}Szenen</h2></div>
-        <div class="zh-scenes">${c.szenen.map(scene).join('')}</div>
-      </section>
-      <aside class="zh-side">
-        <div class="zh-card zh-wx"${c.wetter ? '' : ' hidden'}><div class="zh-ttl">${ic('pin')}<span>${esc(c.wetter?.ort || '')}</span></div>
-          <div class="zh-wxr"><span data-v="wxic">${ic('cloud')}</span><div><div class="zh-big" data-v="wxt">–</div><div class="zh-s" data-v="wxs"></div></div></div>
-          <div class="zh-hours" data-v="hours"></div></div>
-        <div class="zh-card zh-kl${K.weitere.length ? ' wide' : ''}"${K.temperatur || K.luftfeuchte || K.weitere.length ? '' : ' hidden'}><div class="zh-ttl">${ic('thermo')}${esc(c.raum)}</div>${kl}</div>
-        <div class="zh-card zh-hrs"${c.wetter ? '' : ' hidden'}><div class="zh-ttl">${ic('clock')}Nächste Stunden</div><div class="zh-hours" data-v="hours"></div></div>
-        <div class="zh-card zh-sens"${c.sensoren.length ? '' : ' hidden'}><div class="zh-ttl">${ic('shield')}Sensoren</div><div class="zh-sens-g">${c.sensoren.map((s, i) => `
-          <div class="zh-se" data-se="${i}"><div class="si">${ic({ fenster: 'window', tuer: 'door', bewegung: 'motion' }[s.art] || 'shield')}</div><div><h5>${esc(s.name)}</h5><p></p></div></div>`).join('')}</div></div>
-        <div class="zh-card zh-rtc"${c.routinen.length ? '' : ' hidden'}><div class="zh-ttl">${ic('clock')}Routinen</div>${c.routinen.map((r, i) => `
-          <div class="zh-rt" data-rt="${i}" role="button" tabindex="0"><div class="zh-ri">${ic(r.icon)}</div><div><h4>${esc(r.name)}</h4><p>${esc(r.info)}</p></div>
-            <button class="zh-sw" type="button" data-rtsw="${i}" role="switch" aria-label="${esc(r.name)} aktiv"></button></div>`).join('')}</div>
-      </aside>`;
+    if (built) return;
+    built = true;
+    host.innerHTML = window.ZH_MARKUP;
+    icons(host);
+    // Beschriftungen für die Tab-Reihe auf dem Handy
+    const LBL = { start: 'Start', tv: 'Fernseher', cal: 'Kalender', alarm: 'Wecker', set: 'Einstellungen' };
+    qa('.z-nv[data-p]').forEach(n => { n.dataset.label = LBL[n.dataset.p]; n.title = LBL[n.dataset.p]; });
+    // dezentes Herz unten in der Seitenleiste: zurück zur Wir-App (nur Tablet)
+    $('rail').insertAdjacentHTML('beforeend', `<div class="z-nv z-back" data-back title="Zurück zur Wir-App">${svg('heart')}</div>`);
+    // Uhrzeit-Feld für die Wecker (unsichtbar, öffnet die Zeitauswahl des Geräts)
+    host.insertAdjacentHTML('beforeend', '<input type="time" id="zh-timepick" class="z-timepick" tabindex="-1" aria-hidden="true">');
+    wire();
   }
 
-  // ---------------------------------------------------------------- Aktualisieren (ohne Neuaufbau)
-  const q = (sel, all) => (all ? root.querySelectorAll(sel) : root.querySelector(sel));
-  const ARC = 2 * Math.PI * 92 * 0.75, CIRC = 2 * Math.PI * 92;
-
-  function renderLamps() {
-    const c = S.config; if (!c) return;
-    c.lampen.forEach((l, i) => {
-      const el = q(`[data-lamp="${i}"]`); if (!el || el === drag?.el) return;
-      paintLamp(el, lampView(l));
-    });
-  }
-  function paintLamp(el, v) {
-    el.classList.toggle('on', v.on);
-    el.classList.toggle('na', v.na);
-    el.classList.toggle('busy', v.busy);
-    el.style.setProperty('--c', v.color);
-    el.querySelector('.tr').setAttribute('stroke-dasharray', `${ARC} ${CIRC}`);
-    el.querySelector('.v').setAttribute('stroke-dasharray', `${v.on ? ARC * v.bri / 100 : 0} ${CIRC}`);
-    el.querySelector('p').textContent = v.na ? 'nicht erreichbar' : v.on ? v.bri + ' %' : 'Aus';
-    el.setAttribute('aria-pressed', v.on);
+  // ---------------------------------------------------------------- Navigation in Zuhause
+  function go(p) {
+    page = p;
+    qa('.z-nv[data-p]').forEach(n => n.classList.toggle('z-on', n.dataset.p === p));
+    qa('.z-page').forEach(x => x.classList.toggle('z-on', x.id === 'zh-p-' + p));
+    const v = tvView();
+    if (p === 'tv' && v?.on) $('stage').style.setProperty('--z-a1', v.app.farbe); else $('stage').style.removeProperty('--z-a1');
+    if (!mqTab.matches) { host.closest('.page')?.scrollTo({ top: 0 }); $('rail').querySelector('.z-on')?.scrollIntoView({ inline: 'center', block: 'nearest' }); }
   }
 
-  function renderStatus() {
-    const m = S.meta;
-    const stale = !m || Date.now() - (m.beat || 0) > 95000;
-    let cls = 'bad', txt = 'Offline';
-    if (!stale && m.mode === 'test') { cls = 'test'; txt = 'Testmodus'; }
-    else if (!stale && m.connected) { cls = 'ok'; txt = 'HA'; }
-    else if (!stale) txt = 'Getrennt';
-    q('[data-status]', true).forEach(b => { b.className = 'zh-status ' + cls; b.textContent = txt; b.title = m?.error || ''; });
-  }
-
-  function renderScenes() {
-    const active = sceneOv || S.meta?.scene || '';
-    q('[data-sc]', true).forEach(b => { b.classList.toggle('on', b.dataset.sc === active); b.setAttribute('aria-pressed', b.dataset.sc === active); });
-  }
-
-  function renderDevs() {
-    (S.config?.schalter || []).forEach((d, i) => {
-      const el = q(`[data-dev="${i}"]`); if (!el) return;
-      const s = ent(d.entity_id), o = ov[d.entity_id];
-      const on = o ? o.on : isOn(s);
-      el.classList.toggle('on', on);
-      el.setAttribute('aria-pressed', on);
-      el.querySelector('p').textContent = !s || s.state === 'unavailable' ? 'nicht erreichbar' : on ? (s.a?.percentage ? s.a.percentage + ' %' : 'An') : 'Aus';
-    });
-  }
-
-  function renderTv() {
-    (S.config?.tv || []).forEach((t, i) => {
-      const el = q(`[data-tv="${i}"]`); if (!el) return;
-      const s = ent(t.entity_id), a = s?.a || {}, o = ov[t.entity_id] || {};
-      const on = o.on != null ? o.on : isOn(s);
-      el.classList.toggle('on', on);
-      const what = [a.app_name || a.source, a.media_series_title || a.media_title].filter(Boolean).join(' · ');
-      const st = !s || s.state === 'unavailable' ? 'nicht erreichbar' : !on ? 'Aus' : s.state === 'paused' ? 'Pausiert' + (what ? ' · ' + what : '') : what || 'An';
-      el.querySelector('[data-tvs]').textContent = st;
-      el.querySelector('[data-tvpw]').classList.toggle('on', on);
-      el.querySelector('[data-tvpp]').disabled = !on;
-      const vol = el.querySelector('[data-tvvol]');
-      const v = Math.round((o.vol != null ? o.vol : a.volume_level || 0) * 100);
-      if (document.activeElement !== vol) vol.value = v;
-      vol.disabled = !on;
-      el.querySelector('[data-tvvl]').textContent = v + ' %';
-      el.querySelectorAll('[data-app]').forEach(b => b.classList.toggle('on', on && (b.dataset.app === a.source || b.dataset.app === a.app_name)));
-    });
-  }
-
-  function renderSensors() {
-    (S.config?.sensoren || []).forEach((x, i) => {
-      const el = q(`[data-se="${i}"]`); if (!el) return;
-      const s = ent(x.entity_id);
-      const on = s?.state === 'on';
-      let txt = '–', warn = false;
-      if (!s || s.state === 'unavailable') txt = 'nicht erreichbar';
-      else if (x.art === 'fenster' || x.art === 'tuer') { warn = on; txt = on ? `offen · ${dur(s.changed)}` : 'zu'; }
-      else if (x.art === 'bewegung') txt = on ? 'Bewegung jetzt' : s.changed ? ago(s.changed) : 'ruhig';
-      else txt = on ? 'an' : 'aus';
-      el.classList.toggle('warn', warn);
-      el.querySelector('p').textContent = txt;
-    });
-  }
-
-  function renderRoutines() {
-    (S.config?.routinen || []).forEach((r, i) => {
-      const sw = q(`[data-rtsw="${i}"]`); if (!sw) return;
-      const s = ent(r.entity_id), o = ov[r.entity_id];
-      const on = o ? o.on : s?.state === 'on';
-      sw.classList.toggle('on', on);
-      sw.classList.toggle('busy', !!o);
-      sw.setAttribute('aria-checked', on);
-    });
-    if (sheetKind === 'rt') fillRoutineSheet();
-  }
-
-  function spark(svg, pts, w, h) {
-    if (!svg) return;
-    if (!pts || pts.length < 2) { svg.innerHTML = ''; return; }
-    const vs = pts.map(p => p[1]);
-    let mn = Math.min(...vs), mx = Math.max(...vs);
-    if (mx - mn < 1) { const m = (mx + mn) / 2; mn = m - 0.5; mx = m + 0.5; }
-    const t0 = Date.now() - 24 * 3600000, t1 = Date.now();
-    const xy = pts.map(([t, v]) => `${(Math.max(0, (t - t0) / (t1 - t0)) * w).toFixed(1)},${(h - 3 - (v - mn) / (mx - mn) * (h - 6)).toFixed(1)}`);
-    svg.innerHTML = `<path class="l" d="M${xy.join(' L')}"/>`;
-  }
-
-  function renderKlima() {
-    const c = S.config; if (!c) return;
-    const K = c.klima, ser = S.klima?.series || {};
-    const val = id => { const s = ent(id); const v = parseFloat(s?.state); return Number.isFinite(v) ? v : NaN; };
-    const t = val(K.temperatur), h = val(K.luftfeuchte);
-    const simple = !K.weitere.length;
-    const tv = q('[data-v="t"]'), hv = q('[data-v="h"]');
-    if (tv) tv.innerHTML = K.temperatur ? `${fmtNum(t)}<small>${simple ? ' °C' : ' °C'}</small>` : '';
-    if (hv) hv.innerHTML = K.luftfeuchte ? (simple ? `Luftfeuchte ${fmtNum(h, 0)} %` : `${fmtNum(h, 0)}<small> %</small>`) : '';
-    const sp = q('[data-sp="t"]');
-    if (sp) { const vb = sp.viewBox.baseVal; spark(sp, ser[K.temperatur || K.luftfeuchte], vb.width, vb.height); }
-    const sh = q('[data-sp="h"]');
-    if (sh) spark(sh, ser[K.luftfeuchte], 140, 26);
-    K.weitere.forEach((w, i) => {
-      const v = val(w.entity_id), el = q(`[data-v="x${i}"]`);
-      if (el) el.innerHTML = `${fmtNum(v, Math.abs(v) >= 100 ? 0 : 1)}<small> ${esc(w.einheit)}</small>`;
-      const bar = q(`[data-bar="x${i}"]`);
-      if (bar) bar.style.width = Math.max(0, Math.min(100, v / w.max * 100)) + '%';
-    });
-  }
-
-  // Wetter: WMO-Codes von Open-Meteo
-  function wmo(code, day) {
-    if (code === 0) return [day ? 'sun' : 'moon', 'Klar'];
-    if (code <= 2) return [day ? 'cloudsun' : 'cloudmoon', code === 1 ? 'Überwiegend klar' : 'Leicht bewölkt'];
-    if (code === 3) return ['cloud', 'Bewölkt'];
-    if (code <= 48) return ['fog', 'Nebel'];
-    if (code <= 57) return ['rain', 'Nieselregen'];
-    if (code <= 67) return ['rain', 'Regen'];
-    if (code <= 77) return ['snow', 'Schnee'];
-    if (code <= 82) return ['rain', 'Regenschauer'];
-    if (code <= 86) return ['snow', 'Schneeschauer'];
-    return ['storm', 'Gewitter'];
-  }
-  function renderWetter() {
-    const w = S.wetter;
-    if (!w?.now) return;
-    const [icn, txt] = wmo(w.now.code, w.now.day);
-    q('[data-v="wxic"]').innerHTML = ic(icn);
-    q('[data-v="wxt"]').textContent = w.now.t + '°';
-    q('[data-v="wxs"]').textContent = `${txt} · gefühlt ${w.now.feels}°`;
-    const hrs = (w.hours || []).map(h => `<div>${h.h} Uhr${ic(wmo(h.code, h.day)[0])}<b>${h.t}°</b></div>`).join('');
-    q('[data-v="hours"]', true).forEach(e => { e.innerHTML = hrs; });
-  }
-
-  // Uhr, Begrüßung, Wir-Chip (nur im Tablet-Layout sichtbar)
-  function tick() {
-    if (!S.config || !$('s-zuhause').classList.contains('active')) return;
-    const n = new Date(), h = n.getHours();
-    const set = (k, v) => { const e = q(`[data-v="${k}"]`); if (e && e.textContent !== v) e.textContent = v; };
-    set('clock', pad(h) + ':' + pad(n.getMinutes()));
-    set('date', n.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }));
-    set('hello', (h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 17 ? 'Hallo' : h < 22 ? 'Guten Abend' : 'Gute Nacht') + ', ihr zwei');
-    const days = ($('dayCount')?.textContent || '').trim();
-    let chip = days && days !== '0' ? `${days} Tage zusammen` : 'Wir zwei';
+  // ---------------------------------------------------------------- Uhr, Fakten, Hinweise
+  function daysTo(ms) { return Math.round((new Date(ms).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5); }
+  function wiedersehen() {
     const next = window.WIR_COUNTDOWN?.next?.();
-    if (next) {
-      const d = Math.round((new Date(next).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000);
-      chip += d <= 0 ? ' · Wiedersehen heute' : d === 1 ? ' · Wiedersehen morgen' : ` · Wiedersehen in ${d} Tagen`;
+    if (!next) return '';
+    const d = daysTo(next);
+    return d <= 0 ? 'Wiedersehen heute' : d === 1 ? 'Wiedersehen morgen' : `Wiedersehen in ${d} Tagen`;
+  }
+  const local = { night: true, saverMin: 5 };
+  try { local.night = localStorage.getItem('zh-night') !== '0'; local.saverMin = +localStorage.getItem('zh-saver') || 5; } catch (_) {}
+  function tick() {
+    if (!built) return;
+    const n = new Date(), hm = n.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }), h = n.getHours();
+    $('clock').textContent = hm; $('sclock').textContent = hm;
+    $('date').textContent = n.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('hello').textContent = (h < 11 ? 'Guten Morgen' : h < 17 ? 'Hallo' : h < 22 ? 'Guten Abend' : 'Gute Nacht') + ', ihr zwei';
+    $('saver').classList.toggle('z-night', local.night && (h >= 22 || h < 6));
+    renderFacts();
+  }
+  const num = (v, d = 1) => (Number.isFinite(v) ? v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–');
+  const val = id => { const v = parseFloat(ent(id)?.state); return Number.isFinite(v) ? v : NaN; };
+  function wmo(code) {
+    if (code === 0) return ['cloudsun', 'klar'];
+    if (code <= 2) return ['cloudsun', 'leicht bewölkt'];
+    if (code === 3) return ['cloud', 'bewölkt'];
+    if (code <= 48) return ['cloud', 'Nebel'];
+    if (code <= 67 || (code >= 80 && code <= 82)) return ['rain', 'Regen'];
+    if (code <= 86) return ['cloud', 'Schnee'];
+    return ['rain', 'Gewitter'];
+  }
+  function renderFacts() {
+    const c = cfg(); if (!c) return;
+    const K = c.klima, w = S.wetter, f = qa('.z-f', $('p-start'));
+    if (f.length < 4) return;
+    if (w?.now) {
+      const [ic, txt] = wmo(w.now.code);
+      f[0].querySelector('b').textContent = `${w.now.t}° · ${txt}`;
+      f[0].querySelector('span').textContent = `${w.ort} · ${w.regen_ab ? `Regen ab ${w.regen_ab} Uhr` : 'kein Regen in Sicht'}`;
+      const ics = f[0].querySelector('.z-ic'); if (ics.dataset.i !== ic) { ics.dataset.i = ic; ics.innerHTML = svg(ic); }
     }
-    set('chip', chip);
-    renderStatus();
-    renderSensors();
+    f[0].hidden = !c.wetter;
+    const t = val(K.temperatur), hu = val(K.luftfeuchte), co = val(K.co2);
+    f[1].querySelector('b').textContent = `${num(t)}° · ${num(hu, 0)} %`;
+    f[1].querySelector('span').textContent = K.co2 ? `CO₂ ${num(co, 0)} ppm · ${co < 800 ? 'gut' : co < 1200 ? 'mittel' : 'lüften'}` : 'Raumklima';
+    f[1].hidden = !K.temperatur && !K.luftfeuchte;
+    f[2].querySelector('b').textContent = `${num(val(K.strom_heute))} kWh heute`;
+    $('watt').textContent = `gerade ${num(val(K.leistung), 0)} W`;
+    f[2].hidden = !K.strom_heute && !K.leistung;
+    const days = (document.getElementById('dayCount')?.textContent || '').trim();
+    qa('.z-days-n').forEach(x => { x.textContent = days || '–'; });
+    f[3].querySelector(':scope > div > span').textContent = wiedersehen() || 'Wir zwei';
+    $('saver').querySelector('.z-sc2').textContent = [Number.isFinite(t) ? `${num(t)}° drinnen` : '', w?.now ? `${w.now.t}° ${w.ort}` : ''].filter(Boolean).join(' · ');
+  }
+  function renderChips() {
+    const c = cfg(); if (!c) return;
+    const box = qa('.z-chips', $('p-start'))[0];
+    const alarm = `<div class="z-chip z-alarm" data-go="alarm">${svg('alarm')}<span id="zh-nextalarm">${esc(alarmInfo().chip)}</span></div>`;
+    const sens = c.sensoren.map(x => {
+      const s = ent(x.entity_id), open = s?.state === 'on';
+      const icon = x.art === 'fenster' ? 'window' : x.art === 'tuer' ? 'door' : 'bolt';
+      const mins = s ? Math.max(1, Math.round((Date.now() - Date.parse(s.changed)) / 60000)) : 0;
+      const txt = !s || s.state === 'unavailable' ? `${x.name} ?` : x.art === 'bewegung' ? (open ? 'Bewegung' : 'Ruhig')
+        : open ? `${x.name} offen · ${mins < 60 ? mins + ' Min' : Math.round(mins / 60) + ' Std'}` : `${x.name} zu`;
+      return `<div class="z-chip${open && x.art !== 'bewegung' ? ' z-warn' : ''}">${svg(icon)}${esc(txt)}</div>`;
+    }).join('');
+    const html = alarm + sens;
+    if (box.dataset.h !== html) { box.dataset.h = html; box.innerHTML = html; }
   }
 
-  function render() {
-    build();
-    if (!S.config) return;
-    // Optimistische Werte verwerfen, sobald echte Daten da sind (Realtime kam an)
-    renderLamps(); renderStatus(); renderScenes(); renderDevs(); renderTv(); renderSensors(); renderRoutines(); renderKlima(); renderWetter(); tick();
-    if (sheetKind === 'lamp') fillLampSheet();
-  }
-  // ---------------------------------------------------------------- Lampen: Tippen / Wischen / Langdruck
-  let drag = null;
-  root.addEventListener('pointerdown', e => {
-    const el = e.target.closest('.zh-orb');
-    if (!el || e.button > 0) return;
-    const l = S.config.lampen[+el.dataset.lamp], v = lampView(l);
-    drag = { el, l, y: e.clientY, x: e.clientX, b0: v.on ? v.bri : 0, bri: v.bri, moved: false, long: false, id: e.pointerId, sent: 0, timer: 0 };
-    try { el.setPointerCapture(e.pointerId); } catch (_) {}
-    drag.lp = setTimeout(() => {
-      if (drag && !drag.moved) { drag.long = true; navigator.vibrate?.(15); openLamp(+el.dataset.lamp); }
-    }, 500);
-  });
-  root.addEventListener('pointermove', e => {
-    if (!drag || e.pointerId !== drag.id || drag.long) return;
-    const dy = drag.y - e.clientY;
-    if (!drag.moved && Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(e.clientX - drag.x)) { drag.moved = true; clearTimeout(drag.lp); }
-    if (!drag.moved) return;
-    e.preventDefault();
-    const scale = drag.el.querySelector('.zh-ring').offsetWidth * 1.2 || 150;
-    drag.bri = Math.max(1, Math.min(100, Math.round(drag.b0 + dy / scale * 100)));
-    const v = { ...lampView(drag.l), on: true, bri: drag.bri, busy: false };
-    paintLamp(drag.el, v);
-    // während des Wischens höchstens alle 350 ms senden (ohne Protokoll), am Ende einmal mit Protokoll
-    const now = Date.now();
-    if (now - drag.sent > 350) { drag.sent = now; T.call({ entity_id: drag.l.entity_id, service: 'light.turn_on', data: { brightness_pct: drag.bri }, log: false }).catch(() => {}); }
-  });
-  function endDrag(e) {
-    if (!drag || (e && e.pointerId !== drag.id)) return;
-    clearTimeout(drag.lp);
-    const d = drag; drag = null;
-    if (e?.type === 'pointercancel' && !d.moved) { renderLamps(); return; }
-    if (d.long) return;
-    const v = lampView(d.l);
-    if (d.moved) lampCmd(d.l, { service: 'light.turn_on', data: { brightness_pct: d.bri } }, { on: true, bri: d.bri }, d.el);
-    else if (!v.na) lampCmd(d.l, { service: v.on ? 'light.turn_off' : 'light.turn_on' }, { on: !v.on }, d.el);
-    else toast(d.l.name + ' ist nicht erreichbar');
-  }
-  root.addEventListener('pointerup', endDrag);
-  root.addEventListener('pointercancel', endDrag);
-  root.addEventListener('contextmenu', e => {
-    const el = e.target.closest('.zh-orb');
-    if (!el) return;
-    e.preventDefault();
-    if (!drag?.long) openLamp(+el.dataset.lamp);
-  });
-  root.addEventListener('keydown', e => {
-    const el = e.target.closest('.zh-orb');
-    if (el) {
-      const l = S.config.lampen[+el.dataset.lamp], v = lampView(l);
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lampCmd(l, { service: v.on ? 'light.turn_off' : 'light.turn_on' }, { on: !v.on }, el); }
-      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        const b = Math.max(1, Math.min(100, (v.on ? v.bri : 0) + (e.key === 'ArrowUp' ? 10 : -10)));
-        lampCmd(l, { service: 'light.turn_on', data: { brightness_pct: b } }, { on: true, bri: b }, el);
-      } else if (e.key === 'm' || e.key === 'ContextMenu') { e.preventDefault(); openLamp(+el.dataset.lamp); }
-      return;
+  // ---------------------------------------------------------------- Lampen
+  let dr = null;
+  function renderLamps() {
+    const c = cfg(); if (!c) return;
+    const P = $('pills');
+    if (P.childElementCount !== c.lampen.length) {
+      P.innerHTML = c.lampen.map((l, i) => `<div class="z-pill" data-k="${i}"><div class="z-fill"></div><div class="z-in"><div class="z-ic">${svg('bulb')}</div><div><h3>${esc(l.name)}</h3><p></p></div><div class="z-pct"></div></div></div>`).join('');
     }
-    const rt = e.target.closest('.zh-rt');
-    if (rt && e.target === rt && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openRoutine(+rt.dataset.rt); }
-  });
-
-  // ---------------------------------------------------------------- Klicks: Alle, Szenen, Geräte, Routinen, Fernseher, Status
-  root.addEventListener('click', async e => {
-    const c = S.config; if (!c) return;
-    const all = e.target.closest('[data-all]');
-    if (all) {
-      const on = all.dataset.all === 'on';
-      c.lampen.forEach(l => { ov[l.entity_id] = { on, t: Date.now() }; });
-      renderLamps();
-      const ok = await call({ entity_id: '*lampen', service: on ? 'light.turn_on' : 'light.turn_off' }, all);
-      if (!ok) c.lampen.forEach(l => delete ov[l.entity_id]);
-      setTimeout(() => { c.lampen.forEach(l => delete ov[l.entity_id]); renderLamps(); }, 4000);
-      renderLamps();
-      return;
-    }
-    const sc = e.target.closest('[data-sc]');
-    if (sc) {
-      const s = c.szenen.find(x => x.key === sc.dataset.sc); if (!s) return;
-      sceneOv = s.key; renderScenes();
-      const ok = await call(s.aktion === 'alle_aus' ? { entity_id: '*lampen', service: 'light.turn_off', scene: s.key }
-        : { entity_id: s.entity_id, service: s.entity_id.split('.')[0] + '.turn_on', scene: s.key }, sc);
-      if (!ok) sceneOv = null;
-      setTimeout(() => { sceneOv = null; renderScenes(); }, 4000);
-      renderScenes();
-      return;
-    }
-    const dv = e.target.closest('[data-dev]');
-    if (dv) {
-      const d = c.schalter[+dv.dataset.dev], on = !isOn(ent(d.entity_id));
-      ov[d.entity_id] = { on, t: Date.now() }; renderDevs();
-      await call({ entity_id: d.entity_id, service: d.entity_id.split('.')[0] + (on ? '.turn_on' : '.turn_off') }, dv);
-      setTimeout(() => { delete ov[d.entity_id]; renderDevs(); }, 4000);
-      return;
-    }
-    const sw = e.target.closest('[data-rtsw]');
-    if (sw) { e.stopPropagation(); toggleRoutine(+sw.dataset.rtsw, sw); return; }
-    const rt = e.target.closest('[data-rt]');
-    if (rt) { openRoutine(+rt.dataset.rt); return; }
-    const tvEl = e.target.closest('[data-tv]');
-    if (tvEl) {
-      const t = c.tv[+tvEl.dataset.tv], s = ent(t.entity_id);
-      if (e.target.closest('[data-tvpw]')) {
-        const on = !isOn(s);
-        ov[t.entity_id] = { on, t: Date.now() }; renderTv();
-        await call({ entity_id: t.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' }, tvEl);
-        setTimeout(() => { delete ov[t.entity_id]; renderTv(); }, 4000);
-      } else if (e.target.closest('[data-tvpp]')) {
-        await call({ entity_id: t.entity_id, service: 'media_player.media_play_pause' }, tvEl);
-      } else if (e.target.closest('[data-app]')) {
-        await call({ entity_id: t.entity_id, service: 'media_player.select_source', data: { source: e.target.closest('[data-app]').dataset.app } }, tvEl);
-      }
-      return;
-    }
-    const st = e.target.closest('[data-status]');
-    if (st) {
-      const m = S.meta;
-      toast(!m ? 'Zuhause-Dienst läuft nicht' : m.mode === 'test' ? 'Testmodus: Home Assistant wird simuliert' : m.connected ? 'Mit Home Assistant verbunden' : 'Getrennt: ' + (m.error || 'keine Verbindung'));
-    }
-  });
-  // Lautstärke: beim Ziehen anzeigen, beim Loslassen senden
-  root.addEventListener('input', e => {
-    const vol = e.target.closest('[data-tvvol]'); if (!vol) return;
-    vol.closest('[data-tv]').querySelector('[data-tvvl]').textContent = vol.value + ' %';
-  });
-  root.addEventListener('change', async e => {
-    const vol = e.target.closest('[data-tvvol]'); if (!vol) return;
-    const el = vol.closest('[data-tv]'), t = S.config.tv[+el.dataset.tv];
-    ov[t.entity_id] = { ...(ov[t.entity_id] || {}), vol: +vol.value / 100, t: Date.now() };
-    await call({ entity_id: t.entity_id, service: 'media_player.volume_set', data: { volume_level: +vol.value / 100 } }, el);
-    setTimeout(() => { delete ov[t.entity_id]; renderTv(); }, 3000);
-  });
-
-  async function toggleRoutine(i, el) {
-    const r = S.config.routinen[i], on = !(ent(r.entity_id)?.state === 'on');
-    ov[r.entity_id] = { on, t: Date.now() }; renderRoutines();
-    await call({ entity_id: r.entity_id, service: on ? 'automation.turn_on' : 'automation.turn_off' }, el);
-    setTimeout(() => { delete ov[r.entity_id]; renderRoutines(); }, 4000);
-  }
-
-  // ---------------------------------------------------------------- Sheet (Handy) / Panel (Tablet)
-  let sheetKind = '', sheetIdx = -1;
-  const wrap = document.createElement('div');
-  wrap.className = 'zh-sheet-wrap';
-  wrap.innerHTML = '<div class="zh-veil"></div><div class="zh-sheet" role="dialog" aria-modal="true" tabindex="-1"><div class="zh-grab"></div><div class="zh-sheet-in"></div></div>';
-  document.body.append(wrap);
-  const sheetIn = wrap.querySelector('.zh-sheet-in');
-  function openSheet(kind, i, html) {
-    sheetKind = kind; sheetIdx = i;
-    sheetIn.innerHTML = html;
-    wrap.classList.add('open');
-    setTimeout(() => wrap.querySelector('.zh-sheet').focus({ preventScroll: true }), 50);
-  }
-  function closeSheet() { wrap.classList.remove('open'); sheetKind = ''; sheetIdx = -1; }
-  wrap.querySelector('.zh-veil').addEventListener('click', closeSheet);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetKind) closeSheet(); });
-  document.addEventListener('wir:show', closeSheet);
-  // Sheet nach unten wischen = schließen (Handy)
-  let sy = null;
-  wrap.querySelector('.zh-grab').addEventListener('pointerdown', e => { sy = e.clientY; });
-  wrap.addEventListener('pointerup', e => { if (sy != null && e.clientY - sy > 60) closeSheet(); sy = null; });
-
-  function openLamp(i) {
-    const l = S.config.lampen[i];
-    const modes = ent(l.entity_id)?.a?.supported_color_modes || ['color_temp', 'rgb'];
-    const hasCt = modes.includes('color_temp');
-    const hasCol = modes.some(m => ['hs', 'xy', 'rgb', 'rgbw', 'rgbww'].includes(m));
-    openSheet('lamp', i, `
-      <div class="zh-sh"><h3>${esc(l.name)}</h3><button class="zh-sw" type="button" data-shsw role="switch" aria-label="An/Aus"></button></div>
-      <div class="zh-lbl"><span>Helligkeit</span><span data-shpct></span></div>
-      <input type="range" min="1" max="100" data-shbri aria-label="Helligkeit">
-      ${hasCt ? `<div class="zh-lbl"><span>Weißton</span><span>warm – kalt</span></div>
-      <input type="range" min="2200" max="6500" step="100" data-shct aria-label="Weißton" style="--g1:#ffb15c;--g2:#d8ecff">` : ''}
-      ${hasCol ? `<div class="zh-lbl"><span>Farbe</span></div><div class="zh-cols">${COLORS.map(c => `<button type="button" data-col="${c}" style="background:${c};--c:${c}" aria-label="Farbe ${c}"></button>`).join('')}</div>` : ''}
-      <button class="zh-done" type="button" data-shclose>Fertig</button>`);
-    fillLampSheet(true);
-  }
-  function fillLampSheet(first) {
-    if (sheetKind !== 'lamp') return;
-    const l = S.config.lampen[sheetIdx], v = lampView(l), s = ent(l.entity_id);
-    sheetIn.querySelector('[data-shsw]').classList.toggle('on', v.on);
-    const bri = sheetIn.querySelector('[data-shbri]');
-    if (first || document.activeElement !== bri) bri.value = v.bri;
-    bri.style.setProperty('--g1', 'var(--zh-track,#3a2236)');
-    bri.style.setProperty('--g2', v.color);
-    sheetIn.querySelector('[data-shpct]').textContent = v.on ? v.bri + ' %' : 'Aus';
-    const ct = sheetIn.querySelector('[data-shct]');
-    if (ct && (first || document.activeElement !== ct)) {
-      const a = s?.a || {};
-      if (a.min_color_temp_kelvin) { ct.min = a.min_color_temp_kelvin; ct.max = a.max_color_temp_kelvin; }
-      ct.value = a.color_temp_kelvin || 2700;
-    }
-    sheetIn.querySelectorAll('[data-col]').forEach(b => b.classList.toggle('sel', b.dataset.col.toLowerCase() === v.color.toLowerCase()));
-  }
-  sheetIn.addEventListener('click', e => {
-    if (e.target.closest('[data-shclose]')) return closeSheet();
-    if (sheetKind === 'lamp') {
-      const l = S.config.lampen[sheetIdx], v = lampView(l);
-      if (e.target.closest('[data-shsw]')) return lampCmd(l, { service: v.on ? 'light.turn_off' : 'light.turn_on' }, { on: !v.on }, e.target);
-      const col = e.target.closest('[data-col]');
-      if (col) return lampCmd(l, { service: 'light.turn_on', data: { rgb_color: rgbOf(col.dataset.col) } }, { on: true, color: col.dataset.col }, col);
-    }
-    if (sheetKind === 'rt') {
-      const r = S.config.routinen[sheetIdx];
-      if (e.target.closest('[data-shsw]')) return toggleRoutine(sheetIdx, e.target);
-      const run = e.target.closest('[data-run]');
-      if (run) {
-        run.disabled = true; run.textContent = 'Wird ausgeführt …';
-        call({ entity_id: r.entity_id, service: 'automation.trigger' }, run).then(ok => {
-          run.disabled = false; run.textContent = ok ? 'Ausgeführt ✓' : 'Jetzt ausführen';
-          if (ok) setTimeout(() => { if (run.isConnected) run.textContent = 'Jetzt ausführen'; }, 2000);
-        });
-      }
-    }
-  });
-  // Helligkeit/Weißton im Sheet: live anzeigen, gedrosselt senden, beim Loslassen protokollieren
-  let shSent = 0;
-  sheetIn.addEventListener('input', e => {
-    if (sheetKind !== 'lamp') return;
-    const l = S.config.lampen[sheetIdx];
-    if (e.target.matches('[data-shbri]')) {
-      const b = +e.target.value;
-      ov[l.entity_id] = { ...(ov[l.entity_id] || {}), on: true, bri: b, t: Date.now() };
-      sheetIn.querySelector('[data-shpct]').textContent = b + ' %';
-      sheetIn.querySelector('[data-shsw]').classList.add('on');
-      renderLamps();
-      if (Date.now() - shSent > 350) { shSent = Date.now(); T.call({ entity_id: l.entity_id, service: 'light.turn_on', data: { brightness_pct: b }, log: false }).catch(() => {}); }
-    } else if (e.target.matches('[data-shct]')) {
-      ov[l.entity_id] = { ...(ov[l.entity_id] || {}), on: true, color: hex(kelvinRgb(+e.target.value)), t: Date.now() };
-      renderLamps();
-    }
-  });
-  sheetIn.addEventListener('change', e => {
-    if (sheetKind !== 'lamp') return;
-    const l = S.config.lampen[sheetIdx];
-    if (e.target.matches('[data-shbri]')) lampCmd(l, { service: 'light.turn_on', data: { brightness_pct: +e.target.value } }, { on: true, bri: +e.target.value }, e.target);
-    if (e.target.matches('[data-shct]')) lampCmd(l, { service: 'light.turn_on', data: { color_temp_kelvin: +e.target.value } }, { on: true, color: hex(kelvinRgb(+e.target.value)) }, e.target);
-  });
-
-  function openRoutine(i) {
-    const r = S.config.routinen[i];
-    openSheet('rt', i, `
-      <div class="zh-sh"><h3>${esc(r.name)}</h3><button class="zh-sw" type="button" data-shsw role="switch" aria-label="Aktiv"></button></div>
-      <p class="zh-meta">${esc(r.info)}</p>
-      <div class="zh-lbl"><span>Status</span><span data-rtstate></span></div>
-      <div class="zh-lbl"><span>Zuletzt ausgeführt</span><span data-rtlast></span></div>
-      <button class="zh-act" type="button" data-run>Jetzt ausführen</button>
-      <button class="zh-done" type="button" data-shclose>Fertig</button>`);
-    fillRoutineSheet();
-  }
-  function fillRoutineSheet() {
-    if (sheetKind !== 'rt') return;
-    const r = S.config.routinen[sheetIdx], s = ent(r.entity_id), o = ov[r.entity_id];
-    const on = o ? o.on : s?.state === 'on';
-    sheetIn.querySelector('[data-shsw]').classList.toggle('on', on);
-    sheetIn.querySelector('[data-rtstate]').textContent = !s || s.state === 'unavailable' ? 'nicht erreichbar' : on ? 'aktiv' : 'inaktiv';
-    sheetIn.querySelector('[data-rtlast]').textContent = s?.a?.last_triggered ? ago(s.a.last_triggered) : 'noch nie';
-  }
-
-  // ---------------------------------------------------------------- Start, Sichtbarkeit
-  // Optimistische Werte: verworfen, sobald sich der Datensatz des Geräts ändert
-  const prevSig = {};
-  function changeFilter(state) {
-    for (const [id, s] of Object.entries(state.entities)) {
-      const sig = s.state + '|' + JSON.stringify(s.a);
-      if (prevSig[id] !== undefined && prevSig[id] !== sig && ov[id] && !(drag && drag.l.entity_id === id)) delete ov[id];
-      prevSig[id] = sig;
-    }
-    if (sceneOv && state.meta?.scene === sceneOv) sceneOv = null;
-    render();
-  }
-
-  function start() {
-    if (started) return;
-    started = true;
-    build();
-    T.start(changeFilter).catch(err => {
-      started = false;
-      console.error('Zuhause', err);
-      root.innerHTML = '<div class="zh-card zh-empty">Zuhause ist gerade nicht erreichbar.</div>';
-      cfgSig = '';
+    c.lampen.forEach((l, i) => {
+      const el = P.children[i]; if (!el || dr?.t === el) return;
+      const v = lampView(l);
+      el.classList.toggle('z-on', v.on);
+      el.style.setProperty('--c', v.c);
+      el.querySelector('.z-fill').style.width = (v.on ? v.b : 0) + '%';
+      el.querySelector('p').textContent = v.na ? 'nicht erreichbar' : v.on ? v.k : 'Aus';
+      el.querySelector('.z-pct').textContent = v.on ? v.b + ' %' : 'Aus';
     });
   }
-  document.addEventListener('wir:show', e => {
-    document.body.classList.toggle('zh-open', e.detail === 's-zuhause');
-    if (e.detail !== 's-zuhause') return;
-    if (!window.WIR_PB?.authStore?.isValid) return;
-    if (!started) start(); else { render(); }
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && started) T.refresh().catch(() => {});
-  });
-  setInterval(tick, 10000);
 
-  // ---------------------------------------------------------------- Leistungsmodus (Einstellungen, nur dieses Gerät)
-  const perf = $('perfSwitch');
-  if (perf) {
-    perf.checked = document.documentElement.classList.contains('perf');
-    perf.addEventListener('change', () => {
-      document.documentElement.classList.toggle('perf', perf.checked);
-      try { localStorage.setItem('wir-perf', perf.checked ? '1' : '0'); } catch (_) {}
+  // ---------------------------------------------------------------- Geräte, Routinen
+  function renderDevs() {
+    const c = cfg(); if (!c) return;
+    const D = $('devs');
+    if (D.childElementCount !== c.geraete.length) {
+      D.innerHTML = c.geraete.map((g, i) => `<div class="z-dev" style="--c:${g.farbe}" data-k="${i}"><div class="z-di">${svg(g.icon)}</div><div><h4>${esc(g.name)}</h4><p></p></div></div>`).join('');
+    }
+    c.geraete.forEach((g, i) => {
+      const el = D.children[i], o = ov[g.entity_id], s = ent(g.entity_id);
+      const on = o?.on != null ? o.on : s?.state === 'on';
+      el.classList.toggle('z-on', on);
+      el.querySelector('p').textContent = !s || s.state === 'unavailable' ? 'nicht erreichbar' : on ? (g.text_an || 'An') : 'Aus';
+    });
+    D.hidden = !c.geraete.length;
+  }
+  function renderRoutines() {
+    const c = cfg(); if (!c) return;
+    const R = $('routines');
+    if (R.childElementCount !== c.routinen.length) {
+      R.innerHTML = c.routinen.map((r, i) => `<div class="z-rt" data-k="${i}"><div class="z-h">${svg(r.icon)}<div class="z-sw"></div></div><div><h4>${esc(r.name)}</h4><p>${esc(r.info)}</p></div></div>`).join('');
+      if (c.routinen.length !== 4) R.style.gridTemplateColumns = `repeat(${Math.max(1, c.routinen.length)},1fr)`;
+    }
+    c.routinen.forEach((r, i) => {
+      const o = ov[r.entity_id];
+      R.children[i].querySelector('.z-sw').classList.toggle('z-on', o?.on != null ? o.on : ent(r.entity_id)?.state === 'on');
+    });
+    R.hidden = !c.routinen.length;
+  }
+
+  // ---------------------------------------------------------------- Fernseher
+  const mmss = s => `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
+  function renderTV() {
+    const v = tvView();
+    $('tvc').hidden = !v; qa('.z-nv[data-p="tv"]').forEach(n => { n.hidden = !v; });
+    if (!v) return;
+    const { tv, a, app } = v;
+    const A = $('apps');
+    if (A.childElementCount !== tv.apps.length) A.innerHTML = tv.apps.map((x, i) => `<div class="z-ap" style="--c:${x.farbe}" data-k="${i}"><b>${esc(x.name)}</b><span>öffnen</span></div>`).join('');
+    const Q = $('srcs');
+    if (Q.dataset.n !== String(tv.quellen.length)) {
+      Q.dataset.n = tv.quellen.length;
+      Q.innerHTML = tv.quellen.map((q, i) => `<div class="z-src" data-k="${i}">${svg(q.icon)}${esc(q.name)}</div>`).join('');
+    }
+    Q.hidden = !tv.quellen.length;
+    $('stage').style.setProperty('--app', app.farbe);
+    $('p-tv').classList.toggle('z-tvoff', !v.on);
+    qa('#zh-p-tv .z-h1, #zh-tvc h3').forEach(x => { x.textContent = tv.name; });
+    $('napp').textContent = app.name;
+    $('ntitle').textContent = a.media_series_title || a.media_title || app.test || '';
+    // Fortschritt (Position läuft seit media_position_updated_at weiter)
+    let pos = a.media_position || 0;
+    const dur = a.media_duration || 0;
+    if (v.playing && a.media_position_updated_at) pos += (Date.now() - Date.parse(a.media_position_updated_at)) / 1000;
+    pos = Math.min(pos, dur || pos);
+    const prog = qa('.z-prog', $('p-tv'))[0];
+    prog.querySelector('.z-bar i').style.width = dur ? (pos / dur * 100).toFixed(1) + '%' : '0%';
+    prog.querySelector(':scope > span').textContent = dur ? `${mmss(pos)} / ${mmss(dur)}` : '';
+    $('nsub').textContent = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
+    $('pp').innerHTML = svg(v.playing ? 'pause' : 'play');
+    $('pwrt').textContent = v.on ? 'Ausschalten' : 'Einschalten';
+    $('tvstate').textContent = v.on ? 'An · ' + app.name : 'Aus · Standby';
+    $('tvstate').classList.toggle('z-off', !v.on);
+    qa('.z-ap', A).forEach((x, i) => { x.classList.toggle('z-on', v.on && i === v.ai); x.querySelector('span').textContent = v.on && i === v.ai ? 'läuft' : 'öffnen'; });
+    const known = tv.quellen.some(q => q.source === v.source);
+    qa('.z-src', Q).forEach((x, i) => x.classList.toggle('z-on', known ? tv.quellen[i].source === v.source : i === 0));
+    const pct = v.vol / v.max * 100;
+    $('vn').textContent = v.muted ? 'stumm' : v.vol; $('vi').style.width = pct + '%'; $('mute').classList.toggle('z-on', v.muted);
+    $('tvc').classList.toggle('z-off', !v.on);
+    $('tvcsub').textContent = v.on ? app.name + (v.playing ? ' · läuft' : ' · pausiert') : 'Aus · tippen für Fernbedienung';
+    $('tvc-v').style.width = pct + '%'; $('tvc-n').textContent = v.muted ? '–' : v.vol;
+    if (page === 'tv') { if (v.on) $('stage').style.setProperty('--z-a1', app.farbe); else $('stage').style.removeProperty('--z-a1'); }
+  }
+  // Lautstärke: Anzeige sofort, Befehl gedrosselt
+  let volSent = 0, volTimer = 0;
+  function setVol(n, final) {
+    const v = tvView(); if (!v) return;
+    n = Math.max(0, Math.min(v.max, Math.round(n)));
+    optimistic(v.tv.entity_id, { vol: n, muted: false });
+    renderTV();
+    clearTimeout(volTimer);
+    const send = log => call({ entity_id: v.tv.entity_id, service: 'media_player.volume_set', data: { volume_level: n / v.max }, log }, !log);
+    if (final) send(true);
+    else if (Date.now() - volSent > 300) { volSent = Date.now(); send(false); volTimer = setTimeout(() => send(true), 600); }
+    else volTimer = setTimeout(() => send(true), 400);
+  }
+  function tvPower(on) {
+    const v = tvView(); if (!v) return;
+    optimistic(v.tv.entity_id, { on });
+    renderTV();
+    toast(on ? `${v.tv.name} eingeschaltet` : `${v.tv.name} aus`);
+    call({ entity_id: v.tv.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' });
+  }
+
+  // ---------------------------------------------------------------- Szenen
+  function renderScenes() {
+    const c = cfg(); if (!c) return;
+    const Sc = $('scenes');
+    if (Sc.childElementCount !== c.szenen.length) Sc.innerHTML = c.szenen.map(s => `<div class="z-sc" style="--a:${s.farbe}" data-k="${s.key}"><div class="z-b">${svg(s.icon)}</div>${esc(s.name)}</div>`).join('');
+    const on = sceneOv || S.meta?.scene || '';
+    qa('.z-sc', Sc).forEach(x => x.classList.toggle('z-on', x.dataset.k === on));
+  }
+
+  // ---------------------------------------------------------------- Kalender + To-dos
+  const C = { d: 'var(--z-d)', i: 'var(--z-i)', g: 'var(--z-g)' };
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  let view = new Date(today().getFullYear(), today().getMonth(), 1), sel = today();
+  const events = () => S.kalender?.termine || [];
+  function evOn(ds) {
+    const a = [];
+    events().forEach(x => { if (x.d === ds) a.push(x); else if (x.s && ds >= x.s && ds <= x.to) a.push({ ...x, span: true, start: ds === x.s, end: ds === x.to }); });
+    return a.sort((p, q) => (q.span ? 1 : 0) - (p.span ? 1 : 0) || (p.t || '').localeCompare(q.t || ''));
+  }
+  function renderMonth() {
+    $('mtitle').textContent = view.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    const first = new Date(view.getFullYear(), view.getMonth(), 1), off = (first.getDay() + 6) % 7, start = new Date(first);
+    start.setDate(1 - off);
+    const td = iso(today()), sd = iso(sel);
+    let h = '';
+    for (let k = 0; k < 42; k++) {
+      const d = new Date(start); d.setDate(start.getDate() + k);
+      const ds = iso(d), es = evOn(ds), dow = (d.getDay() + 6) % 7;
+      const cls = ['z-day', d.getMonth() !== view.getMonth() ? 'z-other' : '', dow > 4 ? 'z-we' : '', ds === td ? 'z-today' : '', ds === sd ? 'z-sel' : ''].join(' ');
+      h += `<div class="${cls}" data-d="${ds}"><div class="z-n">${d.getDate()}</div>${es.slice(0, 2).map(x => `<div class="z-ev ${x.span ? 'z-span' : ''} ${x.start ? 'z-start' : ''} ${x.end ? 'z-end' : ''}" style="--c:${C[x.w]}">${x.span && !x.start && dow !== 0 ? '&nbsp;' : esc(x.n)}</div>`).join('')}${es.length > 2 ? `<div class="z-more">+${es.length - 2}</div>` : ''}</div>`;
+    }
+    if ($('grid').dataset.h !== h) { $('grid').dataset.h = h; $('grid').innerHTML = h; }
+  }
+  const whoTxt = w => (w === 'g' ? 'gemeinsam' : w === 'i' ? 'Ida' : 'Daniel');
+  function renderAgenda() {
+    const ds = iso(sel), es = evOn(ds);
+    $('seltitle').textContent = ds === iso(today()) ? 'Heute' : sel.toLocaleDateString('de-DE', { weekday: 'long' });
+    $('seldate').textContent = sel.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+    $('agenda').innerHTML = es.length ? es.slice(0, 3).map(x => `<div class="z-it" style="--c:${C[x.w]}"><div class="z-bar"></div><div class="z-t">${x.span || !x.t ? 'ganzt.' : esc(x.t)}</div><div><b>${esc(x.n)}</b><small>${[x.span ? 'ganztägig' : (x.e ? x.t + ' – ' + x.e : ''), whoTxt(x.w)].filter(Boolean).map(esc).join(' · ')}</small></div></div>`).join('') : '<div class="z-empty">Keine Termine – freier Tag.</div>';
+  }
+  const LISTS = { Gemeinsam: 'gemeinsam', Einkauf: 'einkauf', Haushalt: 'haushalt' };
+  let curL = 'gemeinsam';
+  const todoOv = {};   // id -> { done, who, gone } optimistisch
+  function todoList(list) {
+    return S.todos.filter(t => t.list === list && !todoOv[t.id]?.gone).map(t => ({ ...t, ...(todoOv[t.id] || {}) }))
+      .sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+  }
+  function renderTodos() {
+    const items = todoList(curL);
+    const h = items.map(x => `<div class="z-td ${x.done ? 'z-done' : ''}" data-id="${x.id}"><div class="z-cb">${svg('check')}</div><div><b>${esc(x.text)}</b>${x.note ? `<small>${esc(x.note)}</small>` : ''}</div><div class="z-who" style="--c:${C[x.who]}">${x.who === 'd' ? 'D' : x.who === 'i' ? 'I' : 'W'}</div></div>`).join('')
+      || '<div class="z-empty">Noch nichts auf der Liste.</div>';
+    if ($('todos').dataset.h !== h) { $('todos').dataset.h = h; $('todos').innerHTML = h; }
+    const open = [...todoList('gemeinsam'), ...todoList('haushalt'), ...todoList('einkauf')].filter(x => !x.done).slice(0, 3);
+    $('rtodos').innerHTML = open.map(x => `<div class="z-rtodo"><i></i>${esc(x.text)}</div>`).join('') || '<div class="z-rtodo">Alles erledigt</div>';
+  }
+
+  // ---------------------------------------------------------------- Wecker (Einstellungen in PocketBase: home_settings "wecker")
+  const DEF_ALARM = {
+    alarms: [
+      { id: 'a1', zeit: '5:00', bis: '6:00', alle: 10, tage: [0, 1, 2, 3, 4], an: true, titel: 'Werktage', ton: true },
+      { id: 'a2', zeit: '9:00', bis: '', alle: 0, tage: [5, 6], an: false, titel: 'Wochenende', ton: false },
+    ],
+    vorlauf: 15, ton: 'Sanft', aussetzen: '',
+  };
+  const W = () => S.settings.wecker || DEF_ALARM;
+  const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+  const fmtMin = m => `${Math.floor(((m % 1440) + 1440) % 1440 / 60)}:${pad(((m % 60) + 60) % 60)}`;
+  function times(a) {
+    if (!a.bis || !a.alle) return [a.zeit];
+    const out = [];
+    for (let m = toMin(a.zeit); m <= toMin(a.bis) && out.length < 30; m += a.alle) out.push(fmtMin(m));
+    return out;
+  }
+  function nextAlarm() {
+    const w = W(), now = new Date();
+    for (let d = 0; d < 8; d++) {
+      const day = new Date(now); day.setDate(now.getDate() + d); day.setHours(0, 0, 0, 0);
+      const dow = (day.getDay() + 6) % 7;
+      if (iso(day) === w.aussetzen) continue;
+      const cand = w.alarms.filter(a => a.an && a.tage.includes(dow)).map(a => ({ a, m: toMin(a.zeit) }))
+        .filter(x => d > 0 || x.m > now.getHours() * 60 + now.getMinutes()).sort((p, q) => p.m - q.m)[0];
+      if (cand) return { ...cand, d, day };
+    }
+    return null;
+  }
+  function alarmInfo() {
+    const w = W(), n = nextAlarm(), tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    if (!n) return { chip: 'kein Wecker', state: w.aussetzen === iso(tomorrow) ? 'Morgen kein Wecker' : 'Kein Wecker aktiv', saver: '', n };
+    const when = n.d === 0 ? 'heute' : n.d === 1 ? 'morgen' : n.day.toLocaleDateString('de-DE', { weekday: 'long' });
+    const lead = fmtMin(n.m - w.vorlauf);
+    return { chip: 'Wecker ' + n.a.zeit, state: `Nächster: ${when} ${n.a.zeit}` + (w.vorlauf ? ` · Licht ab ${lead}` : ''), saver: `Wecker ${when} ${n.a.zeit} · `, n };
+  }
+  function renderAlarm() {
+    const w = W(), info = alarmInfo();
+    const L = qa('.z-alist', $('p-alarm'))[0];
+    const h = w.alarms.map(a => {
+      const ts = times(a), lead = fmtMin(toMin(a.zeit) - w.vorlauf);
+      const small = a.bis ? `– ${a.bis} · alle ${a.alle} Min` : esc(a.titel);
+      const p = !a.ton ? 'nur Licht, kein Ton' : `${a.bis ? esc(a.titel) + ' · ' : ''}Licht ab <span class="z-lead">${w.vorlauf ? lead : a.zeit}</span>${ts.length > 1 ? ` · ${ts.length} Wecker` : ''}`;
+      return `<div class="z-al${a.an ? '' : ' z-off'}" data-id="${esc(a.id)}"><div><h3 data-time>${esc(a.zeit)}<small>${small}</small></h3><p>${p}</p></div><div class="z-sw${a.an ? ' z-on' : ''}"></div>` +
+        `<div class="z-days">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t, i) => `<div data-day="${i}"${a.tage.includes(i) ? ' class="z-on"' : ''}>${t}</div>`).join('')}</div>` +
+        (ts.length > 1 ? `<div class="z-atimes">${ts.map(t => `<span>${t}</span>`).join('')}</div>` : '') + '</div>';
+    }).join('') + `<div class="z-addal">${svg('plus')}Wecker hinzufügen</div>`;
+    if (L.dataset.h !== h) { L.dataset.h = h; L.innerHTML = h; }
+    if (document.activeElement !== $('vor')) $('vor').value = w.vorlauf;
+    $('vl').textContent = w.vorlauf + ' Min';
+    qa('#zh-tone > div').forEach(x => x.classList.toggle('z-on', x.textContent === w.ton));
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const sk = w.aussetzen === iso(tomorrow);
+    $('skip').classList.toggle('z-on', sk);
+    $('skip').querySelector('span').textContent = sk ? 'Morgen ausgesetzt – rückgängig' : 'Morgen aussetzen';
+    $('astate').textContent = info.state;
+    $('snext').textContent = info.saver + 'antippen zum Aufwecken';
+    renderChips();
+  }
+  let saveT = 0;
+  function saveAlarm(mut) {
+    const w = JSON.parse(JSON.stringify(W()));
+    mut(w);
+    S.settings.wecker = w;
+    renderAlarm();
+    clearTimeout(saveT);
+    saveT = setTimeout(() => T.settings.save('wecker', S.settings.wecker).catch(() => toast('Speichern fehlgeschlagen')), 400);
+  }
+
+  // ---------------------------------------------------------------- Weckvorgang (Test) + Bildschirmschoner
+  let alarmAt = null, sn = 0, glowT = 0, holdT = 0, pr = 0;
+  const fmt = d => d.toLocaleTimeString('de-DE', { hour: 'numeric', minute: '2-digit' });
+  function openRing() {
+    const R = $('ring'), n = alarmInfo().n;
+    const day = n ? n.day : (() => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0); return d; })();
+    const m = n ? n.m : 300;
+    alarmAt = new Date(day); alarmAt.setHours(Math.floor(m / 60), m % 60, 0, 0);
+    R.classList.add('z-on'); R.classList.remove('z-calm'); sn = 0;
+    $('rclock').textContent = fmt(alarmAt);
+    const me = window.WIR_LOOK?.me?.()?.name || '';
+    qa('.z-gm', R)[0].textContent = 'Guten Morgen' + (me ? ', ' + me : '');
+    // Wetter, Termine und To-dos des Wecktages
+    const w = S.wetter, rwx = qa('.z-rwx', R)[0];
+    qa('.z-t1', R)[0].lastChild.textContent = `${w?.ort || 'Wetter'} heute`;
+    rwx.querySelector('b').textContent = w?.heute ? `${w.heute.min}° → ${w.heute.max}°` : '–';
+    rwx.querySelector('span').textContent = w?.heute ? `${wmo(w.heute.code)[1]}${w.regen_ab ? ` · ab ${w.regen_ab} Uhr Regen` : ''}` : '';
+    const es = evOn(iso(day)).slice(0, 4), box = qa('.z-rc', R)[1];
+    qa('.z-row', box).forEach(x => x.remove());
+    box.insertAdjacentHTML('beforeend', es.map(x => `<div class="z-row"><div class="z-t">${x.span || !x.t ? 'ganzt.' : esc(x.t)}</div><div><b>${esc(x.n)}</b><small>${esc(x.e ? 'bis ' + x.e : whoTxt(x.w))}</small></div></div>`).join('') || '<div class="z-row"><div><b>Keine Termine</b></div></div>');
+    rupd();
+    let g = 0; R.style.setProperty('--glow', 0);
+    clearInterval(glowT); glowT = setInterval(() => { g = Math.min(1, g + 0.03); R.style.setProperty('--glow', g); if (g >= 1) clearInterval(glowT); }, 60);
+  }
+  function rupd() {
+    const dayStart = new Date(alarmAt).setHours(0, 0, 0, 0);
+    const first = evOn(iso(alarmAt)).find(x => x.t && dayStart + toMin(x.t) * 60000 > alarmAt.getTime());
+    $('sntxt').textContent = '10 Min · bis ' + fmt(new Date(alarmAt.getTime() + 6e5));
+    $('ringtxt').textContent = sn ? `Wecker ${fmt(alarmAt)} · ${sn}× geschlummert` : `Wecker ${fmt(alarmAt)} · Licht 100 %`;
+    if (first) {
+      const left = Math.max(0, Math.round((dayStart + toMin(first.t) * 60000 - alarmAt) / 6e4));
+      $('gs').textContent = `${first.n} ab ${first.t} · noch ${Math.floor(left / 60)} h ${left % 60} Min`;
+    } else $('gs').textContent = 'Heute keine Termine';
+    const b = qa('.z-done b', $('ring'))[0], wd = wiedersehen();
+    if (b) {
+      const t = b.previousSibling, inN = wd.startsWith('Wiedersehen in ');
+      if (t) t.textContent = !wd ? 'Schönen Tag' : inN ? 'Schönen Tag – ihr seht euch in ' : 'Schönen Tag – ihr seht euch ';
+      b.textContent = wd.replace('Wiedersehen in ', '').replace('Wiedersehen ', '');
+    }
+  }
+  function closeRing() { clearInterval(glowT); clearInterval(holdT); $('ring')?.classList.remove('z-on'); }
+
+  let idleT = 0;
+  function idle() {
+    clearTimeout(idleT);
+    if (!active || !mqTab.matches) return;   // Bildschirmschoner nur auf dem Tablet
+    idleT = setTimeout(() => { if (!$('ring').classList.contains('z-on')) $('saver').classList.add('z-on'); }, local.saverMin * 6e4);
+  }
+
+  // ---------------------------------------------------------------- Leistungsmodus (automatisch + Schalter)
+  // localStorage 'wir-perf': '1' an, '0' aus, fehlt = automatisch: iPhone/iOS an; Tablet volle Effekte nur bei ≥ 45 FPS
+  let perfAuto = null;
+  const perfPref = () => { try { return localStorage.getItem('wir-perf'); } catch (_) { return null; } };
+  function perfOn() {
+    const p = perfPref();
+    if (p === '1') return true;
+    if (p === '0') return false;
+    if (isIOS && !mqTab.matches) return true;
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return true;
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) return true;
+    return perfAuto ?? isIOS;   // iPad: sparsam, bis die FPS-Messung volle Effekte erlaubt
+  }
+  function applyPerf() {
+    const on = perfOn();
+    document.documentElement.classList.toggle('perf', on);
+    host.querySelector('.z-stage')?.classList.toggle('z-perf', on);
+    $('perf')?.classList.toggle('z-on', on);
+    const app = document.getElementById('perfSwitch'); if (app) app.checked = on;
+  }
+  // FPS kurz messen (2 s, nur Tablet, nur automatisch, einmal pro Sitzung)
+  let fpsRaf = 0;
+  function measureFps() {
+    if (perfPref() !== null || perfAuto !== null || !mqTab.matches || fpsRaf) return;
+    if (navigator.deviceMemory && navigator.deviceMemory <= 2) return;
+    host.querySelector('.z-stage')?.classList.remove('z-perf');   // volle Effekte probeweise
+    let frames = 0, t0 = 0;
+    const step = t => {
+      if (!active) { fpsRaf = 0; return; }
+      if (!t0) t0 = t;
+      frames++;
+      if (t - t0 < 2000) { fpsRaf = requestAnimationFrame(step); return; }
+      fpsRaf = 0;
+      perfAuto = frames / ((t - t0) / 1000) < 45;
+      applyPerf();
+    };
+    fpsRaf = requestAnimationFrame(step);
+  }
+
+  // ---------------------------------------------------------------- Layout Handy/Tablet
+  function applyLayout() {
+    const tab = mqTab.matches;
+    host.classList.toggle('z-tablet', tab);
+    host.classList.toggle('z-phone', !tab);
+    document.body.classList.toggle('zh-full', tab && active);
+    if (!tab) $('saver')?.classList.remove('z-on');
+    applyPerf();
+    idle();
+  }
+
+  // ---------------------------------------------------------------- Ereignisse (einmal verdrahtet, nur an Elementen in Zuhause)
+  function wire() {
+    $('rail').addEventListener('click', e => {
+      if (e.target.closest('[data-back]')) { UI.show('s-home'); return; }
+      const n = e.target.closest('.z-nv[data-p]'); if (n) go(n.dataset.p);
+    });
+    host.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g && !g.closest('.z-rail')) go(g.dataset.go); });
+
+    // Lampen: Tippen = an/aus, waagerecht wischen = Helligkeit (wie in der Vorlage)
+    const P = $('pills');
+    let sent = 0;
+    P.addEventListener('pointerdown', e => {
+      const t = e.target.closest('.z-pill'); if (!t) return;
+      dr = { t, x: e.clientX, y: e.clientY, m: false, l: cfg().lampen[t.dataset.k], id: e.pointerId };
+    });
+    P.addEventListener('pointermove', e => {
+      if (!dr || e.pointerId !== dr.id) return;
+      if (!dr.m && Math.abs(e.clientX - dr.x) > 10 && Math.abs(e.clientX - dr.x) > Math.abs(e.clientY - dr.y)) { dr.m = true; try { dr.t.setPointerCapture(e.pointerId); } catch (_) {} }
+      if (!dr.m) return;
+      const r = dr.t.getBoundingClientRect();
+      dr.b = Math.max(1, Math.min(100, Math.round((e.clientX - r.left) / r.width * 100)));
+      dr.t.classList.add('z-on');
+      dr.t.querySelector('.z-fill').style.width = dr.b + '%';
+      dr.t.querySelector('.z-pct').textContent = dr.b + ' %';
+      if (Date.now() - sent > 350) { sent = Date.now(); call({ entity_id: dr.l.entity_id, service: 'light.turn_on', data: { brightness_pct: dr.b }, log: false }, true); }
+    });
+    const end = e => {
+      if (!dr || (e && e.pointerId !== dr.id)) return;
+      const d = dr; dr = null;
+      if (e?.type === 'pointercancel' && !d.m) { renderLamps(); return; }
+      const v = lampView(d.l);
+      sceneOv = null;
+      if (d.m) { optimistic(d.l.entity_id, { on: true, b: d.b }); call({ entity_id: d.l.entity_id, service: 'light.turn_on', data: { brightness_pct: d.b } }); }
+      else { optimistic(d.l.entity_id, { on: !v.on }); call({ entity_id: d.l.entity_id, service: v.on ? 'light.turn_off' : 'light.turn_on' }); }
+      renderLamps(); renderScenes();
+    };
+    P.addEventListener('pointerup', end);
+    P.addEventListener('pointercancel', end);
+    const all = on => () => {
+      cfg().lampen.forEach(l => optimistic(l.entity_id, { on }));
+      sceneOv = null; renderLamps(); renderScenes();
+      call({ entity_id: '*lampen', service: on ? 'light.turn_on' : 'light.turn_off' });
+    };
+    $('allon').addEventListener('click', all(true));
+    $('alloff').addEventListener('click', all(false));
+
+    $('devs').addEventListener('click', e => {
+      const t = e.target.closest('.z-dev'); if (!t) return;
+      const g = cfg().geraete[t.dataset.k], on = !(ov[g.entity_id]?.on ?? ent(g.entity_id)?.state === 'on');
+      optimistic(g.entity_id, { on }); renderDevs();
+      call({ entity_id: g.entity_id, service: g.entity_id.split('.')[0] + (on ? '.turn_on' : '.turn_off') });
+    });
+    $('routines').addEventListener('click', e => {
+      const s = e.target.closest('.z-sw'); if (!s) return;
+      const r = cfg().routinen[s.closest('.z-rt').dataset.k], on = !s.classList.contains('z-on');
+      optimistic(r.entity_id, { on }); renderRoutines();
+      call({ entity_id: r.entity_id, service: on ? 'automation.turn_on' : 'automation.turn_off' });
+    });
+
+    // Fernseher
+    $('pwr').addEventListener('click', () => tvPower(!tvView()?.on));
+    $('offmsg').addEventListener('click', () => tvPower(true));
+    $('tvc-p').addEventListener('click', () => tvPower(!tvView()?.on));
+    $('tvc').addEventListener('click', e => { if (!e.target.closest('.z-mb')) go('tv'); });
+    $('tvc-u').addEventListener('click', () => setVol((tvView()?.vol || 0) + 1));
+    $('tvc-d').addEventListener('click', () => setVol((tvView()?.vol || 0) - 1));
+    $('vu').addEventListener('click', () => setVol((tvView()?.vol || 0) + 1));
+    $('vd').addEventListener('click', () => setVol((tvView()?.vol || 0) - 1));
+    const vb = $('vbar');
+    let vdr = false;
+    const vset = (e, fin) => { const r = vb.getBoundingClientRect(); setVol((e.clientX - r.left) / r.width * (tvView()?.max || 50), fin); };
+    vb.addEventListener('pointerdown', e => { vdr = true; vb.setPointerCapture(e.pointerId); vset(e); });
+    vb.addEventListener('pointermove', e => { if (vdr) vset(e); });
+    vb.addEventListener('pointerup', e => { if (vdr) { vdr = false; vset(e, true); } });
+    $('mute').addEventListener('click', () => {
+      const v = tvView(); if (!v) return;
+      optimistic(v.tv.entity_id, { muted: !v.muted }); renderTV();
+      call({ entity_id: v.tv.entity_id, service: 'media_player.volume_mute', data: { is_volume_muted: !v.muted } });
+    });
+    $('pp').addEventListener('click', () => {
+      const v = tvView(); if (!v) return;
+      optimistic(v.tv.entity_id, { playing: !v.playing }); renderTV();
+      call({ entity_id: v.tv.entity_id, service: 'media_player.media_play_pause' });
+    });
+    const ctrl = qa('.z-ctrl > div', $('p-tv'));
+    ctrl[0].addEventListener('click', () => { const v = tvView(); if (v) call({ entity_id: v.tv.entity_id, service: 'media_player.media_previous_track' }); });
+    ctrl[2].addEventListener('click', () => { const v = tvView(); if (v) call({ entity_id: v.tv.entity_id, service: 'media_player.media_next_track' }); });
+    $('apps').addEventListener('click', e => {
+      const t = e.target.closest('.z-ap'); if (!t) return;
+      const v = tvView(), app = v.tv.apps[t.dataset.k], was = v.on;
+      optimistic(v.tv.entity_id, { on: true, playing: true, app: app.name }); renderTV();
+      toast((was ? '' : `${v.tv.name} an · `) + app.name + ' wird geöffnet');
+      call({ entity_id: v.tv.entity_id, service: 'tv.app', data: { app: app.name } });
+    });
+    $('srcs').addEventListener('click', e => {
+      const t = e.target.closest('.z-src'); if (!t) return;
+      const v = tvView(), q = v.tv.quellen[t.dataset.k];
+      optimistic(v.tv.entity_id, { source: q.source }); renderTV();
+      call({ entity_id: v.tv.entity_id, service: 'media_player.select_source', data: { source: q.source } });
+    });
+    const KEYS = { 'z-u': 'DPAD_UP', 'z-dn': 'DPAD_DOWN', 'z-l': 'DPAD_LEFT', 'z-r': 'DPAD_RIGHT', 'z-ok': 'DPAD_CENTER' };
+    const KEYS2 = { undo: 'BACK', home: 'HOME', menu: 'MENU', mic: 'SEARCH' };
+    qa('.z-dpad .z-a, .z-dpad .z-ok, .z-keys > div', $('p-tv')).forEach(b => b.addEventListener('click', () => {
+      b.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1)' }], { duration: 160 });
+      const cls = [...b.classList].find(c => KEYS[c]);
+      const command = cls ? KEYS[cls] : KEYS2[b.dataset.i];
+      const tv = cfg()?.fernseher;
+      if (command && tv?.remote) call({ entity_id: tv.remote, service: 'remote.send_command', data: { command } }, true);
+    }));
+
+    // Szenen (schalten serverseitig mehrere Geräte, z. B. Filmabend: Licht dimmen + Netflix)
+    $('scenes').addEventListener('click', e => {
+      const t = e.target.closest('.z-sc'); if (!t) return;
+      const s = cfg().szenen.find(x => x.key === t.dataset.k);
+      sceneOv = s.key; renderScenes();
+      toast('Szene „' + s.name + '“ aktiviert');
+      call({ scene: s.key }).then(ok => { if (!ok) { sceneOv = null; renderScenes(); } });
+    });
+
+    // Kalender
+    $('grid').addEventListener('click', e => {
+      const t = e.target.closest('.z-day'); if (!t) return;
+      const [y, m, d] = t.dataset.d.split('-').map(Number);
+      sel = new Date(y, m - 1, d); if (m - 1 !== view.getMonth()) view = new Date(y, m - 1, 1);
+      renderMonth(); renderAgenda();
+    });
+    $('cprev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderMonth(); });
+    $('cnext').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderMonth(); });
+    $('ctoday').addEventListener('click', () => { view = new Date(today().getFullYear(), today().getMonth(), 1); sel = today(); renderMonth(); renderAgenda(); });
+
+    // To-dos: Tippen = abhaken, Kreis D/I/W = Zuordnung wechseln, nach links wischen = löschen
+    $('lists').addEventListener('click', e => {
+      const t = e.target.closest('#zh-lists > div'); if (!t) return;
+      curL = LISTS[t.textContent] || 'gemeinsam';
+      qa('#zh-lists > div').forEach(x => x.classList.toggle('z-on', x === t));
+      renderTodos();
+    });
+    const inp = $('newtd');
+    const addT = () => {
+      const text = inp.value.trim(); if (!text) return;
+      inp.value = '';
+      T.todos.add({ list: curL, text, who: 'g' }).catch(() => toast('Speichern fehlgeschlagen'));
+    };
+    $('addbtn').addEventListener('click', addT);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') addT(); });
+    const TD = $('todos');
+    let sw = null;
+    TD.addEventListener('pointerdown', e => { const t = e.target.closest('.z-td'); if (t) sw = { t, x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId }; });
+    TD.addEventListener('pointermove', e => {
+      if (!sw || e.pointerId !== sw.id) return;
+      sw.dx = Math.min(0, e.clientX - sw.x);
+      if (Math.abs(sw.dx) > 12 && Math.abs(sw.dx) > Math.abs(e.clientY - sw.y)) {
+        if (!sw.moved) { try { sw.t.setPointerCapture(e.pointerId); } catch (_) {} }
+        sw.moved = true; sw.t.style.transform = `translateX(${sw.dx}px)`; sw.t.style.opacity = 1 + sw.dx / 240;
+      }
+    });
+    const swEnd = e => {
+      if (!sw || e.pointerId !== sw.id) return;
+      const s = sw; sw = null;
+      const id = s.t.dataset.id;
+      if (s.moved) {
+        if (s.dx < -90) {
+          todoOv[id] = { gone: true }; renderTodos();
+          T.todos.remove(id).catch(() => { delete todoOv[id]; renderTodos(); toast('Löschen fehlgeschlagen'); });
+        } else { s.t.style.transform = ''; s.t.style.opacity = ''; }
+        return;
+      }
+      if (e.type === 'pointercancel' || !id) return;
+      const x = todoList(curL).find(t => t.id === id); if (!x) return;
+      if (e.target.closest('.z-who')) {
+        const who = { g: 'd', d: 'i', i: 'g' }[x.who] || 'g';
+        todoOv[id] = { ...(todoOv[id] || {}), who }; renderTodos();
+        T.todos.update(id, { who }).catch(() => toast('Speichern fehlgeschlagen'));
+      } else {
+        todoOv[id] = { ...(todoOv[id] || {}), done: !x.done }; renderTodos();
+        T.todos.update(id, { done: !x.done }).catch(() => toast('Speichern fehlgeschlagen'));
+      }
+    };
+    TD.addEventListener('pointerup', swEnd);
+    TD.addEventListener('pointercancel', swEnd);
+
+    // Wecker: Zeit antippen = ändern, Schalter/Tage antippen, nach links wischen = löschen
+    const AL = qa('.z-alist', $('p-alarm'))[0];
+    const tp = $('timepick');
+    let tpFor = null, asw = null, alSwiped = false;
+    AL.addEventListener('click', e => {
+      if (alSwiped) { alSwiped = false; return; }
+      const card = e.target.closest('.z-al'), id = card?.dataset.id;
+      if (e.target.closest('.z-addal')) {
+        saveAlarm(w => w.alarms.push({ id: 'a' + Date.now().toString(36), zeit: '7:00', bis: '', alle: 0, tage: [0, 1, 2, 3, 4], an: true, titel: 'Wecker', ton: true }));
+        return;
+      }
+      if (!card) return;
+      if (e.target.closest('.z-sw')) { saveAlarm(w => { const a = w.alarms.find(x => x.id === id); a.an = !a.an; }); return; }
+      const d = e.target.closest('[data-day]');
+      if (d) { saveAlarm(w => { const a = w.alarms.find(x => x.id === id), n = +d.dataset.day; a.tage = a.tage.includes(n) ? a.tage.filter(x => x !== n) : [...a.tage, n].sort(); }); return; }
+      if (e.target.closest('[data-time]')) {
+        tpFor = id;
+        tp.value = W().alarms.find(x => x.id === id).zeit.padStart(5, '0');
+        try { tp.showPicker(); } catch (_) { tp.focus(); tp.click(); }
+      }
+    });
+    tp.addEventListener('change', () => {
+      if (!tpFor || !tp.value) return;
+      const [h, m] = tp.value.split(':').map(Number), id = tpFor;
+      saveAlarm(w => {
+        const a = w.alarms.find(x => x.id === id); if (!a) return;
+        const span = a.bis ? toMin(a.bis) - toMin(a.zeit) : 0;
+        a.zeit = `${h}:${pad(m)}`;
+        if (a.bis) a.bis = fmtMin(h * 60 + m + span);
+      });
+    });
+    AL.addEventListener('pointerdown', e => { const c = e.target.closest('.z-al'); if (c && !e.target.closest('.z-sw,[data-day]')) asw = { c, x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId }; });
+    AL.addEventListener('pointermove', e => {
+      if (!asw || e.pointerId !== asw.id) return;
+      asw.dx = Math.min(0, e.clientX - asw.x);
+      if (Math.abs(asw.dx) > 14 && Math.abs(asw.dx) > Math.abs(e.clientY - asw.y)) {
+        if (!asw.moved) { try { asw.c.setPointerCapture(e.pointerId); } catch (_) {} }
+        asw.moved = true; asw.c.style.transform = `translateX(${asw.dx}px)`;
+      }
+    });
+    const aEnd = e => {
+      if (!asw || e.pointerId !== asw.id) return;
+      const s = asw; asw = null;
+      if (!s.moved) return;
+      alSwiped = true; setTimeout(() => { alSwiped = false; }, 50);
+      if (s.dx < -110) { saveAlarm(w => { w.alarms = w.alarms.filter(x => x.id !== s.c.dataset.id); }); toast('Wecker gelöscht'); }
+      else s.c.style.transform = '';
+    };
+    AL.addEventListener('pointerup', aEnd);
+    AL.addEventListener('pointercancel', aEnd);
+    $('vor').addEventListener('input', () => { $('vl').textContent = $('vor').value + ' Min'; });
+    $('vor').addEventListener('change', () => saveAlarm(w => { w.vorlauf = +$('vor').value; }));
+    $('tone').addEventListener('click', e => { const t = e.target.closest('#zh-tone > div'); if (t) saveAlarm(w => { w.ton = t.textContent; }); });
+    $('skip').addEventListener('click', () => {
+      const tm = new Date(); tm.setDate(tm.getDate() + 1);
+      saveAlarm(w => { w.aussetzen = w.aussetzen === iso(tm) ? '' : iso(tm); });
+    });
+    $('testring').addEventListener('click', openRing);
+    $('snooze').addEventListener('click', () => { sn++; alarmAt = new Date(alarmAt.getTime() + 6e5); $('rclock').textContent = fmt(alarmAt); rupd(); });
+    const stp = $('stop'), sf = $('sfill');
+    stp.addEventListener('pointerdown', e => {
+      stp.setPointerCapture(e.pointerId); pr = 0; clearInterval(holdT);
+      holdT = setInterval(() => {
+        pr += 4; sf.style.width = pr + '%';
+        if (pr >= 100) { clearInterval(holdT); $('ring').classList.add('z-calm'); sf.style.width = '0'; $('ringtxt').textContent = 'Wecker aus · ' + (sn ? sn + '× geschlummert' : 'direkt aufgestanden'); }
+      }, 40);
+    });
+    const cancel = () => { clearInterval(holdT); if (pr < 100) { pr = 0; sf.style.width = '0'; } };
+    stp.addEventListener('pointerup', cancel); stp.addEventListener('pointerleave', cancel);
+    $('todash').addEventListener('click', () => { closeRing(); go('start'); });
+
+    // Einstellungen in Zuhause
+    $('perf').addEventListener('click', () => {
+      const on = !$('perf').classList.contains('z-on');
+      try { localStorage.setItem('wir-perf', on ? '1' : '0'); } catch (_) {}
+      applyPerf(); toast(on ? 'Leistungsmodus an' : 'Leistungsmodus aus');
+    });
+    $('night').addEventListener('click', () => {
+      local.night = !local.night; $('night').classList.toggle('z-on', local.night);
+      try { localStorage.setItem('zh-night', local.night ? '1' : '0'); } catch (_) {}
+      tick();
+    });
+    $('night').classList.toggle('z-on', local.night);
+    qa('#zh-saverseg > div').forEach(x => x.classList.toggle('z-on', parseInt(x.textContent) === local.saverMin));
+    $('saverseg').addEventListener('click', e => {
+      const t = e.target.closest('#zh-saverseg > div'); if (!t) return;
+      qa('#zh-saverseg > div').forEach(x => x.classList.toggle('z-on', x === t));
+      local.saverMin = parseInt(t.textContent);
+      try { localStorage.setItem('zh-saver', local.saverMin); } catch (_) {}
+      idle();
+    });
+    $('savertest').addEventListener('click', e => { e.stopPropagation(); $('saver').classList.add('z-on'); });
+    $('saver').addEventListener('click', e => { e.stopPropagation(); $('saver').classList.remove('z-on'); idle(); });
+    host.addEventListener('pointerdown', idle);
+    host.addEventListener('keydown', idle);
+  }
+
+  // ---------------------------------------------------------------- Status (Testmodus / verbunden)
+  function renderStatus() {
+    const m = S.meta, stale = !m || Date.now() - (m.beat || 0) > 95000;
+    const bad = stale || (m.mode !== 'test' && !m.connected);
+    const txt = stale ? 'offline' : m.mode === 'test' ? 'Testmodus' : m.connected ? 'verbunden' : 'getrennt';
+    qa('.z-devhd .z-state').forEach(x => { x.textContent = txt; x.classList.toggle('z-off', bad); });
+    const live = qa('.z-live')[0]; if (live) { live.title = txt; live.classList.toggle('z-off', bad); }
+    const rows = qa('#zh-p-set .z-srow');
+    if (rows[4]) {
+      rows[4].querySelector('small').textContent = stale ? 'Dienst nicht erreichbar' : m.mode === 'test' ? 'Testmodus · simulierte Daten' : (m.connected ? 'echte Daten' : 'getrennt: ' + (m.error || ''));
+      rows[4].querySelector('.z-state').textContent = stale ? 'offline' : m.mode === 'test' ? 'bereit' : m.connected ? 'verbunden' : 'getrennt';
+      rows[4].querySelector('.z-state').classList.toggle('z-off', bad);
+    }
+    if (rows[5]) rows[5].querySelector('small').textContent = 'angemeldet als ' + (window.WIR_LOOK?.me?.()?.name || '…');
+    const info = qa('#zh-p-set .z-info')[0];
+    if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : 'Verbunden mit Home Assistant.';
+  }
+
+  // ---------------------------------------------------------------- Zeichnen
+  function render() {
+    if (!built || !cfg()) return;
+    renderLamps(); renderDevs(); renderRoutines(); renderTV(); renderScenes(); renderFacts(); renderChips();
+    renderMonth(); renderAgenda(); renderTodos(); renderAlarm(); renderStatus();
+  }
+  // Realtime-Änderung: optimistische Werte verwerfen, sobald das Gerät selbst etwas meldet
+  const prev = {};
+  function onChange() {
+    for (const [id, s] of Object.entries(S.entities)) {
+      const sig = s.state + '|' + JSON.stringify(s.a);
+      if (prev[id] !== undefined && prev[id] !== sig && ov[id] && !(dr && dr.l.entity_id === id)) delete ov[id];
+      prev[id] = sig;
+    }
+    for (const id of Object.keys(todoOv)) {
+      const t = S.todos.find(x => x.id === id), o = todoOv[id];
+      if (!t || ((o.done === undefined || o.done === t.done) && (o.who === undefined || o.who === t.who) && !o.gone)) delete todoOv[id];
+    }
+    if (sceneOv && S.meta?.scene === sceneOv) sceneOv = null;
+    if (active) render();
+  }
+
+  // ---------------------------------------------------------------- Lebenszyklus
+  let tickT = 0, progT = 0;
+  function activate() {
+    if (active) return;
+    active = true;
+    build();
+    host.classList.remove('z-sleep');
+    applyLayout();
+    tick(); render();
+    T.start(onChange).catch(err => { console.error('Zuhause', err); toast('Zuhause ist gerade nicht erreichbar'); });
+    tickT = setInterval(tick, 10000);
+    progT = setInterval(() => { if (page === 'tv' && tvView()?.playing) renderTV(); }, 5000);
+    idle();
+    measureFps();
+  }
+  function deactivate() {
+    if (!active) return;
+    active = false;
+    T.stop();
+    clearInterval(tickT); clearInterval(progT); clearTimeout(idleT); clearTimeout(toastT); clearTimeout(volTimer);
+    if (fpsRaf) { cancelAnimationFrame(fpsRaf); fpsRaf = 0; }
+    closeRing();
+    $('saver')?.classList.remove('z-on');
+    host.classList.add('z-sleep');           // nichts mehr zeichnen (auch keine Animationen), solange unsichtbar
+    document.body.classList.remove('zh-full');
+  }
+  const visible = () => !!document.getElementById('s-zuhause')?.classList.contains('active') && !document.hidden && !!window.WIR_PB?.authStore?.isValid;
+  const sync = () => (visible() ? activate() : deactivate());
+  document.addEventListener('wir:show', sync);
+  document.addEventListener('visibilitychange', sync);
+  mqTab.addEventListener('change', () => { if (built) applyLayout(); });
+  host.classList.add('z-sleep');
+
+  // Leistungsmodus gilt für die ganze App (Schalter auch in den Einstellungen der Wir-App, gleiche Speicherung)
+  applyPerf();
+  const perfSw = document.getElementById('perfSwitch');
+  if (perfSw) {
+    perfSw.checked = perfOn();
+    perfSw.addEventListener('change', () => {
+      try { localStorage.setItem('wir-perf', perfSw.checked ? '1' : '0'); } catch (_) {}
+      applyPerf();
     });
   }
 })();

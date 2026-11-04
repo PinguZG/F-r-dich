@@ -1054,9 +1054,12 @@
   }
 
   // Ziel aus der URL (/#go=...) – wird vom Service Worker beim Öffnen gesetzt
-  const startGo = new URLSearchParams(location.hash.slice(1)).get('go');
-  if (startGo) history.replaceState(null, '', location.pathname + location.search);
+  // /#zuhause (Wandtablet) öffnet Zuhause direkt und bleibt in der Adresse stehen (auch nach Neuladen)
+  const zhLink = location.hash === '#zuhause';
+  let startGo = zhLink ? 's-zuhause' : new URLSearchParams(location.hash.slice(1)).get('go');
+  if (startGo && !zhLink) history.replaceState(null, '', location.pathname + location.search);
   window.addEventListener('hashchange', () => {
+    if (location.hash === '#zuhause') { if (pb.authStore.isValid && started) goTo('s-zuhause'); else startGo = 's-zuhause'; return; }
     const go = new URLSearchParams(location.hash.slice(1)).get('go');
     if (!go) return;
     history.replaceState(null, '', location.pathname + location.search);

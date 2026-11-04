@@ -20,6 +20,7 @@
     lavendel:    '#f8f2ff',
     glut:        '#090d1c',
     rosenacht:   '#140a16',
+    aurora:      '#06070b',
   };
   function applyTheme(t) {
     if (!THEMES[t]) t = 'rose';

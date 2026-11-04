@@ -157,6 +157,28 @@ html[data-theme="rosenacht"]{
   --swatch:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df);
 }
 
+/* Aurora (04.11.2026): fast schwarzer Grund, Polarlicht Türkis/Violett/Pink, dunkle Karten mit feinen Rändern (Vorlage Zuhause) */
+html[data-theme="aurora"]{
+  color-scheme: dark;
+  --bg1:#06070b; --bg2:#07080e; --bg3:#0b0c16;
+  --ink:#f2f3f7; --ink-soft:#a3a8ba; --ink-faint:#5a5f70;
+  --accent:#7b5cff; --accent2:#2fd4c4; --accent-ink:#fff;
+  --accent3:#2fd4c4; --accent4:#ff6fb5;
+  --glass:rgba(255,255,255,.045); --glass-strong:rgba(255,255,255,.09); --glass-border:rgba(255,255,255,.08);
+  --shadow:0,0,0;
+  --input-bg:rgba(255,255,255,.05); --input-ink:#f2f3f7; --placeholder:#6b7083;
+  --liquid1:#ff6fb5; --liquid2:#7b5cff;
+  --glow:#7b5cff; --glow2:#2fd4c4;
+  --paper:#f4f2fb; --paper-line:#dcd6f2; --paper-ink:#1d1640; --paper-margin:#9d86ff;
+  --chip:rgba(255,255,255,.07);
+  --card:rgba(255,255,255,.04); --card-line:rgba(255,255,255,.08);
+  --ok:#2fd4c4; --warn:#ffb36b;
+  --cloud1:rgba(47,212,196,.2); --cloud2:rgba(123,92,255,.24); --cloud3:rgba(255,95,168,.14); --cloud4:rgba(123,92,255,.12);
+  --sc-ink:#fff; --sc-mix:75%; --orb-off:rgba(255,255,255,.04);
+  --switch-on:#7b5cff; --clock-to:#c9c3ff;
+  --swatch:linear-gradient(135deg,#06070b,#2fd4c4,#7b5cff,#ff6fb5);
+}
+
 /* ---------- Grundlagen ---------- */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 [hidden]{display:none!important}
@@ -383,6 +405,7 @@ textarea.mem-input{resize:none;line-height:1.45}
 .swatch[data-theme="pfirsich"] i{background:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b)}
 .swatch[data-theme="lavendel"] i{background:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8)}
 .swatch[data-theme="glut"] i{background:linear-gradient(135deg,#090d1c,#1b2350,#9b6bff,#ff8f3a,#ffc27a)}
+.swatch[data-theme="aurora"] i{background:linear-gradient(135deg,#06070b 10%,#2fd4c4,#7b5cff,#ff6fb5)}
 .swatch[data-theme="rosenacht"] i{background:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df)}
 .swatch.on{color:var(--ink)}
 .swatch.on i{transform:scale(1.06);box-shadow:0 0 0 3px var(--bg1),0 0 0 6px var(--accent),0 8px 18px rgba(var(--shadow),.3)}
