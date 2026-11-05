@@ -739,6 +739,12 @@ const server = http.createServer((req, res) => {
         send(200, { an: tvIsOn(), ms: Date.now() - t0 });
       }, err => send(502, { message: err.message }));
   }
+  // beliebiger ADB-Befehl (nur lokal, zum Untersuchen der Standby-Einstellungen)
+  if (req.method === 'POST' && u.pathname === '/diag/adb') {
+    const command = u.searchParams.get('cmd') || '';
+    if (!intern.adb || !command) return send(400, { message: 'cmd?' });
+    return adb(command, 30000).then(r => send(200, { antwort: r }), err => send(502, { message: err.message }));
+  }
   if (req.method === 'POST' && u.pathname === '/diag/logos') {
     if (!intern.adb || !tvIsOn()) return send(400, { message: 'Fernseher aus oder keine ADB-Entität' });
     return logosRefresh(u.searchParams.get('force') === '1').then(r => send(200, { ergebnis: r }));
