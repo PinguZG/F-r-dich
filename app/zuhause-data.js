@@ -6,7 +6,7 @@
 //   await t.call({ entity_id, service, data, scene, log })     Befehl; wirft Error(.message) bei Ablehnung/Fehler
 //   t.todos.add({ list, text, who }) / .update(id, patch) / .remove(id)
 //   t.settings.save(key, data)
-//   t.state = { config, entities: { [entity_id]: { state, a, changed } }, meta, klima, wetter, kalender,
+//   t.state = { config, entities: { [entity_id]: { state, a, changed } }, meta, klima, wetter, kalender, tv (Titel per ADB),
 //               todos: [ { id, list, text, note, who, done } ], settings: { [key]: data } }
 //
 // Später kommt 'ha-direct' dazu (eigenständige Seite für das Wandtablet, spricht direkt per WebSocket mit Home
@@ -15,7 +15,7 @@
   // ---------------- Transport "wir": PocketBase (home_state, home_todos, home_settings) + POST /api/home/cmd ----------------
   function wirTransport() {
     const pb = window.WIR_PB;
-    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, todos: [], settings: {} };
+    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, tv: null, todos: [], settings: {} };
     let onChange = () => {}, unsubs = [], gen = 0, raf = 0;
 
     const changed = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; onChange(state); }); };
@@ -27,6 +27,7 @@
       else if (k === '_klima') state.klima = d;
       else if (k === '_wetter') state.wetter = d;
       else if (k === '_kalender') state.kalender = d;
+      else if (k === '_tv') state.tv = d;
       else if (deleted) delete state.entities[k];
       else state.entities[k] = d;
     }

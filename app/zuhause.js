@@ -97,8 +97,15 @@
     if (o.app != null) appName = o.app;
     const ai = Math.max(0, tv.apps.findIndex(x => x.name === appName));
     const app = tv.apps[ai] || { name: appName || tv.name, farbe: '#7b5cff', test: '' };
-    if (on) tvHint = false;
-    return { tv, s, a, on, playing, vol, muted, max, ai, app, source: o.source || a.source || '' };
+    // Einschalt-Routine läuft (in wir-home, im HA-Skript oder gerade angetippt) bzw. ist ohne Erfolg zu Ende
+    const m = S.meta || {}, since = t => (t ? Date.now() - Date.parse(t) : Infinity);
+    const starting = !on && (since(m.tv_wake) < 35000 || (tv.an_skript && ent(tv.an_skript)?.state === 'on') || Date.now() - tvStart < 6000);
+    const fail = !on && !starting && (since(m.tv_fail) < 180000 || tvHint);
+    if (on) { tvHint = false; tvStart = 0; }
+    // Titel per ADB (wir-home): nur, wenn er zur laufenden App passt und frisch ist
+    const ti = S.tv && S.tv.paket && on && since(S.tv.at) < 60000 && (!app.paket || pk.length === 0 || S.tv.paket === app.paket || pk.includes(S.tv.paket)) ? S.tv : null;
+    if (ti && o.playing == null) playing = ti.spielt;
+    return { tv, s, a, on, playing, vol, muted, max, ai, app, ti, starting, fail, source: o.source || a.source || '' };
   }
 
   // ---------------------------------------------------------------- Aufbau (einmal)
@@ -157,6 +164,7 @@
     $('hello').textContent = (h < 11 ? 'Guten Morgen' : h < 17 ? 'Hallo' : h < 22 ? 'Guten Abend' : 'Gute Nacht') + ', ihr zwei';
     $('saver').classList.toggle('z-night', local.night && (h >= 22 || h < 6));
     renderFacts();
+    if (cfg()) { renderTV(); tvWatch(); }
   }
   const num = (v, d = 1) => (Number.isFinite(v) ? v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–');
   const val = id => { const v = parseFloat(ent(id)?.state); return Number.isFinite(v) ? v : NaN; };
@@ -342,7 +350,12 @@
     $('p-tv').classList.toggle('z-tvoff', !v.on);
     qa('#zh-p-tv .z-h1, #zh-tvc h3').forEach(x => { x.textContent = tv.name; });
     $('napp').textContent = app.name;
-    $('ntitle').textContent = a.media_series_title || a.media_title || app.test || '';
+    // Titel: per ADB (Serie / Staffel · Folge · Episode bzw. Titel · Untertitel), sonst Cast/HA; Beispieltext nur im Testmodus
+    const ti = v.ti, sf = ti?.staffel ? `Staffel ${ti.staffel} · Folge ${ti.folge}` : '';
+    const serie = ti && sf ? ti.untertitel || '' : '';
+    const titel = ti ? (serie || ti.titel) : a.media_series_title || a.media_title || (S.meta?.mode === 'test' ? app.test : '') || '';
+    const zeile = ti ? (serie ? [sf, ti.titel] : [ti.untertitel]).filter(Boolean).join(' · ') : '';
+    $('ntitle').textContent = titel;
     // Fortschritt (Position läuft seit media_position_updated_at weiter)
     let pos = a.media_position || 0;
     const dur = a.media_duration || 0;
@@ -351,11 +364,13 @@
     const prog = qa('.z-prog', $('p-tv'))[0];
     prog.querySelector('.z-bar i').style.width = dur ? (pos / dur * 100).toFixed(1) + '%' : '0%';
     prog.querySelector(':scope > span').textContent = dur ? `${mmss(pos)} / ${mmss(dur)}` : '';
-    $('nsub').textContent = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
+    const st = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
+    $('nsub').textContent = zeile ? `${zeile} · ${st}` : st;
     setHTML($('pp'), svg(v.playing ? 'pause' : 'play'));
-    $('pwrt').textContent = v.on ? 'Ausschalten' : 'Einschalten';
-    $('offmsg').querySelector('span').textContent = tvHint ? 'Einschalten nicht möglich – Netzwerk-Standby am TV prüfen' : 'Tippen zum Einschalten';
-    $('tvstate').textContent = v.on ? 'An · ' + app.name : 'Aus · Standby';
+    $('pwrt').textContent = v.on ? 'Ausschalten' : v.starting ? 'Startet …' : 'Einschalten';
+    $('offmsg').querySelector('b').textContent = v.starting ? 'Fernseher wird gestartet …' : 'Fernseher ist aus';
+    $('offmsg').querySelector('span').textContent = v.starting ? 'kann bis zu 25 Sekunden dauern' : v.fail ? 'Hat diesmal nicht geklappt – nochmal tippen' : 'Tippen zum Einschalten';
+    $('tvstate').textContent = v.on ? 'An · ' + app.name : v.starting ? 'Startet …' : 'Aus · Standby';
     $('tvstate').classList.toggle('z-off', !v.on);
     qa('.z-ap', A).forEach((x, i) => { x.classList.toggle('z-on', v.on && i === v.ai); x.querySelector('span').textContent = v.on && i === v.ai ? 'läuft' : 'öffnen'; });
     const known = tv.quellen.some(q => q.source === v.source);
@@ -363,7 +378,8 @@
     const pct = v.vol / v.max * 100;
     $('vn').textContent = v.muted ? 'stumm' : v.vol; $('vi').style.width = pct + '%'; $('mute').classList.toggle('z-on', v.muted);
     $('tvc').classList.toggle('z-off', !v.on);
-    $('tvcsub').textContent = v.on ? app.name + (v.playing ? ' · läuft' : ' · pausiert') : 'Aus · tippen für Fernbedienung';
+    $('tvcsub').textContent = v.on ? app.name + (titel && v.ti ? ' · ' + titel : v.playing ? ' · läuft' : ' · pausiert')
+      : v.starting ? 'Fernseher wird gestartet …' : v.fail ? 'Aus · Einschalten hat nicht geklappt' : 'Aus · tippen für Fernbedienung';
     $('tvc-v').style.width = pct + '%'; $('tvc-n').textContent = v.muted ? '–' : v.vol;
     if (page === 'tv') { if (v.on) $('stage').style.setProperty('--z-a1', app.farbe); else $('stage').style.removeProperty('--z-a1'); }
   }
@@ -381,16 +397,30 @@
     else volTimer = setTimeout(() => send(true), 400);
   }
   // Einschalten klappt bei manchen Fernsehern nur mit Netzwerk-Standby – meldet er sich nicht, dezenter Hinweis im Panel
-  let tvHint = false, tvHintT = 0;
+  // Einschalten: wir-home startet die Einschalt-Routine (bis 25 s) – solange "wird gestartet …", danach ggf. dezenter Hinweis
+  let tvHint = false, tvHintT = 0, tvStart = 0;
+  function tvStarting() {
+    tvStart = Date.now(); tvHint = false;
+    clearTimeout(tvHintT);
+    // Rückfall, falls vom Dienst nichts kommt
+    tvHintT = setTimeout(() => { if (active && !tvView()?.on && !tvView()?.starting) { tvHint = true; renderTV(); } }, 40000);
+  }
   function tvPower(on) {
     const v = tvView(); if (!v) return;
-    optimistic(v.tv.entity_id, { on });
+    if (on && v.starting) return;
+    if (on) tvStarting(); else optimistic(v.tv.entity_id, { on: false });
     renderTV();
-    toast(on ? `${v.tv.name} wird eingeschaltet` : `${v.tv.name} aus`);
-    clearTimeout(tvHintT);
-    const fail = () => { if (active && !tvView()?.on) { tvHint = true; delete ov[v.tv.entity_id]; renderTV(); } };
-    call({ entity_id: v.tv.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' }, on).then(ok => { if (on && !ok) fail(); });
-    if (on) tvHintT = setTimeout(fail, 12000);
+    toast(on ? `${v.tv.name} wird gestartet …` : `${v.tv.name} aus`);
+    call({ entity_id: v.tv.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' }, on).then(ok => { if (on && !ok) { tvStart = 0; tvHint = true; if (active) renderTV(); } });
+    if (on) setTimeout(() => { if (active) renderTV(); }, 6500);
+  }
+  // "läuft gerade" mit Titel: wir-home liest ihn nur, solange Zuhause offen ist – alle 30 s melden
+  let watchAt = 0;
+  function tvWatch() {
+    const v = tvView();
+    if (!active || !v?.tv.titel || !v.on || Date.now() - watchAt < 30000) return;
+    watchAt = Date.now();
+    call({ entity_id: v.tv.entity_id, service: 'tv.watch', log: false }, true);
   }
   function volStep(d) {
     const v = tvView(); if (!v) return;
@@ -727,11 +757,13 @@
     $('apps').addEventListener('click', e => {
       const t = e.target.closest('.z-ap'); if (!t) return;
       const v = tvView(), app = v.tv.apps[t.dataset.k], was = v.on;
-      optimistic(v.tv.entity_id, { on: true, playing: true, app: app.name }); renderTV();
-      toast((was ? '' : `${v.tv.name} an · `) + app.name + ' wird geöffnet');
+      // Fernseher aus: wir-home weckt ihn erst (bis 25 s) und öffnet die App danach
+      if (was) optimistic(v.tv.entity_id, { on: true, playing: true, app: app.name }); else { tvStarting(); optimistic(v.tv.entity_id, { app: app.name }); }
+      renderTV();
+      toast((was ? '' : `${v.tv.name} wird gestartet · `) + app.name + (was ? ' wird geöffnet' : ' folgt'));
       call({ entity_id: v.tv.entity_id, service: 'tv.app', data: { app: app.name } }).then(ok => {
-        // läuft die App nach 12 s nicht, ist sie vermutlich nicht installiert (der Fernseher zeigt dann nur die Linkauswahl)
-        if (ok && app.paket) setTimeout(() => { const n = tvView(); if (active && n && n.app.name !== app.name && !n.s?.a?.app_id?.startsWith(app.paket)) toast(app.name + ' nicht gestartet – auf dem Fernseher installiert?'); }, 12000);
+        // läuft die App nach 12 s (nach dem Wecken 40 s) nicht, ist sie vermutlich nicht installiert (der Fernseher zeigt dann nur die Linkauswahl)
+        if (ok && app.paket) setTimeout(() => { const n = tvView(); if (active && n?.on && n.app.name !== app.name && !n.s?.a?.app_id?.startsWith(app.paket)) toast(app.name + ' nicht gestartet – auf dem Fernseher installiert?'); }, was ? 12000 : 40000);
       });
     });
     $('srcs').addEventListener('click', e => {
@@ -963,7 +995,7 @@
       if (!t || ((o.done === undefined || o.done === t.done) && (o.who === undefined || o.who === t.who) && !o.gone)) delete todoOv[id];
     }
     if (sceneOv && S.meta?.scene === sceneOv) sceneOv = null;
-    if (active) render();
+    if (active) { render(); tvWatch(); }
   }
 
   // ---------------------------------------------------------------- Lebenszyklus
@@ -986,6 +1018,7 @@
     active = false;
     T.stop();
     clearInterval(tickT); clearInterval(progT); clearTimeout(idleT); clearTimeout(toastT); clearTimeout(volTimer);
+    watchAt = 0;
     if (fpsRaf) { cancelAnimationFrame(fpsRaf); fpsRaf = 0; }
     closeRing(); closeLamp(); clearTimeout(tvHintT);
     $('saver')?.classList.remove('z-on');

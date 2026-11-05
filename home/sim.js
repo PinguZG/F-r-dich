@@ -61,6 +61,7 @@ class Sim extends EventEmitter {
         media_duration: 2640, media_position: 1120, media_position_updated_at: iso(),
       });
       if (tv.remote) put(tv.remote, 'on', { friendly_name: tv.name, current_activity: app?.paket || '' });
+      if (tv.an_skript) put(tv.an_skript, 'off', { friendly_name: 'Fernseher an' });
       if (tv.cast) put(tv.cast, 'playing', { friendly_name: tv.name + ' (Cast)', app_name: app?.name || '', media_title: app?.test || '' });
     }
     const DC = { fenster: 'window', tuer: 'door', bewegung: 'motion' };

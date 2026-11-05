@@ -115,8 +115,10 @@ function readConfig() {
 
 // öffentlicher Teil der Konfiguration für die App (enthält keine Geheimnisse)
 function publicConfig() {
-  const { allowIds, ...rest } = C.cfg;
-  return { ...rest, fehler: C.errors };
+  const { allowIds, fernseher, ...rest } = C.cfg;
+  let tv = null;
+  if (fernseher) { const { intern: _, ...f } = fernseher; tv = { ...f, titel: !!fernseher.intern.adb }; }
+  return { ...rest, fernseher: tv, fehler: C.errors };
 }
 
 // ----------------------------------------------------------------------
@@ -140,6 +142,9 @@ function slim(s) {
 function onState(s) {
   const was = states.get(s.entity_id);
   states.set(s.entity_id, s);
+  // interne Entitäten (ADB) nie nach home_state – nur die ausgewertete Antwort
+  if (s.entity_id === intern.adb) { if (s.attributes?.adb_response !== was?.attributes?.adb_response) tvMedia(s.attributes?.adb_response); return; }
+  tvWatchState(s.entity_id, was);
   // Wecker-Helfer tauchen in HA auf (Paket gerade eingespielt) -> Einstellungen übertragen
   if (C.allow.get(s.entity_id)?.kind === 'wecker' && (!was || was.missing) && !s.missing) weckerSoon();
   put(s.entity_id, slim(s));
@@ -171,6 +176,7 @@ function startBackend() {
       klimaBackfill().catch(err => log('Klima-Verlauf', err.message));
       weckerSoon();
       kalender().catch(err => log('Kalender:', err.message));
+      tvDiscover().catch(err => log('Fernseher suchen:', err.message));
     }
   });
   backend.start();
@@ -352,6 +358,147 @@ async function weckerSync() {
 }
 
 // ----------------------------------------------------------------------
+// Fernseher zuverlässig einschalten: im Standby schläft das Netzwerk des Fernsehers, media_player.turn_on allein
+// klappt dann selten. Darum Magic Packet (Wake on LAN) + turn_on (+ ADB-Wakeup) alle 2 s, bis er an ist (max. 25 s).
+// Normalweg ist das HA-Skript fernseher.an_skript (script.wir_tv_an aus ha/packages/wir.yaml); fehlt es, macht
+// wir-home dasselbe selbst. Läuft eine Einschalt-Routine, steht in _meta "tv_wake" (Zeitpunkt) – die App zeigt dann
+// "Fernseher wird gestartet …"; klappt es nicht, "tv_fail" (dezenter Hinweis).
+// ----------------------------------------------------------------------
+const TV_OFF = ['off', 'standby', 'unavailable', 'unknown'];
+const WAKE_MS = 25000, WAKE_STEP = 2000;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const intern = { adb: '', wol: '' };      // gefundene interne Entitäten (nie an die App)
+const tvIsOn = () => { const tv = C.cfg.fernseher; return !!tv && !!states.get(tv.entity_id) && !TV_OFF.includes(states.get(tv.entity_id).state); };
+const skriptDa = () => { const id = C.cfg.fernseher?.an_skript; return !!id && !!states.get(id) && !states.get(id).missing; };
+
+// ADB- und Wake-on-LAN-Entität: aus der Konfiguration oder "auto" (ADB = media_player mit adb_response, WOL = button.wake_on_lan_…)
+async function tvDiscover() {
+  const tv = C.cfg.fernseher;
+  if (!tv || !backend.overview) return;
+  const want = tv.intern;
+  let found = { adb: want.adb === 'auto' ? '' : want.adb, wol: want.wol === 'auto' ? '' : want.wol };
+  if (want.adb === 'auto' || want.wol === 'auto') {
+    const { entities } = await backend.overview();
+    if (want.adb === 'auto') found.adb = entities.find(e => e.id.startsWith('media_player.') && e.attrs.includes('adb_response'))?.id || '';
+    if (want.wol === 'auto') found.wol = entities.find(e => e.id.startsWith('button.wake_on_lan'))?.id || '';
+  }
+  if (found.adb !== intern.adb || found.wol !== intern.wol) {
+    log('Fernseher intern:', 'ADB', found.adb || '–', '· WOL', found.wol || '–');
+    Object.assign(intern, found);
+    backend.setConfig(C.cfg, intern.adb ? [intern.adb] : []);
+    put('_config', publicConfig());
+    if (!intern.adb) put('_tv', {});
+  }
+}
+
+let waking = null;
+// variante: 'auto' (Skript, sonst selbst alles), zum Messen auch 'tv' (nur turn_on), 'wol', 'wol_adb', 'skript'
+function tvWake(variante = 'auto') {
+  if (waking) return waking;
+  const tv = C.cfg.fernseher, t0 = Date.now();
+  const fire = (d, s, id) => { if (id) backend.call(d, s, [id], {}).catch(() => {}); };
+  const useSkript = variante === 'skript' || (variante === 'auto' && skriptDa());
+  setMeta({ tv_wake: new Date().toISOString(), tv_fail: '' });
+  waking = (async () => {
+    if (useSkript) fire('script', 'turn_on', tv.an_skript);
+    for (let n = 0; Date.now() - t0 < WAKE_MS; n++) {
+      if (!useSkript) {
+        if (variante !== 'tv') fire('button', 'press', intern.wol);
+        fire('media_player', 'turn_on', tv.entity_id);
+        if (['auto', 'wol_adb'].includes(variante)) fire('media_player', 'turn_on', intern.adb);
+      }
+      const until = t0 + (n + 1) * WAKE_STEP;
+      while (Date.now() < until && !tvIsOn()) await sleep(100);
+      if (tvIsOn()) return Date.now() - t0;
+    }
+    return 0;
+  })().then(ms => {
+    log(ms ? `Fernseher an nach ${(ms / 1000).toFixed(1)} s (${useSkript ? 'Skript' : variante})` : `Fernseher nach ${WAKE_MS / 1000} s nicht an (${useSkript ? 'Skript' : variante})`);
+    setMeta({ tv_wake: '', tv_fail: ms ? '' : new Date().toISOString() });
+    return ms;
+  }).finally(() => { waking = null; });
+  return waking;
+}
+// Skript läuft in HA (z. B. aus "Filmabend") -> App zeigt "wird gestartet …", Ende ohne Erfolg -> Hinweis
+let skriptT0 = 0;
+function tvWatchState(id, was) {
+  const tv = C.cfg.fernseher;
+  if (!tv || waking) return;
+  const s = states.get(id);
+  if (id === tv.an_skript && s.state === 'on' && was?.state !== 'on') { skriptT0 = Date.now(); setMeta({ tv_wake: new Date().toISOString(), tv_fail: '' }); }
+  if (id === tv.an_skript && s.state === 'off' && was?.state === 'on' && skriptT0) {
+    const ms = Date.now() - skriptT0; skriptT0 = 0;
+    log(tvIsOn() ? `Fernseher an (HA-Skript, ${(ms / 1000).toFixed(1)} s)` : 'Fernseher: HA-Skript ohne Erfolg beendet');
+    setMeta({ tv_wake: '', tv_fail: tvIsOn() ? '' : new Date().toISOString() });
+  }
+  if (id === tv.entity_id && tvIsOn() && meta.tv_fail) setMeta({ tv_fail: '' });
+}
+
+// ----------------------------------------------------------------------
+// "Läuft gerade" mit Titel: wir-home liest per ADB die Media-Session des Fernsehers – nur diesen einen festen
+// Lese-Befehl, nur solange der Fernseher an ist und Zuhause offen ist (die App meldet sich per "tv.watch" alle 30 s),
+// höchstens alle 10 s. Ergebnis in home_state "_tv". Die App darf ADB nicht benutzen.
+// ----------------------------------------------------------------------
+const ADB_CMD = 'dumpsys media_session';
+const POLL_MS = 10000, WATCH_MS = 45000;
+let watchUntil = 0, adbBusy = false, adbErr = '', lastRaw = '', adbLast = 0;
+
+// dumpsys media_session -> Sitzungen (Paket, Zustand, Titel/Untertitel/Beschreibung)
+function parseSessions(raw) {
+  const out = [];
+  const blocks = String(raw || '').split(/\n(?=\s*package=)/).slice(1);
+  for (const b of blocks) {
+    const g = re => (b.match(re) || [])[1];
+    const pk = g(/package=([\w.]+)/);
+    if (!pk) continue;
+    const st = Number(g(/state=PlaybackState \{state=(\d+)/) ?? -1);
+    let desc = g(/metadata:[^\n]*?description=([^\n]*)/) || '';
+    const parts = desc.split(', ').map(x => (x === 'null' ? '' : x.trim()));
+    // MediaDescription.toString() = "Titel, Untertitel, Beschreibung" (Titel kann selbst Kommas enthalten)
+    const beschreibung = parts.length >= 3 ? parts.pop() : '';
+    const untertitel = parts.length >= 2 ? parts.pop() : '';
+    const titel = parts.join(', ');
+    out.push({ paket: pk, aktiv: /active=true/.test(b), zustand: st, titel, untertitel, beschreibung });
+  }
+  return out;
+}
+// Staffel/Folge aus Texten wie "S2:F4", "S2 E4", "Staffel 2, Folge 4", "Season 2 Episode 4"
+function staffelFolge(t) {
+  const m = String(t || '').match(/\b(?:S|Staffel|Season)\s*(\d{1,2})\s*[:.,·|-]?\s*(?:E|F|Folge|Episode|Ep\.?)\s*(\d{1,3})\b/i);
+  return m ? { staffel: +m[1], folge: +m[2] } : null;
+}
+function mediaInfo(raw) {
+  const all = parseSessions(raw).filter(s => s.titel || s.untertitel);
+  // spielend (3) vor pausiert (2) vor dem Rest, aktive Sitzung bevorzugt
+  const rank = s => (s.zustand === 3 ? 4 : s.zustand === 2 ? 2 : 0) + (s.aktiv ? 1 : 0);
+  const s = all.sort((a, b) => rank(b) - rank(a))[0];
+  if (!s || rank(s) < 2) return {};
+  const sf = staffelFolge(s.titel) || staffelFolge(s.untertitel) || staffelFolge(s.beschreibung);
+  return { paket: s.paket, titel: s.titel.slice(0, 120), untertitel: s.untertitel.slice(0, 120), staffel: sf?.staffel || 0, folge: sf?.folge || 0,
+    spielt: s.zustand === 3, at: new Date().toISOString() };
+}
+function tvMedia(raw) {
+  if (typeof raw !== 'string') return;
+  lastRaw = raw;
+  put('_tv', tvIsOn() ? mediaInfo(raw) : {});
+}
+async function tvPoll(force) {
+  if (!intern.adb || !meta.connected || adbBusy) return;
+  if (!tvIsOn()) { if (cache.get('_tv') !== '{}') put('_tv', {}); return; }
+  if (!force && Date.now() > watchUntil) return;
+  adbBusy = true; adbLast = Date.now();
+  try {
+    await backend.call('androidtv', 'adb_command', [intern.adb], { command: ADB_CMD });
+    const s = states.get(intern.adb);
+    if (s) tvMedia(s.attributes?.adb_response);
+    adbErr = '';
+  } catch (err) {
+    if (err.message !== adbErr) log('Titel per ADB nicht lesbar:', err.message);   // jede Fehlerart nur einmal
+    adbErr = err.message;
+  } finally { adbBusy = false; }
+}
+
+// ----------------------------------------------------------------------
 // Befehle von PocketBase (nur localhost)
 // ----------------------------------------------------------------------
 const hits = new Map(); // user -> Zeitstempel
@@ -391,8 +538,27 @@ async function handle(cmd) {
     calls = sz.entity_id ? conf.check(C, { entity_id: sz.entity_id, service: sz.entity_id.split('.')[0] + '.turn_on' }, states).calls
       : sz.aktionen.flatMap(a => conf.check(C, a, states).calls);
     label = `Szene ${sz.name}`;
-  } else ({ calls, label } = conf.check(C, cmd, states));
+  }
+  let wake = false, watch = false;
+  if (!sz) ({ calls, label, wake, watch } = conf.check(C, cmd, states));
+  if (watch) { watchUntil = Date.now() + WATCH_MS; if (cache.get('_tv') === undefined || Date.now() - adbLast > POLL_MS) tvPoll(); return { ok: true, label: '' }; }
   if (!meta.connected) { const e = new Error(meta.mode === 'test' ? 'Testmodus startet noch' : 'Home Assistant nicht verbunden'); e.status = 503; throw e; }
+  // Fernseher einschalten -> Einschalt-Routine (läuft im Hintergrund weiter, die App sieht den Fortschritt in _meta)
+  const tv = C.cfg.fernseher;
+  if (tv && meta.mode === 'live' && calls.length === 1 && calls[0].domain === 'media_player' && calls[0].service === 'turn_on' && calls[0].entity_ids[0] === tv.entity_id && !tvIsOn()) {
+    tvWake();
+    return { ok: true, label };
+  }
+  // App bei ausgeschaltetem Fernseher: erst wecken, dann die App starten
+  if (wake && meta.mode === 'live') {
+    tvWake().then(async ms => {
+      if (!ms) return;
+      await sleep(1500);
+      for (const c of calls) await backend.call(c.domain, c.service, c.entity_ids, c.data).catch(err => log('App-Start nach Einschalten:', err.message));
+    });
+    return { ok: true, label };
+  }
+  if (wake) calls.unshift({ domain: 'media_player', service: 'turn_on', entity_ids: [tv.entity_id], data: {}, optional: true });
   for (const c of volumeSteps(calls)) {
     if (c.wait) await new Promise(r => setTimeout(r, c.wait));
     try { await backend.call(c.domain, c.service, c.entity_ids, c.data); }
@@ -414,7 +580,28 @@ const server = http.createServer((req, res) => {
   // Diagnose (nur lokal auf dem VPS, z. B. per ssh + curl): Fernseher-nahe Entitäten
   if (req.method === 'GET' && req.url === '/diag/entities') {
     if (!backend?.overview) return send(400, { message: 'nur im echten Modus' });
-    return backend.overview().then(r => send(200, r), err => send(502, { message: err.message }));
+    return backend.overview().then(r => send(200, { intern, ...r }), err => send(502, { message: err.message }));
+  }
+  // Diagnose Fernseher: Einschalten messen (?v=auto|tv|wol|wol_adb|skript), Ausschalten, Media-Session lesen
+  const u = new URL(req.url, 'http://x');
+  if (req.method === 'POST' && u.pathname === '/diag/tv-an') {
+    if (meta.mode !== 'live' || !C.cfg.fernseher) return send(400, { message: 'nur im echten Modus' });
+    if (tvIsOn()) return send(409, { message: 'Fernseher ist schon an' });
+    const v = u.searchParams.get('v') || 'auto';
+    if (!['auto', 'tv', 'wol', 'wol_adb', 'skript'].includes(v)) return send(400, { message: 'Variante?' });
+    return tvWake(v).then(ms => send(200, { ok: !!ms, ms, variante: v, skript: skriptDa(), intern }));
+  }
+  if (req.method === 'POST' && u.pathname === '/diag/tv-aus') {
+    const tv = C.cfg.fernseher, t0 = Date.now();
+    return backend.call('media_player', 'turn_off', [tv.entity_id], {}).then(async () => {
+      while (tvIsOn() && Date.now() - t0 < 15000) await sleep(200);
+      send(200, { aus: !tvIsOn(), ms: Date.now() - t0 });
+    }, err => send(502, { message: err.message }));
+  }
+  if (req.method === 'POST' && u.pathname === '/diag/medien') {
+    if (!intern.adb) return send(400, { message: 'keine ADB-Entität', intern });
+    adbErr = '';
+    return tvPoll(true).then(() => send(200, { fehler: adbErr, info: lastRaw ? mediaInfo(lastRaw) : null, sitzungen: parseSessions(lastRaw), roh: lastRaw.slice(0, 8000) }));
   }
   if (req.method !== 'POST' || req.url !== '/cmd') return send(404, { message: 'Nicht gefunden' });
   let body = '';
@@ -460,6 +647,9 @@ async function main() {
   setInterval(kal, 10 * 60000);
   // Wecker zur Sicherheit alle 15 Minuten abgleichen (falls ein Hinweis von PocketBase verloren ging)
   setInterval(() => weckerSoon(0), 15 * 60000);
+  // Fernseher: Titel abfragen (nur wenn Zuhause offen und TV an), interne Entitäten nachsuchen, solange sie fehlen
+  setInterval(() => tvPoll(), POLL_MS);
+  setInterval(() => { if (meta.connected && (!intern.adb || !intern.wol)) tvDiscover().catch(() => {}); }, 2 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
   let reloadTimer = null;
@@ -473,7 +663,7 @@ async function main() {
         klimaTrim();
         log('Konfiguration neu geladen');
         if (meta.mode === 'test') for (const s of backend.states.values()) onState(s);
-        wx(); kal();
+        wx(); kal(); tvDiscover().catch(() => {});
       } catch (err) { log('Konfiguration fehlerhaft, alte bleibt aktiv:', err.message); }
     }, 500);
   });

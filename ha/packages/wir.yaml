@@ -75,15 +75,47 @@ script:
       - action: light.turn_off
         target: { entity_id: light.kuche }
         data: { transition: 4 }
-      # Fernseher an + Netflix (Fehler hier sollen das Licht nicht stören)
-      - action: media_player.turn_on
-        target: { entity_id: media_player.fernseher }
+      # Fernseher an (zuverlässig, wartet bis er an ist, max. 25 s) + Netflix (Fehler hier sollen das Licht nicht stören)
+      - action: script.wir_tv_an
         continue_on_error: true
-      - delay: { seconds: 4 }
+      - delay: { seconds: 2 }
       - action: remote.turn_on
         target: { entity_id: remote.fernseher }
         data: { activity: "netflix://" }
         continue_on_error: true
+
+  # Fernseher zuverlässig einschalten: im Standby schläft sein Netzwerk, media_player.turn_on allein klappt dann selten.
+  # Alle 2 s: Magic Packet (Wake on LAN) + turn_on (+ ADB-Wakeup), bis media_player.fernseher an ist – höchstens 25 s.
+  # Wake-on-LAN- und ADB-Entität werden über ihre Integration gefunden (so steht die MAC-Adresse nicht in dieser Datei).
+  wir_tv_an:
+    alias: "Wir: Fernseher an"
+    icon: mdi:television
+    mode: single
+    max_exceeded: silent
+    variables:
+      wol: "{{ integration_entities('wake_on_lan') | select('match', 'button.') | list }}"
+      adb: "{{ integration_entities('androidtv') | select('match', 'media_player.') | list }}"
+      aus: ["off", "standby", "unavailable", "unknown"]
+      t0: "{{ now().timestamp() }}"
+    sequence:
+      - repeat:
+          sequence:
+            - if: "{{ wol | count > 0 }}"
+              then:
+                - action: button.press
+                  target: { entity_id: "{{ wol }}" }
+                  continue_on_error: true
+            - action: media_player.turn_on
+              target: { entity_id: media_player.fernseher }
+              continue_on_error: true
+            - if: "{{ adb | count > 0 }}"
+              then:
+                - action: media_player.turn_on
+                  target: { entity_id: "{{ adb }}" }
+                  continue_on_error: true
+            - wait_template: "{{ states('media_player.fernseher') not in aus }}"
+              timeout: 2
+          until: "{{ states('media_player.fernseher') not in aus or now().timestamp() - t0 >= 25 }}"
 
   wir_lesen:
     alias: "Wir: Lesen"

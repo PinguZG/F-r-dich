@@ -38,11 +38,17 @@
   // Startlinks aus https://www.home-assistant.io/integrations/androidtv_remote/ und der Community-Liste
   // "Android TV Remote – App Links/Deep Linking" (community.home-assistant.io/t/567921).
   // "quellen" = Eingänge für select_source, genau so geschrieben wie in HA (Android TV Remote meldet keine -> ausgeblendet).
+  // "an_skript" = Einschalt-Skript aus dem HA-Paket (Magic Packet + turn_on alle 2 s, bis er an ist) – Ein-Knopf, App-Kacheln
+  // und Filmabend schalten darüber ein. "adb" / "wol" = Android-Debug-Bridge- bzw. Wake-on-LAN-Entität, NUR für wir-home
+  // (Titel lesen, wecken), nie für die App. "auto" = wir-home sucht sie selbst in HA, sonst entity_id eintragen.
   "fernseher": {
     "name": "Fernseher",
     "entity_id": "media_player.fernseher",
     "remote": "remote.fernseher",
     "cast": "media_player.mitv_mssp3",
+    "an_skript": "script.wir_tv_an",
+    "adb": "auto",
+    "wol": "auto",
     "max_lautstaerke": 100,
     "apps": [
       { "name": "Netflix",       "farbe": "#e50914", "start": "netflix://",                  "paket": "com.netflix.ninja",                 "test": "Serie · Staffel 2, Folge 4" },

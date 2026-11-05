@@ -27,11 +27,14 @@ class HA extends EventEmitter {
     this.setConfig(cfg);
   }
 
-  setConfig(cfg) {
-    const ids = [...cfg.allowIds].sort().join(',');
+  // extra = interne Entitäten nur für wir-home (z. B. ADB des Fernsehers), nie für die App
+  setConfig(cfg, extra = this.extra || []) {
+    this.extra = extra;
+    const all = [...new Set([...cfg.allowIds, ...extra])];
+    const ids = all.sort().join(',');
     this.cfg = cfg;
     const changed = ids !== [...this.ids].sort().join(',');
-    this.ids = new Set(cfg.allowIds);
+    this.ids = new Set(all);
     // andere Entitäten -> neu abonnieren (einfachster saubere Weg: Verbindung neu aufbauen)
     if (changed && this.ws) { this.backoff = 500; this.ws.close(); }
   }

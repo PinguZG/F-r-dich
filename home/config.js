@@ -49,6 +49,12 @@ function load(file) {
     allow.set(id, { domain, name, kind });
     return id;
   }
+  function internId(v, domain, where) {
+    v = str(v, 120);
+    if (!v || v === 'auto') return v;
+    if (!ENTITY_RE.test(v) || !v.startsWith(domain + '.')) { errors.push(`${where}: "${v}" muss "auto" oder ${domain}.… sein`); return ''; }
+    return v;
+  }
   const color = (c, fb) => (HEX_RE.test(String(c || '')) ? String(c).toLowerCase() : fb);
   const list = v => (Array.isArray(v) ? v : []);
   const pct = v => Math.max(1, Math.min(100, Math.round(Number(v) || 50)));
@@ -86,6 +92,12 @@ function load(file) {
         cast: f.cast ? entity(f.cast, ['media_player'], 'fernseher.cast', name, 'cast') : '',
         apps: list(f.apps).slice(0, 16).map(a => ({ name: str(a.name, 30), farbe: color(a.farbe, '#7b5cff'), start: str(a.start, 200), paket: str(a.paket, 120), test: str(a.test, 60) })).filter(a => a.name),
         quellen: list(f.quellen).slice(0, 8).map(q => ({ name: str(q.name, 20), source: str(q.source || q.name, 40), icon: str(q.icon, 10) || 'tv' })).filter(q => q.name),
+        an_skript: f.an_skript ? entity(f.an_skript, ['script'], 'fernseher.an_skript', name, 'tvan') : '',
+        // nur für wir-home (nie in der Freigabeliste / an die App): "auto" = in HA suchen, sonst entity_id
+        intern: {
+          adb: internId(f.adb, 'media_player', 'fernseher.adb'),
+          wol: internId(f.wol, 'button', 'fernseher.wol'),
+        },
       };
     }
   }
@@ -194,13 +206,19 @@ function check(conf, cmd, states) {
     only('app');
     const app = tv.apps.find(a => a.name === data.app);
     if (!app) bad('App nicht freigegeben');
-    // Fernseher aus -> erst einschalten (Fehler dabei nicht fatal, manche Fernseher melden sich erst danach), kurz warten
+    // Fernseher aus -> wake: wir-home weckt ihn erst (Einschalt-Routine) und startet die App, sobald er an ist
     const off = ['off', 'standby', 'unavailable', 'unknown', undefined].includes(states?.get(tv.entity_id)?.state);
-    const calls = off ? [{ domain: 'media_player', service: 'turn_on', entity_ids: [tv.entity_id], data: {}, optional: true }] : [];
-    const wait = off ? 3000 : 0;
-    if (app.start && tv.remote) calls.push({ domain: 'remote', service: 'turn_on', entity_ids: [tv.remote], data: { activity: app.start }, wait });
-    else calls.push({ domain: 'media_player', service: 'select_source', entity_ids: [tv.entity_id], data: { source: app.name }, wait });
-    return { calls, label: `${name}: ${app.name}`, app: app.name };
+    const calls = app.start && tv.remote ? [{ domain: 'remote', service: 'turn_on', entity_ids: [tv.remote], data: { activity: app.start } }]
+      : [{ domain: 'media_player', service: 'select_source', entity_ids: [tv.entity_id], data: { source: app.name } }];
+    return { calls, label: `${name}: ${app.name}`, app: app.name, wake: off };
+  }
+
+  // Sonderfall: "läuft gerade" anfordern, solange Zuhause offen ist (kein Befehl an HA, wir-home fragt dann den Titel ab)
+  if (domain === 'tv' && service === 'watch') {
+    const tv = cfg.fernseher;
+    if (!tv || id !== tv.entity_id) bad('Gerät nicht freigegeben');
+    only();
+    return { calls: [], label: '', watch: true };
   }
 
   if (ent.domain !== domain) bad('Dienst passt nicht zum Gerät');
