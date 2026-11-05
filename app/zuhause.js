@@ -13,6 +13,13 @@
   const I = { home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>', cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>', alarm: '<circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2M5 4L2 7M19 4l3 3"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>', moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>', film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>', book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/>', flame: '<path d="M12 2c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 1.5-4.5 3-6 0 2.5 1.5 4 3 4 0-4-1.5-6.5 0-9z"/>', power: '<path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/>', heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>', thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>', cloudsun: '<path d="M8 3v1M3.5 5.5l.7.7M2 10h1M12.5 5.5l-.7.7M5.5 10a3 3 0 0 1 5.6-1.5"/><path d="M7 20h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 13 3.5 3.5 0 0 0 7 20z"/>', sunrise: '<path d="M12 3v4M5 10l1.5 1.5M19 10l-1.5 1.5M3 17h18M7 17a5 5 0 0 1 10 0M8 21h8"/>', bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', window: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 12h16"/>', door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="14.5" cy="12" r=".8"/>', coffee: '<path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2"/>', fan: '<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 3 2 1 4l-3 3M14 12c4 0 7 1 7 4 0 2-2 3-4 1l-3-3M12 14c0 4-1 7-4 7-2 0-3-2-1-4l3-3M10 12c-4 0-7-1-7-4 0-2 2-3 4-1l3 3"/>', stars: '<path d="M5 3v4M3 5h4M17 15v4M15 17h4M12 6l1.5 4.5L18 12l-4.5 1.5L12 18l-1.5-4.5L6 12l4.5-1.5z"/>', left: '<path d="M15 6l-6 6 6 6"/>', right: '<path d="M9 6l6 6-6 6"/>', up: '<path d="M6 15l6-6 6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', pause: '<path d="M9 5v14M15 5v14"/>', play: '<path d="M7 4l13 8-13 8z"/>', prev: '<path d="M6 5v14M19 5l-10 7 10 7z"/>', next: '<path d="M18 5v14M5 5l10 7-10 7z"/>', undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', menu: '<path d="M4 6h16M4 12h16M4 18h16"/>', mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>', mute: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/>', hdmi: '<path d="M3 8h18v5l-3 3H6l-3-3z"/><path d="M8 11h8"/>', cast: '<path d="M3 17a4 4 0 0 1 4 4M3 13a8 8 0 0 1 8 8M3 9a12 12 0 0 1 12 12"/><path d="M3 6V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/>', check: '<path d="M5 12l5 5 9-10"/>', plus: '<path d="M12 5v14M5 12h14"/>', sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' };
   I.cloud = '<path d="M7 19h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 12 3.5 3.5 0 0 0 7 19z"/>';
   I.rain = '<path d="M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.2 8 3.5 3.5 0 0 0 7 15zM8 18l-1 3M12 18l-1 3M16 18l-1 3"/>';
+  // Fernseher-Extras: Bildschirmfoto, Bild aus (Ton an), Text senden/löschen, HDMI
+  I.camera = '<path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>';
+  I.screenoff = '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M4 4l16 16"/>';
+  I.send = '<path d="M5 12h12M12 6l6 6-6 6"/>';
+  I.backspace = '<path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>';
+  I.hdmi = '<path d="M4 8h16v5l-3 3H7l-3-3z"/><path d="M8 11h8"/>';
+  I.close = '<path d="M6 6l12 12M18 6L6 18"/>';
   const svg = n => `<svg viewBox="0 0 24 24">${I[n] || I.stars}</svg>`;
   const icons = el => qa('[data-i]', el).forEach(e => { if (!e.querySelector(':scope > svg')) e.insertAdjacentHTML('afterbegin', svg(e.dataset.i)); });
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -83,11 +90,11 @@
     'com.amazon.amazonvideo.livingroom': `<path fill="currentColor" d="M9.6 3.6v7.6l6.3-3.8z"/><path ${ST} stroke-width="1.9" d="M3.4 14.4c5.3 3.7 11.9 3.7 17.2 0M17.4 13.5l3.2.9-.9 3.1"/>`,
     'com.disney.disneyplus': `<path ${ST} stroke-width="1.7" d="M2.8 15.2C5.6 7.8 13.7 5 21.2 8.8"/><path ${ST} stroke-width="2.3" d="M16.2 12.4v7.2M12.6 16h7.2"/><circle cx="5" cy="18.4" r="1.2" fill="currentColor"/>`,
     'de.swr.avp.ard.tv': `<circle cx="12" cy="12" r="9.6" ${ST} stroke-width="1.6" opacity=".45"/><path fill="currentColor" d="M12.6 5.6h2.8v12.8h-3.1V9.3l-2.9 1.8V8z"/>`,
-    'com.zdf.android.mediathek': '<rect x="1.5" y="5.5" width="21" height="13" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="12" y="14.8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="700" letter-spacing=".4" fill="currentColor" stroke="none">ZDF</text>',
+    'com.zdf.android.mediathek': '<rect x="1.5" y="5.5" width="21" height="13" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="12" y="14.8" text-anchor="middle" font-style="normal" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="700" letter-spacing=".4" fill="currentColor" stroke="none">ZDF</text>',
     'com.spotify.tv.android': '<circle cx="12" cy="12" r="10" fill="currentColor"/><path fill="none" stroke="#0b0d12" stroke-width="1.9" stroke-linecap="round" d="M6.6 9.4c3.6-1.1 7.6-.8 10.9 1.1M7.3 12.6c2.9-.8 6-.5 8.6.9M8 15.6c2.2-.5 4.4-.3 6.3.7"/>',
     'tv.twitch.android.app': '<path fill="currentColor" fill-rule="evenodd" d="M5.5 2.5l-2 4v13H8V22h2.5l2.5-2.5h3.5l4.5-4.5v-12.5zm1.8 1.8h11.4v9.9L16 16.9h-4l-2.5 2.5v-2.5H7.3zm3.8 3.2v5h1.8v-5zm4.6 0v5h1.8v-5z"/>',
   };
-  const appMark = ap => `<svg viewBox="0 0 24 24" aria-hidden="true">${MARKS[ap.paket] || `<text x="12" y="17" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" font-weight="800" fill="currentColor" stroke="none">${esc((ap.name || '?').slice(0, 1).toUpperCase())}</text>`}</svg>`;
+  const appMark = ap => `<svg viewBox="0 0 24 24" aria-hidden="true">${MARKS[ap.paket] || `<text x="12" y="17" text-anchor="middle" font-style="normal" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" font-weight="800" fill="currentColor" stroke="none">${esc((ap.name || '?').slice(0, 1).toUpperCase())}</text>`}</svg>`;
 
   function tvView() {
     const tv = cfg()?.fernseher; if (!tv) return null;
@@ -132,6 +139,20 @@
     // "läuft gerade": Platz für das große App-Zeichen; Hinweis neben "Apps" weg
     qa('#zh-p-tv .z-now')[0]?.insertAdjacentHTML('afterbegin', '<i class="z-nowmark" id="zh-nowmark" aria-hidden="true"></i>');
     qa('#zh-p-tv .z-sec span')[1]?.remove();
+    // weitere installierte Apps (vom Fernseher gelesen) unter den festen App-Kacheln
+    $('apps').insertAdjacentHTML('afterend', '<div class="z-sec" id="zh-moresec" hidden><span>Weitere Apps</span></div><div class="z-more" id="zh-more"></div>');
+    // Lautstärke-Karte: Bild aus (Ton an) + Bildschirmfoto neben "Stumm"
+    $('mute').insertAdjacentHTML('afterend', '<div class="z-vbtn z-xbtn" id="zh-bildaus" data-i="screenoff">Bild aus</div><div class="z-vbtn z-xbtn" id="zh-shotbtn" data-i="camera">Bildschirm</div>');
+    // eigene Kachel: Bildhelligkeit des Fernsehers (wie die Lautstärke-Kachel)
+    qa('#zh-p-tv .z-volc')[0]?.insertAdjacentHTML('afterend', '<div class="z-volc z-hellc" id="zh-hellc" hidden><div class="z-vh">Bildhelligkeit<b id="zh-hn">50</b></div><div class="z-vrow"><div class="z-vbtn" id="zh-hd">−</div><div class="z-vbar" id="zh-hbar"><i id="zh-hi"></i></div><div class="z-vbtn" id="zh-hu">+</div></div></div>');
+    // Fernbedienung: Text an den Fernseher (Suchfelder usw.)
+    qa('#zh-p-tv .z-remote')[0]?.insertAdjacentHTML('beforeend', '<div class="z-tvtext"><input id="zh-tvtext" type="text" maxlength="200" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="Text an den Fernseher …"><div class="z-tb" id="zh-tvdel" data-i="backspace" title="Zeichen löschen"></div><div class="z-tb z-send" id="zh-tvsend" data-i="send" title="Senden"></div></div>');
+    // Bildschirmfoto groß
+    host.insertAdjacentHTML('beforeend', '<div class="z-ov z-shotov" id="zh-shotov"><div class="z-shotbox"><img id="zh-shotimg" alt="Bildschirm des Fernsehers"><div class="z-shotmsg" id="zh-shotmsg"></div></div><div class="z-shotbar"><div class="z-btn" id="zh-shotnew" data-i="camera">Neu aufnehmen</div><div class="z-btn" id="zh-shotclose" data-i="close">Schließen</div></div></div>');
+    // Einstellungen: Kino-Licht
+    qa('#zh-p-set .z-info')[0]?.insertAdjacentHTML('beforebegin', '<div class="z-srow" id="zh-kinorow"><div class="z-si" data-i="film"></div><div><b>Kino-Licht</b><small>Licht dimmt automatisch, solange auf dem Fernseher etwas läuft</small></div><div class="z-sw z-r" id="zh-kino"></div></div>');
+    // Wecker: Fernseher beim Wecken
+    qa('#zh-p-alarm .z-aset .z-skip')[0]?.insertAdjacentHTML('beforebegin', '<div class="z-sbox" id="zh-wtv"><h4>Fernseher beim Wecken<div class="z-sw" id="zh-wtvsw"></div></h4><p>geht zur Weckzeit an und öffnet die App</p><div class="z-opts z-wtvapps" id="zh-wtvapps"></div><h4 class="z-wtvvol">Lautstärke<span id="zh-wtvvl">15</span></h4><input type="range" min="0" max="40" value="15" id="zh-wtvvol"></div>');
     icons(host);
     // Beschriftungen für die Tab-Reihe auf dem Handy
     const LBL = { start: 'Start', tv: 'Fernseher', cal: 'Kalender', alarm: 'Wecker', set: 'Einstellungen' };
@@ -377,14 +398,34 @@
     const { tv, a, app } = v;
     const A = $('apps');
     if (A.childElementCount !== tv.apps.length) A.innerHTML = tv.apps.map((x, i) => `<div class="z-ap" style="--c:${x.farbe}" data-k="${i}"><i class="z-mark">${appMark(x)}</i><b>${esc(x.name)}</b><span>öffnen</span></div>`).join('');
-    const Q = $('srcs');
-    if (Q.dataset.n !== String(tv.quellen.length)) {
-      Q.dataset.n = tv.quellen.length;
-      Q.innerHTML = tv.quellen.map((q, i) => `<div class="z-src" data-k="${i}">${svg(q.icon)}${esc(q.name)}</div>`).join('');
+    const Q = $('srcs'), ein = srcList(tv), esig = ein.map(q => q.name).join('|');
+    if (Q.dataset.sig !== esig) {
+      Q.dataset.sig = esig;
+      Q.innerHTML = ein.map((q, i) => `<div class="z-src" data-k="${i}">${svg(q.icon)}${esc(q.name)}</div>`).join('');
     }
-    Q.hidden = !tv.quellen.length;
+    Q.hidden = !ein.length;
+    // weitere Apps vom Fernseher (kleine Kacheln mit Anfangsbuchstabe bzw. eigenem Zeichen)
+    const more = S.tvx?.apps || [], M = $('more'), msig = more.map(x => x.paket).join('|');
+    if (M.dataset.sig !== msig) {
+      M.dataset.sig = msig;
+      M.innerHTML = more.map((x, i) => `<div class="z-ma" style="--c:${esc(x.farbe)}" data-k="${i}"><i class="z-mark">${appMark(x)}</i><b>${esc(x.name)}</b></div>`).join('');
+    }
+    M.hidden = $('moresec').hidden = !more.length;
+    qa('.z-ma', M).forEach((x, i) => x.classList.toggle('z-on', v.on && !!a.app_id && a.app_id === more[i]?.paket));
+    // Bild aus (Ton läuft weiter): der Fernseher schläft, Lautstärke bleibt bedienbar
+    const bildAus = !v.on && !!S.tvx?.bild_aus;
     $('stage').style.setProperty('--app', app.farbe);
     $('p-tv').classList.toggle('z-tvoff', !v.on);
+    $('p-tv').classList.toggle('z-bildaus', bildAus);
+    const ba = $('bildaus');
+    ba.lastChild.textContent = bildAus ? 'Bild an' : 'Bild aus';
+    ba.classList.toggle('z-on', bildAus);
+    ba.hidden = $('shotbtn').hidden = !tv.titel;
+    // Bildhelligkeit (nur mit ADB)
+    const hv = Number.isFinite(hellOv) ? hellOv : S.tvx?.helligkeit;
+    $('hellc').hidden = !tv.titel || !Number.isFinite(hv);
+    if (Number.isFinite(hv)) { $('hn').textContent = hv; $('hi').style.width = hv + '%'; }
+    renderShot();
     qa('#zh-p-tv .z-h1, #zh-tvc h3').forEach(x => { x.textContent = tv.name; });
     $('napp').textContent = app.name;
     // großes App-Zeichen rechts in "läuft gerade" (füllt die Karte, auch wenn die App keinen Titel liefert)
@@ -400,10 +441,10 @@
     const st = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
     $('nsub').textContent = zeile ? `${zeile} · ${st}` : st;
     setHTML($('pp'), svg(v.playing ? 'pause' : 'play'));
-    $('pwrt').textContent = v.on ? 'Ausschalten' : v.starting ? 'Startet …' : 'Einschalten';
-    $('offmsg').querySelector('b').textContent = v.starting ? 'Fernseher wird gestartet …' : 'Fernseher ist aus';
-    $('offmsg').querySelector('span').textContent = v.starting ? 'kann bis zu 25 Sekunden dauern' : v.fail ? 'Hat diesmal nicht geklappt – nochmal tippen' : 'Tippen zum Einschalten';
-    $('tvstate').textContent = v.on ? 'An · ' + app.name : v.starting ? 'Startet …' : 'Aus · Standby';
+    $('pwrt').textContent = v.on || bildAus ? 'Ausschalten' : v.starting ? 'Startet …' : 'Einschalten';
+    $('offmsg').querySelector('b').textContent = v.starting ? 'Fernseher wird gestartet …' : bildAus ? 'Bild aus · Ton läuft' : 'Fernseher ist aus';
+    $('offmsg').querySelector('span').textContent = v.starting ? 'kann bis zu 45 Sekunden dauern' : bildAus ? 'Tippen für Bild an' : v.fail ? 'Hat diesmal nicht geklappt – nochmal tippen' : 'Tippen zum Einschalten';
+    $('tvstate').textContent = v.on ? 'An · ' + app.name : v.starting ? 'Startet …' : bildAus ? 'Bild aus · Ton an' : 'Aus · Standby';
     $('tvstate').classList.toggle('z-off', !v.on);
     qa('.z-ap', A).forEach((x, i) => {
       x.classList.toggle('z-on', v.on && i === v.ai);
@@ -411,12 +452,12 @@
       if (sp.textContent !== t) sp.textContent = t;
     });
     const known = tv.quellen.some(q => q.source === v.source);
-    qa('.z-src', Q).forEach((x, i) => x.classList.toggle('z-on', known ? tv.quellen[i].source === v.source : i === 0));
+    qa('.z-src', Q).forEach((x, i) => x.classList.toggle('z-on', ein[i]?.x ? ein[i].x === eingangSel : known ? tv.quellen[i]?.source === v.source : i === 0));
     const pct = v.vol / v.max * 100;
     $('vn').textContent = v.muted ? 'stumm' : v.vol; $('vi').style.width = pct + '%'; $('mute').classList.toggle('z-on', v.muted);
     $('tvc').classList.toggle('z-off', !v.on);
     $('tvcsub').textContent = v.on ? app.name + (titel && v.ti ? ' · ' + titel : v.playing ? ' · läuft' : ' · pausiert')
-      : v.starting ? 'Fernseher wird gestartet …' : v.fail ? 'Aus · Einschalten hat nicht geklappt' : 'Aus · tippen für Fernbedienung';
+      : v.starting ? 'Fernseher wird gestartet …' : bildAus ? 'Bild aus · Ton läuft' : v.fail ? 'Aus · Einschalten hat nicht geklappt' : 'Aus · tippen für Fernbedienung';
     $('tvc-v').style.width = pct + '%'; $('tvc-n').textContent = v.muted ? '–' : v.vol;
     if (page === 'tv') { if (v.on) $('stage').style.setProperty('--z-a1', app.farbe); else $('stage').style.removeProperty('--z-a1'); }
   }
@@ -458,6 +499,50 @@
     if (!active || !v?.tv.titel || !v.on || Date.now() - watchAt < 30000) return;
     watchAt = Date.now();
     call({ entity_id: v.tv.entity_id, service: 'tv.watch', log: false }, true);
+  }
+  // Eingänge: aus der Konfiguration ("quellen") oder die vom Fernseher gelesenen HDMI-Eingänge (+ Smart TV)
+  let eingangSel = 'tv';
+  function srcList(tv) {
+    if (tv.quellen.length) return tv.quellen;
+    const e = S.tvx?.eingaenge || [];
+    return e.length ? [{ name: 'Smart TV', icon: 'tv', x: 'tv' }, ...e.map(q => ({ name: q.name, icon: 'hdmi', x: q.key }))] : [];
+  }
+  // Bildhelligkeit: Anzeige sofort, Befehl gedrosselt (wie die Lautstärke)
+  let hellOv = NaN, hellT = 0;
+  function setHell(n) {
+    const v = tvView(); if (!v) return;
+    hellOv = Math.max(0, Math.min(100, Math.round(n)));
+    renderTV();
+    clearTimeout(hellT);
+    hellT = setTimeout(() => {
+      const wert = hellOv;
+      call({ entity_id: v.tv.entity_id, service: 'tv.helligkeit', data: { wert } }).finally(() => { if (hellOv === wert) { hellOv = NaN; if (active) renderTV(); } });
+    }, 350);
+  }
+  // Bildschirmfoto: anfordern, groß zeigen, sobald das neue Foto da ist
+  let shotWant = 0, shotOpen = false;
+  function takeShot() {
+    const v = tvView(); if (!v?.on) return toast('Der Fernseher ist aus');
+    shotWant = Date.now(); shotOpen = true;
+    renderShot();
+    call({ entity_id: v.tv.entity_id, service: 'tv.bildschirm' }).then(ok => { if (!ok) { shotOpen = false; renderShot(); } });
+  }
+  function renderShot() {
+    const ov = $('shotov'); if (!ov) return;
+    ov.classList.toggle('z-on', shotOpen);
+    if (!shotOpen) return;
+    const b = S.tvx?.bildschirm || {}, sh = S.shot, neu = sh && Date.parse(sh.at) >= shotWant - 2000;
+    const img = $('shotimg');
+    if (neu && img.src !== sh.url) img.src = sh.url;
+    img.hidden = !neu;
+    $('shotmsg').textContent = b.laeuft || (!neu && !b.fehler) ? 'Bildschirm wird aufgenommen …'
+      : !neu && b.fehler ? b.fehler : 'Netflix, Prime & Co. erscheinen hier schwarz (Kopierschutz).';
+  }
+  function sendText(enter) {
+    const v = tvView(), inp = $('tvtext'); if (!v) return;
+    const text = inp.value;
+    if (!text && !enter) return;
+    call({ entity_id: v.tv.entity_id, service: 'tv.text', data: { text, enter } }).then(ok => { if (ok) { inp.value = ''; toast(enter ? 'Gesendet' : 'Text gesendet'); } });
   }
   function volStep(d) {
     const v = tvView(); if (!v) return;
@@ -573,6 +658,18 @@
     setHTML(L, h);
     if (document.activeElement !== $('vor')) $('vor').value = w.vorlauf;
     $('vl').textContent = w.vorlauf + ' Min';
+    // Fernseher beim Wecken (nur mit Fernseher in der Konfiguration)
+    const ftv = cfg()?.fernseher, wt = { an: false, app: ftv?.apps?.[0]?.name || '', lautstaerke: 15, ...(w.tv || {}) };
+    $('wtv').hidden = !ftv;
+    if (ftv) {
+      $('wtvsw').classList.toggle('z-on', !!wt.an);
+      $('wtv').classList.toggle('z-off', !wt.an);
+      const AP = $('wtvapps');
+      if (AP.childElementCount !== ftv.apps.length) AP.innerHTML = ftv.apps.map(x => `<div>${esc(x.name)}</div>`).join('');
+      qa('div', AP).forEach(x => x.classList.toggle('z-on', x.textContent === wt.app));
+      if (document.activeElement !== $('wtvvol')) $('wtvvol').value = wt.lautstaerke;
+      $('wtvvl').textContent = wt.lautstaerke;
+    }
     qa('#zh-tone > div').forEach(x => x.classList.toggle('z-on', x.textContent === w.ton));
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     const sk = w.aussetzen === iso(tomorrow);
@@ -764,8 +861,10 @@
     });
 
     // Fernseher
-    $('pwr').addEventListener('click', () => tvPower(!tvView()?.on));
-    $('offmsg').addEventListener('click', () => tvPower(true));
+    // bei "Bild aus" (Ton läuft) heißt Ausschalten: Musik anhalten und schlafen
+    const bildAusNow = () => !!S.tvx?.bild_aus && !tvView()?.on;
+    $('pwr').addEventListener('click', () => tvPower(bildAusNow() ? false : !tvView()?.on));
+    $('offmsg').addEventListener('click', () => (bildAusNow() ? $('bildaus').click() : tvPower(true)));
     $('tvc-p').addEventListener('click', () => tvPower(!tvView()?.on));
     $('tvc').addEventListener('click', e => { if (!e.target.closest('.z-mb')) go('tv'); });
     $('tvc-u').addEventListener('click', () => volStep(1));
@@ -805,10 +904,49 @@
     });
     $('srcs').addEventListener('click', e => {
       const t = e.target.closest('.z-src'); if (!t) return;
-      const v = tvView(), q = v.tv.quellen[t.dataset.k];
+      const v = tvView(), q = srcList(v.tv)[t.dataset.k]; if (!q) return;
+      if (q.x) {   // vom Fernseher gelesene Eingänge (per ADB)
+        eingangSel = q.x; renderTV();
+        call({ entity_id: v.tv.entity_id, service: 'tv.eingang', data: { eingang: q.x } });
+        return;
+      }
       optimistic(v.tv.entity_id, { source: q.source }); renderTV();
       call({ entity_id: v.tv.entity_id, service: 'media_player.select_source', data: { source: q.source } });
     });
+    // weitere Apps vom Fernseher
+    $('more').addEventListener('click', e => {
+      const t = e.target.closest('.z-ma'); if (!t) return;
+      const v = tvView(), x = S.tvx?.apps?.[t.dataset.k]; if (!v || !x) return;
+      if (!v.on) tvStarting();
+      renderTV();
+      toast((v.on ? '' : `${v.tv.name} wird gestartet · `) + x.name + (v.on ? ' wird geöffnet' : ' folgt'));
+      call({ entity_id: v.tv.entity_id, service: 'tv.starten', data: { paket: x.paket } });
+    });
+    // Bild aus / an (Ton läuft weiter), Bildschirmfoto
+    $('bildaus').addEventListener('click', () => {
+      const v = tvView(); if (!v) return;
+      const aus = !(S.tvx?.bild_aus && !v.on);
+      toast(aus ? 'Bild aus – der Ton läuft weiter' : 'Bild wird eingeschaltet …');
+      if (!aus) tvStarting();
+      call({ entity_id: v.tv.entity_id, service: 'tv.bild', data: { aus } });
+    });
+    $('shotbtn').addEventListener('click', takeShot);
+    $('shotnew').addEventListener('click', takeShot);
+    $('shotclose').addEventListener('click', () => { shotOpen = false; renderShot(); });
+    // Bildhelligkeit: Balken ziehen/tippen, − / +
+    const hb = $('hbar');
+    let hdr = false;
+    const hset = e => { const r = hb.getBoundingClientRect(); setHell((e.clientX - r.left) / r.width * 100); };
+    hb.addEventListener('pointerdown', e => { hdr = true; hb.setPointerCapture(e.pointerId); hset(e); });
+    hb.addEventListener('pointermove', e => { if (hdr) hset(e); });
+    hb.addEventListener('pointerup', e => { if (hdr) { hdr = false; hset(e); } });
+    const hcur = () => (Number.isFinite(hellOv) ? hellOv : S.tvx?.helligkeit ?? 50);
+    $('hd').addEventListener('click', () => setHell(hcur() - 10));
+    $('hu').addEventListener('click', () => setHell(hcur() + 10));
+    // Text an den Fernseher: Senden-Knopf bzw. Enter auf der Tastatur = Text + Bestätigen; ⌫ löscht ein Zeichen
+    $('tvsend').addEventListener('click', () => sendText(true));
+    $('tvtext').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendText(true); } });
+    $('tvdel').addEventListener('click', () => { const v = tvView(); if (v) call({ entity_id: v.tv.entity_id, service: 'tv.text', data: { loeschen: 1 } }, true); });
     const KEYS = { 'z-u': 'DPAD_UP', 'z-dn': 'DPAD_DOWN', 'z-l': 'DPAD_LEFT', 'z-r': 'DPAD_RIGHT', 'z-ok': 'DPAD_CENTER' };
     const KEYS2 = { undo: 'BACK', home: 'HOME', menu: 'MENU', mic: 'SEARCH' };
     qa('.z-dpad .z-a, .z-dpad .z-ok, .z-keys > div', $('p-tv')).forEach(b => b.addEventListener('click', () => {
@@ -943,6 +1081,21 @@
     $('vor').addEventListener('input', () => { $('vl').textContent = $('vor').value + ' Min'; });
     $('vor').addEventListener('change', () => saveAlarm(w => { w.vorlauf = +$('vor').value; }));
     $('tone').addEventListener('click', e => { const t = e.target.closest('#zh-tone > div'); if (t) saveAlarm(w => { w.ton = t.textContent; }); });
+    // Fernseher beim Wecken: an/aus, App, Lautstärke
+    const wtv = patch => saveAlarm(w => { w.tv = { an: false, app: cfg()?.fernseher?.apps?.[0]?.name || '', lautstaerke: 15, ...(w.tv || {}), ...patch }; });
+    $('wtvsw').addEventListener('click', () => wtv({ an: !W().tv?.an }));
+    $('wtvapps').addEventListener('click', e => { const t = e.target.closest('#zh-wtvapps > div'); if (t) wtv({ app: t.textContent, an: true }); });
+    $('wtvvol').addEventListener('input', () => { $('wtvvl').textContent = $('wtvvol').value; });
+    $('wtvvol').addEventListener('change', () => wtv({ lautstaerke: +$('wtvvol').value }));
+    // Kino-Licht (gemeinsame Einstellung "fernseher")
+    $('kino').addEventListener('click', () => {
+      const f = { ...(S.settings.fernseher || {}) };
+      f.kinolicht = !f.kinolicht;
+      S.settings.fernseher = f;
+      renderStatus();
+      toast(f.kinolicht ? 'Kino-Licht an – das Licht dimmt, sobald etwas läuft' : 'Kino-Licht aus');
+      T.settings.save('fernseher', f).catch(() => toast('Speichern fehlgeschlagen'));
+    });
     $('skip').addEventListener('click', () => {
       const tm = new Date(); tm.setDate(tm.getDate() + 1);
       saveAlarm(w => { w.aussetzen = w.aussetzen === iso(tm) ? '' : iso(tm); });
@@ -1004,6 +1157,9 @@
       rows[4].querySelector('.z-state').classList.toggle('z-off', bad);
     }
     if (rows[5]) rows[5].querySelector('small').textContent = 'angemeldet als ' + (window.WIR_LOOK?.me?.()?.name || '…');
+    // Kino-Licht nur mit echtem Fernseher (ADB)
+    $('kinorow').hidden = !cfg()?.fernseher?.titel || m?.mode === 'test';
+    $('kino').classList.toggle('z-on', !!S.settings.fernseher?.kinolicht);
     const info = qa('#zh-p-set .z-info')[0];
     if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : S.kalender?.test ? 'Home Assistant · Kalender noch mit Testterminen.' : 'Verbunden mit Home Assistant.';
   }

@@ -15,10 +15,30 @@
   // ---------------- Transport "wir": PocketBase (home_state, home_todos, home_settings) + POST /api/home/cmd ----------------
   function wirTransport() {
     const pb = window.WIR_PB;
-    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, tv: null, todos: [], settings: {} };
+    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, tv: null, tvx: null, shot: null, todos: [], settings: {} };
     let onChange = () => {}, unsubs = [], gen = 0, raf = 0;
 
     const changed = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; onChange(state); }); };
+    // Bildschirmfoto vom Fernseher (home_logos "_bildschirm", geschützte Datei): nur laden, wenn ein neues da ist
+    let shotAt = '', shotBusy = false;
+    async function shotSoon() {
+      const at = state.tvx?.bildschirm?.at || '';
+      // nur frische Fotos (gerade angefordert) – kein altes Foto bei jedem Öffnen laden
+      if (!at || at === shotAt || shotBusy || !unsubs.length || Date.now() - Date.parse(at) > 120000) return;
+      shotBusy = true;
+      try {
+        const r = await pb.collection('home_logos').getFirstListItem('paket="_bildschirm"', { requestKey: null });
+        const token = await pb.files.getToken({ requestKey: null });
+        const res = await fetch(pb.files.getURL(r, r.bild, { token }));
+        if (res.ok) {
+          if (state.shot) URL.revokeObjectURL(state.shot.url);
+          state.shot = { url: URL.createObjectURL(await res.blob()), at };
+          shotAt = at;
+          changed();
+        }
+      } catch (_) { /* nächster Versuch beim nächsten Stand */ }
+      finally { shotBusy = false; if ((state.tvx?.bildschirm?.at || '') !== shotAt) setTimeout(shotSoon, 3000); }
+    }
     function applyState(rec, deleted) {
       const k = rec.key, d = deleted ? null : rec.data;
       if (k === '_config') state.config = d;
@@ -27,6 +47,7 @@
       else if (k === '_wetter') state.wetter = d;
       else if (k === '_kalender') state.kalender = d;
       else if (k === '_tv') state.tv = d;
+      else if (k === '_tvx') { state.tvx = d; shotSoon(); }
       else if (deleted) delete state.entities[k];
       else state.entities[k] = d;
     }

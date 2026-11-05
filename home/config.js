@@ -142,7 +142,15 @@ function load(file) {
       try { check(tmp, { entity_id: a.entity_id, service: a.service, data: a.data || {} }); aktionen.push({ entity_id: a.entity_id, service: a.service, data: a.data || {} }); }
       catch (err) { errors.push(`szenen[${i}].aktionen[${j}]: ${err.message}`); }
     });
-    return { key: 'sz' + i, name, icon: str(s.icon, 20) || 'stars', farbe: color(s.farbe, '#7b5cff'), entity_id: id, aktionen };
+    // optional "fernseher": { "an": true, "app": "Netflix", "lautstaerke": 20, "helligkeit": 0 } – macht wir-home per ADB
+    let tvs = null;
+    if (s.fernseher && fernseher) {
+      const f = s.fernseher, num = v => (v === undefined || v === null || v === '' ? null : Math.max(0, Math.min(100, Math.round(Number(v)) || 0)));
+      const app = str(f.app, 30);
+      if (app && !fernseher.apps.some(a => a.name === app)) errors.push(`szenen[${i}].fernseher.app: "${app}" steht nicht unter fernseher.apps`);
+      tvs = { an: f.an !== false, app: fernseher.apps.some(a => a.name === app) ? app : '', lautstaerke: num(f.lautstaerke), helligkeit: num(f.helligkeit) };
+    }
+    return { key: 'sz' + i, name, icon: str(s.icon, 20) || 'stars', farbe: color(s.farbe, '#7b5cff'), entity_id: id, aktionen, fernseher: tvs };
   }).filter(s => s.entity_id || s.aktionen.length);
 
   // Lichtwecker-Helfer: nur wir-home setzt sie (aus den Wecker-Einstellungen), die App darf sie nicht schalten
@@ -227,6 +235,42 @@ function check(conf, cmd, states) {
     if (!tv || id !== tv.entity_id) bad('Gerät nicht freigegeben');
     only();
     return { calls: [], label: 'App-Logos neu einlesen', logos: true };
+  }
+
+  // Fernseher-Extras per ADB (wir-home führt sie selbst aus und prüft Eingang/App gegen die vom Fernseher gelesenen Listen):
+  // Bildschirmfoto, Eingang (HDMI), Text eingeben, Bild aus/an (Ton läuft weiter), Bildhelligkeit, weitere installierte App starten
+  if (domain === 'tv' && ['bildschirm', 'eingang', 'text', 'bild', 'helligkeit', 'starten'].includes(service)) {
+    const tv = cfg.fernseher;
+    if (!tv || id !== tv.entity_id) bad('Gerät nicht freigegeben');
+    if (service === 'helligkeit') {
+      only('wert');
+      if (!Number.isInteger(data.wert) || data.wert < 0 || data.wert > 100) bad('Helligkeit 0–100');
+      return { calls: [], label: `${tv.name}: Bildhelligkeit ${data.wert}`, tvx: { art: 'helligkeit', wert: data.wert } };
+    }
+    const name = tv.name;
+    if (service === 'bildschirm') { only(); return { calls: [], label: `${name}: Bildschirmfoto`, tvx: { art: 'bildschirm' } }; }
+    if (service === 'eingang') {
+      only('eingang');
+      if (!/^(tv|hdmi\d)$/.test(String(data.eingang))) bad('Eingang?');
+      return { calls: [], label: `${name}: ${data.eingang === 'tv' ? 'Smart TV' : 'HDMI ' + data.eingang.slice(4)}`, tvx: { art: 'eingang', eingang: data.eingang } };
+    }
+    if (service === 'text') {
+      only('text', 'enter', 'loeschen');
+      const text = typeof data.text === 'string' ? data.text : '';
+      if (text.length > 200) bad('Text zu lang');
+      const loeschen = data.loeschen == null ? 0 : data.loeschen;
+      if (!Number.isInteger(loeschen) || loeschen < 0 || loeschen > 50) bad('Löschen 0–50');
+      if (!text && !loeschen && !data.enter) bad('Kein Text');
+      return { calls: [], label: `${name}: Text eingegeben`, tvx: { art: 'text', text, enter: !!data.enter, loeschen } };
+    }
+    if (service === 'bild') {
+      only('aus');
+      if (typeof data.aus !== 'boolean') bad('Bild aus: ja/nein');
+      return { calls: [], label: `${name}: Bild ${data.aus ? 'aus (Ton an)' : 'an'}`, tvx: { art: 'bild', aus: data.aus } };
+    }
+    only('paket');
+    if (!/^[a-zA-Z][\w.]{1,120}$/.test(String(data.paket))) bad('App?');
+    return { calls: [], label: `${name}: App ${data.paket}`, tvx: { art: 'starten', paket: data.paket } };
   }
 
   if (ent.domain !== domain) bad('Dienst passt nicht zum Gerät');

@@ -172,4 +172,24 @@ async function refresh(pakete, deps, force) {
   return ergebnis;
 }
 
-module.exports = { refresh, imgSize, logoPaths };
+// Eine Datei vom Fernseher (z. B. Bildschirmfoto) über HA abholen – derselbe Weg wie bei den APKs, Platz "slot";
+// die Kopie in HA wird danach sofort mit einer winzigen Datei überschrieben. deps wie bei refresh().
+async function holen(devicePath, slot, deps) {
+  const { call, signPath, haBase, adbEntity } = deps;
+  let last = '';
+  for (const w of [...WEGE].sort((a, b) => (b === wegOk) - (a === wegOk))) {
+    await call('androidtv', 'download', [adbEntity], { device_path: devicePath, local_path: w.datei(slot) });
+    const r = await fetch(haBase + await w.url(slot, signPath), { signal: AbortSignal.timeout(60000) });
+    if (r.ok) {
+      wegOk = w;
+      const buf = Buffer.from(await r.arrayBuffer());
+      await call('androidtv', 'download', [adbEntity], { device_path: '/system/etc/hosts', local_path: w.datei(slot) }).catch(() => {});
+      return buf;
+    }
+    last = `${w.name} ${r.status}`;
+    r.body?.cancel().catch(() => {});
+  }
+  throw new Error('Datei aus HA laden: ' + last);
+}
+
+module.exports = { refresh, holen, imgSize, logoPaths };

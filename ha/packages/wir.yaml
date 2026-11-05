@@ -168,13 +168,13 @@ script:
         target: { entity_id: light.kuche }
         data: { brightness_pct: 60, color_temp_kelvin: 3000, transition: 2 }
 
+  # Der Fernseher bleibt hier unberührt: aus der App heraus schaltet wir-home ihn dazu ein (Netflix, dunkles Bild,
+  # leise – home/config.jsonc, Szene "Gute Nacht" -> "fernseher").
   wir_gute_nacht:
     alias: "Wir: Gute Nacht"
     icon: mdi:weather-night
     mode: restart
     sequence:
-      - action: script.wir_tv_aus
-        continue_on_error: true
       - action: light.turn_off
         target: { entity_id: [light.kuche, light.tisch] }
         data: { transition: 5 }

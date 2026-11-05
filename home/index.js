@@ -143,8 +143,19 @@ function onState(s) {
   const was = states.get(s.entity_id);
   states.set(s.entity_id, s);
   // interne Entitäten (ADB) nie nach home_state – nur die ausgewertete Antwort
-  if (s.entity_id === intern.adb) { adbSeq++; tvEcht(); tvWatchState(s.entity_id, was); return; }
+  if (s.entity_id === intern.adb) {
+    adbSeq++; tvEcht(); tvWatchState(s.entity_id, was); kinoLicht(s, was);
+    // gerade angegangen: "Bild aus" ist vorbei; Apps/Eingänge lesen (höchstens alle 6 h)
+    const off = ['off', 'unavailable', 'unknown', undefined];
+    if (tvIsOn() && off.includes(was?.state)) {
+      if (tvx.bild_aus) tvxSet({ bild_aus: false });
+      setTimeout(() => tvxDiscover().catch(err => log('Fernseher-Apps lesen:', err.message)), 20000);
+    }
+    return;
+  }
   tvWatchState(s.entity_id, was);
+  // Sonnenaufgang startet (Lichtwecker oder Test) -> ggf. Fernseher zur Weckzeit
+  if (C.cfg.wecker?.test && s.entity_id === C.cfg.wecker.test && s.state === 'on' && was && was.state !== 'on') weckerTv().catch(err => log('Wecker-Fernseher:', err.message));
   // Wecker-Helfer tauchen in HA auf (Paket gerade eingespielt) -> Einstellungen übertragen
   if (C.allow.get(s.entity_id)?.kind === 'wecker' && (!was || was.missing) && !s.missing) weckerSoon();
   put(s.entity_id, slim(s));
@@ -411,12 +422,14 @@ async function tvDiscover() {
   }
 }
 
-// Android-Schlaf per ADB; geht das nicht (keine ADB-Entität, Fehler), wie bisher die Power-Taste
+// Android-Schlaf per ADB; geht das nicht (keine ADB-Entität, Fehler), wie bisher die Power-Taste.
+// Vorher Pause (Musik-Apps wie Spotify spielen im Android-Schlaf sonst weiter – das ist nur bei "Bild aus" gewollt).
 function tvSleep() {
   const tv = C.cfg.fernseher;
   const power = () => backend.call('media_player', 'turn_off', [tv.entity_id], {});
+  if (tvx.bild_aus) tvxSet({ bild_aus: false });
   if (!intern.adb) return power();
-  return backend.call('androidtv', 'adb_command', [intern.adb], { command: 'input keyevent 223' }, 10000)
+  return backend.call('androidtv', 'adb_command', [intern.adb], { command: 'input keyevent 127; input keyevent 223' }, 10000)
     .then(() => backend.call('homeassistant', 'update_entity', [intern.adb], {}).catch(() => {}))
     .catch(err => { log('ADB-Schlaf fehlgeschlagen, Power-Taste:', err.message); return power(); });
 }
@@ -642,6 +655,244 @@ function logosFaellig() {
 }
 
 // ----------------------------------------------------------------------
+// Fernseher-Extras per ADB: weitere installierte Apps, Eingänge (HDMI), Text eingeben, Bild aus (Ton an), Bildschirmfoto.
+// Stand für die App in home_state "_tvx": { apps: [{ paket, name, farbe }], eingaenge: [{ key, name }], bild_aus,
+// bildschirm: { laeuft, at, fehler } }. Die Listen liest wir-home vom Fernseher, sobald er an ist (höchstens alle 6 h).
+// ----------------------------------------------------------------------
+const APP_INFO = {   // bekannte Apps: Name + Farbe (sonst aus dem Paketnamen gebildet)
+  'com.android.vending': ['Play Store', '#34a853'], 'com.crunchyroll.crunchyroid': ['Crunchyroll', '#f47521'],
+  'com.google.android.videos': ['Google TV', '#4285f4'], 'com.internet.tvbrowser': ['TV Browser', '#7b5cff'],
+  'com.mediatek.wwtv.tvcenter': ['Live-TV', '#2fd4c4'], 'com.mitv.gallery': ['Galerie', '#a99bff'],
+  'com.surfshark.vpnclient.android': ['Surfshark', '#1ebfbf'], 'de.prosiebensat1digital.seventv': ['Joyn', '#ff3c78'],
+  'de.telekom.magentatv.atv': ['MagentaTV', '#e20074'], 'de.toggo': ['TOGGO', '#ff6a00'],
+  'com.xiaomi.mitv.mediaexplorer': ['Medien (USB)', '#ffb36b'],
+};
+// System-Apps ohne Nutzen als Kachel
+const APP_WEG = new Set(['com.mitv.tvhome.atv', 'com.mitv.tvhome.mitvplus', 'com.xiaomi.mitv.tvmanager', 'com.google.android.music',
+  'com.google.android.play.games', 'com.android.tv.settings']);
+const appName = p => {
+  const teile = p.split('.').filter(t => !['com', 'de', 'tv', 'android', 'app', 'atv', 'mobile', 'www', 'org', 'net', 'apps', 'leanback'].includes(t));
+  const t = teile[teile.length - 1] || p;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+let tvx = { apps: [], eingaenge: [], bild_aus: false, bildschirm: null };
+const tvxIds = new Map();   // Eingang key -> TV-Input-ID (nur intern)
+let tvxAt = 0;
+function tvxSet(patch) { Object.assign(tvx, patch); put('_tvx', tvx); }
+
+async function tvxDiscover(force) {
+  if (!intern.adb || !tvIsOn() || (!force && Date.now() - tvxAt < 6 * 3600000)) return;
+  tvxAt = Date.now();
+  const out = await adb(`cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.LEANBACK_LAUNCHER; echo =====; dumpsys tv_input | grep HDMIInputService/HW; echo =====; settings get global ${HELL_KEY}`);
+  const [teilA, teilB = '', teilC = ''] = out.split('=====');
+  const hell = parseInt(teilC.trim(), 10);
+  if (Number.isFinite(hell)) tvxSet({ helligkeit: hell });
+  const fest = new Set(C.cfg.fernseher.apps.map(a => a.paket).filter(Boolean));
+  const pakete = [...new Set([...teilA.matchAll(/^\s*([a-zA-Z][\w.]+)\/\S+/gm)].map(m => m[1]))].filter(p => !fest.has(p) && !APP_WEG.has(p));
+  const apps = pakete.map(p => ({ paket: p, name: APP_INFO[p]?.[0] || appName(p), farbe: APP_INFO[p]?.[1] || '#7b5cff' }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'de')).slice(0, 40);
+  // HDMI-Eingänge in Reihenfolge der Hardware-Nummer = HDMI 1, 2, 3
+  const hw = [...new Map([...teilB.matchAll(/([\w.]+\/[\w.]*HDMIInputService\/HW(\d+))/g)].map(m => [+m[2], m[1]])).entries()].sort((a, b) => a[0] - b[0]);
+  tvxIds.clear();
+  const eingaenge = hw.slice(0, 4).map(([, id], i) => { tvxIds.set('hdmi' + (i + 1), id); return { key: 'hdmi' + (i + 1), name: 'HDMI ' + (i + 1) }; });
+  if (!pakete.length && !hw.length) { tvxAt = 0; return; }   // Antwort unvollständig -> später erneut
+  tvxSet({ apps, eingaenge });
+  log(`Fernseher: ${apps.length} weitere Apps, ${eingaenge.length} HDMI-Eingänge`);
+}
+
+// Text für "input text": nur druckbare ASCII-Zeichen (Umlaute umschreiben), Leerzeichen als %s, in '…' für die Shell
+function adbText(t) {
+  const s = t.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7e]/g, '');
+  return "'" + s.replace(/%/g, '').replace(/ /g, '%s').replace(/'/g, "'\\''") + "'";
+}
+
+async function tvxRun(x) {
+  const fail = msg => { const e = new Error(msg); e.status = 400; throw e; };
+  if (x.art === 'bild') {
+    if (x.aus) {
+      if (!tvIsOn()) fail('Der Fernseher ist aus');
+      await adb('input keyevent 223');   // Android-Schlaf: Bild aus, Musik-Apps spielen weiter
+      tvxSet({ bild_aus: true, bild_aus_at: new Date().toISOString() });
+    } else {
+      tvxSet({ bild_aus: false });
+      tvWake('adb');
+    }
+    return;
+  }
+  if (x.art === 'bildschirm') { if (!tvIsOn()) fail('Der Fernseher ist aus'); bildschirmFoto(); return; }
+  if (x.art === 'starten') {
+    if (!tvx.apps.some(a => a.paket === x.paket)) fail('App nicht auf dem Fernseher');
+    const go = () => adb(`monkey -p ${x.paket} -c android.intent.category.LEANBACK_LAUNCHER 1`);
+    if (tvIsOn()) await go();
+    else tvWake().then(ms => ms && sleep(1500).then(go)).catch(err => log('App-Start nach Einschalten:', err.message));
+    return;
+  }
+  if (!tvIsOn()) fail('Der Fernseher ist aus');
+  if (x.art === 'helligkeit') return tvHelligkeit(x.wert);
+  if (x.art === 'eingang') {
+    if (x.eingang === 'tv') return void await adb('input keyevent 3');
+    if (!tvxIds.size) await tvxDiscover(true);   // nach einem Neustart sind die internen IDs weg
+    const id = tvxIds.get(x.eingang);
+    if (!id) fail('Eingang unbekannt');
+    await adb(`am start -a android.intent.action.VIEW -d content://android.media.tv/passthrough/${encodeURIComponent(id)}`);
+    return;
+  }
+  if (x.art === 'text') {
+    const teile = [];
+    if (x.loeschen) teile.push('input keyevent ' + Array(x.loeschen).fill(67).join(' '));
+    if (x.text) teile.push('input text ' + adbText(x.text));
+    if (x.enter) teile.push('input keyevent 66');
+    await adb(teile.join('; '));
+  }
+}
+
+// Bildschirmfoto: screencap auf dem Fernseher -> über HA abholen -> PocketBase home_logos (Eintrag "_bildschirm", geschützt).
+// Läuft im Hintergrund (dauert ein paar Sekunden); die App sieht den Fortschritt in _tvx.bildschirm.
+// Hinweis: Streaming-Apps mit Kopierschutz (Netflix, Prime …) liefern dabei nur ein schwarzes Bild.
+let shotBusy = false;
+async function bildschirmFoto() {
+  if (shotBusy) return;
+  shotBusy = true;
+  tvxSet({ bildschirm: { ...(tvx.bildschirm || {}), laeuft: true, fehler: '' } });
+  try {
+    await adb('screencap -p /sdcard/wir-bild.png', 30000);
+    const buf = await tvlogos.holen('/sdcard/wir-bild.png', 'bild', {
+      call: (d, s, ids, data) => backend.call(d, s, ids, data, 120000), signPath: p => backend.signPath(p),
+      haBase: HA_URL.replace(/\/+$/, ''), adbEntity: intern.adb,
+    });
+    adb('rm -f /sdcard/wir-bild.png').catch(() => {});
+    if (buf.length < 1000 || buf.readUInt32BE(0) !== 0x89504e47) throw new Error('kein Bild');
+    const f = new FormData();
+    f.set('paket', '_bildschirm'); f.set('version', String(Date.now())); f.set('art', 'bildschirm');
+    f.set('bild', new Blob([buf], { type: 'image/png' }), 'bildschirm.png');
+    const r = await api('GET', `/api/collections/home_logos/records?filter=${encodeURIComponent('paket="_bildschirm"')}&perPage=1&skipTotal=1`);
+    if (r.items[0]) await pbForm('PATCH', `/api/collections/home_logos/records/${r.items[0].id}`, f);
+    else await pbForm('POST', '/api/collections/home_logos/records', f);
+    tvxSet({ bildschirm: { laeuft: false, at: new Date().toISOString(), fehler: '' } });
+  } catch (err) {
+    log('Bildschirmfoto:', err.message);
+    tvxSet({ bildschirm: { ...(tvx.bildschirm || {}), laeuft: false, fehler: 'Bildschirmfoto hat nicht geklappt' } });
+  } finally { shotBusy = false; }
+}
+
+// ----------------------------------------------------------------------
+// Kino-Licht (Einstellung home_settings "fernseher".kinolicht): läuft etwas auf dem Fernseher, dimmen die eingeschalteten
+// Lampen sanft auf 12 %; bei Pause oder Aus kommt die vorherige Helligkeit zurück (nur, wenn niemand inzwischen von Hand
+// an der Lampe war). Zustand aus der ADB-Entität (playing / paused / idle / off).
+// ----------------------------------------------------------------------
+const KINO_PCT = 12;
+let tvSet = { at: 0, data: {} }, kinoT = null;
+const kinoMem = new Map();   // entity_id -> Helligkeit (0–255) vor dem Dimmen
+async function tvSettings() {
+  if (Date.now() - tvSet.at < 60000) return tvSet.data;
+  const r = await api('GET', `/api/collections/home_settings/records?filter=${encodeURIComponent('key="fernseher"')}&perPage=1&skipTotal=1`);
+  tvSet = { at: Date.now(), data: r.items[0]?.data || {} };
+  return tvSet.data;
+}
+function kinoLicht(s, was) {
+  const now = s?.state, before = was?.state;
+  if (now === before || meta.mode !== 'live') return;
+  clearTimeout(kinoT);
+  // kurz warten: beim Spulen/Umschalten wechselt der Zustand oft hin und her
+  kinoT = setTimeout(async () => {
+    const st = states.get(intern.adb)?.state;
+    try {
+      if (!(await tvSettings()).kinolicht) { kinoMem.clear(); return; }
+      if (st === 'playing') {
+        for (const l of C.cfg.lampen) {
+          const ls = states.get(l.entity_id);
+          if (ls?.state !== 'on' || kinoMem.has(l.entity_id)) continue;
+          const b = Number(ls.attributes?.brightness) || 0;
+          if (b && b <= Math.round(KINO_PCT * 2.55) + 3) continue;   // schon dunkel genug
+          kinoMem.set(l.entity_id, b);
+          await backend.call('light', 'turn_on', [l.entity_id], { brightness_pct: KINO_PCT, transition: 4 });
+        }
+        if (kinoMem.size) log('Kino-Licht: gedimmt');
+      } else if (kinoMem.size) {
+        for (const [id, b] of kinoMem) {
+          const ls = states.get(id), jetzt = Number(ls?.attributes?.brightness) || 0;
+          // nur zurück, wenn die Lampe noch an ist und noch "unsere" Helligkeit hat
+          if (ls?.state === 'on' && Math.abs(jetzt - Math.round(KINO_PCT * 2.55)) <= 6 && b) await backend.call('light', 'turn_on', [id], { brightness: b, transition: 3 });
+        }
+        kinoMem.clear();
+        log('Kino-Licht: zurück');
+      }
+    } catch (err) { log('Kino-Licht:', err.message); }
+  }, 3000);
+}
+
+// ----------------------------------------------------------------------
+// Fernseher beim Wecken (Wecker-Einstellungen "tv": { an, app, lautstaerke }): startet der Sonnenaufgang (Lichtwecker in
+// HA oder "Weckvorgang testen"), schaltet wir-home den Fernseher zur Weckzeit ein, öffnet die App und stellt die
+// Lautstärke ein. Beim Test (Weckzeit noch weit weg) nach der Testdauer.
+// ----------------------------------------------------------------------
+// App öffnen und Lautstärke setzen (Fernseher ist an) – für Wecker und Szenen
+async function tvAppVol(appName, vol) {
+  const tv = C.cfg.fernseher;
+  const app = tv.apps.find(a => a.name === appName);
+  if (app) {
+    const { calls } = conf.check(C, { entity_id: tv.entity_id, service: 'tv.app', data: { app: app.name } }, states);
+    for (const c of calls) await backend.call(c.domain, c.service, c.entity_ids, c.data).catch(err => log('App öffnen:', err.message));
+    await sleep(3000);
+  }
+  if (vol != null) {
+    const v = Math.max(0, Math.min(tv.max_lautstaerke, Math.round(Number(vol) || 0)));
+    for (const c of volumeSteps([{ domain: 'media_player', service: 'volume_set', entity_ids: [tv.entity_id], data: { volume_level: v / tv.max_lautstaerke } }]))
+      await backend.call(c.domain, c.service, c.entity_ids, c.data).catch(() => {});
+  }
+}
+
+// Bildhelligkeit des Fernsehers (Xiaomi: globale Einstellung picture_brightness, 0–100, 50 = Werkseinstellung)
+const HELL_KEY = 'picture_brightness';
+async function tvHelligkeit(n) {
+  n = Math.max(0, Math.min(100, Math.round(n)));
+  await adb(`settings put global ${HELL_KEY} ${n}`);
+  tvxSet({ helligkeit: n });
+}
+
+// Szene mit "fernseher": einschalten (das HA-Skript läuft parallel – bei "Gute Nacht" ggf. noch die alte Version, die
+// den Fernseher zuerst ausschaltet, darum kurz warten), dann App, Lautstärke, Bildhelligkeit
+async function tvSzene(sz) {
+  const f = sz.fernseher;
+  await sleep(4000);
+  const an = tvIsOn() || await tvWake();
+  if (!an) return log(`Szene ${sz.name}: Fernseher ging nicht an`);
+  await sleep(2500);
+  if (f.helligkeit != null) await tvHelligkeit(f.helligkeit).catch(err => log('Helligkeit:', err.message));
+  await tvAppVol(f.app, f.lautstaerke);
+  log(`Szene ${sz.name}: Fernseher an${f.app ? ' · ' + f.app : ''}${f.lautstaerke != null ? ' · Lautstärke ' + f.lautstaerke : ''}${f.helligkeit != null ? ' · Helligkeit ' + f.helligkeit : ''}`);
+}
+
+let weckTvT = null;
+async function weckerTv() {
+  const tv = C.cfg.fernseher, wk = C.cfg.wecker;
+  if (!tv || meta.mode !== 'live') return;
+  const r = await api('GET', `/api/collections/home_settings/records?filter=${encodeURIComponent('key="wecker"')}&perPage=1&skipTotal=1`);
+  const t = r.items[0]?.data?.tv;
+  if (!t?.an) return;
+  const z = String(states.get(wk.zeit)?.state || '');
+  let ms = Infinity;
+  if (/^\d{2}:\d{2}/.test(z)) {
+    const [h, m] = z.split(':').map(Number), at = new Date(); at.setHours(h, m, 0, 0);
+    if (at - Date.now() < -120000) at.setDate(at.getDate() + 1);
+    ms = Math.max(0, at - Date.now());
+  }
+  if (ms > 35 * 60000) ms = wk.test_sekunden * 1000;   // Test-Sonnenaufgang
+  clearTimeout(weckTvT);
+  log(`Wecker: Fernseher in ${Math.round(ms / 1000)} s (${t.app || 'ohne App'}, Lautstärke ${t.lautstaerke})`);
+  weckTvT = setTimeout(async () => {
+    try {
+      const an = tvIsOn() || await tvWake();
+      if (!an) return log('Wecker: Fernseher ging nicht an');
+      await sleep(2500);
+      await tvAppVol(t.app, t.lautstaerke);
+      log('Wecker: Fernseher an' + (t.app ? ' · ' + t.app : ''));
+    } catch (err) { log('Wecker-Fernseher:', err.message); }
+  }, ms);
+}
+
+// ----------------------------------------------------------------------
 // Befehle von PocketBase (nur localhost)
 // ----------------------------------------------------------------------
 const hits = new Map(); // user -> Zeitstempel
@@ -682,8 +933,13 @@ async function handle(cmd) {
       : sz.aktionen.flatMap(a => conf.check(C, a, states).calls);
     label = `Szene ${sz.name}`;
   }
-  let wake = false, watch = false, logos = false;
-  if (!sz) ({ calls, label, wake, watch, logos } = conf.check(C, cmd, states));
+  let wake = false, watch = false, logos = false, x = null;
+  if (!sz) ({ calls, label, wake, watch, logos, tvx: x } = conf.check(C, cmd, states));
+  if (x) {
+    if (meta.mode !== 'live' || !intern.adb) { const e = new Error('Geht nur mit dem echten Fernseher (ADB)'); e.status = 400; throw e; }
+    await tvxRun(x);
+    return { ok: true, label };
+  }
   if (logos) {
     if (meta.mode !== 'live') { const e = new Error('Im Testmodus gibt es keine Logos'); e.status = 400; throw e; }
     if (!intern.adb) { const e = new Error('Android Debug Bridge in HA fehlt'); e.status = 400; throw e; }
@@ -722,6 +978,8 @@ async function handle(cmd) {
       const e = new Error(err.message || 'Fehler von Home Assistant'); e.status = 502; throw e;
     }
   }
+  // Szene mit Fernseher: im Hintergrund einschalten, App öffnen, Lautstärke + Bildhelligkeit setzen
+  if (sz?.fernseher && tv && meta.mode === 'live') tvSzene(sz).catch(err => log(`Szene ${sz.name} – Fernseher:`, err.message));
   // aktive Szene merken (Markierung in der App); Licht von Hand geändert -> keine Szene mehr aktiv (wie in der Vorlage)
   if (sz) setMeta({ scene: sz.key, scene_at: new Date().toISOString() });
   else if (calls[0].domain === 'light' && meta.scene) setMeta({ scene: '', scene_at: '' });
@@ -808,6 +1066,8 @@ async function main() {
   try { klima = JSON.parse(cache.get('_klima') || 'null') || { series: {} }; } catch (_) { klima = { series: {} }; }
   if (!klima.series) klima = { series: {} };
   klimaTrim();
+  try { Object.assign(tvx, JSON.parse(cache.get('_tvx') || '{}')); } catch (_) { /* leer lassen */ }
+  if (tvx.bildschirm?.laeuft) tvx.bildschirm.laeuft = false;
   put('_config', publicConfig());
   setMeta({ connected: false, error: '' });
   // Datensätze von Geräten, die nicht mehr in der Konfiguration stehen, bleiben liegen – die App zeigt nur Konfiguriertes.
@@ -829,6 +1089,8 @@ async function main() {
   // Fernseher: Titel abfragen (nur wenn Zuhause offen und TV an), interne Entitäten nachsuchen, solange sie fehlen
   setInterval(() => tvPoll(), POLL_MS);
   setInterval(() => { if (meta.connected && (!intern.adb || !intern.wol)) tvDiscover().catch(() => {}); }, 2 * 60000);
+  // weitere Apps / Eingänge vom Fernseher (höchstens alle 6 h, nur wenn er an ist)
+  setInterval(() => { if (meta.connected && tvIsOn()) tvxDiscover().catch(err => log('Fernseher-Apps lesen:', err.message)); }, 2 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
   let reloadTimer = null;

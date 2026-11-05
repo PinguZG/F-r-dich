@@ -67,9 +67,10 @@
   // Die fünf Skripte kommen aus dem HA-Paket ha/packages/wir.yaml (Farben/Helligkeiten dort ändern).
   "szenen": [
     { "name": "Gemütlich",  "icon": "flame", "farbe": "#ff8a3c", "entity_id": "script.wir_gemuetlich" },
-    { "name": "Filmabend",  "icon": "film",  "farbe": "#7b5cff", "entity_id": "script.wir_filmabend" },
+    // "fernseher": wir-home schaltet dazu den Fernseher ein, öffnet die App, setzt Lautstärke und Bildhelligkeit (0–100, 50 = normal)
+    { "name": "Filmabend",  "icon": "film",  "farbe": "#7b5cff", "entity_id": "script.wir_filmabend", "fernseher": { "app": "Netflix", "lautstaerke": 35, "helligkeit": 50 } },
     { "name": "Lesen",      "icon": "book",  "farbe": "#ffc27a", "entity_id": "script.wir_lesen" },
-    { "name": "Gute Nacht", "icon": "moon",  "farbe": "#5b6cff", "entity_id": "script.wir_gute_nacht" },
+    { "name": "Gute Nacht", "icon": "moon",  "farbe": "#5b6cff", "entity_id": "script.wir_gute_nacht", "fernseher": { "app": "Netflix", "lautstaerke": 20, "helligkeit": 0 } },
     { "name": "Alles aus",  "icon": "power", "farbe": "#6b7085", "entity_id": "script.wir_alles_aus" }
   ],
 

@@ -214,3 +214,39 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 #zh .z-perf .z-nowmark{filter:none}
 #zh.z-phone .z-nowmark{width:84px;height:84px;right:20px;top:22px;transform:none}
 #zh.z-phone .z-now h2,#zh.z-phone .z-now p{max-width:calc(100% - 100px)}
+
+/* Fernseher-Extras: Bild aus + Bildschirm neben "Stumm", Bildhelligkeit als eigene Kachel (wie Lautstärke, warm statt türkis),
+   Text an den Fernseher unter den Tasten, weitere Apps als kleine Kacheln, Bildschirmfoto groß als Overlay */
+#zh .z-vbtn.z-xbtn{flex:1;font-size:15px}
+#zh .z-vbtn.z-xbtn svg{width:19px;height:19px}
+#zh .z-vbtn.z-xbtn.z-on{background:color-mix(in srgb,var(--z-teal) 18%,transparent);color:var(--zt-bff3ec)}
+#zh .z-bildaus .z-volc:not(.z-hellc){opacity:1;pointer-events:auto}
+#zh .z-hellc .z-vbar i{background:linear-gradient(90deg,rgba(255,200,120,.25),#ffc27a);box-shadow:0 0 22px rgba(255,194,122,.45)}
+#zh .z-tvtext{display:flex;gap:8px;width:100%;max-width:340px}
+#zh .z-tvtext input{flex:1;min-width:0;height:48px;border-radius:16px;border:1px solid var(--z-line);background:rgba(var(--zw),.05);color:var(--z-txt);
+  padding:0 14px;font:inherit;font-size:15px;outline:none;transition:border-color .2s}
+#zh .z-tvtext input:focus{border-color:color-mix(in srgb,var(--z-vio) 60%,transparent)}
+#zh .z-tvtext input::placeholder{color:var(--z-mut)}
+#zh .z-tb{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:rgba(var(--zw),.06);border:1px solid var(--z-line);cursor:pointer;color:var(--zt-d6d9e4);flex:none}
+#zh .z-tb.z-send{background:radial-gradient(circle at 35% 30%,#9d86ff,#6a4cff);border-color:transparent;color:#fff}
+#zh .z-tb:active{transform:scale(.94)}
+#zh .z-more{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#zh .z-ma{--c:#7b5cff;height:60px;border-radius:18px;display:flex;align-items:center;gap:11px;padding:0 14px;cursor:pointer;
+  background:radial-gradient(130% 140% at 0% 0%,color-mix(in srgb,var(--c) 14%,transparent),transparent 65%),var(--z-card);border:1px solid var(--z-line);transition:background .3s,border-color .3s,transform .2s}
+#zh .z-ma:active{transform:scale(.97)}
+#zh .z-ma .z-mark{width:26px;height:26px;flex:none;color:color-mix(in srgb,var(--c) 84%,#fff)}
+#zh .z-ma .z-mark svg{display:block;width:100%;height:100%;fill:none;stroke:none}
+#zh .z-ma b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .z-ma.z-on{border-color:color-mix(in srgb,var(--c) 50%,transparent);background:radial-gradient(130% 140% at 0% 0%,color-mix(in srgb,var(--c) 28%,transparent),transparent 70%),var(--z-card)}
+#zh .z-shotov{background:rgba(6,7,11,.92);backdrop-filter:blur(10px);place-items:center;align-content:center;gap:16px;padding:24px}
+#zh .z-shotbox{width:min(100%,960px);display:grid;gap:10px;justify-items:center}
+#zh .z-shotbox img{width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:18px;background:#000;border:1px solid var(--z-line)}
+#zh .z-shotmsg{font-size:14px;color:var(--z-mut);text-align:center}
+#zh .z-shotbar{display:flex;gap:10px}
+#zh .z-wtvapps{flex-wrap:wrap}
+#zh .z-wtvapps div{flex:1 0 28%;height:38px;font-size:12px}
+#zh .z-wtvvol{margin-top:12px}
+#zh #zh-wtv.z-off .z-wtvapps,#zh #zh-wtv.z-off .z-wtvvol,#zh #zh-wtv.z-off input{opacity:.4}
+#zh #zh-wtv h4 .z-sw{margin-left:auto}
+#zh.z-phone .z-more{grid-template-columns:1fr 1fr}
+#zh.z-phone .z-tvtext{max-width:none}
