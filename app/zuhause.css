@@ -250,3 +250,14 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 #zh #zh-wtv h4 .z-sw{margin-left:auto}
 #zh.z-phone .z-more{grid-template-columns:1fr 1fr}
 #zh.z-phone .z-tvtext{max-width:none}
+
+/* Tablet: Spalten der Seiten scrollen, wenn der Inhalt höher ist als der Bildschirm (Fernseher-Extras, Wecker-Fernseher,
+   weitere Einstellungen). Karten behalten ihre Höhe (nicht zusammendrücken), unten läuft der Inhalt weich aus. */
+#zh:not(.z-phone) .z-t-left,#zh:not(.z-phone) .z-t-right,#zh:not(.z-phone) .z-alist,#zh:not(.z-phone) .z-aset,#zh:not(.z-phone) .z-scol{
+  min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:4px 6px 28px;margin:-4px -6px 0;
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+#zh:not(.z-phone) .z-t-left::-webkit-scrollbar,#zh:not(.z-phone) .z-t-right::-webkit-scrollbar,#zh:not(.z-phone) .z-alist::-webkit-scrollbar,
+#zh:not(.z-phone) .z-aset::-webkit-scrollbar,#zh:not(.z-phone) .z-scol::-webkit-scrollbar{display:none}
+#zh .z-t-left > *,#zh .z-t-right > *{flex-shrink:0}
+#zh:not(.z-phone) .z-remote{flex:1 0 auto}
