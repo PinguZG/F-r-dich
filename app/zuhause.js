@@ -17,6 +17,9 @@
   const icons = el => qa('[data-i]', el).forEach(e => { if (!e.querySelector(':scope > svg')) e.insertAdjacentHTML('afterbegin', svg(e.dataset.i)); });
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = n => String(n).padStart(2, '0');
+  // innerHTML nur setzen, wenn sich der Inhalt geändert hat (zuletzt gesetztes HTML in einer WeakMap, nicht im DOM)
+  const htmlOf = new WeakMap();
+  const setHTML = (el, h) => { if (el && htmlOf.get(el) !== h) { htmlOf.set(el, h); el.innerHTML = h; } };
 
   // ---------------------------------------------------------------- Zustand
   const T = window.ZuhauseData.create(window.ZH_TRANSPORT || 'wir');
@@ -124,7 +127,16 @@
     qa('.z-page').forEach(x => x.classList.toggle('z-on', x.id === 'zh-p-' + p));
     const v = tvView();
     if (p === 'tv' && v?.on) $('stage').style.setProperty('--z-a1', v.app.farbe); else $('stage').style.removeProperty('--z-a1');
-    if (!mqTab.matches) { host.closest('.page')?.scrollTo({ top: 0 }); $('rail').querySelector('.z-on')?.scrollIntoView({ inline: 'center', block: 'nearest' }); }
+    // Handy: nach oben und Tab mittig – nur wenn nötig und direkt gesetzt (wiederholtes scrollTo/scrollIntoView hielt in WebKit Speicher fest)
+    if (!mqTab.matches) {
+      const pg = host.closest('.page'); if (pg && pg.scrollTop) pg.scrollTop = 0;
+      const R = $('rail'), on = R.querySelector('.z-on');
+      if (on) {
+        const rr = R.getBoundingClientRect(), or = on.getBoundingClientRect();
+        const x = Math.max(0, Math.min(R.scrollWidth - R.clientWidth, Math.round(R.scrollLeft + (or.left + or.width / 2) - (rr.left + rr.width / 2))));
+        if (Math.abs(R.scrollLeft - x) > 1) R.scrollLeft = x;
+      }
+    }
   }
 
   // ---------------------------------------------------------------- Uhr, Fakten, Hinweise
@@ -193,7 +205,7 @@
       return `<div class="z-chip${open && x.art !== 'bewegung' ? ' z-warn' : ''}">${svg(icon)}${esc(txt)}</div>`;
     }).join('');
     const html = alarm + sens;
-    if (box.dataset.h !== html) { box.dataset.h = html; box.innerHTML = html; }
+    setHTML(box, html);
   }
 
   // ---------------------------------------------------------------- Lampen
@@ -340,7 +352,7 @@
     prog.querySelector('.z-bar i').style.width = dur ? (pos / dur * 100).toFixed(1) + '%' : '0%';
     prog.querySelector(':scope > span').textContent = dur ? `${mmss(pos)} / ${mmss(dur)}` : '';
     $('nsub').textContent = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
-    $('pp').innerHTML = svg(v.playing ? 'pause' : 'play');
+    setHTML($('pp'), svg(v.playing ? 'pause' : 'play'));
     $('pwrt').textContent = v.on ? 'Ausschalten' : 'Einschalten';
     $('offmsg').querySelector('span').textContent = tvHint ? 'Einschalten nicht möglich – Netzwerk-Standby am TV prüfen' : 'Tippen zum Einschalten';
     $('tvstate').textContent = v.on ? 'An · ' + app.name : 'Aus · Standby';
@@ -419,14 +431,14 @@
       const cls = ['z-day', d.getMonth() !== view.getMonth() ? 'z-other' : '', dow > 4 ? 'z-we' : '', ds === td ? 'z-today' : '', ds === sd ? 'z-sel' : ''].join(' ');
       h += `<div class="${cls}" data-d="${ds}"><div class="z-n">${d.getDate()}</div>${es.slice(0, 2).map(x => `<div class="z-ev ${x.span ? 'z-span' : ''} ${x.start ? 'z-start' : ''} ${x.end ? 'z-end' : ''}" style="--c:${C[x.w]}">${x.span && !x.start && dow !== 0 ? '&nbsp;' : esc(x.n)}</div>`).join('')}${es.length > 2 ? `<div class="z-more">+${es.length - 2}</div>` : ''}</div>`;
     }
-    if ($('grid').dataset.h !== h) { $('grid').dataset.h = h; $('grid').innerHTML = h; }
+    setHTML($('grid'), h);
   }
   const whoTxt = w => (w === 'g' ? 'gemeinsam' : w === 'i' ? 'Ida' : 'Daniel');
   function renderAgenda() {
     const ds = iso(sel), es = evOn(ds);
     $('seltitle').textContent = ds === iso(today()) ? 'Heute' : sel.toLocaleDateString('de-DE', { weekday: 'long' });
     $('seldate').textContent = sel.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
-    $('agenda').innerHTML = es.length ? es.slice(0, 3).map(x => `<div class="z-it" style="--c:${C[x.w]}"><div class="z-bar"></div><div class="z-t">${x.span || !x.t ? 'ganzt.' : esc(x.t)}</div><div><b>${esc(x.n)}</b><small>${[x.span ? 'ganztägig' : (x.e ? x.t + ' – ' + x.e : ''), whoTxt(x.w)].filter(Boolean).map(esc).join(' · ')}</small></div></div>`).join('') : '<div class="z-empty">Keine Termine – freier Tag.</div>';
+    setHTML($('agenda'), es.length ? es.slice(0, 3).map(x => `<div class="z-it" style="--c:${C[x.w]}"><div class="z-bar"></div><div class="z-t">${x.span || !x.t ? 'ganzt.' : esc(x.t)}</div><div><b>${esc(x.n)}</b><small>${[x.span ? 'ganztägig' : (x.e ? x.t + ' – ' + x.e : ''), whoTxt(x.w)].filter(Boolean).map(esc).join(' · ')}</small></div></div>`).join('') : '<div class="z-empty">Keine Termine – freier Tag.</div>');
   }
   const LISTS = { Gemeinsam: 'gemeinsam', Einkauf: 'einkauf', Haushalt: 'haushalt' };
   let curL = 'gemeinsam';
@@ -439,9 +451,9 @@
     const items = todoList(curL);
     const h = items.map(x => `<div class="z-td ${x.done ? 'z-done' : ''}" data-id="${x.id}"><div class="z-cb">${svg('check')}</div><div><b>${esc(x.text)}</b>${x.note ? `<small>${esc(x.note)}</small>` : ''}</div><div class="z-who" style="--c:${C[x.who]}">${x.who === 'd' ? 'D' : x.who === 'i' ? 'I' : 'W'}</div></div>`).join('')
       || '<div class="z-empty">Noch nichts auf der Liste.</div>';
-    if ($('todos').dataset.h !== h) { $('todos').dataset.h = h; $('todos').innerHTML = h; }
+    setHTML($('todos'), h);
     const open = [...todoList('gemeinsam'), ...todoList('haushalt'), ...todoList('einkauf')].filter(x => !x.done).slice(0, 3);
-    $('rtodos').innerHTML = open.map(x => `<div class="z-rtodo"><i></i>${esc(x.text)}</div>`).join('') || '<div class="z-rtodo">Alles erledigt</div>';
+    setHTML($('rtodos'), open.map(x => `<div class="z-rtodo"><i></i>${esc(x.text)}</div>`).join('') || '<div class="z-rtodo">Alles erledigt</div>');
   }
 
   // ---------------------------------------------------------------- Wecker (Einstellungen in PocketBase: home_settings "wecker")
@@ -491,7 +503,7 @@
         `<div class="z-days">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t, i) => `<div data-day="${i}"${a.tage.includes(i) ? ' class="z-on"' : ''}>${t}</div>`).join('')}</div>` +
         (ts.length > 1 ? `<div class="z-atimes">${ts.map(t => `<span>${t}</span>`).join('')}</div>` : '') + '</div>';
     }).join('') + `<div class="z-addal">${svg('plus')}Wecker hinzufügen</div>`;
-    if (L.dataset.h !== h) { L.dataset.h = h; L.innerHTML = h; }
+    setHTML(L, h);
     if (document.activeElement !== $('vor')) $('vor').value = w.vorlauf;
     $('vl').textContent = w.vorlauf + ' Min';
     qa('#zh-tone > div').forEach(x => x.classList.toggle('z-on', x.textContent === w.ton));

@@ -67,7 +67,7 @@
             pb.collection('home_settings').subscribe('*', e => { state.settings[e.record.key] = e.record.data; settingIds[e.record.key] = e.record.id; changed(); }),
           ]);
           // stop() kam während des Starts -> sofort wieder abmelden (keine verwaisten Abos)
-          if (my !== gen) { subs.forEach(u => u()); return; }
+          if (my !== gen) { subs.forEach(u => Promise.resolve(u()).catch(() => {})); return; }
           unsubs = subs;
           await loadAll(my);
         })().finally(() => { this.starting = null; });
@@ -75,7 +75,8 @@
       },
       stop() {
         gen++;
-        unsubs.forEach(u => { try { u(); } catch (_) {} });
+        // unsubscribe() liefert ein Promise – Fehler (z. B. abgelaufene Realtime-Verbindung beim schnellen Wechsel) abfangen
+        unsubs.forEach(u => { try { Promise.resolve(u()).catch(() => {}); } catch (_) {} });
         unsubs = [];
         if (raf) { cancelAnimationFrame(raf); raf = 0; }
       },

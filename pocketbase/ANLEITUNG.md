@@ -1626,3 +1626,25 @@ git commit -m "Zurück vor HA-Anbindung" && git push
 ```
 Danach in HA (optional) `/homeassistant/packages/wir.yaml` löschen und HA neu starten. Die Datenbank wurde nicht verändert
 (kein Schemawechsel); nur bei Bedarf aus `vor-ha-anbindung-2026-11-05` zurückspielen wie unter „Zurück zur alten Version → 2.“.
+
+## Speicher-Suche Zuhause 05.11.2026 (Wir `wir-v38`)
+
+**Gemessen** (lokal, DB-Kopie, Testmodus):
+- **Chromium mit erzwungener Speicherbereinigung (CDP), 5 Min. Zuhause-Bedienschleife nach 90 s Aufwärmen:** JS-Heap 4,0 → 4,2 MB,
+  DOM-Knoten konstant 6709, Event-Listener konstant 643. Der Heap-Snapshot-Vergleich zeigt keine wachsenden App-Objekte (nur
+  Netzwerk-Protokolldaten der Messung selbst). **Kein Leck in Zuhause-JS/DOM.**
+- **WebKit (iPhone-13-Emulation, Windows), je 3 Min., Bedienung in der Seite selbst gesteuert:** Leerlauf ±0 MB; Unterseiten wechseln
+  +53, Vordergrund/Hintergrund +70, Lampen/Szenen +39 MB. Nach der Bedienung gibt WebKit nichts zurück (4 Min. Ruhe: bleibt).
+  **Vordergrund/Hintergrund wächst in den Einstellungen sogar stärker (+90 MB) als in Zuhause (+59 MB)** – dieser Anteil kommt aus
+  der übrigen App (viele Bereiche laden beim Zurückkehren neu) bzw. der WebKit-Engine, nicht aus Zuhause.
+
+**Behoben** (ohne Design-/Funktionsänderung):
+- Inhalte werden nur neu aufgebaut, wenn sie sich ändern (Play/Pause-Symbol – lief auf der TV-Seite alle 5 s –, Tagesliste,
+  To-do-Vorschau); das Vergleichs-HTML liegt in einer `WeakMap` statt als großes `data-h`-Attribut im DOM (Monat, Wecker, To-dos, Hinweise).
+- Unterseitenwechsel auf dem Handy: `scrollTo`/`scrollIntoView` nur noch, wenn nötig (direkt `scrollTop`/`scrollLeft`).
+- Abmelden der Realtime-Abos beim schnellen Hintergrund-Wechsel warf unbehandelte Fehler („Missing or invalid client id“) – abgefangen.
+
+**Ergebnis** (gleicher 10-Min.-Test, nur Zuhause, inkl. Vorder-/Hintergrund): vorher 177 → 400 MB, nachher 175 → 368 MB.
+**Ziel (±20 MB) in der Windows-WebKit-Emulation nicht erreicht.** Der Rest wächst auch außerhalb von Zuhause und lässt sich keinem
+App-Objekt zuordnen. Die Emulation nutzt eine andere Grafik-/Speicherschicht als Safari auf dem iPhone; belastbar ist nur eine
+Messung am echten Gerät (Safari-Webinformationen → Zeitleisten → Speicher, braucht einen Mac).
