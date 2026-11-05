@@ -182,13 +182,18 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 .z-lp-k.z-on i,.z-lp-c.z-on{border-color:var(--z-txt);box-shadow:0 0 0 3px color-mix(in srgb,var(--s) 45%,transparent)}
 .z-lp-cols .z-lp-c{width:100%;height:auto;aspect-ratio:1}
 
-/* App-Kacheln mit echtem Logo vom Fernseher: Logo groß (Banner 16:9 bzw. quadratisches Symbol), runde Ecken, Name klein
-   darunter, "läuft" als kleines Schild oben rechts; der Glow (--c) hat die Hauptfarbe des Logos */
-#zh .z-ap.z-hasl{justify-content:space-between;align-items:center;padding:10px 10px 8px;gap:5px}
-#zh .z-ap .z-logo{position:relative;display:block;flex:1;min-height:0;max-width:100%;object-fit:contain;border-radius:12px;
-  box-shadow:0 8px 22px -10px var(--c);user-select:none;-webkit-user-drag:none}
-#zh .z-ap.z-hasl:not(.z-banner) .z-logo{aspect-ratio:1;max-height:58px;border-radius:15px}
-#zh .z-ap.z-hasl b{font-size:12px;font-weight:600;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* App-Kacheln mit echtem Logo vom Fernseher. Freigestellt (zuhause-data.js: einfarbiger Hintergrund weg, dunkle Schrift hell)
+   schwebt das Logo direkt auf der Glas-Kachel mit Glow in seiner Farbe (--c); sonst (Foto-Banner) füllt es die Kachel und
+   läuft nach unten ins Design aus. Name klein darunter, "läuft" als kleines Schild oben rechts. */
+#zh .z-ap.z-hasl{justify-content:flex-end;align-items:center;padding:10px 12px 9px}
+#zh .z-ap .z-logo{position:absolute;left:16px;top:14px;width:calc(100% - 32px);height:calc(100% - 46px);object-fit:contain;
+  filter:drop-shadow(0 4px 16px color-mix(in srgb,var(--c) 50%,transparent));transition:transform .35s,filter .35s;
+  user-select:none;-webkit-user-drag:none}
+#zh .z-ap.z-hasl.z-on .z-logo{transform:scale(1.05);filter:drop-shadow(0 6px 20px color-mix(in srgb,var(--c) 80%,transparent))}
+#zh .z-ap.z-hasl:not(.z-frei) .z-logo{left:0;top:0;width:100%;height:100%;object-fit:cover;filter:none;opacity:.85;
+  -webkit-mask-image:linear-gradient(to bottom,#000 40%,transparent 88%);mask-image:linear-gradient(to bottom,#000 40%,transparent 88%)}
+#zh .z-perf .z-ap .z-logo{filter:none}
+#zh .z-ap.z-hasl b{font-size:13px;font-weight:600;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--zt-d6d9e4)}
 #zh .z-ap.z-hasl span{position:absolute;top:7px;right:8px;display:none;font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,.5);color:#fff}
 #zh .z-ap.z-hasl.z-on span{display:block}
 #zh.z-phone .z-ap.z-hasl span{font-size:10px}

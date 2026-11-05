@@ -375,7 +375,7 @@
     // Titel: per ADB (Serie / Staffel · Folge · Episode bzw. Titel · Untertitel), sonst Cast/HA; Beispieltext nur im Testmodus
     const ti = v.ti, sf = ti?.staffel ? `Staffel ${ti.staffel} · Folge ${ti.folge}` : '';
     const serie = ti && sf ? ti.untertitel || '' : '';
-    const titel = (ti && (serie || ti.titel)) || a.media_series_title || a.media_title || (S.meta?.mode === 'test' ? app.test : '') || '';
+    const titel = (ti && (serie || ti.titel)) || a.media_series_title || a.media_title || (S.meta?.mode === 'test' ? app.test : '') || (v.on ? app.name : '');
     const zeile = ti ? (serie ? [sf, ti.titel] : [ti.untertitel]).filter(Boolean).join(' · ') : '';
     $('ntitle').textContent = titel;
     const { pos, dur } = renderProg(v);
@@ -399,6 +399,7 @@
         } else im?.remove();
         x.classList.toggle('z-hasl', !!L);
         x.classList.toggle('z-banner', L?.art === 'banner');
+        x.classList.toggle('z-frei', !!L?.frei);
         x.style.setProperty('--c', L?.farbe || ap.farbe);
       }
       x.classList.toggle('z-on', v.on && i === v.ai);

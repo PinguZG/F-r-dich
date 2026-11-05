@@ -477,15 +477,20 @@ function tvWatchState(id, was) {
 // ADB (nur wir-home, nie die App): feste Lese-Befehle über androidtv.adb_command, nacheinander (Warteschlange).
 // Die Antwort steht danach im Attribut adb_response der ADB-Entität.
 // ----------------------------------------------------------------------
-let adbQ = Promise.resolve(), adbSeq = 0;
+let adbQ = Promise.resolve(), adbSeq = 0, adbMark = 0;
 function adb(command, timeoutMs = 20000) {
   const run = async () => {
     if (!intern.adb) throw new Error('keine ADB-Entität');
-    const seq = adbSeq;
-    await backend.call('androidtv', 'adb_command', [intern.adb], { command }, timeoutMs);
-    // die Zustandsänderung kommt über das Abo – kurz darauf warten (gleiche Antwort wie vorher = keine Änderung)
-    for (let i = 0; i < 15 && adbSeq === seq; i++) await sleep(100);
-    return String(states.get(intern.adb)?.attributes?.adb_response ?? '');
+    // Kennung vorneweg: ohne sie stünde bei einer verspäteten/fehlenden Antwort noch die vorige im Attribut
+    // (so bekam Twitch einmal das Spotify-APK)
+    const mark = `__wir${Date.now().toString(36)}${(adbMark++).toString(36)}__`;
+    await backend.call('androidtv', 'adb_command', [intern.adb], { command: `echo ${mark}; ${command}` }, timeoutMs);
+    // die Zustandsänderung kommt über das Abo – kurz darauf warten
+    const t0 = Date.now();
+    let r = '';
+    while (!(r = String(states.get(intern.adb)?.attributes?.adb_response ?? '')).startsWith(mark) && Date.now() - t0 < 3000) await sleep(100);
+    if (!r.startsWith(mark)) throw new Error('keine ADB-Antwort');
+    return r.slice(mark.length).replace(/^\r?\n/, '');
   };
   const p = adbQ.then(run, run);
   adbQ = p.catch(() => {});
