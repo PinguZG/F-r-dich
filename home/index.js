@@ -392,7 +392,11 @@ async function tvDiscover() {
   let found = { adb: want.adb === 'auto' ? '' : want.adb, wol: want.wol === 'auto' ? '' : want.wol };
   if (want.adb === 'auto' || want.wol === 'auto') {
     const { entities } = await backend.overview();
-    if (want.adb === 'auto') found.adb = entities.find(e => e.id.startsWith('media_player.') && e.attrs.includes('adb_response'))?.id || '';
+    // ADB: hat das Attribut adb_response – außer der Fernseher schläft (dann "unavailable" ohne Attribute):
+    // dann am Namen der Integration erkennen ("Android TV …") bzw. die zuletzt gefundene behalten
+    const adbs = entities.filter(e => e.id.startsWith('media_player.'));
+    if (want.adb === 'auto') found.adb = (adbs.find(e => e.attrs.includes('adb_response')) || adbs.find(e => e.id === intern.adb)
+      || adbs.find(e => /^media_player\.android_tv_/.test(e.id) || /^Android TV /.test(e.name)))?.id || '';
     // alle Wake-on-LAN-Knöpfe (der Fernseher kann mehrere Schnittstellen/MACs haben), mit Komma getrennt
     if (want.wol === 'auto') found.wol = entities.filter(e => /^button\..*wake_?on_?lan/.test(e.id)).map(e => e.id).sort().join(',');
   }
