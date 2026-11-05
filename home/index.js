@@ -597,7 +597,9 @@ function logosRefresh(force) {
       else await pbForm('POST', '/api/collections/home_logos/records', f);
     },
   }, force).then(erg => {
-    put('_logos', { stand: new Date().toISOString(), laeuft: false, ergebnis: erg.map(([p, r]) => `${p}: ${r}`) });
+    // nur Fehler (z. B. HA-Weg gesperrt) -> Stand nicht weiterzählen, in einer Stunde erneut (logosFaellig)
+    const ok = erg.some(([, r]) => !r.startsWith('Fehler'));
+    put('_logos', { stand: ok ? new Date().toISOString() : alt.stand || '', fehler_at: ok ? '' : new Date().toISOString(), laeuft: false, ergebnis: erg.map(([p, r]) => `${p}: ${r}`) });
     return erg;
   }).catch(err => {
     log('Logos:', err.message);
@@ -607,7 +609,8 @@ function logosRefresh(force) {
   return logosBusy;
 }
 function logosFaellig() {
-  const st = JSON.parse(cache.get('_logos') || '{}').stand;
+  const { stand: st, fehler_at: fe } = JSON.parse(cache.get('_logos') || '{}');
+  if (fe && Date.now() - Date.parse(fe) < 3600000) return;
   if (!st || Date.now() - Date.parse(st) > LOGO_TAG_MS) logosRefresh(false);
 }
 

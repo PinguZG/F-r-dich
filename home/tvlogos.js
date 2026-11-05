@@ -17,8 +17,17 @@ const ResourceFinder = require('app-info-parser/src/resource-finder');
 const { mapInfoResource } = require('app-info-parser/src/utils');
 
 const PKG_RE = /^[a-zA-Z][\w.]{1,120}$/;
-const HA_MEDIA = '/media';          // in HA standardmäßig erlaubt (allowlist_external_dirs) und per signiertem Link lesbar
 const MAX_APK = 400 * 1024 * 1024;
+// Wege, eine Datei aus HA abzuholen (androidtv.download darf nur in erlaubte Ordner schreiben, standardmäßig /media und www):
+// 1. /media + signierter Link (nur mit HA-Anmeldung). HA liefert dort nur Audio/Video/Bild aus – daher die Endung .mp4
+//    (der Inhalt bleibt das APK; die Datei wird danach sofort mit einer winzigen Datei überschrieben).
+// 2. Rückfall www (/local/…, im Tailnet ohne Anmeldung lesbar) mit zufälligem, nicht erratbarem Namen.
+const zufall = require('crypto').randomBytes(12).toString('hex');
+const WEGE = [
+  { name: 'media', datei: i => `/media/wir-logo-${i}.mp4`, url: (i, sign) => sign(`/media/local/wir-logo-${i}.mp4`) },
+  { name: 'www', datei: i => `/config/www/wir-${zufall}-${i}.bin`, url: async i => `/local/wir-${zufall}-${i}.bin` },
+];
+let wegOk = null;
 
 // ---------------- ZIP (APK) lesen ----------------
 function openZip(file) {
@@ -99,6 +108,18 @@ async function bestImage(apks, paths) {
 //         adbEntity, list() -> {paket: {id, version}}, save(paket, rec, bild|null), log }
 async function refresh(pakete, deps, force) {
   const { adb, call, signPath, haBase, adbEntity, log } = deps;
+  // APK vom Fernseher nach HA kopieren und abholen; der zuletzt funktionierende Weg wird zuerst probiert
+  async function fromHa(devicePath, i) {
+    let last = '';
+    for (const w of [...WEGE].sort((a, b) => (b === wegOk) - (a === wegOk))) {
+      await call('androidtv', 'download', [adbEntity], { device_path: devicePath, local_path: w.datei(i) });
+      const r = await fetch(haBase + await w.url(i, signPath), { signal: AbortSignal.timeout(300000) });
+      if (r.ok) { wegOk = w; return r; }
+      last = `${w.name} ${r.status}`;
+      r.body?.cancel().catch(() => {});
+    }
+    throw new Error('APK aus HA laden: ' + last);
+  }
   const known = await deps.list();
   const ergebnis = [];
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wir-logos-'));
@@ -117,12 +138,8 @@ async function refresh(pakete, deps, force) {
         apkPaths.sort((x, y) => (/\/base\.apk$/.test(y) ? 1 : 0) - (/\/base\.apk$/.test(x) ? 1 : 0));
         const local = [];
         for (let i = 0; i < apkPaths.length && i < 8; i++) {
-          const ha = `${HA_MEDIA}/wir-logo-${i}.apk`;
           benutzt = Math.max(benutzt, i + 1);
-          await call('androidtv', 'download', [adbEntity], { device_path: apkPaths[i], local_path: ha });
-          const signed = await signPath(`/media/local/wir-logo-${i}.apk`);
-          const r = await fetch(haBase + signed, { signal: AbortSignal.timeout(300000) });
-          if (!r.ok) throw new Error('APK aus HA laden: ' + r.status);
+          const r = await fromHa(apkPaths[i], i);
           if (Number(r.headers.get('content-length')) > MAX_APK) throw new Error('APK zu groß');
           const f = path.join(tmp, `${i}.apk`);
           await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(f));
@@ -144,7 +161,7 @@ async function refresh(pakete, deps, force) {
     fs.rmSync(tmp, { recursive: true, force: true });
     // APK-Kopien in HA durch eine winzige Datei ersetzen (Platz auf dem Pi)
     for (let i = 0; i < benutzt; i++) {
-      await call('androidtv', 'download', [adbEntity], { device_path: '/system/etc/hosts', local_path: `${HA_MEDIA}/wir-logo-${i}.apk` }).catch(() => {});
+      for (const w of wegOk ? [wegOk] : WEGE) await call('androidtv', 'download', [adbEntity], { device_path: '/system/etc/hosts', local_path: w.datei(i) }).catch(() => {});
     }
   }
   log('Logos:', ergebnis.map(([p, r]) => `${p} ${r}`).join(' | '));
