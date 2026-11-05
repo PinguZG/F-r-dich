@@ -130,7 +130,11 @@ async function refresh(pakete, deps, force) {
       try {
         const out = await adb(`pm path ${paket}; dumpsys package ${paket} | grep -m1 versionCode`);
         const apkPaths = [...String(out).matchAll(/^package:(\/\S+\.apk)\s*$/gm)].map(m => m[1]);
-        if (!apkPaths.length) { ergebnis.push([paket, 'nicht installiert']); continue; }
+        if (!apkPaths.length) {
+          if (known[paket]) await deps.remove(paket);
+          ergebnis.push([paket, 'nicht installiert']);
+          continue;
+        }
         const version = (String(out).match(/versionCode=(\d+)/) || [])[1] || '';
         const alt = known[paket];
         if (!force && alt && alt.version === version && alt.bild) { ergebnis.push([paket, 'aktuell']); continue; }

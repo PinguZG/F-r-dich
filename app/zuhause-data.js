@@ -196,6 +196,8 @@
   async function loadLogos(pb) {
     const recs = await pb.collection('home_logos').getFullList({ batch: 100, requestKey: null });
     let token = null, changed = false;
+    // gelöschte Logos (App nicht mehr installiert) aus dem Speicher werfen
+    for (const [paket, L] of logoCache) if (!recs.some(r => r.paket === paket && r.bild)) { URL.revokeObjectURL(L.url); logoCache.delete(paket); changed = true; }
     for (const r of recs) {
       if (!r.bild) continue;
       const key = r.id + '|' + r.bild;

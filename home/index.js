@@ -620,6 +620,11 @@ function logosRefresh(force) {
       if (ex) await pbForm('PATCH', `/api/collections/home_logos/records/${ex.id}`, f);
       else await pbForm('POST', '/api/collections/home_logos/records', f);
     },
+    // App nicht (mehr) installiert -> altes Logo weg (die Kachel zeigt dann wieder nur Name + Farbe)
+    async remove(paket) {
+      const ex = (await this.list())[paket];
+      if (ex) await api('DELETE', `/api/collections/home_logos/records/${ex.id}`);
+    },
   }, force).then(erg => {
     // nur Fehler (z. B. HA-Weg gesperrt) -> Stand nicht weiterzählen, in einer Stunde erneut (logosFaellig)
     const ok = erg.some(([, r]) => !r.startsWith('Fehler'));
