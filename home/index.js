@@ -380,7 +380,8 @@ async function tvDiscover() {
   if (want.adb === 'auto' || want.wol === 'auto') {
     const { entities } = await backend.overview();
     if (want.adb === 'auto') found.adb = entities.find(e => e.id.startsWith('media_player.') && e.attrs.includes('adb_response'))?.id || '';
-    if (want.wol === 'auto') found.wol = entities.find(e => e.id.startsWith('button.wake_on_lan'))?.id || '';
+    // alle Wake-on-LAN-Knöpfe (der Fernseher kann mehrere Schnittstellen/MACs haben), mit Komma getrennt
+    if (want.wol === 'auto') found.wol = entities.filter(e => /^button\..*wake_?on_?lan/.test(e.id)).map(e => e.id).sort().join(',');
   }
   if (found.adb !== intern.adb || found.wol !== intern.wol) {
     log('Fernseher intern:', 'ADB', found.adb || '–', '· WOL', found.wol || '–');
@@ -392,18 +393,20 @@ async function tvDiscover() {
 }
 
 let waking = null;
-// variante: 'auto' (Skript, sonst selbst alles), zum Messen auch 'tv' (nur turn_on), 'wol', 'wol_adb', 'skript'
+// variante: 'auto' (Skript, sonst selbst alles), zum Messen auch 'tv' (nur turn_on), 'wol' (alle Knöpfe),
+// 'wol0'/'wol1' (nur dieser eine Knopf), 'wol_adb', 'skript'
 function tvWake(variante = 'auto') {
   if (waking) return waking;
   const tv = C.cfg.fernseher, t0 = Date.now();
-  const fire = (d, s, id) => { if (id) backend.call(d, s, [id], {}).catch(() => {}); };
+  const fire = (d, s, id) => { if (id) backend.call(d, s, id.split(','), {}).catch(() => {}); };
+  const one = /^wol(\d)$/.exec(variante), wol = one ? intern.wol.split(',')[+one[1]] || '' : intern.wol;
   const useSkript = variante === 'skript' || (variante === 'auto' && skriptDa());
   setMeta({ tv_wake: new Date().toISOString(), tv_fail: '' });
   waking = (async () => {
     if (useSkript) fire('script', 'turn_on', tv.an_skript);
     for (let n = 0; Date.now() - t0 < WAKE_MS; n++) {
       if (!useSkript) {
-        if (variante !== 'tv') fire('button', 'press', intern.wol);
+        if (variante !== 'tv') fire('button', 'press', wol);
         fire('media_player', 'turn_on', tv.entity_id);
         if (['auto', 'wol_adb'].includes(variante)) fire('media_player', 'turn_on', intern.adb);
       }
@@ -588,7 +591,7 @@ const server = http.createServer((req, res) => {
     if (meta.mode !== 'live' || !C.cfg.fernseher) return send(400, { message: 'nur im echten Modus' });
     if (tvIsOn()) return send(409, { message: 'Fernseher ist schon an' });
     const v = u.searchParams.get('v') || 'auto';
-    if (!['auto', 'tv', 'wol', 'wol_adb', 'skript'].includes(v)) return send(400, { message: 'Variante?' });
+    if (!/^(auto|tv|wol\d?|wol_adb|skript)$/.test(v)) return send(400, { message: 'Variante?' });
     return tvWake(v).then(ms => send(200, { ok: !!ms, ms, variante: v, skript: skriptDa(), intern }));
   }
   if (req.method === 'POST' && u.pathname === '/diag/tv-aus') {
