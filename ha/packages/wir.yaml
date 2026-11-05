@@ -116,13 +116,42 @@ script:
                 - action: media_player.turn_on
                   target: { entity_id: "{{ adb }}" }
                   continue_on_error: true
+                # aus dem Android-Schlaf (App "Aus", Gute Nacht, Alles aus) weckt nur ADB-Wakeup
+                - action: androidtv.adb_command
+                  target: { entity_id: "{{ adb }}" }
+                  data: { command: "input keyevent 224" }
+                  continue_on_error: true
                 # ADB-Zustand sofort neu abfragen statt auf das nächste Abfrage-Intervall zu warten
                 - action: homeassistant.update_entity
                   target: { entity_id: "{{ adb }}" }
                   continue_on_error: true
             - wait_template: "{{ states(pruef) not in aus }}"
               timeout: 2
-          until: "{{ states(pruef) not in aus or now().timestamp() - t0 >= 25 }}"
+          until: "{{ states(pruef) not in aus or now().timestamp() - t0 >= 45 }}"
+
+  # Ausschalten in den Android-Schlaf (KEYCODE_SLEEP): das WLAN bleibt wach, wir_tv_an weckt ihn per ADB wieder.
+  # Die Power-Taste (media_player.turn_off) schickt den Xiaomi in den Tiefschlaf, aus dem ihn übers WLAN nichts weckt –
+  # nur ohne ADB-Integration (oder wenn ADB nicht antwortet) wird sie benutzt.
+  wir_tv_aus:
+    alias: "Wir: Fernseher aus"
+    icon: mdi:television-off
+    mode: single
+    max_exceeded: silent
+    variables:
+      adb: "{{ integration_entities('androidtv') | select('match', 'media_player.') | list }}"
+    sequence:
+      - if: "{{ adb | count > 0 and states(adb[0]) not in ['off', 'unavailable', 'unknown'] }}"
+        then:
+          - action: androidtv.adb_command
+            target: { entity_id: "{{ adb }}" }
+            data: { command: "input keyevent 223" }
+            continue_on_error: true
+        else:
+          - if: "{{ adb | count == 0 }}"
+            then:
+              - action: media_player.turn_off
+                target: { entity_id: media_player.fernseher }
+                continue_on_error: true
 
   wir_lesen:
     alias: "Wir: Lesen"
@@ -144,8 +173,7 @@ script:
     icon: mdi:weather-night
     mode: restart
     sequence:
-      - action: media_player.turn_off
-        target: { entity_id: media_player.fernseher }
+      - action: script.wir_tv_aus
         continue_on_error: true
       - action: light.turn_off
         target: { entity_id: [light.kuche, light.tisch] }
@@ -171,8 +199,7 @@ script:
       - action: light.turn_off
         target: { entity_id: [light.bett, light.kuche, light.tisch] }
         data: { transition: 1 }
-      - action: media_player.turn_off
-        target: { entity_id: media_player.fernseher }
+      - action: script.wir_tv_aus
         continue_on_error: true
 
   # Sonnenaufgang auf allen drei Lampen: dunkles Orange -> helles Kaltweiß über "dauer" Sekunden.

@@ -363,9 +363,11 @@ async function weckerSync() {
 // Normalweg ist das HA-Skript fernseher.an_skript (script.wir_tv_an aus ha/packages/wir.yaml); fehlt es, macht
 // wir-home dasselbe selbst. Läuft eine Einschalt-Routine, steht in _meta "tv_wake" (Zeitpunkt) – die App zeigt dann
 // "Fernseher wird gestartet …"; klappt es nicht, "tv_fail" (dezenter Hinweis).
+// Ausschalten aus der App: per ADB in den Android-Schlaf (KEYCODE_SLEEP) statt Power-Taste – dann bleibt das WLAN wach
+// und ADB-Wakeup (KEYCODE_WAKEUP) holt ihn zurück; die Power-Taste schickt den Xiaomi in den Tiefschlaf (nur Fernbedienung).
 // ----------------------------------------------------------------------
 const TV_OFF = ['off', 'standby', 'unavailable', 'unknown'];
-const WAKE_MS = 25000, WAKE_STEP = 2000;
+const WAKE_MS = 45000, WAKE_STEP = 2000;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const intern = { adb: '', wol: '' };      // gefundene interne Entitäten (nie an die App)
 // Ist der Fernseher WIRKLICH an? media_player.fernseher (Android TV Remote) hat assumed_state: nach turn_on steht er sofort
@@ -409,9 +411,19 @@ async function tvDiscover() {
   }
 }
 
+// Android-Schlaf per ADB; geht das nicht (keine ADB-Entität, Fehler), wie bisher die Power-Taste
+function tvSleep() {
+  const tv = C.cfg.fernseher;
+  const power = () => backend.call('media_player', 'turn_off', [tv.entity_id], {});
+  if (!intern.adb) return power();
+  return backend.call('androidtv', 'adb_command', [intern.adb], { command: 'input keyevent 223' }, 10000)
+    .then(() => backend.call('homeassistant', 'update_entity', [intern.adb], {}).catch(() => {}))
+    .catch(err => { log('ADB-Schlaf fehlgeschlagen, Power-Taste:', err.message); return power(); });
+}
+
 let waking = null;
 // variante: 'auto' (Skript, sonst selbst alles), zum Messen auch 'tv' (nur turn_on), 'wol' (alle Knöpfe),
-// 'wol0'/'wol1' (nur dieser eine Knopf), 'wol_adb', 'skript'
+// 'wol0'/'wol1' (nur dieser eine Knopf), 'wol_adb', 'skript', 'adb' (nur ADB-Wakeup)
 function tvWake(variante = 'auto') {
   if (waking) return waking;
   const tv = C.cfg.fernseher, t0 = Date.now();
@@ -422,7 +434,10 @@ function tvWake(variante = 'auto') {
   waking = (async () => {
     if (useSkript) fire('script', 'turn_on', tv.an_skript);
     for (let n = 0; Date.now() - t0 < WAKE_MS; n++) {
-      if (!useSkript) {
+      // ADB-Wakeup aus dem Android-Schlaf (im Schlaf kommt etwa jeder zweite Befehl an, darum bei jedem Schritt)
+      if (['auto', 'adb', 'wol_adb'].includes(variante) && intern.adb) backend.call('androidtv', 'adb_command', [intern.adb], { command: 'input keyevent 224' }, 8000).catch(() => {});
+      if (variante === 'adb') fire('homeassistant', 'update_entity', intern.adb);
+      else if (!useSkript) {
         if (variante !== 'tv') fire('button', 'press', wol);
         fire('media_player', 'turn_on', tv.entity_id);
         if (['auto', 'wol_adb'].includes(variante)) fire('media_player', 'turn_on', intern.adb);
@@ -676,6 +691,11 @@ async function handle(cmd) {
     tvWake();
     return { ok: true, label };
   }
+  // Fernseher ausschalten -> Android-Schlaf per ADB (aus dem ihn die Einschalt-Routine wieder holt)
+  if (tv && meta.mode === 'live' && intern.adb && calls.length === 1 && calls[0].domain === 'media_player' && calls[0].service === 'turn_off' && calls[0].entity_ids[0] === tv.entity_id) {
+    await tvSleep();
+    return { ok: true, label };
+  }
   // App bei ausgeschaltetem Fernseher: erst wecken, dann die App starten
   if (wake && meta.mode === 'live') {
     tvWake().then(async ms => {
@@ -715,12 +735,12 @@ const server = http.createServer((req, res) => {
     if (meta.mode !== 'live' || !C.cfg.fernseher) return send(400, { message: 'nur im echten Modus' });
     if (tvIsOn()) return send(409, { message: 'Fernseher ist schon an' });
     const v = u.searchParams.get('v') || 'auto';
-    if (!/^(auto|tv|wol\d?|wol_adb|skript)$/.test(v)) return send(400, { message: 'Variante?' });
+    if (!/^(auto|tv|adb|wol\d?|wol_adb|skript)$/.test(v)) return send(400, { message: 'Variante?' });
     return tvWake(v).then(ms => send(200, { ok: !!ms, ms, variante: v, skript: skriptDa(), intern }));
   }
   if (req.method === 'POST' && u.pathname === '/diag/tv-aus') {
     const tv = C.cfg.fernseher, t0 = Date.now();
-    return backend.call('media_player', 'turn_off', [tv.entity_id], {}).then(async () => {
+    return tvSleep().then(async () => {
       for (let n = 0; tvIsOn() && Date.now() - t0 < 25000; n++) {
         if (n % 10 === 0 && intern.adb) backend.call('homeassistant', 'update_entity', [intern.adb], {}).catch(() => {});
         await sleep(200);
