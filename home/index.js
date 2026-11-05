@@ -130,7 +130,7 @@ const meta = { mode: 'test', connected: false, error: '', scene: '', scene_at: '
 const ATTRS = ['friendly_name', 'brightness', 'color_mode', 'rgb_color', 'color_temp_kelvin', 'min_color_temp_kelvin', 'max_color_temp_kelvin',
   'supported_color_modes', 'last_triggered', 'unit_of_measurement', 'device_class', 'percentage', 'current',
   'volume_level', 'is_volume_muted', 'media_title', 'media_series_title', 'media_artist', 'app_name', 'source',
-  'media_duration', 'media_position', 'media_position_updated_at'];
+  'media_duration', 'media_position', 'media_position_updated_at', 'app_id', 'current_activity', 'supported_features'];
 function slim(s) {
   const a = {};
   for (const k of ATTRS) if (s.attributes && s.attributes[k] !== undefined) a[k] = s.attributes[k];
@@ -138,7 +138,10 @@ function slim(s) {
 }
 
 function onState(s) {
+  const was = states.get(s.entity_id);
   states.set(s.entity_id, s);
+  // Wecker-Helfer tauchen in HA auf (Paket gerade eingespielt) -> Einstellungen übertragen
+  if (C.allow.get(s.entity_id)?.kind === 'wecker' && (!was || was.missing) && !s.missing) weckerSoon();
   put(s.entity_id, slim(s));
   klimaSample(s.entity_id, s.state);
 }
@@ -164,7 +167,11 @@ function startBackend() {
   backend.on('status', st => {
     if (st.connected !== meta.connected || st.error !== meta.error) log('Status:', st.connected ? 'verbunden' : 'getrennt', st.error || '');
     setMeta({ connected: st.connected, error: st.error });
-    if (st.connected) klimaBackfill().catch(err => log('Klima-Verlauf', err.message));
+    if (st.connected) {
+      klimaBackfill().catch(err => log('Klima-Verlauf', err.message));
+      weckerSoon();
+      kalender().catch(err => log('Kalender:', err.message));
+    }
   });
   backend.start();
 }
@@ -256,31 +263,92 @@ async function weather() {
 // Kalender: Testmodus = Testtermine aus der Konfiguration; echt = calendar.… aus HA (REST), alle 10 Minuten
 // Format pro Termin: { d, t, e, n, w } oder ganztägig über mehrere Tage { s, to, n, w }
 // ----------------------------------------------------------------------
+let kalIds = null;   // zuletzt gefundene calendar.… (nur lesen)
 async function kalender() {
   const K = C.cfg.kalender;
-  if (meta.mode === 'test' || !K.quellen.length) { put('_kalender', { termine: K.testtermine, test: meta.mode === 'test' }); return; }
+  const test = () => put('_kalender', { termine: K.testtermine, test: true, farben: K.farben });
+  if (meta.mode === 'test') return test();
+  if (!meta.connected) return;
+  // automatisch: alle Kalender, die der HA-Benutzer sehen kann (+ eingetragene Zuordnung), sonst nur die eingetragenen
+  let quellen = K.quellen.slice();
+  if (K.automatisch) {
+    // ohne eingerichtete Kalender-Integration antwortet HA mit 404 -> keine Kalender
+    const list = await backend.rest('/api/calendars').catch(err => { if (err.status === 404) return []; throw err; });
+    const known = new Map(K.quellen.map(q => [q.entity_id, q.wer]));
+    quellen = (Array.isArray(list) ? list : []).map(c => String(c.entity_id || ''))
+      .filter(id => /^calendar\.[a-z0-9_]+$/.test(id)).slice(0, 12)
+      .map(id => ({ entity_id: id, wer: known.get(id) || K.standard }));
+  }
+  const ids = quellen.map(q => q.entity_id).join(', ');
+  if (ids !== kalIds) { kalIds = ids; log('Kalender:', ids || 'keine gefunden – Testtermine bleiben'); }
+  if (!quellen.length) return test();
   const pad = n => String(n).padStart(2, '0');
   const day = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const now = new Date(), from = new Date(now.getFullYear(), now.getMonth() - 1, 1), to = new Date(now.getFullYear(), now.getMonth() + 3, 1);
   const out = [];
-  for (const q of K.quellen) {
-    const r = await fetch(`${HA_URL.replace(/\/+$/, '')}/api/calendars/${q.entity_id}?start=${from.toISOString()}&end=${to.toISOString()}`,
-      { headers: { Authorization: 'Bearer ' + HA_TOKEN }, signal: AbortSignal.timeout(15000) });
-    if (!r.ok) throw new Error('Kalender ' + q.entity_id + ': ' + r.status);
-    for (const ev of await r.json()) {
+  for (const q of quellen) {
+    let evs;
+    try { evs = await backend.rest(`/api/calendars/${q.entity_id}?start=${encodeURIComponent(from.toISOString())}&end=${encodeURIComponent(to.toISOString())}`); }
+    catch (err) { log('Kalender', q.entity_id, err.message); continue; }
+    for (const ev of Array.isArray(evs) ? evs : []) {
       const n = String(ev.summary || '').slice(0, 60);
       if (ev.start?.date) {
-        const s = ev.start.date, e = new Date(ev.end.date); e.setDate(e.getDate() - 1);
+        const s = ev.start.date, e = new Date(ev.end?.date || s); e.setDate(e.getDate() - 1);
         const toD = day(e);
         out.push(toD > s ? { s, to: toD, n, w: q.wer } : { d: s, t: '', e: '', n, w: q.wer });
-      } else {
-        const s = new Date(ev.start.dateTime), e = new Date(ev.end.dateTime);
+      } else if (ev.start?.dateTime) {
+        const s = new Date(ev.start.dateTime), e = new Date(ev.end?.dateTime || ev.start.dateTime);
         out.push({ d: day(s), t: hm(s), e: hm(e), n, w: q.wer });
       }
     }
   }
-  put('_kalender', { termine: out.slice(0, 400), test: false });
+  put('_kalender', { termine: out.slice(0, 400), test: false, farben: K.farben, quellen: quellen.length });
+}
+
+// ----------------------------------------------------------------------
+// Lichtwecker: Wecker-Einstellungen der App (home_settings "wecker") -> Helfer in HA (die Automation läuft lokal in HA).
+// Der erste eingeschaltete Wecker der Liste bestimmt Zeit und Tage. "Morgen aussetzen" -> input_boolean aussetzen.
+// Gesetzt wird nur, was abweicht. Auslöser: Änderung in der App (PocketBase-Hook -> POST /wecker), Verbinden, alle 15 Min.
+// ----------------------------------------------------------------------
+const DEF_WECKER = { alarms: [{ zeit: '5:00', tage: [0, 1, 2, 3, 4], an: true }], vorlauf: 15, aussetzen: '' };
+let weckerT = null, weckerBusy = false;
+function weckerSoon(ms = 800) { clearTimeout(weckerT); weckerT = setTimeout(() => weckerSync().catch(err => log('Wecker:', err.message)), ms); }
+async function weckerSync() {
+  const wk = C.cfg.wecker;
+  if (!wk.ok || !meta.connected) return;
+  if (weckerBusy) return weckerSoon(2000);
+  weckerBusy = true;
+  try {
+    const f = encodeURIComponent('key="wecker"');
+    const r = await api('GET', `/api/collections/home_settings/records?filter=${f}&perPage=1&skipTotal=1`);
+    const w = r.items[0]?.data || DEF_WECKER;
+    const a = (Array.isArray(w.alarms) ? w.alarms : []).find(x => x && x.an && Array.isArray(x.tage) && x.tage.length && /^\d{1,2}:\d{2}$/.test(String(x.zeit)));
+    const pad = n => String(n).padStart(2, '0');
+    const [hh, mm] = a ? String(a.zeit).split(':').map(Number) : [5, 0];
+    const zeit = `${pad(hh)}:${pad(mm)}:00`;
+    const vorlauf = Math.max(0, Math.min(30, Math.round(Number(w.vorlauf) || 0)));
+    // aussetzen gilt, wenn der ausgesetzte Tag ein aktiver Wecktag ist und dessen Weckzeit noch bevorsteht
+    const now = new Date(), today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    let skip = false;
+    if (a && /^\d{4}-\d{2}-\d{2}$/.test(String(w.aussetzen || ''))) {
+      const [y, mo, d] = w.aussetzen.split('-').map(Number), sd = new Date(y, mo - 1, d, hh, mm);
+      skip = a.tage.includes((sd.getDay() + 6) % 7) && (w.aussetzen > today || (w.aussetzen === today && now < sd));
+    }
+    const want = [[wk.aktiv, !!a], ...wk.tage.map((id, i) => [id, !!a && a.tage.includes(i)])];
+    if (wk.aussetzen) want.push([wk.aussetzen, skip]);
+    const calls = [];
+    for (const [id, on] of want) if (states.get(id)?.state !== (on ? 'on' : 'off')) calls.push(['input_boolean', on ? 'turn_on' : 'turn_off', id, {}]);
+    if (states.get(wk.zeit)?.state !== zeit) calls.push(['input_datetime', 'set_datetime', wk.zeit, { time: zeit }]);
+    if (wk.vorlauf && Number(states.get(wk.vorlauf)?.state) !== vorlauf) calls.push(['input_number', 'set_value', wk.vorlauf, { value: vorlauf }]);
+    let n = 0;
+    for (const [dom, svc, id, data] of calls) {
+      if (!states.has(id) || states.get(id).missing) continue;   // Paket noch nicht eingespielt
+      await backend.call(dom, svc, [id], data);
+      n++;
+    }
+    if (n) log(`Wecker übertragen (${n}): ${a ? zeit.slice(0, 5) + ' · Tage ' + a.tage.map(i => ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][i]).join(',') + ' · Vorlauf ' + vorlauf + ' Min' : 'aus'}${skip ? ' · einmal aussetzen' : ''}`);
+  } finally { weckerBusy = false; }
 }
 
 // ----------------------------------------------------------------------
@@ -297,6 +365,21 @@ function rateOk(user) {
   return true;
 }
 
+// Fernseher ohne "Lautstärke setzen" (Android TV Remote kann nur lauter/leiser): Zielwert in Tastendrücke umrechnen
+const VOLUME_SET = 4;
+function volumeSteps(calls) {
+  const tv = C.cfg.fernseher;
+  return calls.map(c => {
+    if (!tv || c.domain !== 'media_player' || c.service !== 'volume_set' || c.entity_ids[0] !== tv.entity_id) return c;
+    const s = states.get(tv.entity_id);
+    const f = s?.attributes?.supported_features;
+    if (typeof f !== 'number' || (f & VOLUME_SET) || !tv.remote) return c;
+    const diff = Math.round((c.data.volume_level - (Number(s.attributes.volume_level) || 0)) * tv.max_lautstaerke);
+    if (!diff) return null;
+    return { domain: 'remote', service: 'send_command', entity_ids: [tv.remote], data: { command: diff > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN', num_repeats: Math.min(30, Math.abs(diff)), delay_secs: 0.05 } };
+  }).filter(Boolean);
+}
+
 async function handle(cmd) {
   if (!cmd || typeof cmd.user !== 'string' || !cmd.user) { const e = new Error('Kein Nutzer'); e.status = 401; throw e; }
   if (!rateOk(cmd.user)) { const e = new Error('Zu viele Befehle – kurz warten'); e.status = 429; throw e; }
@@ -310,9 +393,13 @@ async function handle(cmd) {
     label = `Szene ${sz.name}`;
   } else ({ calls, label } = conf.check(C, cmd, states));
   if (!meta.connected) { const e = new Error(meta.mode === 'test' ? 'Testmodus startet noch' : 'Home Assistant nicht verbunden'); e.status = 503; throw e; }
-  for (const c of calls) {
+  for (const c of volumeSteps(calls)) {
+    if (c.wait) await new Promise(r => setTimeout(r, c.wait));
     try { await backend.call(c.domain, c.service, c.entity_ids, c.data); }
-    catch (err) { const e = new Error(err.message || 'Fehler von Home Assistant'); e.status = 502; throw e; }
+    catch (err) {
+      if (c.optional) { log('optional fehlgeschlagen:', c.domain + '.' + c.service, err.message); continue; }
+      const e = new Error(err.message || 'Fehler von Home Assistant'); e.status = 502; throw e;
+    }
   }
   // aktive Szene merken (Markierung in der App); Licht von Hand geändert -> keine Szene mehr aktiv (wie in der Vorlage)
   if (sz) setMeta({ scene: sz.key, scene_at: new Date().toISOString() });
@@ -322,6 +409,8 @@ async function handle(cmd) {
 
 const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
+  // Wecker-Einstellungen wurden in der App geändert (pb_hooks/wir_zuhause.pb.js) -> zu HA übertragen
+  if (req.method === 'POST' && req.url === '/wecker') { weckerSoon(300); req.resume(); return send(200, { ok: true }); }
   if (req.method !== 'POST' || req.url !== '/cmd') return send(404, { message: 'Nicht gefunden' });
   let body = '';
   req.on('data', ch => { body += ch; if (body.length > 10000) req.destroy(); });
@@ -362,7 +451,10 @@ async function main() {
   const wx = () => weather().catch(err => log('Wetter:', err.message));
   wx(); setInterval(wx, 20 * 60000);
   const kal = () => kalender().catch(err => log('Kalender:', err.message));
-  kal(); setInterval(kal, 10 * 60000);
+  if (meta.mode === 'test') kal();   // echt: nach dem Verbinden
+  setInterval(kal, 10 * 60000);
+  // Wecker zur Sicherheit alle 15 Minuten abgleichen (falls ein Hinweis von PocketBase verloren ging)
+  setInterval(() => weckerSoon(0), 15 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
   let reloadTimer = null;

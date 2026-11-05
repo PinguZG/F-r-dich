@@ -159,3 +159,25 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 @media (prefers-reduced-motion:reduce){
   #zh *,#zh *::before,#zh *::after{animation:none!important;transition:none!important}
 }
+
+/* ---------- Lampe: Langdruck-Panel (Helligkeit, Weißton, Farben) ---------- */
+#zh .z-pill{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.z-lp{--c:#ffb35c;position:fixed;inset:0;z-index:5000;font-family:inherit;display:none;place-items:end center;background:rgba(0,0,0,.45);padding:16px}
+.z-lp.z-on{display:grid;animation:zh-fade .25s}
+.z-lp.z-lp-tab{place-items:center}
+.z-lp-card{width:100%;max-width:440px;border-radius:28px;background:var(--z-bg);border:1px solid var(--z-line);
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));color:var(--z-txt);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.z-lp-hd{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.z-lp-hd > div:nth-child(2){flex:1;min-width:0}
+.z-lp-dot{width:46px;height:46px;border-radius:50%;background:var(--c);box-shadow:0 0 22px color-mix(in srgb,var(--c) 70%,transparent);flex:none}
+.z-lp h3{font-size:20px;font-weight:600}
+.z-lp-sub{font-size:15px;color:var(--z-mut)}
+.z-lp-x{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--z-card);border:1px solid var(--z-line);cursor:pointer;font-size:16px;color:var(--z-mut)}
+.z-lp-lab{font-size:13px;color:var(--z-mut);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.z-lp input[type=range]{width:100%;height:44px;accent-color:var(--c);touch-action:pan-x}
+.z-lp-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.z-lp-cols{grid-template-columns:repeat(8,1fr)}
+.z-lp-k{display:grid;justify-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--z-mut)}
+.z-lp-k i,.z-lp-c{display:block;width:44px;height:44px;max-width:100%;border-radius:50%;background:var(--s);border:2px solid transparent;cursor:pointer;justify-self:center}
+.z-lp-k.z-on i,.z-lp-c.z-on{border-color:var(--z-txt);box-shadow:0 0 0 3px color-mix(in srgb,var(--s) 45%,transparent)}
+.z-lp-cols .z-lp-c{width:100%;height:auto;aspect-ratio:1}

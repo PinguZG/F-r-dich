@@ -61,3 +61,16 @@ onRecordUpdateRequest((e) => {
     if (!was && e.record.getBool('done')) require(`${__hooks}/activity_lib.js`).log(e.app, e.auth.id, 'home', 'zuhause', 'To-do erledigt: ' + e.record.getString('text'));
   } catch (_) {}
 }, 'home_todos');
+
+// Wecker-Einstellungen geändert -> wir-home überträgt sie in die Helfer des Lichtweckers in Home Assistant
+function wirWeckerSync(e) {
+  e.next();
+  if (e.record.getString('key') !== 'wecker') return;
+  try {
+    $http.send({ url: 'http://127.0.0.1:8095/wecker', method: 'POST', body: '{}', headers: { 'content-type': 'application/json' }, timeout: 3 });
+  } catch (err) {
+    e.app.logger().warn('zuhause wecker sync', 'error', String(err));   // wir-home gleicht ohnehin alle 15 Min ab
+  }
+}
+onRecordAfterCreateSuccess(wirWeckerSync, 'home_settings');
+onRecordAfterUpdateSuccess(wirWeckerSync, 'home_settings');

@@ -74,11 +74,19 @@
   }
   function tvView() {
     const tv = cfg()?.fernseher; if (!tv) return null;
-    const s = ent(tv.entity_id), a = s?.a || {}, o = ov[tv.entity_id] || {};
+    const s = ent(tv.entity_id), o = ov[tv.entity_id] || {};
+    // Cast liefert, was gerade läuft (Titel, Play/Pause); Android TV Remote liefert an/aus, Lautstärke und die App
+    const cs = tv.cast ? ent(tv.cast) : null, ca = cs && !['off', 'unavailable', 'unknown', 'idle', 'standby'].includes(cs.state) ? cs.a : {};
+    const a = { ...ca, ...(s?.a || {}), media_title: ca.media_title || s?.a?.media_title, media_series_title: ca.media_series_title || s?.a?.media_series_title,
+      media_duration: ca.media_duration ?? s?.a?.media_duration, media_position: ca.media_position ?? s?.a?.media_position,
+      media_position_updated_at: ca.media_position_updated_at || s?.a?.media_position_updated_at };
     const max = tv.max_lautstaerke;
     let on = !!s && !['off', 'standby', 'unavailable', 'unknown'].includes(s.state);
-    let playing = s?.state === 'playing', vol = Math.round((a.volume_level || 0) * max), muted = !!a.is_volume_muted;
-    let appName = a.app_name || a.source || '';
+    let playing = s?.state === 'playing' || cs?.state === 'playing', vol = Math.round((s?.a?.volume_level || 0) * max), muted = !!s?.a?.is_volume_muted;
+    // App erkennen: Paketname (app_id / current_activity der Fernbedienung) oder Name (Cast)
+    const pk = [s?.a?.app_id, tv.remote ? ent(tv.remote)?.a?.current_activity : ''].filter(Boolean);
+    const byPk = tv.apps.find(x => x.paket && pk.includes(x.paket));
+    let appName = byPk?.name || ca.app_name || s?.a?.app_name || s?.a?.source || '';
     if (o.on != null) on = o.on;
     if (o.playing != null) playing = o.playing;
     if (o.vol != null) vol = o.vol;
@@ -86,6 +94,7 @@
     if (o.app != null) appName = o.app;
     const ai = Math.max(0, tv.apps.findIndex(x => x.name === appName));
     const app = tv.apps[ai] || { name: appName || tv.name, farbe: '#7b5cff', test: '' };
+    if (on) tvHint = false;
     return { tv, s, a, on, playing, vol, muted, max, ai, app, source: o.source || a.source || '' };
   }
 
@@ -102,6 +111,9 @@
     $('rail').insertAdjacentHTML('beforeend', `<div class="z-nv z-back" data-back title="Zurück zur Wir-App">${svg('heart')}</div>`);
     // Uhrzeit-Feld für die Wecker (unsichtbar, öffnet die Zeitauswahl des Geräts)
     host.insertAdjacentHTML('beforeend', '<input type="time" id="zh-timepick" class="z-timepick" tabindex="-1" aria-hidden="true">');
+    // Langdruck-Panel der Lampen: direkt an body (über allem, unabhängig von Scroll-/Stapelkontext in Zuhause)
+    document.body.insertAdjacentHTML('beforeend', '<div class="z-lp" id="zh-lp" role="dialog" aria-label="Lampe"></div>');
+    wireLamp();
     wire();
   }
 
@@ -203,6 +215,73 @@
     });
   }
 
+  // Langdruck-Panel einer Lampe
+  const LP_K = [[2200, 'Warm'], [2700, 'Gemütlich'], [3500, 'Neutral'], [4500, 'Hell'], [6000, 'Kalt']];
+  const LP_C = ['#ff3b30', '#ff7a1a', '#ffc23d', '#4cd964', '#2fd4c4', '#3d7bff', '#8f6bff', '#ff5fa8'];
+  let lp = null, lpSent = 0, lpT = 0;
+  function openLamp(l) {
+    if (!l) return;
+    lp = { l, drag: false };
+    const box = $('lp'), cs = getComputedStyle(host);
+    // Farben der aktuellen Farbwelt aus Zuhause übernehmen
+    for (const v of ['--z-bg', '--z-card', '--z-line', '--z-txt', '--z-mut', '--z-vio', '--zw']) box.style.setProperty(v, cs.getPropertyValue(v));
+    box.classList.toggle('z-lp-tab', mqTab.matches);
+    box.querySelector('h3').textContent = l.name;
+    box.classList.add('z-on');
+    renderLp();
+  }
+  function closeLamp() { lp = null; clearTimeout(lpT); $('lp')?.classList.remove('z-on'); }
+  function renderLp() {
+    if (!lp) return;
+    const v = lampView(lp.l), box = $('lp'), a = ent(lp.l.entity_id)?.a || {};
+    box.style.setProperty('--c', v.c);
+    box.querySelector('.z-lp-sw').classList.toggle('z-on', v.on);
+    box.querySelector('.z-lp-sub').textContent = v.na ? 'nicht erreichbar' : v.on ? `${v.b} % · ${v.k}` : 'Aus';
+    const r = box.querySelector('input'); if (!lp.drag) r.value = v.b;
+    qa('[data-k]', box).forEach(x => x.classList.toggle('z-on', a.color_mode === 'color_temp' && Math.abs((a.color_temp_kelvin || 0) - +x.dataset.k) < 250));
+    qa('[data-c]', box).forEach(x => x.classList.toggle('z-on', a.color_mode !== 'color_temp' && v.c === x.dataset.c));
+  }
+  function lampCmd(data, log = true) {
+    const l = lp?.l; if (!l) return;
+    optimistic(l.entity_id, { on: true, ...(data.brightness_pct ? { b: data.brightness_pct } : {}) });
+    sceneOv = null;
+    call({ entity_id: l.entity_id, service: 'light.turn_on', data: { ...data, transition: data.brightness_pct && !log ? 0.3 : 1 }, log }, !log);
+    renderLamps(); renderScenes(); renderLp();
+  }
+  function wireLamp() {
+    const box = $('lp');
+    box.innerHTML = `<div class="z-lp-card"><div class="z-lp-hd"><div class="z-lp-dot"></div><div><h3></h3><p class="z-lp-sub"></p></div><div class="z-sw z-lp-sw"></div><div class="z-lp-x" data-x>✕</div></div>` +
+      `<div class="z-lp-lab">Helligkeit</div><input type="range" min="1" max="100" step="1" aria-label="Helligkeit">` +
+      `<div class="z-lp-lab">Weißton</div><div class="z-lp-row">${LP_K.map(([k, n]) => `<div class="z-lp-k" data-k="${k}" style="--s:${hex(kelvinRgb(k))}"><i></i><span>${n}</span></div>`).join('')}</div>` +
+      `<div class="z-lp-lab">Farbe</div><div class="z-lp-row z-lp-cols">${LP_C.map(c => `<div class="z-lp-c" data-c="${c}" style="--s:${c}"></div>`).join('')}</div></div>`;
+    box.addEventListener('click', e => {
+      if (e.target === box || e.target.closest('[data-x]')) return closeLamp();
+      if (!lp) return;
+      if (e.target.closest('.z-lp-sw')) {
+        const on = !lampView(lp.l).on;
+        optimistic(lp.l.entity_id, { on }); sceneOv = null;
+        call({ entity_id: lp.l.entity_id, service: on ? 'light.turn_on' : 'light.turn_off', data: { transition: 0.5 } });
+        renderLamps(); renderScenes(); renderLp();
+        return;
+      }
+      const k = e.target.closest('[data-k]'), c = e.target.closest('[data-c]');
+      if (k) {
+        const a = ent(lp.l.entity_id)?.a || {};
+        lampCmd({ color_temp_kelvin: Math.max(a.min_color_temp_kelvin || 2000, Math.min(a.max_color_temp_kelvin || 6500, +k.dataset.k)) });
+      } else if (c) lampCmd({ rgb_color: hexRgb(c.dataset.c) });
+    });
+    const r = box.querySelector('input');
+    r.addEventListener('input', () => {
+      if (!lp) return;
+      lp.drag = true;
+      optimistic(lp.l.entity_id, { on: true, b: +r.value }); renderLamps();
+      clearTimeout(lpT);
+      if (Date.now() - lpSent > 350) { lpSent = Date.now(); lampCmd({ brightness_pct: +r.value }, false); }
+      else lpT = setTimeout(() => lampCmd({ brightness_pct: +r.value }, false), 360);
+    });
+    r.addEventListener('change', () => { if (!lp) return; lp.drag = false; clearTimeout(lpT); lampCmd({ brightness_pct: +r.value }); });
+  }
+
   // ---------------------------------------------------------------- Geräte, Routinen
   function renderDevs() {
     const c = cfg(); if (!c) return;
@@ -263,6 +342,7 @@
     $('nsub').textContent = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
     $('pp').innerHTML = svg(v.playing ? 'pause' : 'play');
     $('pwrt').textContent = v.on ? 'Ausschalten' : 'Einschalten';
+    $('offmsg').querySelector('span').textContent = tvHint ? 'Einschalten nicht möglich – Netzwerk-Standby am TV prüfen' : 'Tippen zum Einschalten';
     $('tvstate').textContent = v.on ? 'An · ' + app.name : 'Aus · Standby';
     $('tvstate').classList.toggle('z-off', !v.on);
     qa('.z-ap', A).forEach((x, i) => { x.classList.toggle('z-on', v.on && i === v.ai); x.querySelector('span').textContent = v.on && i === v.ai ? 'läuft' : 'öffnen'; });
@@ -288,12 +368,23 @@
     else if (Date.now() - volSent > 300) { volSent = Date.now(); send(false); volTimer = setTimeout(() => send(true), 600); }
     else volTimer = setTimeout(() => send(true), 400);
   }
+  // Einschalten klappt bei manchen Fernsehern nur mit Netzwerk-Standby – meldet er sich nicht, dezenter Hinweis im Panel
+  let tvHint = false, tvHintT = 0;
   function tvPower(on) {
     const v = tvView(); if (!v) return;
     optimistic(v.tv.entity_id, { on });
     renderTV();
-    toast(on ? `${v.tv.name} eingeschaltet` : `${v.tv.name} aus`);
-    call({ entity_id: v.tv.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' });
+    toast(on ? `${v.tv.name} wird eingeschaltet` : `${v.tv.name} aus`);
+    clearTimeout(tvHintT);
+    const fail = () => { if (active && !tvView()?.on) { tvHint = true; delete ov[v.tv.entity_id]; renderTV(); } };
+    call({ entity_id: v.tv.entity_id, service: on ? 'media_player.turn_on' : 'media_player.turn_off' }, on).then(ok => { if (on && !ok) fail(); });
+    if (on) tvHintT = setTimeout(fail, 12000);
+  }
+  function volStep(d) {
+    const v = tvView(); if (!v) return;
+    optimistic(v.tv.entity_id, { vol: Math.max(0, Math.min(v.max, v.vol + d)), muted: false });
+    renderTV();
+    call({ entity_id: v.tv.entity_id, service: d > 0 ? 'media_player.volume_up' : 'media_player.volume_down' }, true);
   }
 
   // ---------------------------------------------------------------- Szenen
@@ -534,10 +625,21 @@
     let sent = 0;
     P.addEventListener('pointerdown', e => {
       const t = e.target.closest('.z-pill'); if (!t) return;
-      dr = { t, x: e.clientX, y: e.clientY, m: false, l: cfg().lampen[t.dataset.k], id: e.pointerId };
+      const l = cfg().lampen[t.dataset.k];
+      dr = { t, x: e.clientX, y: e.clientY, m: false, l, id: e.pointerId };
+      const my = dr;
+      dr.lp = setTimeout(() => { if (dr === my && !my.m) { my.long = true; openLamp(l); } }, 520);
+    });
+    P.addEventListener('contextmenu', e => {
+      const t = e.target.closest('.z-pill'); if (!t) return;
+      e.preventDefault();
+      if (dr) { clearTimeout(dr.lp); dr = null; }
+      openLamp(cfg().lampen[t.dataset.k]);
     });
     P.addEventListener('pointermove', e => {
       if (!dr || e.pointerId !== dr.id) return;
+      if (Math.abs(e.clientX - dr.x) > 10 || Math.abs(e.clientY - dr.y) > 10) clearTimeout(dr.lp);
+      if (dr.long) return;
       if (!dr.m && Math.abs(e.clientX - dr.x) > 10 && Math.abs(e.clientX - dr.x) > Math.abs(e.clientY - dr.y)) { dr.m = true; try { dr.t.setPointerCapture(e.pointerId); } catch (_) {} }
       if (!dr.m) return;
       const r = dr.t.getBoundingClientRect();
@@ -545,16 +647,18 @@
       dr.t.classList.add('z-on');
       dr.t.querySelector('.z-fill').style.width = dr.b + '%';
       dr.t.querySelector('.z-pct').textContent = dr.b + ' %';
-      if (Date.now() - sent > 350) { sent = Date.now(); call({ entity_id: dr.l.entity_id, service: 'light.turn_on', data: { brightness_pct: dr.b }, log: false }, true); }
+      if (Date.now() - sent > 350) { sent = Date.now(); call({ entity_id: dr.l.entity_id, service: 'light.turn_on', data: { brightness_pct: dr.b, transition: 0.3 }, log: false }, true); }
     });
     const end = e => {
       if (!dr || (e && e.pointerId !== dr.id)) return;
       const d = dr; dr = null;
+      clearTimeout(d.lp);
+      if (d.long) { renderLamps(); return; }
       if (e?.type === 'pointercancel' && !d.m) { renderLamps(); return; }
       const v = lampView(d.l);
       sceneOv = null;
-      if (d.m) { optimistic(d.l.entity_id, { on: true, b: d.b }); call({ entity_id: d.l.entity_id, service: 'light.turn_on', data: { brightness_pct: d.b } }); }
-      else { optimistic(d.l.entity_id, { on: !v.on }); call({ entity_id: d.l.entity_id, service: v.on ? 'light.turn_off' : 'light.turn_on' }); }
+      if (d.m) { optimistic(d.l.entity_id, { on: true, b: d.b }); call({ entity_id: d.l.entity_id, service: 'light.turn_on', data: { brightness_pct: d.b, transition: 0.3 } }); }
+      else { optimistic(d.l.entity_id, { on: !v.on }); call({ entity_id: d.l.entity_id, service: v.on ? 'light.turn_off' : 'light.turn_on', data: { transition: 0.5 } }); }
       renderLamps(); renderScenes();
     };
     P.addEventListener('pointerup', end);
@@ -585,10 +689,10 @@
     $('offmsg').addEventListener('click', () => tvPower(true));
     $('tvc-p').addEventListener('click', () => tvPower(!tvView()?.on));
     $('tvc').addEventListener('click', e => { if (!e.target.closest('.z-mb')) go('tv'); });
-    $('tvc-u').addEventListener('click', () => setVol((tvView()?.vol || 0) + 1));
-    $('tvc-d').addEventListener('click', () => setVol((tvView()?.vol || 0) - 1));
-    $('vu').addEventListener('click', () => setVol((tvView()?.vol || 0) + 1));
-    $('vd').addEventListener('click', () => setVol((tvView()?.vol || 0) - 1));
+    $('tvc-u').addEventListener('click', () => volStep(1));
+    $('tvc-d').addEventListener('click', () => volStep(-1));
+    $('vu').addEventListener('click', () => volStep(1));
+    $('vd').addEventListener('click', () => volStep(-1));
     const vb = $('vbar');
     let vdr = false;
     const vset = (e, fin) => { const r = vb.getBoundingClientRect(); setVol((e.clientX - r.left) / r.width * (tvView()?.max || 50), fin); };
@@ -613,7 +717,10 @@
       const v = tvView(), app = v.tv.apps[t.dataset.k], was = v.on;
       optimistic(v.tv.entity_id, { on: true, playing: true, app: app.name }); renderTV();
       toast((was ? '' : `${v.tv.name} an · `) + app.name + ' wird geöffnet');
-      call({ entity_id: v.tv.entity_id, service: 'tv.app', data: { app: app.name } });
+      call({ entity_id: v.tv.entity_id, service: 'tv.app', data: { app: app.name } }).then(ok => {
+        // läuft die App nach 12 s nicht, ist sie vermutlich nicht installiert (der Fernseher zeigt dann nur die Linkauswahl)
+        if (ok && app.paket) setTimeout(() => { const n = tvView(); if (active && n && n.app.name !== app.name && !n.s?.a?.app_id?.startsWith(app.paket)) toast(app.name + ' nicht gestartet – auf dem Fernseher installiert?'); }, 12000);
+      });
     });
     $('srcs').addEventListener('click', e => {
       const t = e.target.closest('.z-src'); if (!t) return;
@@ -759,7 +866,10 @@
       const tm = new Date(); tm.setDate(tm.getDate() + 1);
       saveAlarm(w => { w.aussetzen = w.aussetzen === iso(tm) ? '' : iso(tm); });
     });
-    $('testring').addEventListener('click', openRing);
+    $('testring').addEventListener('click', () => {
+      openRing();
+      call({ entity_id: '', service: 'wecker.test' }).then(ok => { if (ok) toast('Test-Sonnenaufgang läuft · 1 Min'); });
+    });
     $('snooze').addEventListener('click', () => { sn++; alarmAt = new Date(alarmAt.getTime() + 6e5); $('rclock').textContent = fmt(alarmAt); rupd(); });
     const stp = $('stop'), sf = $('sfill');
     stp.addEventListener('pointerdown', e => {
@@ -803,23 +913,28 @@
   function renderStatus() {
     const m = S.meta, stale = !m || Date.now() - (m.beat || 0) > 95000;
     const bad = stale || (m.mode !== 'test' && !m.connected);
-    const txt = stale ? 'offline' : m.mode === 'test' ? 'Testmodus' : m.connected ? 'verbunden' : 'getrennt';
+    const txt = stale ? 'offline' : m.mode === 'test' ? 'Testmodus' : m.connected ? 'HA verbunden' : 'HA getrennt';
     qa('.z-devhd .z-state').forEach(x => { x.textContent = txt; x.classList.toggle('z-off', bad); });
     const live = qa('.z-live')[0]; if (live) { live.title = txt; live.classList.toggle('z-off', bad); }
     const rows = qa('#zh-p-set .z-srow');
     if (rows[4]) {
-      rows[4].querySelector('small').textContent = stale ? 'Dienst nicht erreichbar' : m.mode === 'test' ? 'Testmodus · simulierte Daten' : (m.connected ? 'echte Daten' : 'getrennt: ' + (m.error || ''));
+      rows[4].querySelector('small').textContent = stale ? 'Dienst nicht erreichbar' : m.mode === 'test' ? 'Testmodus · simulierte Daten' : (m.connected ? 'echte Daten' : 'getrennt' + (m.error ? ': ' + m.error : '') + ' · verbindet neu …');
       rows[4].querySelector('.z-state').textContent = stale ? 'offline' : m.mode === 'test' ? 'bereit' : m.connected ? 'verbunden' : 'getrennt';
       rows[4].querySelector('.z-state').classList.toggle('z-off', bad);
     }
     if (rows[5]) rows[5].querySelector('small').textContent = 'angemeldet als ' + (window.WIR_LOOK?.me?.()?.name || '…');
     const info = qa('#zh-p-set .z-info')[0];
-    if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : 'Verbunden mit Home Assistant.';
+    if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : S.kalender?.test ? 'Home Assistant · Kalender noch mit Testterminen.' : 'Verbunden mit Home Assistant.';
   }
 
   // ---------------------------------------------------------------- Zeichnen
+  function kalFarben() {
+    const F = S.kalender?.farben || cfg()?.kalender?.farben || {};
+    for (const w of ['d', 'i', 'g']) { if (F[w]) host.style.setProperty('--z-' + w, F[w]); else host.style.removeProperty('--z-' + w); }
+  }
   function render() {
     if (!built || !cfg()) return;
+    kalFarben(); renderLp();
     renderLamps(); renderDevs(); renderRoutines(); renderTV(); renderScenes(); renderFacts(); renderChips();
     renderMonth(); renderAgenda(); renderTodos(); renderAlarm(); renderStatus();
   }
@@ -860,7 +975,7 @@
     T.stop();
     clearInterval(tickT); clearInterval(progT); clearTimeout(idleT); clearTimeout(toastT); clearTimeout(volTimer);
     if (fpsRaf) { cancelAnimationFrame(fpsRaf); fpsRaf = 0; }
-    closeRing();
+    closeRing(); closeLamp(); clearTimeout(tvHintT);
     $('saver')?.classList.remove('z-on');
     host.classList.add('z-sleep');           // nichts mehr zeichnen (auch keine Animationen), solange unsichtbar
     document.body.classList.remove('zh-full');

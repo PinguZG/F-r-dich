@@ -15,6 +15,8 @@ const SERVICES = {
   automation: ['turn_on', 'turn_off', 'trigger'],
   switch: ['turn_on', 'turn_off'],
   input_boolean: ['turn_on', 'turn_off'],
+  input_datetime: ['set_datetime'],
+  input_number: ['set_value'],
   fan: ['turn_on', 'turn_off'],
   media_player: ['turn_on', 'turn_off', 'volume_up', 'volume_down', 'volume_set', 'volume_mute', 'media_play_pause',
     'media_next_track', 'media_previous_track', 'select_source'],
@@ -81,7 +83,8 @@ function load(file) {
     if (id) {
       fernseher = {
         name, entity_id: id, remote, max_lautstaerke: Math.max(1, Math.min(100, Number(f.max_lautstaerke) || 50)),
-        apps: list(f.apps).slice(0, 16).map(a => ({ name: str(a.name, 30), farbe: color(a.farbe, '#7b5cff'), start: str(a.start, 200), test: str(a.test, 60) })).filter(a => a.name),
+        cast: f.cast ? entity(f.cast, ['media_player'], 'fernseher.cast', name, 'cast') : '',
+        apps: list(f.apps).slice(0, 16).map(a => ({ name: str(a.name, 30), farbe: color(a.farbe, '#7b5cff'), start: str(a.start, 200), paket: str(a.paket, 120), test: str(a.test, 60) })).filter(a => a.name),
         quellen: list(f.quellen).slice(0, 8).map(q => ({ name: str(q.name, 20), source: str(q.source || q.name, 40), icon: str(q.icon, 10) || 'tv' })).filter(q => q.name),
       };
     }
@@ -105,7 +108,10 @@ function load(file) {
 
   const kal = raw.kalender || {};
   const WER = ['d', 'i', 'g'];
+  const farben = {};
+  for (const w of WER) farben[w] = color(kal.farben?.[w], '');
   const kalender = {
+    automatisch: !!kal.automatisch, standard: WER.includes(kal.standard) ? kal.standard : 'g', farben,
     quellen: list(kal.quellen).slice(0, 8).map((q, i) => ({ entity_id: entity(q.entity_id, ['calendar'], `kalender.quellen[${i}]`, '', 'kalender'), wer: WER.includes(q.wer) ? q.wer : 'g' })).filter(q => q.entity_id),
     testtermine: list(kal.testtermine).slice(0, 200).map(t => ({
       d: DATE_RE.test(t.d) ? t.d : '', s: DATE_RE.test(t.s) ? t.s : '', to: DATE_RE.test(t.to) ? t.to : '',
@@ -127,11 +133,24 @@ function load(file) {
     return { key: 'sz' + i, name, icon: str(s.icon, 20) || 'stars', farbe: color(s.farbe, '#7b5cff'), entity_id: id, aktionen };
   }).filter(s => s.entity_id || s.aktionen.length);
 
+  // Lichtwecker-Helfer: nur wir-home setzt sie (aus den Wecker-Einstellungen), die App darf sie nicht schalten
+  const wk = raw.wecker || {};
+  const wecker = {
+    aktiv: entity(wk.aktiv, ['input_boolean'], 'wecker.aktiv', 'Wecker aktiv', 'wecker'),
+    aussetzen: entity(wk.aussetzen, ['input_boolean'], 'wecker.aussetzen', 'Wecker aussetzen', 'wecker'),
+    zeit: entity(wk.zeit, ['input_datetime'], 'wecker.zeit', 'Weckzeit', 'wecker'),
+    vorlauf: entity(wk.vorlauf, ['input_number'], 'wecker.vorlauf', 'Vorlauf', 'wecker'),
+    tage: list(wk.tage).slice(0, 7).map((t, i) => entity(t, ['input_boolean'], `wecker.tage[${i}]`, 'Wecker Tag ' + (i + 1), 'wecker')),
+    test: wk.test ? entity(wk.test, ['script'], 'wecker.test', 'Sonnenaufgang', 'wecker') : '',
+    test_sekunden: Math.max(30, Math.min(300, Math.round(Number(wk.test_sekunden) || 60))),
+  };
+  wecker.ok = !!(wecker.aktiv && wecker.zeit && wecker.tage.length === 7 && wecker.tage.every(Boolean));
+
   const w = raw.wetter || {};
   const wetter = Number.isFinite(+w.lat) && Number.isFinite(+w.lon) && w.lat !== '' && w.lon !== ''
     ? { ort: str(w.ort, 40) || 'Wetter', lat: +w.lat, lon: +w.lon } : null;
 
-  const cfg = { wetter, lampen, farbnamen, geraete, fernseher, szenen, routinen, klima, sensoren, kalender };
+  const cfg = { wetter, lampen, farbnamen, geraete, fernseher, szenen, routinen, klima, sensoren, kalender, wecker };
   return { cfg, allow, errors };
 }
 
@@ -156,6 +175,14 @@ function check(conf, cmd, states) {
     return { calls: [{ domain, service, entity_ids: ids, data: {} }], label: `Alle Lampen ${service === 'turn_on' ? 'an' : 'aus'}` };
   }
 
+  // Sonderfall: Weckvorgang testen = Sonnenaufgang-Skript mit fester Dauer (nichts sonst an den Wecker-Helfern)
+  if (domain === 'wecker' && service === 'test') {
+    only();
+    const wk = cfg.wecker;
+    if (!wk?.test) bad('Kein Test-Sonnenaufgang eingetragen');
+    return { calls: [{ domain: 'script', service: 'turn_on', entity_ids: [wk.test], data: { variables: { dauer: wk.test_sekunden } } }], label: `Test-Sonnenaufgang (${wk.test_sekunden} s)` };
+  }
+
   const ent = conf.allow.get(id);
   if (!ent) bad('Gerät nicht freigegeben');
   const name = ent.name || id;
@@ -167,23 +194,29 @@ function check(conf, cmd, states) {
     only('app');
     const app = tv.apps.find(a => a.name === data.app);
     if (!app) bad('App nicht freigegeben');
-    const calls = [{ domain: 'media_player', service: 'turn_on', entity_ids: [tv.entity_id], data: {} }];
-    if (app.start && tv.remote) calls.push({ domain: 'remote', service: 'turn_on', entity_ids: [tv.remote], data: { activity: app.start } });
-    else calls.push({ domain: 'media_player', service: 'select_source', entity_ids: [tv.entity_id], data: { source: app.name } });
+    // Fernseher aus -> erst einschalten (Fehler dabei nicht fatal, manche Fernseher melden sich erst danach), kurz warten
+    const off = ['off', 'standby', 'unavailable', 'unknown', undefined].includes(states?.get(tv.entity_id)?.state);
+    const calls = off ? [{ domain: 'media_player', service: 'turn_on', entity_ids: [tv.entity_id], data: {}, optional: true }] : [];
+    const wait = off ? 3000 : 0;
+    if (app.start && tv.remote) calls.push({ domain: 'remote', service: 'turn_on', entity_ids: [tv.remote], data: { activity: app.start }, wait });
+    else calls.push({ domain: 'media_player', service: 'select_source', entity_ids: [tv.entity_id], data: { source: app.name }, wait });
     return { calls, label: `${name}: ${app.name}`, app: app.name };
   }
 
   if (ent.domain !== domain) bad('Dienst passt nicht zum Gerät');
   if (!(SERVICES[domain] || []).includes(service)) bad('Dienst nicht erlaubt');
-  if (['klima', 'sensor', 'kalender'].includes(ent.kind)) bad('Nur lesbar');
+  if (['klima', 'sensor', 'kalender', 'cast'].includes(ent.kind)) bad('Nur lesbar');
+  if (ent.kind === 'wecker') bad('Nur über die Wecker-Einstellungen');
   // App-Start über remote.turn_on nur mit tv.app (prüft die App-Liste)
   if (domain === 'remote' && service === 'turn_on') bad('Dienst nicht erlaubt');
 
   const clean = {};
   let label = name;
   if (domain === 'light') {
-    if (service !== 'turn_on') only();
+    if (service === 'toggle') only();
+    else if (service === 'turn_off') only('transition');
     for (const [k, v] of Object.entries(data)) {
+      if (k === 'transition') { if (typeof v !== 'number' || !(v >= 0 && v <= 10)) bad('Übergang 0–10 s'); clean[k] = Math.round(v * 10) / 10; continue; }
       if (k === 'brightness_pct') { if (!Number.isInteger(v) || v < 1 || v > 100) bad('Helligkeit 1–100'); clean[k] = v; }
       else if (k === 'color_temp_kelvin') { if (!Number.isInteger(v) || v < 1500 || v > 9000) bad('Weißton ungültig'); clean[k] = v; }
       else if (k === 'rgb_color') { if (!Array.isArray(v) || v.length !== 3 || !v.every(x => Number.isInteger(x) && x >= 0 && x <= 255)) bad('Farbe ungültig'); clean[k] = v.slice(); }

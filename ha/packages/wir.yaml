@@ -1,0 +1,232 @@
+# =====================================================================================================
+# Wir-App – Home-Assistant-Paket (Szenen als Skripte, Lichtwecker). KEINE Geheimnisse in dieser Datei.
+#
+# Einspielen: pocketbase/ANLEITUNG.md, Abschnitt "Home Assistant anbinden" (File editor -> /homeassistant/packages/wir.yaml,
+# in configuration.yaml unter "homeassistant:" die Zeile "packages: !include_dir_named packages").
+#
+# - Die Wir-App (Dienst wir-home auf dem VPS, HA-Benutzer "Wir-App" ohne Admin) startet die Skripte und setzt die
+#   Wecker-Helfer aus den Wecker-Einstellungen der App. Bitte die Helfer nicht in HA ändern – die App überschreibt sie.
+# - Der Lichtwecker läuft LOKAL in HA, also auch ohne Internet/VPS.
+# - Lampen: light.bett (OmniGlow), light.kuche, light.tisch (Hue-Lightstrips über ZHA, Farbe + Weißtöne, 2000–6500 K).
+# =====================================================================================================
+
+input_boolean:
+  wir_wecker_aktiv:
+    name: "Wir: Wecker aktiv"
+    icon: mdi:alarm
+  wir_wecker_aussetzen:
+    name: "Wir: Wecker einmal aussetzen"
+    icon: mdi:alarm-off
+  wir_wecker_mo: { name: "Wir: Wecker Montag", icon: mdi:calendar }
+  wir_wecker_di: { name: "Wir: Wecker Dienstag", icon: mdi:calendar }
+  wir_wecker_mi: { name: "Wir: Wecker Mittwoch", icon: mdi:calendar }
+  wir_wecker_do: { name: "Wir: Wecker Donnerstag", icon: mdi:calendar }
+  wir_wecker_fr: { name: "Wir: Wecker Freitag", icon: mdi:calendar }
+  wir_wecker_sa: { name: "Wir: Wecker Samstag", icon: mdi:calendar }
+  wir_wecker_so: { name: "Wir: Wecker Sonntag", icon: mdi:calendar }
+
+input_datetime:
+  wir_wecker_zeit:
+    name: "Wir: Weckzeit"
+    has_date: false
+    has_time: true
+    icon: mdi:alarm
+
+input_number:
+  wir_wecker_vorlauf:
+    name: "Wir: Sonnenaufgang Vorlauf"
+    min: 0
+    max: 30
+    step: 1
+    unit_of_measurement: min
+    mode: slider
+    icon: mdi:weather-sunset-up
+
+# Ohne "initial": HA behält die Werte über Neustarts. Die Wir-App setzt sie beim Verbinden ohnehin
+# (Standard aus der App: Mo–Fr 5:00, Vorlauf 15 Min).
+
+script:
+  wir_gemuetlich:
+    alias: "Wir: Gemütlich"
+    icon: mdi:fire
+    mode: restart
+    sequence:
+      - action: light.turn_on
+        target: { entity_id: light.bett }
+        data: { brightness_pct: 45, rgb_color: [255, 120, 40], transition: 3 }
+      - action: light.turn_on
+        target: { entity_id: light.kuche }
+        data: { brightness_pct: 30, color_temp_kelvin: 2200, transition: 3 }
+      - action: light.turn_on
+        target: { entity_id: light.tisch }
+        data: { brightness_pct: 50, rgb_color: [255, 150, 70], transition: 3 }
+
+  wir_filmabend:
+    alias: "Wir: Filmabend"
+    icon: mdi:movie-open
+    mode: restart
+    sequence:
+      - action: light.turn_on
+        target: { entity_id: light.bett }
+        data: { brightness_pct: 15, rgb_color: [120, 80, 255], transition: 4 }
+      - action: light.turn_on
+        target: { entity_id: light.tisch }
+        data: { brightness_pct: 8, rgb_color: [255, 110, 40], transition: 4 }
+      - action: light.turn_off
+        target: { entity_id: light.kuche }
+        data: { transition: 4 }
+      # Fernseher an + Netflix (Fehler hier sollen das Licht nicht stören)
+      - action: media_player.turn_on
+        target: { entity_id: media_player.fernseher }
+        continue_on_error: true
+      - delay: { seconds: 4 }
+      - action: remote.turn_on
+        target: { entity_id: remote.fernseher }
+        data: { activity: "netflix://" }
+        continue_on_error: true
+
+  wir_lesen:
+    alias: "Wir: Lesen"
+    icon: mdi:book-open-variant
+    mode: restart
+    sequence:
+      - action: light.turn_on
+        target: { entity_id: light.tisch }
+        data: { brightness_pct: 100, color_temp_kelvin: 4000, transition: 2 }
+      - action: light.turn_on
+        target: { entity_id: light.bett }
+        data: { brightness_pct: 80, color_temp_kelvin: 3500, transition: 2 }
+      - action: light.turn_on
+        target: { entity_id: light.kuche }
+        data: { brightness_pct: 60, color_temp_kelvin: 3000, transition: 2 }
+
+  wir_gute_nacht:
+    alias: "Wir: Gute Nacht"
+    icon: mdi:weather-night
+    mode: restart
+    sequence:
+      - action: media_player.turn_off
+        target: { entity_id: media_player.fernseher }
+        continue_on_error: true
+      - action: light.turn_off
+        target: { entity_id: [light.kuche, light.tisch] }
+        data: { transition: 5 }
+      # Bett noch kurz als schwaches Nachtlicht, dann langsam aus
+      - action: light.turn_on
+        target: { entity_id: light.bett }
+        data: { brightness_pct: 5, rgb_color: [255, 70, 10], transition: 5 }
+      - delay: { seconds: 60 }
+      - action: light.turn_off
+        target: { entity_id: light.bett }
+        data: { transition: 30 }
+
+  wir_alles_aus:
+    alias: "Wir: Alles aus"
+    icon: mdi:power
+    mode: restart
+    sequence:
+      # laufende Szenen-Skripte abbrechen (sonst schaltet z. B. "Gute Nacht" das Bett später noch)
+      - action: script.turn_off
+        target: { entity_id: [script.wir_gute_nacht, script.wir_filmabend, script.wir_sonnenaufgang] }
+        continue_on_error: true
+      - action: light.turn_off
+        target: { entity_id: [light.bett, light.kuche, light.tisch] }
+        data: { transition: 1 }
+      - action: media_player.turn_off
+        target: { entity_id: media_player.fernseher }
+        continue_on_error: true
+
+  # Sonnenaufgang auf allen drei Lampen: dunkles Orange -> helles Kaltweiß über "dauer" Sekunden.
+  # Vom Lichtwecker mit dauer = Vorlauf, von "Weckvorgang testen" in der App mit dauer = 60.
+  wir_sonnenaufgang:
+    alias: "Wir: Sonnenaufgang"
+    icon: mdi:weather-sunset-up
+    mode: restart
+    fields:
+      dauer:
+        name: Dauer
+        description: Sekunden bis voll hell
+        example: 900
+        selector: { number: { min: 30, max: 1800, unit_of_measurement: s } }
+    variables:
+      d: "{{ [[dauer | default(900) | int(900), 30] | max, 1800] | min }}"
+      s: "{{ ((d - 2) / 3) | round(1) }}"
+      lampen: [light.bett, light.kuche, light.tisch]
+    sequence:
+      - action: light.turn_on
+        target: { entity_id: "{{ lampen }}" }
+        data: { brightness_pct: 1, rgb_color: [255, 50, 0], transition: 0 }
+      - delay: { seconds: 2 }
+      - action: light.turn_on
+        target: { entity_id: "{{ lampen }}" }
+        data: { brightness_pct: 25, rgb_color: [255, 110, 20], transition: "{{ s }}" }
+      - delay: { seconds: "{{ s }}" }
+      - action: light.turn_on
+        target: { entity_id: "{{ lampen }}" }
+        data: { brightness_pct: 65, color_temp_kelvin: 3000, transition: "{{ s }}" }
+      - delay: { seconds: "{{ s }}" }
+      - action: light.turn_on
+        target: { entity_id: "{{ lampen }}" }
+        data: { brightness_pct: 100, color_temp_kelvin: 6000, transition: "{{ s }}" }
+
+automation:
+  - id: wir_lichtwecker
+    alias: "Wir: Lichtwecker"
+    description: >-
+      Startet an aktiven Tagen um (Weckzeit − Vorlauf) einen Sonnenaufgang auf Bett, Küche und Tisch,
+      zur Weckzeit voll hell. "Einmal aussetzen" überspringt den nächsten Weckvorgang und wird danach
+      automatisch zurückgesetzt. Kein Ton. Werte kommen aus der Wir-App.
+    mode: queued
+    triggers:
+      # Start des Sonnenaufgangs (Vorlauf > 0); das Template wird jede Minute neu ausgewertet
+      - trigger: template
+        id: start
+        value_template: >-
+          {% set z = states('input_datetime.wir_wecker_zeit') %}
+          {% set v = states('input_number.wir_wecker_vorlauf') | int(0) %}
+          {% if v > 0 and z not in ['unknown', 'unavailable', ''] %}
+            {{ (today_at(z) - timedelta(minutes=v)).strftime('%H:%M') == now().strftime('%H:%M') }}
+          {% else %}false{% endif %}
+      - trigger: time
+        id: weckzeit
+        at: input_datetime.wir_wecker_zeit
+    variables:
+      v: "{{ states('input_number.wir_wecker_vorlauf') | int(0) }}"
+      # Wochentag des WECKmoments (Sonnenaufgang kurz vor Mitternacht gehört zum nächsten Tag)
+      tag: >-
+        {% set wd = (now() + timedelta(minutes=(v if trigger.id == 'start' else 0))).weekday() %}
+        {{ ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'][wd] }}
+    conditions:
+      - condition: state
+        entity_id: input_boolean.wir_wecker_aktiv
+        state: "on"
+      - condition: template
+        value_template: "{{ is_state('input_boolean.wir_wecker_' ~ tag, 'on') }}"
+    actions:
+      - choose:
+          # zur Weckzeit: "aussetzen" zurücksetzen – oder ohne Vorlauf direkt hell machen
+          - conditions: "{{ trigger.id == 'weckzeit' }}"
+            sequence:
+              - if:
+                  - condition: state
+                    entity_id: input_boolean.wir_wecker_aussetzen
+                    state: "on"
+                then:
+                  - action: input_boolean.turn_off
+                    target: { entity_id: input_boolean.wir_wecker_aussetzen }
+                else:
+                  - if: "{{ v == 0 }}"
+                    then:
+                      - action: script.turn_on
+                        target: { entity_id: script.wir_sonnenaufgang }
+                        data: { variables: { dauer: 30 } }
+          # Weckzeit − Vorlauf: Sonnenaufgang starten (außer ausgesetzt)
+          - conditions:
+              - "{{ trigger.id == 'start' }}"
+              - condition: state
+                entity_id: input_boolean.wir_wecker_aussetzen
+                state: "off"
+            sequence:
+              - action: script.turn_on
+                target: { entity_id: script.wir_sonnenaufgang }
+                data: { variables: { dauer: "{{ v * 60 }}" } }

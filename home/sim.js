@@ -60,11 +60,22 @@ class Sim extends EventEmitter {
         app_name: app?.name || '', source: app?.name || '', media_title: app?.test || '',
         media_duration: 2640, media_position: 1120, media_position_updated_at: iso(),
       });
-      if (tv.remote) put(tv.remote, 'on', { friendly_name: tv.name });
+      if (tv.remote) put(tv.remote, 'on', { friendly_name: tv.name, current_activity: app?.paket || '' });
+      if (tv.cast) put(tv.cast, 'playing', { friendly_name: tv.name + ' (Cast)', app_name: app?.name || '', media_title: app?.test || '' });
     }
     const DC = { fenster: 'window', tuer: 'door', bewegung: 'motion' };
     cfg.sensoren.forEach(s => put(s.entity_id, s.test_offen_min ? 'on' : 'off', { friendly_name: s.name, device_class: DC[s.art] || '' },
       s.test_offen_min ? now - s.test_offen_min * 60000 : now - 5 * 3600000));
+    // Lichtwecker-Helfer (werden von wir-home aus den App-Einstellungen gesetzt)
+    const wk = cfg.wecker;
+    if (wk) {
+      put(wk.aktiv, 'off', { friendly_name: 'Wecker aktiv' });
+      put(wk.aussetzen, 'off', { friendly_name: 'Wecker aussetzen' });
+      wk.tage.forEach(id => put(id, 'off', {}));
+      put(wk.zeit, '00:00:00', { has_date: false, has_time: true });
+      put(wk.vorlauf, '0.0', { min: 0, max: 30 });
+      if (wk.test) put(wk.test, 'off', { friendly_name: 'Sonnenaufgang' });
+    }
     const k = cfg.klima;
     put(k.temperatur, String(climate(now, 'temp')), { unit_of_measurement: '°C' });
     put(k.luftfeuchte, String(climate(now, 'hum')), { unit_of_measurement: '%' });
@@ -139,6 +150,19 @@ class Sim extends EventEmitter {
     this.set(id, 'on', a);
   }
 
+  // Sonnenaufgang wie im HA-Paket: dunkles Orange -> Kaltweiß, in drei Stufen über "dauer" Sekunden
+  sunrise(dauer) {
+    clearTimeout(this.sunT);
+    const steps = [[1, [255, 50, 0]], [25, [255, 110, 20]], [65, null, 3000], [100, null, 6000]];
+    const run = i => {
+      if (i >= steps.length) return;
+      const [b, rgb, k] = steps[i];
+      for (const l of this.cfg.lampen) this.lamp(l.entity_id, rgb ? { brightness_pct: b, rgb_color: rgb } : { brightness_pct: b, color_temp_kelvin: k }, true);
+      this.sunT = setTimeout(() => run(i + 1), i === 0 ? 2000 : (dauer - 2) / 3 * 1000);
+    };
+    run(0);
+  }
+
   tvCall(id, s, service, data) {
     const tv = this.cfg.fernseher, a = s.attributes, step = 1 / tv.max_lautstaerke;
     const vol = v => Math.max(0, Math.min(1, Math.round(v * tv.max_lautstaerke) / tv.max_lautstaerke));
@@ -174,12 +198,19 @@ class Sim extends EventEmitter {
         if (service === 'turn_on' && tv) {
           // App-Start über die Activity: passende App im Fernseher anzeigen
           const ap = tv.apps.find(a => a.start === data.activity);
-          if (ap) this.set(tv.entity_id, 'playing', { source: ap.name, app_name: ap.name, media_title: ap.test, media_position: 0 });
+          if (ap) {
+            this.set(tv.entity_id, 'playing', { source: ap.name, app_name: ap.paket || ap.name, app_id: ap.paket || '', media_title: ap.test, media_position: 0 });
+            this.set(id, 'on', { current_activity: ap.paket || '' });
+            if (tv.cast) this.set(tv.cast, 'playing', { app_name: ap.name, media_title: ap.test });
+          }
         }
       } else if (domain === 'automation') {
         if (service === 'trigger') this.set(id, s.state, { last_triggered: iso() });
         else this.set(id, service === 'turn_on' ? 'on' : 'off');
-      } else if (domain === 'scene' || domain === 'script') this.set(id, iso());
+      } else if (domain === 'input_datetime') this.set(id, String(data.time || '00:00:00'));
+      else if (domain === 'input_number') this.set(id, (Number(data.value) || 0).toFixed(1));
+      else if (domain === 'script' && id === this.cfg.wecker?.test) this.sunrise(Number(data.variables?.dauer) || 60);
+      else if (domain === 'scene' || domain === 'script') this.set(id, iso());
       else this.set(id, service === 'turn_on' ? 'on' : 'off');
     }
   }

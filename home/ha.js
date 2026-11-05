@@ -1,15 +1,21 @@
 // Echte Verbindung zu Home Assistant über dessen WebSocket-API (dauerhaft, mit automatischem Wiederverbinden).
 // Gleiche Schnittstelle wie sim.js: Ereignisse 'state' und 'status', call(), history().
+// - Abo NUR auf die freigegebenen Entitäten (subscribe_entities mit entity_ids) – HA schickt nichts anderes.
+// - Wiederverbinden mit wachsendem Abstand (2 s … 60 s, mit Zufall), tote Verbindungen per Ping nach ≤ 30 s erkannt.
 // Adresse und Token kommen aus /etc/wir-home.env und werden NIE ausgegeben.
 'use strict';
 const { EventEmitter } = require('events');
 const WebSocket = require('ws');
 
+const PING_MS = 20000, PONG_MS = 10000;
+const iso = t => (typeof t === 'number' ? new Date(t * 1000).toISOString() : '');
+
 class HA extends EventEmitter {
   constructor(url, token, cfg) {
     super();
     this.mode = 'live';
-    this.wsUrl = url.replace(/\/+$/, '').replace(/^http/, 'ws') + '/api/websocket';
+    this.base = url.replace(/\/+$/, '');
+    this.wsUrl = this.base.replace(/^http/, 'ws') + '/api/websocket';
     this.token = token;
     this.ids = new Set();
     this.seq = 0;
@@ -17,17 +23,21 @@ class HA extends EventEmitter {
     this.ws = null;
     this.ready = false;
     this.backoff = 2000;
+    this.cur = new Map();     // entity_id -> letzter vollständiger Zustand (für die Änderungs-Diffs von HA)
     this.setConfig(cfg);
   }
 
   setConfig(cfg) {
+    const ids = [...cfg.allowIds].sort().join(',');
     this.cfg = cfg;
+    const changed = ids !== [...this.ids].sort().join(',');
     this.ids = new Set(cfg.allowIds);
-    if (this.ready) this.loadStates().catch(() => {});
+    // andere Entitäten -> neu abonnieren (einfachster saubere Weg: Verbindung neu aufbauen)
+    if (changed && this.ws) { this.backoff = 500; this.ws.close(); }
   }
 
   start() { this.connect(); }
-  stop() { this.stopped = true; this.ws?.terminate(); }
+  stop() { this.stopped = true; clearTimeout(this.retryTimer); this.ws?.terminate(); }
 
   status(connected, error) {
     this.ready = connected;
@@ -40,32 +50,31 @@ class HA extends EventEmitter {
     try { ws = new WebSocket(this.wsUrl, { handshakeTimeout: 10000 }); }
     catch (_) { this.status(false, 'HA-Adresse ungültig'); return this.retry(); }
     this.ws = ws;
-    let alive = true;
+    let pongT = null;
     ws.on('message', buf => {
       let m; try { m = JSON.parse(buf); } catch (_) { return; }
       if (m.type === 'auth_required') ws.send(JSON.stringify({ type: 'auth', access_token: this.token }));
-      else if (m.type === 'auth_invalid') { this.status(false, 'Token abgelehnt'); ws.close(); }
-      else if (m.type === 'auth_ok') this.onAuth();
-      else if (m.type === 'pong') alive = true;
+      else if (m.type === 'auth_invalid') { this.authBad = true; this.status(false, 'Token abgelehnt'); ws.close(); }
+      else if (m.type === 'auth_ok') { this.authBad = false; this.onAuth(ws); }
+      else if (m.type === 'pong') { clearTimeout(pongT); pongT = null; }
       else if (m.type === 'result') {
         const p = this.pending.get(m.id);
         if (p) { this.pending.delete(m.id); clearTimeout(p.timer); m.success ? p.res(m.result) : p.rej(new Error(m.error?.message || 'Fehler von Home Assistant')); }
-      } else if (m.type === 'event' && m.event?.event_type === 'state_changed') {
-        const s = m.event.data?.new_state;
-        if (s && this.ids.has(s.entity_id)) this.emit('state', s);
-      }
+      } else if (m.type === 'event' && m.id === this.subId && m.event) this.onEntities(m.event);
     });
     ws.on('open', () => {
       this.ping = setInterval(() => {
-        if (!alive) { ws.terminate(); return; }
-        alive = false;
+        if (pongT) return;
+        pongT = setTimeout(() => ws.terminate(), PONG_MS);   // keine Antwort -> Verbindung tot
         try { ws.send(JSON.stringify({ id: ++this.seq, type: 'ping' })); } catch (_) {}
-      }, 30000);
+      }, PING_MS);
     });
     ws.on('close', () => {
-      clearInterval(this.ping);
+      clearInterval(this.ping); clearTimeout(pongT);
       for (const p of this.pending.values()) { clearTimeout(p.timer); p.rej(new Error('Verbindung zu Home Assistant getrennt')); }
       this.pending.clear();
+      this.subId = null;
+      if (this.ws === ws) this.ws = null;
       if (this.ready) this.status(false, 'Verbindung getrennt');
       this.ready = false;
       this.retry();
@@ -78,7 +87,10 @@ class HA extends EventEmitter {
 
   retry() {
     if (this.stopped || this.retryTimer) return;
-    this.retryTimer = setTimeout(() => { this.retryTimer = null; this.connect(); }, this.backoff);
+    // falsches Token: seltener probieren (HA sperrt sonst die IP nach vielen Fehlversuchen)
+    const base = this.authBad ? Math.max(this.backoff, 60000) : this.backoff;
+    const ms = Math.round(base * (0.8 + Math.random() * 0.4));
+    this.retryTimer = setTimeout(() => { this.retryTimer = null; this.connect(); }, ms);
     this.backoff = Math.min(60000, this.backoff * 2);
   }
 
@@ -92,29 +104,64 @@ class HA extends EventEmitter {
     });
   }
 
-  async onAuth() {
-    this.backoff = 2000;
+  async onAuth(ws) {
     try {
-      await this.send({ type: 'subscribe_events', event_type: 'state_changed' });
-      await this.loadStates();
+      this.cur.clear();
+      this.seen = new Set();
+      const id = this.seq + 1;
+      this.subId = id;
+      await this.send({ type: 'subscribe_entities', entity_ids: [...this.ids] });
+      if (this.ws !== ws) return;
+      // eingetragen, aber in HA (noch) nicht vorhanden -> als "nicht erreichbar" anzeigen
+      setTimeout(() => {
+        if (this.ws !== ws) return;
+        for (const eid of this.ids) if (!this.cur.has(eid)) this.emit('state', { entity_id: eid, state: 'unavailable', attributes: {}, last_changed: new Date().toISOString(), missing: true });
+      }, 1500);
+      this.backoff = 2000;
       this.status(true, '');
     } catch (err) {
       this.status(false, err.message);
-      this.ws?.close();
+      ws.close();
     }
   }
 
-  async loadStates() {
-    const all = await this.send({ type: 'get_states' });
-    const seen = new Set();
-    for (const s of all) if (this.ids.has(s.entity_id)) { seen.add(s.entity_id); this.emit('state', s); }
-    // eingetragen, aber in HA nicht vorhanden -> als "unbekannt" anzeigen
-    for (const id of this.ids) if (!seen.has(id)) this.emit('state', { entity_id: id, state: 'unavailable', attributes: {}, last_changed: new Date().toISOString() });
+  // kompaktes Format von subscribe_entities: a = neu/vollständig, c = Änderungen (+ / -), r = entfernt
+  onEntities(ev) {
+    for (const [eid, s] of Object.entries(ev.a || {})) {
+      if (!this.ids.has(eid)) continue;
+      const st = { entity_id: eid, state: String(s.s), attributes: s.a || {}, last_changed: iso(s.lc) || new Date().toISOString() };
+      this.cur.set(eid, st);
+      this.emit('state', st);
+    }
+    for (const [eid, d] of Object.entries(ev.c || {})) {
+      const old = this.cur.get(eid);
+      if (!old || !this.ids.has(eid)) continue;
+      const st = { ...old, attributes: { ...old.attributes } };
+      const plus = d['+'] || {}, minus = d['-'] || {};
+      if (plus.s !== undefined) st.state = String(plus.s);
+      if (plus.lc !== undefined) st.last_changed = iso(plus.lc);
+      Object.assign(st.attributes, plus.a || {});
+      for (const k of minus.a || []) delete st.attributes[k];
+      this.cur.set(eid, st);
+      this.emit('state', st);
+    }
+    for (const eid of ev.r || []) {
+      if (!this.ids.has(eid)) continue;
+      this.cur.delete(eid);
+      this.emit('state', { entity_id: eid, state: 'unavailable', attributes: {}, last_changed: new Date().toISOString(), missing: true });
+    }
   }
 
   async call(domain, service, ids, data) {
     if (!this.ready) throw new Error('Home Assistant nicht verbunden');
     await this.send({ type: 'call_service', domain, service, service_data: data || {}, target: { entity_id: ids } });
+  }
+
+  // REST (nur lesen): Kalender-Liste und Termine
+  async rest(path) {
+    const r = await fetch(this.base + path, { headers: { Authorization: 'Bearer ' + this.token }, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) { const e = new Error('HA ' + r.status); e.status = r.status; throw e; }
+    return r.json();
   }
 
   // Verlauf (für die Klima-Kurve nach einem Neustart)

@@ -1512,3 +1512,108 @@ git commit -m "Zurück auf Zuhause v1" && git push
 **Ganz ohne Zuhause:** siehe Abschnitt „Zurück auf vor-zuhause“ weiter oben.
 Die Collections `home_todos`/`home_settings` bleiben ungenutzt stehen (Migration bleibt im Repo). Wer Aurora gewählt hatte,
 sieht danach Rosé. Daten zurückspielen nur bei Bedarf aus `vor-zuhause-aurora-2026-11-04` (wie unter „Zurück zur alten Version → 2.“).
+
+---
+
+# Home Assistant angebunden 05.11.2026 (Wir `wir-v37`)
+
+Zuhause spricht jetzt mit dem echten Home Assistant (HA OS 2026.11 auf dem Raspberry Pi, im Tailnet als `http://ha`).
+HA bleibt **nicht öffentlich**: kein Funnel/Serve, nur `wir-home` auf dem VPS spricht über das Tailnet mit HA.
+
+## Was echt läuft
+
+| Bereich | Entitäten | Was geht |
+|---|---|---|
+| **Lampen** | `light.bett` (OmniGlow), `light.kuche`, `light.tisch` | Tippen = an/aus, waagerecht wischen = Helligkeit, **lange drücken (PC: Rechtsklick) = Panel** mit Helligkeit, 5 Weißtönen und 8 Farben. Leuchtet in der echten Farbe aus HA (`rgb_color` bzw. `color_temp_kelvin`). Alles mit sanftem Übergang (`transition`). |
+| **Szenen** | `script.wir_gemuetlich`, `…_filmabend`, `…_lesen`, `…_gute_nacht`, `…_alles_aus` | aus dem HA-Paket `ha/packages/wir.yaml` (Filmabend = Licht dimmen + Fernseher an + Netflix). |
+| **Fernseher** | `media_player.fernseher` + `remote.fernseher` (Android TV Remote), `media_player.mitv_mssp3` (Cast, nur lesen) | an/aus, lauter/leiser (der Fernseher kann nur Schritte – der Balken wird serverseitig in Lautstärke-Tasten umgerechnet), stumm, Play/Pause, vor/zurück, Steuerkreuz/OK/Zurück/Home/Menü/Suche, Apps per Startlink, „läuft gerade“ aus Cast + App-Paketname. Klappt Einschalten nicht: „Einschalten nicht möglich – Netzwerk-Standby am TV prüfen“. |
+| **Kalender** | alle `calendar.…` automatisch | sobald CalDAV in HA eingerichtet ist. Bis dahin **Testtermine** (HA meldet keine Kalender). |
+| **Lichtwecker** | `input_boolean.wir_wecker_*`, `input_datetime.wir_wecker_zeit`, `input_number.wir_wecker_vorlauf`, `script.wir_sonnenaufgang`, `automation.wir_lichtwecker` | läuft **lokal in HA**. Die Wecker-Einstellungen aus Zuhause werden bei jeder Änderung übertragen. „Weckvorgang testen“ startet zusätzlich einen echten 1-Minuten-Sonnenaufgang. |
+| **Status** | – | oben „HA verbunden“ / „HA getrennt“ (verbindet sich selbst neu: 2 s … 60 s), „Testmodus“ nur ohne Token. |
+
+**Ausgeblendet** (gibt es noch nicht, ohne Lücke): Geräte, Routinen, Raumklima/CO₂, Strom, Sensoren (Fenster/Tür), Quellen.
+
+**Startlinks** (Doku HA + Community-Liste „Android TV Remote – App Links/Deep Linking“): Netflix `netflix://`, YouTube
+`https://www.youtube.com`, Prime Video `https://app.primevideo.com`, Disney+ `https://www.disneyplus.com`, ARD
+`https://www.ardmediathek.de`, ZDF `https://www.zdf.de/filme`, Spotify `spotify://`, Twitch `twitch://home`.
+Am Fernseher getestet: Netflix, YouTube, Prime Video, ARD, Spotify starten. **Disney+, ZDF, Twitch** starten nicht (auch nicht per
+Paketname) – vermutlich nicht installiert; nach der Installation einfach erneut probieren. Startet eine App nicht, zeigt Zuhause
+nach 12 s „… nicht gestartet – auf dem Fernseher installiert?“.
+
+## Technik / Sicherheit
+
+- `/etc/wir-home.env`: `HA_URL=http://ha`, `HA_TOKEN=…` (root:root, 600). Token vom HA-Benutzer **„Wir-App“ (kein Admin)**. Nie im Repo, Log oder Chat.
+- `home/ha.js`: WebSocket mit `subscribe_entities` **nur für die freigegebenen entity_ids** (HA schickt nichts anderes), Ping alle 20 s
+  (keine Antwort in 10 s = Verbindung tot), Wiederverbinden mit wachsendem Abstand + Zufall; bei falschem Token höchstens 1×/Min.
+- Freigabeliste (`home/config.jsonc` + `home/config.js`), zusätzlich zu oben: Licht auch `transition` (0–10 s); die Wecker-Helfer darf
+  die App **nicht** schalten (nur `wir-home` beim Übertragen); einziger Wecker-Befehl der App ist `wecker.test`
+  (= `script.wir_sonnenaufgang` mit `dauer: 60`); Cast und Kalender nur lesen.
+- Wecker-Übertragung: Hook `wir_zuhause.pb.js` (Änderung an `home_settings` „wecker“) → `POST 127.0.0.1:8095/wecker` → `wir-home`
+  setzt nur abweichende Helfer; außerdem beim Verbinden und alle 15 Min. **Der erste eingeschaltete Wecker der Liste** bestimmt
+  Zeit und Tage (HA hat einen Lichtwecker); „Morgen aussetzen“ → `wir_wecker_aussetzen`, HA setzt es zur Weckzeit selbst zurück.
+- Kein Schemawechsel (keine neue Migration).
+- In HA gibt es außerdem deine eigene `automation.aufwachen` – die fasst die App nicht an. Falls sie morgens auch Licht schaltet,
+  eine von beiden ausschalten.
+
+## HA-Paket einspielen (einmalig, Klickanleitung)
+
+1. HA öffnen → Seitenleiste **File editor** (falls nicht in der Leiste: Einstellungen → Apps → File editor → „In Seitenleiste anzeigen“).
+2. Oben links **Ordner-Symbol** → du bist in `/homeassistant`. Symbol **„Neuer Ordner“** → Name `packages` → OK.
+3. In den Ordner `packages` wechseln → Symbol **„Neue Datei“** → Name `wir.yaml` → OK.
+4. Inhalt von https://github.com/PinguZG/F-r-dich/blob/main/ha/packages/wir.yaml (Knopf „Copy raw file“) einfügen → rotes **Speichern**-Symbol.
+5. Ordner-Symbol → zurück nach `/homeassistant` → `configuration.yaml` öffnen. Den `http:`-Block **nicht anfassen**.
+   - Gibt es schon eine Zeile `homeassistant:` (ganz links, ohne Einrückung)? Dann direkt darunter, **2 Leerzeichen** eingerückt:
+     `  packages: !include_dir_named packages`
+   - Gibt es keine, ganz ans Ende der Datei (zweite Zeile mit 2 Leerzeichen am Anfang):
+     ```yaml
+     homeassistant:
+       packages: !include_dir_named packages
+     ```
+   → Speichern.
+6. **Einstellungen → System → oben rechts Power-Symbol → „Konfiguration prüfen“**. Erst wenn „Konfiguration gültig“ steht:
+   **Home Assistant neu starten**. (Bei Fehler: Meldung abschreiben/fotografieren, nicht neu starten.)
+7. Nach ca. 1 Min. prüfen: Einstellungen → Automationen & Szenen → **Skripte**: 6 × „Wir: …“, **Automationen**: „Wir: Lichtwecker“.
+   `wir-home` überträgt die Wecker-Einstellungen automatisch, sobald die Helfer auftauchen (Log: `Wecker übertragen …`).
+
+## Neue Geräte / Szenen hinzufügen
+
+- **Lampe:** in `home/config.jsonc` unter `lampen` eine Zeile `{ "name": "…", "entity_id": "light.…", "farbe": "#ffb35c" }` → Commit
+  auf GitHub → nach ≤ 2 Min. live.
+- **Szene:** in HA ein Skript anlegen (oder in `ha/packages/wir.yaml` ergänzen und wie oben einspielen) und unter `szenen`
+  `{ "name": "…", "icon": "stars", "farbe": "#…", "entity_id": "script.…" }` eintragen.
+- **Gerät / Routine / Klima / Sensor:** Beispiele stehen als Kommentar in `home/config.jsonc` – eintragen, erscheint automatisch.
+- **Kalender:** in HA Integration „CalDAV“ (iCloud mit app-spezifischem Passwort) → alle `calendar.…` erscheinen von selbst
+  (als „gemeinsam“). Zuordnen in `kalender.quellen`: `{ "entity_id": "calendar.…", "wer": "d" }` (d/i/g); Farben in `kalender.farben`.
+
+## Getestet
+
+- **Gegen das echte HA (vom VPS):** Das Abo liefert nur die 23 freigegebenen Entitäten. Jede Lampe aus/an/30 %/Farbe/4500 K: Zustand
+  in HA geändert nach 126–237 ms, danach Ausgangszustand wiederhergestellt. Fernseher: lauter (319 ms), Lautstärke-Taste leiser
+  (106 ms), App-Starts (s. o.), danach zurück auf Netflix.
+- **Lokal (Testmodus, zwei Konten, 25 Prüfungen):** Ausblenden ohne Lücke, Langdruck-/Rechtsklick-Panel (Farbe, Weißton, Helligkeit),
+  Tippen, Szene, Fernseher-App + lauter, Test-Sonnenaufgang (Lampen 1 % → 25 %), Wecker-Vorlauf → Übertragung im Log, Kalender,
+  keine Konsolenfehler. Freigabeliste: Wecker-Helfer direkt schalten → 400.
+
+## Sicherung vorher
+
+Git-Tag **`vor-ha-anbindung`** (= `64410b1`), DB-Backup `/home/pingu/backups/vor-ha-anbindung-2026-11-05/` (`data.db`, `auxiliary.db`
+per SQLite-Online-Backup, Integrität „ok“, + `storage/`, `pb_hooks/`, `pb_migrations/`).
+
+## Zurück
+
+**Nur zurück in den Testmodus** (Code bleibt, HA wird simuliert):
+```bash
+ssh -t pingu@wir
+sudo sed -i 's/^HA_TOKEN=/#HA_TOKEN=/' /etc/wir-home.env    # Token-Zeile auskommentieren (wieder aktiv: Raute entfernen)
+sudo systemctl restart wir-home
+journalctl -u wir-home -n 5        # erwartet: "Modus: TEST"
+```
+**Code auf den Stand vor der Anbindung** (am PC):
+```bash
+cd Documents/wir-zuhause/F-r-dich && git checkout main && git pull
+git checkout vor-ha-anbindung -- app home pocketbase/pb_hooks/wir_zuhause.pb.js
+git rm -rq ha
+git commit -m "Zurück vor HA-Anbindung" && git push
+```
+Danach in HA (optional) `/homeassistant/packages/wir.yaml` löschen und HA neu starten. Die Datenbank wurde nicht verändert
+(kein Schemawechsel); nur bei Bedarf aus `vor-ha-anbindung-2026-11-05` zurückspielen wie unter „Zurück zur alten Version → 2.“.

@@ -16,113 +16,97 @@
   // Wetter (Open-Meteo, ohne Schlüssel, auf dem Server zwischengespeichert)
   "wetter": { "ort": "Kiel", "lat": 54.3233, "lon": 10.1228 },
 
-  // Lampen (Balken "Licht"). "farbe" = Leuchtfarbe, falls die Lampe selbst keine Farbe meldet.
-  // "test": Startzustand im Testmodus.
+  // Lampen (Balken "Licht"). Die Leuchtfarbe kommt aus Home Assistant (rgb_color bzw. color_temp_kelvin);
+  // "farbe" gilt nur, solange die Lampe keine Farbe meldet. "test": Startzustand im Testmodus.
   "lampen": [
-    { "name": "Stehlampe",    "entity_id": "light.stehlampe",    "farbe": "#ffb35c", "test": { "an": true,  "helligkeit": 72, "farbe": "#ffb35c" } },
-    { "name": "Deckenlicht",  "entity_id": "light.deckenlicht",  "farbe": "#ffe2b0", "test": { "an": false, "helligkeit": 40, "farbe": "#ffe2b0" } },
-    { "name": "LED-Streifen", "entity_id": "light.led_streifen", "farbe": "#8f6bff", "test": { "an": true,  "helligkeit": 55, "farbe": "#8f6bff" } }
+    { "name": "Bett",  "entity_id": "light.bett",  "farbe": "#ff9a52", "test": { "an": true,  "helligkeit": 45, "farbe": "#ff7828" } },
+    { "name": "Küche", "entity_id": "light.kuche", "farbe": "#ffd9a8", "test": { "an": false, "helligkeit": 60, "farbe": "#ffd9a8" } },
+    { "name": "Tisch", "entity_id": "light.tisch", "farbe": "#ffb35c", "test": { "an": true,  "helligkeit": 50, "farbe": "#ff9646" } }
   ],
 
-  // Farbnamen unter den Lampen (sonst wird ein Name aus dem Farbton gebildet)
-  "farbnamen": { "#ffb35c": "Warmweiß", "#ffe2b0": "Neutral", "#8f6bff": "Violett", "#ff5fa8": "Pink" },
+  // Farbnamen unter den Lampen (sonst wird ein Name aus dem Farbton bzw. Weißton gebildet), z. B. { "#ff7828": "Glut" }
+  "farbnamen": {},
 
-  // Geräte (switch.…, input_boolean.…, fan.…). "watt" = Verbrauch im Testmodus, "text_an" = Text, wenn an.
-  "geraete": [
-    { "name": "Kaffeemaschine", "entity_id": "switch.kaffeemaschine", "icon": "coffee", "farbe": "#ffb35c", "watt": 900 },
-    { "name": "Ventilator",     "entity_id": "fan.ventilator",        "icon": "fan",    "farbe": "#7fd6ff", "watt": 30 },
-    { "name": "Lichterkette",   "entity_id": "switch.lichterkette",   "icon": "stars",  "farbe": "#ffd36b", "watt": 4, "text_an": "Timer 23:00", "test_an": true }
-  ],
+  // Geräte (switch.…, input_boolean.…, fan.…) – gibt es noch keine, daher ausgeblendet. Beispiel:
+  // { "name": "Kaffeemaschine", "entity_id": "switch.kaffeemaschine", "icon": "coffee", "farbe": "#ffb35c", "watt": 900 }
+  "geraete": [],
 
-  // Fernseher (Xiaomi Android-TV). "remote" = remote.… für Fernbedienungstasten und App-Start.
-  // Apps: "start" = Android-Paketname/Link für remote.turn_on (activity); ohne "start" wird die App als Quelle gewählt.
-  // "quellen" = Eingänge für select_source, genau so geschrieben wie in Home Assistant.
+  // Fernseher (Xiaomi MiTV-MSSP3, Android TV über "Android TV Remote").
+  // "remote" = remote.… für Fernbedienungstasten und App-Start, "cast" = Google-Cast-Entität desselben Fernsehers
+  // (nur lesen: was gerade läuft, Titel, Play/Pause-Zustand). Apps: "start" = Startlink (Deep Link) für remote.turn_on,
+  // "paket" = Android-Paketname, an dem die laufende App erkannt wird (Attribut current_activity bzw. app_id).
+  // Startlinks aus https://www.home-assistant.io/integrations/androidtv_remote/ und der Community-Liste
+  // "Android TV Remote – App Links/Deep Linking" (community.home-assistant.io/t/567921).
+  // "quellen" = Eingänge für select_source, genau so geschrieben wie in HA (Android TV Remote meldet keine -> ausgeblendet).
   "fernseher": {
     "name": "Fernseher",
     "entity_id": "media_player.fernseher",
     "remote": "remote.fernseher",
-    "max_lautstaerke": 50,
+    "cast": "media_player.mitv_mssp3",
+    "max_lautstaerke": 100,
     "apps": [
-      { "name": "Netflix",       "farbe": "#e50914", "start": "com.netflix.ninja",                  "test": "Serie · Staffel 2, Folge 4" },
-      { "name": "YouTube",       "farbe": "#ff3d3d", "start": "com.google.android.youtube.tv",      "test": "Video · 12:08" },
-      { "name": "Prime Video",   "farbe": "#1f9dff", "start": "com.amazon.amazonvideo.livingroom",  "test": "Film · noch 1 h 12" },
-      { "name": "Disney+",       "farbe": "#3d5bff", "start": "com.disney.disneyplus",              "test": "Film · noch 58 Min" },
-      { "name": "ARD Mediathek", "farbe": "#2c6bff", "start": "de.swr.ard.avp.mobile.android.amazon", "test": "Tagesschau" },
-      { "name": "ZDF",           "farbe": "#ff8a00", "start": "com.zdf.android.mediathek",          "test": "Live" },
-      { "name": "Spotify",       "farbe": "#1ed760", "start": "com.spotify.tv.android",             "test": "Musik" },
-      { "name": "Twitch",        "farbe": "#9146ff", "start": "tv.twitch.android.app",              "test": "Stream" }
+      { "name": "Netflix",       "farbe": "#e50914", "start": "netflix://",                  "paket": "com.netflix.ninja",                 "test": "Serie · Staffel 2, Folge 4" },
+      { "name": "YouTube",       "farbe": "#ff3d3d", "start": "https://www.youtube.com",     "paket": "com.google.android.youtube.tv",     "test": "Video · 12:08" },
+      { "name": "Prime Video",   "farbe": "#1f9dff", "start": "https://app.primevideo.com",  "paket": "com.amazon.amazonvideo.livingroom", "test": "Film · noch 1 h 12" },
+      { "name": "Disney+",       "farbe": "#3d5bff", "start": "https://www.disneyplus.com",  "paket": "com.disney.disneyplus",             "test": "Film · noch 58 Min" },
+      { "name": "ARD Mediathek", "farbe": "#2c6bff", "start": "https://www.ardmediathek.de", "paket": "de.swr.avp.ard.tv",                 "test": "Tagesschau" },
+      { "name": "ZDF",           "farbe": "#ff8a00", "start": "https://www.zdf.de/filme",    "paket": "com.zdf.android.mediathek",         "test": "Live" },
+      { "name": "Spotify",       "farbe": "#1ed760", "start": "spotify://",                  "paket": "com.spotify.tv.android",            "test": "Musik" },
+      { "name": "Twitch",        "farbe": "#9146ff", "start": "twitch://home",               "paket": "tv.twitch.android.app",             "test": "Stream" }
     ],
-    "quellen": [
-      { "name": "Smart TV", "source": "Smart TV", "icon": "tv" },
-      { "name": "HDMI 1",   "source": "HDMI 1",   "icon": "hdmi" },
-      { "name": "HDMI 2",   "source": "HDMI 2",   "icon": "hdmi" },
-      { "name": "Cast",     "source": "Cast",     "icon": "cast" }
-    ]
+    "quellen": []
   },
 
   // Szenen: entweder "entity_id" (scene.… oder script.… aus HA) oder "aktionen" (was die Szene schaltet).
-  // Aktionen dürfen nur Geräte von oben schalten. "tv.app" startet eine App aus der Liste oben.
+  // Die fünf Skripte kommen aus dem HA-Paket ha/packages/wir.yaml (Farben/Helligkeiten dort ändern).
   "szenen": [
-    { "name": "Gemütlich", "icon": "flame", "farbe": "#ff8a3c", "aktionen": [
-      { "entity_id": "light.stehlampe",    "service": "light.turn_on",  "data": { "brightness_pct": 60, "rgb_color": [255, 179, 92] } },
-      { "entity_id": "light.deckenlicht",  "service": "light.turn_off" },
-      { "entity_id": "light.led_streifen", "service": "light.turn_on",  "data": { "brightness_pct": 35, "rgb_color": [255, 95, 168] } } ] },
-    { "name": "Filmabend", "icon": "film", "farbe": "#7b5cff", "aktionen": [
-      { "entity_id": "light.stehlampe",    "service": "light.turn_on",  "data": { "brightness_pct": 15, "rgb_color": [255, 179, 92] } },
-      { "entity_id": "light.deckenlicht",  "service": "light.turn_off" },
-      { "entity_id": "light.led_streifen", "service": "light.turn_on",  "data": { "brightness_pct": 30, "rgb_color": [143, 107, 255] } },
-      { "entity_id": "media_player.fernseher", "service": "tv.app", "data": { "app": "Netflix" } } ] },
-    { "name": "Lesen", "icon": "book", "farbe": "#ffc27a", "aktionen": [
-      { "entity_id": "light.stehlampe",    "service": "light.turn_on",  "data": { "brightness_pct": 85, "rgb_color": [255, 226, 176] } },
-      { "entity_id": "light.deckenlicht",  "service": "light.turn_on",  "data": { "brightness_pct": 90, "rgb_color": [255, 226, 176] } },
-      { "entity_id": "light.led_streifen", "service": "light.turn_off" } ] },
-    { "name": "Gute Nacht", "icon": "moon", "farbe": "#5b6cff", "aktionen": [
-      { "entity_id": "light.stehlampe",    "service": "light.turn_off" },
-      { "entity_id": "light.deckenlicht",  "service": "light.turn_off" },
-      { "entity_id": "light.led_streifen", "service": "light.turn_off" },
-      { "entity_id": "media_player.fernseher", "service": "media_player.turn_off" },
-      { "entity_id": "switch.lichterkette", "service": "switch.turn_off" } ] },
-    { "name": "Alles aus", "icon": "power", "farbe": "#6b7085", "aktionen": [
-      { "entity_id": "light.stehlampe",    "service": "light.turn_off" },
-      { "entity_id": "light.deckenlicht",  "service": "light.turn_off" },
-      { "entity_id": "light.led_streifen", "service": "light.turn_off" },
-      { "entity_id": "media_player.fernseher", "service": "media_player.turn_off" },
-      { "entity_id": "switch.kaffeemaschine", "service": "switch.turn_off" },
-      { "entity_id": "fan.ventilator", "service": "fan.turn_off" },
-      { "entity_id": "switch.lichterkette", "service": "switch.turn_off" } ] }
+    { "name": "Gemütlich",  "icon": "flame", "farbe": "#ff8a3c", "entity_id": "script.wir_gemuetlich" },
+    { "name": "Filmabend",  "icon": "film",  "farbe": "#7b5cff", "entity_id": "script.wir_filmabend" },
+    { "name": "Lesen",      "icon": "book",  "farbe": "#ffc27a", "entity_id": "script.wir_lesen" },
+    { "name": "Gute Nacht", "icon": "moon",  "farbe": "#5b6cff", "entity_id": "script.wir_gute_nacht" },
+    { "name": "Alles aus",  "icon": "power", "farbe": "#6b7085", "entity_id": "script.wir_alles_aus" }
   ],
 
-  // Routinen = Automationen in HA (Schalter aktiv/inaktiv)
-  "routinen": [
-    { "name": "Sanft wecken",    "entity_id": "automation.sanft_wecken",    "info": "Mo–Fr · 5:00",       "icon": "sunrise", "test_an": true },
-    { "name": "Abends dimmen",   "entity_id": "automation.abends_dimmen",   "info": "täglich · 22:00",    "icon": "moon",    "test_an": true },
-    { "name": "Nacht-Timer",     "entity_id": "automation.nacht_timer",     "info": "aus nach 30 Min",    "icon": "clock",   "test_an": false },
-    { "name": "Fenster-Hinweis", "entity_id": "automation.fenster_hinweis", "info": "nach 20 Min offen",  "icon": "window",  "test_an": true }
-  ],
+  // Routinen = Automationen in HA (Schalter aktiv/inaktiv) – gibt es noch keine, daher ausgeblendet. Beispiel:
+  // { "name": "Abends dimmen", "entity_id": "automation.abends_dimmen", "info": "täglich · 22:00", "icon": "moon" }
+  "routinen": [],
 
-  // Raumklima + Strom (sensor.…). Leer lassen ("") = wird nicht angezeigt.
+  // Raumklima + Strom (sensor.…). Leer ("") = ausgeblendet. Gibt es noch keine.
   "klima": {
-    "temperatur":  "sensor.zimmer_temperatur",
-    "luftfeuchte": "sensor.zimmer_luftfeuchte",
-    "co2":         "sensor.zimmer_co2",
-    "strom_heute": "sensor.strom_heute",
-    "leistung":    "sensor.leistung"
+    "temperatur":  "",
+    "luftfeuchte": "",
+    "co2":         "",
+    "strom_heute": "",
+    "leistung":    ""
   },
 
-  // Sensoren (binary_sensor.…) als Hinweise auf Start. "art": fenster | tuer | bewegung | sonstiges
-  "sensoren": [
-    { "name": "Fenster", "entity_id": "binary_sensor.fenster", "art": "fenster", "test_offen_min": 12 },
-    { "name": "Tür",     "entity_id": "binary_sensor.tuer",    "art": "tuer" }
-  ],
+  // Sensoren (binary_sensor.…) als Hinweise auf Start. "art": fenster | tuer | bewegung | sonstiges.
+  // Gibt es noch keine. Beispiel: { "name": "Fenster", "entity_id": "binary_sensor.fenster", "art": "fenster" }
+  "sensoren": [],
 
-  // Kalender: "quellen" = calendar.… aus HA (z. B. iCloud über CalDAV), "wer": d = Daniel, i = Ida, g = gemeinsam.
-  // "testtermine" werden nur im Testmodus gezeigt.
+  // Lichtwecker (läuft lokal in HA, Paket ha/packages/wir.yaml). wir-home setzt diese Helfer aus den Wecker-Einstellungen
+  // der App (der erste eingeschaltete Wecker der Liste bestimmt Zeit und Tage). Die App darf sie NICHT direkt schalten;
+  // "Weckvorgang testen" startet nur "test" mit "test_sekunden".
+  "wecker": {
+    "aktiv":     "input_boolean.wir_wecker_aktiv",
+    "aussetzen": "input_boolean.wir_wecker_aussetzen",
+    "zeit":      "input_datetime.wir_wecker_zeit",
+    "vorlauf":   "input_number.wir_wecker_vorlauf",
+    "tage": ["input_boolean.wir_wecker_mo", "input_boolean.wir_wecker_di", "input_boolean.wir_wecker_mi", "input_boolean.wir_wecker_do",
+             "input_boolean.wir_wecker_fr", "input_boolean.wir_wecker_sa", "input_boolean.wir_wecker_so"],
+    "test": "script.wir_sonnenaufgang",
+    "test_sekunden": 60
+  },
+
+  // Kalender: "automatisch": true = alle calendar.… aus HA (nur lesen). "quellen" ordnet einzelne Kalender zu
+  // (z. B. { "entity_id": "calendar.ida", "wer": "i" }); "wer": d = Daniel, i = Ida, g = gemeinsam,
+  // nicht eingetragene bekommen "standard". "farben": Farbe je Zuordnung, leer ("") = Farbe der Farbwelt.
+  // Gibt es in HA keinen Kalender, bleiben die "testtermine" sichtbar (Kalender im Testmodus).
   "kalender": {
-    "quellen": [
-      { "entity_id": "calendar.daniel",    "wer": "d" },
-      { "entity_id": "calendar.ida",       "wer": "i" },
-      { "entity_id": "calendar.gemeinsam", "wer": "g" }
-    ],
+    "automatisch": true,
+    "standard": "g",
+    "quellen": [],
+    "farben": { "d": "", "i": "", "g": "" },
     "testtermine": [
       { "d": "2026-11-02", "t": "18:00", "e": "19:30", "n": "Training", "w": "d" },
       { "d": "2026-11-04", "t": "18:00", "e": "19:00", "n": "Training", "w": "d" },
