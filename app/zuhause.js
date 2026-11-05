@@ -536,7 +536,7 @@
     if (neu && img.src !== sh.url) img.src = sh.url;
     img.hidden = !neu;
     $('shotmsg').textContent = b.laeuft || (!neu && !b.fehler) ? 'Bildschirm wird aufgenommen …'
-      : !neu && b.fehler ? b.fehler : 'Netflix, Prime & Co. erscheinen hier schwarz (Kopierschutz).';
+      : !neu && b.fehler ? b.fehler : 'Aufgenommen um ' + new Date(sh.at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
   }
   function sendText(enter) {
     const v = tvView(), inp = $('tvtext'); if (!v) return;

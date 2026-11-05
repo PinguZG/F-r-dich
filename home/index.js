@@ -749,14 +749,20 @@ async function tvxRun(x) {
 
 // Bildschirmfoto: screencap auf dem Fernseher -> über HA abholen -> PocketBase home_logos (Eintrag "_bildschirm", geschützt).
 // Läuft im Hintergrund (dauert ein paar Sekunden); die App sieht den Fortschritt in _tvx.bildschirm.
-// Hinweis: Streaming-Apps mit Kopierschutz (Netflix, Prime …) liefern dabei nur ein schwarzes Bild.
+// Geschützte Inhalte (Netflix, Prime …) lassen sich nicht aufnehmen – dann ein Hinweis statt Bild.
 let shotBusy = false;
 async function bildschirmFoto() {
   if (shotBusy) return;
   shotBusy = true;
   tvxSet({ bildschirm: { ...(tvx.bildschirm || {}), laeuft: true, fehler: '' } });
   try {
-    await adb('screencap -p /sdcard/wir-bild.png', 30000);
+    // geschützte Inhalte (Netflix & Co.): screencap bricht ab und hinterlässt eine leere Datei
+    const rc = await adb('screencap -p /sdcard/wir-bild.png; echo rc=$?; stat -c %s /sdcard/wir-bild.png', 30000);
+    if (!/rc=0/.test(rc) || /^0$/m.test(rc)) {
+      adb('rm -f /sdcard/wir-bild.png').catch(() => {});
+      tvxSet({ bildschirm: { ...(tvx.bildschirm || {}), laeuft: false, fehler: 'Geschützter Inhalt (z. B. Netflix) – davon gibt es kein Bildschirmfoto' } });
+      return;
+    }
     const buf = await tvlogos.holen('/sdcard/wir-bild.png', 'bild', {
       call: (d, s, ids, data) => backend.call(d, s, ids, data, 120000), signPath: p => backend.signPath(p),
       haBase: HA_URL.replace(/\/+$/, ''), adbEntity: intern.adb,
