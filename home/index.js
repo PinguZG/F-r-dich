@@ -728,6 +728,17 @@ const server = http.createServer((req, res) => {
       send(200, { aus: !tvIsOn(), ms: Date.now() - t0 });
     }, err => send(502, { message: err.message }));
   }
+  // Magic Packet mit eigener Zieladresse testen (MAC nur als Parameter, steht nirgends im Repo)
+  if (req.method === 'POST' && u.pathname === '/diag/wol') {
+    const mac = u.searchParams.get('mac') || '', ziel = u.searchParams.get('ziel') || '';
+    if (!/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/.test(mac) || (ziel && !/^\d{1,3}(\.\d{1,3}){3}$/.test(ziel))) return send(400, { message: 'mac/ziel?' });
+    const t0 = Date.now();
+    return backend.send({ type: 'call_service', domain: 'wake_on_lan', service: 'send_magic_packet', service_data: { mac, ...(ziel ? { broadcast_address: ziel } : {}) } })
+      .then(async () => {
+        while (!tvIsOn() && Date.now() - t0 < 25000) { backend.call('homeassistant', 'update_entity', [intern.adb], {}).catch(() => {}); await sleep(2000); }
+        send(200, { an: tvIsOn(), ms: Date.now() - t0 });
+      }, err => send(502, { message: err.message }));
+  }
   if (req.method === 'POST' && u.pathname === '/diag/logos') {
     if (!intern.adb || !tvIsOn()) return send(400, { message: 'Fernseher aus oder keine ADB-Entität' });
     return logosRefresh(u.searchParams.get('force') === '1').then(r => send(200, { ergebnis: r }));
