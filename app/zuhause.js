@@ -75,6 +75,20 @@
     if (o.b != null) b = o.b;
     return { on, b, c, k: colorName(c, a), na: !s || s.state === 'unavailable' };
   }
+  // Eigene App-Zeichen (Vektor, 24er-Raster, currentColor) – gestochen scharf in jeder Größe; unbekannte Apps: Anfangsbuchstabe
+  const ST = 'fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"';
+  const MARKS = {
+    'com.netflix.ninja': '<path fill="currentColor" opacity=".62" d="M6.4 2.5h3.7v18.6l-3.7.4zM13.9 2.5h3.7v19l-3.7-.4z"/><path fill="currentColor" d="M6.4 2.5h3.7l7.5 19-3.7-.4z"/>',
+    'com.google.android.youtube.tv': '<path fill="currentColor" fill-rule="evenodd" d="M2 8.7c0-2.2 1.5-3.7 3.7-3.9C7.8 4.6 9.9 4.5 12 4.5s4.2.1 6.3.3c2.2.2 3.7 1.7 3.7 3.9v6.6c0 2.2-1.5 3.7-3.7 3.9-2.1.2-4.2.3-6.3.3s-4.2-.1-6.3-.3C3.5 19 2 17.5 2 15.3zM9.6 8v8l6.6-4z"/>',
+    'com.amazon.amazonvideo.livingroom': `<path fill="currentColor" d="M9.6 3.6v7.6l6.3-3.8z"/><path ${ST} stroke-width="1.9" d="M3.4 14.4c5.3 3.7 11.9 3.7 17.2 0M17.4 13.5l3.2.9-.9 3.1"/>`,
+    'com.disney.disneyplus': `<path ${ST} stroke-width="1.7" d="M2.8 15.2C5.6 7.8 13.7 5 21.2 8.8"/><path ${ST} stroke-width="2.3" d="M16.2 12.4v7.2M12.6 16h7.2"/><circle cx="5" cy="18.4" r="1.2" fill="currentColor"/>`,
+    'de.swr.avp.ard.tv': `<circle cx="12" cy="12" r="9.6" ${ST} stroke-width="1.6" opacity=".45"/><path fill="currentColor" d="M12.6 5.6h2.8v12.8h-3.1V9.3l-2.9 1.8V8z"/>`,
+    'com.zdf.android.mediathek': '<rect x="1.5" y="5.5" width="21" height="13" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="12" y="14.8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="700" letter-spacing=".4" fill="currentColor" stroke="none">ZDF</text>',
+    'com.spotify.tv.android': '<circle cx="12" cy="12" r="10" fill="currentColor"/><path fill="none" stroke="#0b0d12" stroke-width="1.9" stroke-linecap="round" d="M6.6 9.4c3.6-1.1 7.6-.8 10.9 1.1M7.3 12.6c2.9-.8 6-.5 8.6.9M8 15.6c2.2-.5 4.4-.3 6.3.7"/>',
+    'tv.twitch.android.app': '<path fill="currentColor" fill-rule="evenodd" d="M5.5 2.5l-2 4v13H8V22h2.5l2.5-2.5h3.5l4.5-4.5v-12.5zm1.8 1.8h11.4v9.9L16 16.9h-4l-2.5 2.5v-2.5H7.3zm3.8 3.2v5h1.8v-5zm4.6 0v5h1.8v-5z"/>',
+  };
+  const appMark = ap => `<svg viewBox="0 0 24 24" aria-hidden="true">${MARKS[ap.paket] || `<text x="12" y="17" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="15" font-weight="800" fill="currentColor" stroke="none">${esc((ap.name || '?').slice(0, 1).toUpperCase())}</text>`}</svg>`;
+
   function tvView() {
     const tv = cfg()?.fernseher; if (!tv) return null;
     const s = ent(tv.entity_id), o = ov[tv.entity_id] || {};
@@ -115,8 +129,9 @@
     if (built) return;
     built = true;
     host.innerHTML = window.ZH_MARKUP;
-    // Einstellungen: App-Logos vom Fernseher neu einlesen (nur sichtbar, wenn wir-home ADB hat)
-    qa('#zh-p-set .z-info')[0]?.insertAdjacentHTML('beforebegin', '<div class="z-srow" id="zh-logorow" hidden><div class="z-si" data-i="tv"></div><div><b>App-Logos</b><small id="zh-logotxt">vom Fernseher</small></div><div class="z-btn z-r" id="zh-logobtn">Neu einlesen</div></div>');
+    // "läuft gerade": Platz für das große App-Zeichen; Hinweis neben "Apps" weg
+    qa('#zh-p-tv .z-now')[0]?.insertAdjacentHTML('afterbegin', '<i class="z-nowmark" id="zh-nowmark" aria-hidden="true"></i>');
+    qa('#zh-p-tv .z-sec span')[1]?.remove();
     icons(host);
     // Beschriftungen für die Tab-Reihe auf dem Handy
     const LBL = { start: 'Start', tv: 'Fernseher', cal: 'Kalender', alarm: 'Wecker', set: 'Einstellungen' };
@@ -361,7 +376,7 @@
     if (!v) return;
     const { tv, a, app } = v;
     const A = $('apps');
-    if (A.childElementCount !== tv.apps.length) A.innerHTML = tv.apps.map((x, i) => `<div class="z-ap" style="--c:${x.farbe}" data-k="${i}"><b>${esc(x.name)}</b><span>öffnen</span></div>`).join('');
+    if (A.childElementCount !== tv.apps.length) A.innerHTML = tv.apps.map((x, i) => `<div class="z-ap" style="--c:${x.farbe}" data-k="${i}"><i class="z-mark">${appMark(x)}</i><b>${esc(x.name)}</b><span>öffnen</span></div>`).join('');
     const Q = $('srcs');
     if (Q.dataset.n !== String(tv.quellen.length)) {
       Q.dataset.n = tv.quellen.length;
@@ -372,6 +387,9 @@
     $('p-tv').classList.toggle('z-tvoff', !v.on);
     qa('#zh-p-tv .z-h1, #zh-tvc h3').forEach(x => { x.textContent = tv.name; });
     $('napp').textContent = app.name;
+    // großes App-Zeichen rechts in "läuft gerade" (füllt die Karte, auch wenn die App keinen Titel liefert)
+    const nm = $('nowmark');
+    if (nm.dataset.k !== app.name) { nm.dataset.k = app.name; nm.innerHTML = appMark(app); }
     // Titel: per ADB (Serie / Staffel · Folge · Episode bzw. Titel · Untertitel), sonst Cast/HA; Beispieltext nur im Testmodus
     const ti = v.ti, sf = ti?.staffel ? `Staffel ${ti.staffel} · Folge ${ti.folge}` : '';
     const serie = ti && sf ? ti.untertitel || '' : '';
@@ -388,20 +406,6 @@
     $('tvstate').textContent = v.on ? 'An · ' + app.name : v.starting ? 'Startet …' : 'Aus · Standby';
     $('tvstate').classList.toggle('z-off', !v.on);
     qa('.z-ap', A).forEach((x, i) => {
-      // Logo vom Fernseher: <img> nur einmal anlegen und nur bei geändertem Bild neu setzen (Blob-URL aus dem Cache)
-      const ap = tv.apps[i], L = ap.paket ? S.logos?.get(ap.paket) : null;
-      if ((x.dataset.l || '') !== (L?.url || '')) {
-        x.dataset.l = L?.url || '';
-        let im = x.querySelector('img');
-        if (L) {
-          if (!im) { im = new Image(); im.className = 'z-logo'; im.alt = ''; im.decoding = 'async'; im.draggable = false; x.prepend(im); }
-          im.src = L.url;
-        } else im?.remove();
-        x.classList.toggle('z-hasl', !!L);
-        x.classList.toggle('z-banner', L?.art === 'banner');
-        x.classList.toggle('z-frei', !!L?.frei);
-        x.style.setProperty('--c', L?.farbe || ap.farbe);
-      }
       x.classList.toggle('z-on', v.on && i === v.ai);
       const t = v.on && i === v.ai ? 'läuft' : 'öffnen', sp = x.querySelector('span');
       if (sp.textContent !== t) sp.textContent = t;
@@ -763,10 +767,6 @@
     $('pwr').addEventListener('click', () => tvPower(!tvView()?.on));
     $('offmsg').addEventListener('click', () => tvPower(true));
     $('tvc-p').addEventListener('click', () => tvPower(!tvView()?.on));
-    $('logobtn')?.addEventListener('click', () => {
-      const v = tvView(); if (!v || S.logosInfo?.laeuft) return;
-      call({ entity_id: v.tv.entity_id, service: 'tv.logos' }).then(ok => { if (ok) toast('App-Logos werden vom Fernseher eingelesen …'); });
-    });
     $('tvc').addEventListener('click', e => { if (!e.target.closest('.z-mb')) go('tv'); });
     $('tvc-u').addEventListener('click', () => volStep(1));
     $('tvc-d').addEventListener('click', () => volStep(-1));
@@ -1004,14 +1004,6 @@
       rows[4].querySelector('.z-state').classList.toggle('z-off', bad);
     }
     if (rows[5]) rows[5].querySelector('small').textContent = 'angemeldet als ' + (window.WIR_LOOK?.me?.()?.name || '…');
-    const lr = $('logorow'), li = S.logosInfo || {};
-    if (lr) {
-      lr.hidden = !(m?.mode === 'live' && cfg()?.fernseher?.titel);
-      const n = S.logos?.size || 0;
-      $('logotxt').textContent = li.laeuft ? 'werden vom Fernseher eingelesen …' : li.stand
-        ? `${n} vom Fernseher · Stand ${new Date(li.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'noch nicht eingelesen · Fernseher muss an sein';
-      $('logobtn').classList.toggle('z-off', !!li.laeuft);
-    }
     const info = qa('#zh-p-set .z-info')[0];
     if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : S.kalender?.test ? 'Home Assistant · Kalender noch mit Testterminen.' : 'Verbunden mit Home Assistant.';
   }

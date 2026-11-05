@@ -182,18 +182,35 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 .z-lp-k.z-on i,.z-lp-c.z-on{border-color:var(--z-txt);box-shadow:0 0 0 3px color-mix(in srgb,var(--s) 45%,transparent)}
 .z-lp-cols .z-lp-c{width:100%;height:auto;aspect-ratio:1}
 
-/* App-Kacheln mit echtem Logo vom Fernseher. Freigestellt (zuhause-data.js: einfarbiger Hintergrund weg, dunkle Schrift hell)
-   schwebt das Logo direkt auf der Glas-Kachel mit Glow in seiner Farbe (--c); sonst (Foto-Banner) füllt es die Kachel und
-   läuft nach unten ins Design aus. Name klein darunter, "läuft" als kleines Schild oben rechts. */
-#zh .z-ap.z-hasl{justify-content:flex-end;align-items:center;padding:10px 12px 9px}
-#zh .z-ap .z-logo{position:absolute;left:16px;top:14px;width:calc(100% - 32px);height:calc(100% - 46px);object-fit:contain;
-  filter:drop-shadow(0 4px 16px color-mix(in srgb,var(--c) 50%,transparent));transition:transform .35s,filter .35s;
-  user-select:none;-webkit-user-drag:none}
-#zh .z-ap.z-hasl.z-on .z-logo{transform:scale(1.05);filter:drop-shadow(0 6px 20px color-mix(in srgb,var(--c) 80%,transparent))}
-#zh .z-ap.z-hasl:not(.z-frei) .z-logo{left:0;top:0;width:100%;height:100%;object-fit:cover;filter:none;opacity:.85;
-  -webkit-mask-image:linear-gradient(to bottom,#000 40%,transparent 88%);mask-image:linear-gradient(to bottom,#000 40%,transparent 88%)}
-#zh .z-perf .z-ap .z-logo{filter:none}
-#zh .z-ap.z-hasl b{font-size:13px;font-weight:600;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--zt-d6d9e4)}
-#zh .z-ap.z-hasl span{position:absolute;top:7px;right:8px;display:none;font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,.5);color:#fff}
-#zh .z-ap.z-hasl.z-on span{display:block}
-#zh.z-phone .z-ap.z-hasl span{font-size:10px}
+/* App-Kacheln mit eigenem App-Zeichen (Vektor aus zuhause.js, Farbe --c): Glas-Kachel mit leichtem Farbschimmer von oben
+   links, Zeichen oben links, Name + Zustand unten. Aktiv: kräftigerer Schimmer und Rand, pulsierender Punkt vor "läuft" –
+   ohne farbigen Schatten unter der Kachel. */
+#zh .z-ap{background:radial-gradient(130% 120% at 0% 0%,color-mix(in srgb,var(--c) 15%,transparent),transparent 62%),var(--z-card);
+  box-shadow:none;transition:background .35s,border-color .35s,transform .2s}
+#zh .z-ap::before{display:none}
+#zh .z-ap:active{transform:scale(.97)}
+#zh .z-ap .z-mark{position:absolute;left:15px;top:14px;width:38px;height:38px;color:color-mix(in srgb,var(--c) 84%,#fff);
+  filter:drop-shadow(0 3px 12px color-mix(in srgb,var(--c) 40%,transparent));transition:transform .35s,filter .35s}
+#zh .z-ap .z-mark svg,#zh .z-nowmark svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:none}
+#zh .z-ap b{font-size:15px;font-weight:650;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .z-ap span{display:flex;align-items:center;gap:6px;margin-top:1px}
+#zh .z-ap.z-on{background:radial-gradient(130% 120% at 0% 0%,color-mix(in srgb,var(--c) 30%,transparent),transparent 70%),var(--z-card);
+  border-color:color-mix(in srgb,var(--c) 50%,transparent);box-shadow:none}
+#zh .z-ap.z-on .z-mark{transform:scale(1.06);filter:drop-shadow(0 4px 16px color-mix(in srgb,var(--c) 65%,transparent))}
+#zh .z-ap.z-on span::before{content:"";width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--c) 84%,#fff);animation:zh-puls 2s ease-in-out infinite}
+@keyframes zh-puls{50%{opacity:.35}}
+#zh .z-perf .z-ap .z-mark{filter:none}
+#zh .z-perf .z-ap.z-on span::before{animation:none}
+#zh.z-phone .z-ap .z-mark{width:34px;height:34px}
+
+/* "läuft gerade": großes App-Zeichen rechts (füllt die Fläche, auch wenn die App keinen Titel liefert), kein farbiger Schatten */
+#zh .z-now{box-shadow:none}
+#zh .z-now > div:not(.z-offmsg){position:relative}
+#zh .z-now h2,#zh .z-now p{max-width:calc(100% - 170px);overflow:hidden;text-overflow:ellipsis}
+#zh .z-nowmark{position:absolute;right:34px;top:50%;width:132px;height:132px;transform:translateY(-50%);
+  color:color-mix(in srgb,var(--app) 84%,#fff);filter:drop-shadow(0 10px 40px color-mix(in srgb,var(--app) 55%,transparent));
+  opacity:.95;pointer-events:none;transition:opacity .4s}
+#zh .z-tvoff .z-nowmark{opacity:0}
+#zh .z-perf .z-nowmark{filter:none}
+#zh.z-phone .z-nowmark{width:84px;height:84px;right:20px;top:22px;transform:none}
+#zh.z-phone .z-now h2,#zh.z-phone .z-now p{max-width:calc(100% - 100px)}

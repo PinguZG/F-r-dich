@@ -469,8 +469,6 @@ function tvWatchState(id, was) {
     setMeta({ tv_wake: '', tv_fail: tvIsOn() ? '' : new Date().toISOString() });
   }
   if ((id === tv.entity_id || id === intern.adb) && tvIsOn() && meta.tv_fail) setMeta({ tv_fail: '' });
-  // Fernseher gerade angegangen -> ggf. die tägliche Logo-Prüfung (eine Minute später, damit ADB stabil ist)
-  if (id === intern.adb && tvIsOn() && ['off', 'unavailable', 'unknown', undefined].includes(was?.state)) setTimeout(() => logosFaellig(), 60000);
 }
 
 // ----------------------------------------------------------------------
@@ -830,7 +828,6 @@ async function main() {
   setInterval(() => weckerSoon(0), 15 * 60000);
   // Fernseher: Titel abfragen (nur wenn Zuhause offen und TV an), interne Entitäten nachsuchen, solange sie fehlen
   setInterval(() => tvPoll(), POLL_MS);
-  setInterval(() => { if (meta.connected && tvIsOn()) logosFaellig(); }, 10 * 60000);
   setInterval(() => { if (meta.connected && (!intern.adb || !intern.wol)) tvDiscover().catch(() => {}); }, 2 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)
