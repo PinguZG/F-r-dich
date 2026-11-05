@@ -411,6 +411,11 @@ const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
   // Wecker-Einstellungen wurden in der App geändert (pb_hooks/wir_zuhause.pb.js) -> zu HA übertragen
   if (req.method === 'POST' && req.url === '/wecker') { weckerSoon(300); req.resume(); return send(200, { ok: true }); }
+  // Diagnose (nur lokal auf dem VPS, z. B. per ssh + curl): Fernseher-nahe Entitäten
+  if (req.method === 'GET' && req.url === '/diag/entities') {
+    if (!backend?.overview) return send(400, { message: 'nur im echten Modus' });
+    return backend.overview().then(r => send(200, r), err => send(502, { message: err.message }));
+  }
   if (req.method !== 'POST' || req.url !== '/cmd') return send(404, { message: 'Nicht gefunden' });
   let body = '';
   req.on('data', ch => { body += ch; if (body.length > 10000) req.destroy(); });

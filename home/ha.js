@@ -157,6 +157,14 @@ class HA extends EventEmitter {
     await this.send({ type: 'call_service', domain, service, service_data: data || {}, target: { entity_id: ids } });
   }
 
+  // Diagnose: Überblick über Fernseher-nahe Entitäten (nur IDs, Zustand, Namen und Attribut-Namen – keine Werte)
+  async overview() {
+    if (!this.ready) throw new Error('Home Assistant nicht verbunden');
+    const all = await this.send({ type: 'get_states' }, 30000);
+    return all.filter(s => /^(media_player|remote|button|script|switch)\./.test(s.entity_id))
+      .map(s => ({ id: s.entity_id, state: s.state, name: s.attributes?.friendly_name || '', attrs: Object.keys(s.attributes || {}) }));
+  }
+
   // REST (nur lesen): Kalender-Liste und Termine
   async rest(path) {
     const r = await fetch(this.base + path, { headers: { Authorization: 'Bearer ' + this.token }, signal: AbortSignal.timeout(15000) });
