@@ -1591,7 +1591,7 @@ nach 12 s „… nicht gestartet – auf dem Fernseher installiert?“.
   in HA geändert nach 126–237 ms, danach Ausgangszustand wiederhergestellt. Fernseher: lauter (319 ms), Lautstärke-Taste leiser
   (106 ms), App-Starts (s. o.), danach zurück auf Netflix.
 - **Nach dem Einspielen des Pakets (live, 12 Prüfungen):** Helfer = App-Einstellungen (Mo–Fr 5:00, Vorlauf 15); App-Änderung
-  (6:35, +Sa, Vorlauf 22) nach 629 ms in HA; „Morgen aussetzen“ →  an; zurückgesetzt. Weckvorgang testen:
+  (6:35, +Sa, Vorlauf 22) nach 629 ms in HA; „Morgen aussetzen“ → `wir_wecker_aussetzen` an; zurückgesetzt. Weckvorgang testen:
   alle drei Lampen 1 % Glut-Orange → 25 % → 65 %/3000 K → nach 1 Min. 100 %/6000 K. Alle fünf Szenen schalten wie im Paket
   (Filmabend: Fernseher + Netflix). Freigabeliste live: 15 verbotene Befehle → 400, ohne Login → 401. Ende-zu-Ende App → HA →
   Realtime 221–310 ms, Änderung direkt in HA → Zuhause 257 ms. Ausfalltest (HA per Firewall gesperrt): „getrennt“ nach 19 s,
