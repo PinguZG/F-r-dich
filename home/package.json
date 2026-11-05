@@ -6,5 +6,5 @@
   "main": "index.js",
   "scripts": { "start": "node index.js" },
   "engines": { "node": ">=20" },
-  "dependencies": { "ws": "8.18.3" }
+  "dependencies": { "app-info-parser": "1.1.6", "ws": "8.18.3", "yauzl": "3.2.0" }
 }

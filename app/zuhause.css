@@ -181,3 +181,14 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 .z-lp-k i,.z-lp-c{display:block;width:44px;height:44px;max-width:100%;border-radius:50%;background:var(--s);border:2px solid transparent;cursor:pointer;justify-self:center}
 .z-lp-k.z-on i,.z-lp-c.z-on{border-color:var(--z-txt);box-shadow:0 0 0 3px color-mix(in srgb,var(--s) 45%,transparent)}
 .z-lp-cols .z-lp-c{width:100%;height:auto;aspect-ratio:1}
+
+/* App-Kacheln mit echtem Logo vom Fernseher: Logo groß (Banner 16:9 bzw. quadratisches Symbol), runde Ecken, Name klein
+   darunter, "läuft" als kleines Schild oben rechts; der Glow (--c) hat die Hauptfarbe des Logos */
+#zh .z-ap.z-hasl{justify-content:space-between;align-items:center;padding:10px 10px 8px;gap:5px}
+#zh .z-ap .z-logo{position:relative;display:block;flex:1;min-height:0;max-width:100%;object-fit:contain;border-radius:12px;
+  box-shadow:0 8px 22px -10px var(--c);user-select:none;-webkit-user-drag:none}
+#zh .z-ap.z-hasl:not(.z-banner) .z-logo{aspect-ratio:1;max-height:58px;border-radius:15px}
+#zh .z-ap.z-hasl b{font-size:12px;font-weight:600;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#zh .z-ap.z-hasl span{position:absolute;top:7px;right:8px;display:none;font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,.5);color:#fff}
+#zh .z-ap.z-hasl.z-on span{display:block}
+#zh.z-phone .z-ap.z-hasl span{font-size:10px}

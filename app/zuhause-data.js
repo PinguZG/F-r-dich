@@ -15,10 +15,18 @@
   // ---------------- Transport "wir": PocketBase (home_state, home_todos, home_settings) + POST /api/home/cmd ----------------
   function wirTransport() {
     const pb = window.WIR_PB;
-    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, tv: null, todos: [], settings: {} };
+    const state = { config: null, entities: {}, meta: null, klima: null, wetter: null, kalender: null, tv: null, logosInfo: null, logos: logoCache, todos: [], settings: {} };
     let onChange = () => {}, unsubs = [], gen = 0, raf = 0;
 
     const changed = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; onChange(state); }); };
+    // Logos nur laden, wenn sich der Stand von wir-home ("_logos".stand) geändert hat
+    let logoStand = null, logoBusy = false;
+    function logosSoon() {
+      const st = state.logosInfo?.stand || '';
+      if (st === logoStand || logoBusy || !unsubs.length) return;
+      logoBusy = true;
+      loadLogos(pb).then(ch => { logoStand = st; if (ch) changed(); }, () => {}).finally(() => { logoBusy = false; if ((state.logosInfo?.stand || '') !== logoStand) logosSoon(); });
+    }
 
     function applyState(rec, deleted) {
       const k = rec.key, d = deleted ? null : rec.data;
@@ -28,6 +36,7 @@
       else if (k === '_wetter') state.wetter = d;
       else if (k === '_kalender') state.kalender = d;
       else if (k === '_tv') state.tv = d;
+      else if (k === '_logos') { state.logosInfo = d; logosSoon(); }
       else if (deleted) delete state.entities[k];
       else state.entities[k] = d;
     }
@@ -110,6 +119,51 @@
         },
       },
     };
+  }
+
+  // ---------------- App-Logos vom Fernseher (Collection home_logos, geschützte Dateien) ----------------
+  // Jedes Bild wird genau einmal geladen (als Blob-URL) und bleibt für die ganze Sitzung im Speicher – auch über
+  // Aktivierungen von Zuhause hinweg; neu geladen wird nur ein Logo, dessen Datei sich geändert hat.
+  const logoCache = new Map();   // paket -> { key, url, farbe, art, w, h }
+  // Hauptfarbe: kräftigste Farbtöne gewichtet (graue/fast weiße/schwarze Pixel zählen kaum)
+  async function mainColor(blob) {
+    try {
+      const bmp = await createImageBitmap(blob, { resizeWidth: 32, resizeHeight: 32, resizeQuality: 'medium' });
+      const c = document.createElement('canvas'); c.width = c.height = 32;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(bmp, 0, 0); bmp.close?.();
+      const d = g.getImageData(0, 0, 32, 32).data;
+      let r = 0, gr = 0, b = 0, n = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
+        const w = (d[i + 3] / 255) * ((mx - mn) / 255) ** 2 * (mx > 40 ? 1 : 0.1);
+        r += d[i] * w; gr += d[i + 1] * w; b += d[i + 2] * w; n += w;
+      }
+      if (n < 0.5) return '';
+      // auf volle Leuchtkraft ziehen, damit der Glow trägt
+      const f = 255 / Math.max(r / n, gr / n, b / n, 1);
+      return '#' + [r, gr, b].map(v => Math.min(255, Math.round(v / n * f)).toString(16).padStart(2, '0')).join('');
+    } catch (_) { return ''; }
+  }
+  async function loadLogos(pb) {
+    const recs = await pb.collection('home_logos').getFullList({ batch: 100, requestKey: null });
+    let token = null, changed = false;
+    for (const r of recs) {
+      if (!r.bild) continue;
+      const key = r.id + '|' + r.bild;
+      if (logoCache.get(r.paket)?.key === key) continue;
+      try {
+        token = token || await pb.files.getToken({ requestKey: null });
+        const res = await fetch(pb.files.getURL(r, r.bild, { token }));
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        const alt = logoCache.get(r.paket);
+        if (alt) URL.revokeObjectURL(alt.url);
+        logoCache.set(r.paket, { key, url: URL.createObjectURL(blob), farbe: await mainColor(blob), art: r.art, w: r.breite, h: r.hoehe });
+        changed = true;
+      } catch (_) { /* ohne Logo bleibt die bisherige Kachel */ }
+    }
+    return changed;
   }
 
   const TRANSPORTS = { wir: wirTransport };

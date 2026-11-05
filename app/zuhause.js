@@ -85,6 +85,8 @@
       media_position_updated_at: ca.media_position_updated_at || s?.a?.media_position_updated_at };
     const max = tv.max_lautstaerke;
     let on = !!s && !['off', 'standby', 'unavailable', 'unknown'].includes(s.state);
+    // media_player.fernseher steht nach "an" sofort auf an (angenommen) – wir-home kennt den echten Zustand (ADB)
+    if (typeof S.meta?.tv_an === 'boolean') on = S.meta.tv_an;
     let playing = s?.state === 'playing' || cs?.state === 'playing', vol = Math.round((s?.a?.volume_level || 0) * max), muted = !!s?.a?.is_volume_muted;
     // App erkennen: Paketname (app_id / current_activity der Fernbedienung) oder Name (Cast)
     const pk = [s?.a?.app_id, tv.remote ? ent(tv.remote)?.a?.current_activity : ''].filter(Boolean);
@@ -102,8 +104,8 @@
     const starting = !on && (since(m.tv_wake) < 35000 || (tv.an_skript && ent(tv.an_skript)?.state === 'on') || Date.now() - tvStart < 6000);
     const fail = !on && !starting && (since(m.tv_fail) < 180000 || tvHint);
     if (on) { tvHint = false; tvStart = 0; }
-    // Titel per ADB (wir-home): nur, wenn er zur laufenden App passt und frisch ist
-    const ti = S.tv && S.tv.paket && on && since(S.tv.at) < 60000 && (!app.paket || pk.length === 0 || S.tv.paket === app.paket || pk.includes(S.tv.paket)) ? S.tv : null;
+    // Titel/Position per ADB (wir-home schreibt nur bei Änderung, leert es bei ausgeschaltetem TV): nur, wenn es zur laufenden App passt
+    const ti = S.tv && S.tv.paket && on &&(!app.paket || pk.length === 0 || S.tv.paket === app.paket || pk.includes(S.tv.paket)) ? S.tv : null;
     if (ti && o.playing == null) playing = ti.spielt;
     return { tv, s, a, on, playing, vol, muted, max, ai, app, ti, starting, fail, source: o.source || a.source || '' };
   }
@@ -113,6 +115,8 @@
     if (built) return;
     built = true;
     host.innerHTML = window.ZH_MARKUP;
+    // Einstellungen: App-Logos vom Fernseher neu einlesen (nur sichtbar, wenn wir-home ADB hat)
+    qa('#zh-p-set .z-info')[0]?.insertAdjacentHTML('beforebegin', '<div class="z-srow" id="zh-logorow" hidden><div class="z-si" data-i="tv"></div><div><b>App-Logos</b><small id="zh-logotxt">vom Fernseher</small></div><div class="z-btn z-r" id="zh-logobtn">Neu einlesen</div></div>');
     icons(host);
     // Beschriftungen für die Tab-Reihe auf dem Handy
     const LBL = { start: 'Start', tv: 'Fernseher', cal: 'Kalender', alarm: 'Wecker', set: 'Einstellungen' };
@@ -332,7 +336,25 @@
   }
 
   // ---------------------------------------------------------------- Fernseher
-  const mmss = s => `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
+  const mmss = s => (s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}` : `${Math.floor(s / 60)}`) + `:${pad(Math.floor(s % 60))}`;
+  // Fortschritt: per ADB (Position, lokal weitergezählt solange "spielt"; eine Dauer liefert Android 9 dort nicht)
+  // oder aus Cast/HA (Position läuft seit media_position_updated_at weiter). Ohne Dauer kein Balken, nur die Position.
+  function renderProg(v) {
+    const a = v.a, ti = v.ti;
+    let pos, dur;
+    if (ti && ti.pos >= 0) { dur = 0; pos = ti.pos + (v.playing ? (Date.now() - Date.parse(ti.at)) / 1000 : 0); }
+    else {
+      pos = a.media_position ?? -1; dur = a.media_duration || 0;
+      if (pos >= 0 && v.playing && a.media_position_updated_at) pos += (Date.now() - Date.parse(a.media_position_updated_at)) / 1000;
+    }
+    if (dur) pos = Math.min(pos, dur);
+    const prog = qa('.z-prog', $('p-tv'))[0], bar = prog.querySelector('.z-bar');
+    bar.hidden = !dur;
+    bar.querySelector('i').style.width = dur && pos >= 0 ? (pos / dur * 100).toFixed(1) + '%' : '0%';
+    const t = pos >= 0 ? (dur ? `${mmss(pos)} / ${mmss(dur)}` : mmss(pos)) : '', sp = prog.querySelector(':scope > span');
+    if (sp.textContent !== t) sp.textContent = t;
+    return { pos, dur };
+  }
   function renderTV() {
     const v = tvView();
     $('tvc').hidden = !v; qa('.z-nv[data-p="tv"]').forEach(n => { n.hidden = !v; });
@@ -353,17 +375,10 @@
     // Titel: per ADB (Serie / Staffel · Folge · Episode bzw. Titel · Untertitel), sonst Cast/HA; Beispieltext nur im Testmodus
     const ti = v.ti, sf = ti?.staffel ? `Staffel ${ti.staffel} · Folge ${ti.folge}` : '';
     const serie = ti && sf ? ti.untertitel || '' : '';
-    const titel = ti ? (serie || ti.titel) : a.media_series_title || a.media_title || (S.meta?.mode === 'test' ? app.test : '') || '';
+    const titel = (ti && (serie || ti.titel)) || a.media_series_title || a.media_title || (S.meta?.mode === 'test' ? app.test : '') || '';
     const zeile = ti ? (serie ? [sf, ti.titel] : [ti.untertitel]).filter(Boolean).join(' · ') : '';
     $('ntitle').textContent = titel;
-    // Fortschritt (Position läuft seit media_position_updated_at weiter)
-    let pos = a.media_position || 0;
-    const dur = a.media_duration || 0;
-    if (v.playing && a.media_position_updated_at) pos += (Date.now() - Date.parse(a.media_position_updated_at)) / 1000;
-    pos = Math.min(pos, dur || pos);
-    const prog = qa('.z-prog', $('p-tv'))[0];
-    prog.querySelector('.z-bar i').style.width = dur ? (pos / dur * 100).toFixed(1) + '%' : '0%';
-    prog.querySelector(':scope > span').textContent = dur ? `${mmss(pos)} / ${mmss(dur)}` : '';
+    const { pos, dur } = renderProg(v);
     const st = !v.playing ? 'pausiert' : dur ? `noch ${Math.ceil((dur - pos) / 60)} Min` : 'läuft';
     $('nsub').textContent = zeile ? `${zeile} · ${st}` : st;
     setHTML($('pp'), svg(v.playing ? 'pause' : 'play'));
@@ -372,7 +387,24 @@
     $('offmsg').querySelector('span').textContent = v.starting ? 'kann bis zu 25 Sekunden dauern' : v.fail ? 'Hat diesmal nicht geklappt – nochmal tippen' : 'Tippen zum Einschalten';
     $('tvstate').textContent = v.on ? 'An · ' + app.name : v.starting ? 'Startet …' : 'Aus · Standby';
     $('tvstate').classList.toggle('z-off', !v.on);
-    qa('.z-ap', A).forEach((x, i) => { x.classList.toggle('z-on', v.on && i === v.ai); x.querySelector('span').textContent = v.on && i === v.ai ? 'läuft' : 'öffnen'; });
+    qa('.z-ap', A).forEach((x, i) => {
+      // Logo vom Fernseher: <img> nur einmal anlegen und nur bei geändertem Bild neu setzen (Blob-URL aus dem Cache)
+      const ap = tv.apps[i], L = ap.paket ? S.logos?.get(ap.paket) : null;
+      if ((x.dataset.l || '') !== (L?.url || '')) {
+        x.dataset.l = L?.url || '';
+        let im = x.querySelector('img');
+        if (L) {
+          if (!im) { im = new Image(); im.className = 'z-logo'; im.alt = ''; im.decoding = 'async'; im.draggable = false; x.prepend(im); }
+          im.src = L.url;
+        } else im?.remove();
+        x.classList.toggle('z-hasl', !!L);
+        x.classList.toggle('z-banner', L?.art === 'banner');
+        x.style.setProperty('--c', L?.farbe || ap.farbe);
+      }
+      x.classList.toggle('z-on', v.on && i === v.ai);
+      const t = v.on && i === v.ai ? 'läuft' : 'öffnen', sp = x.querySelector('span');
+      if (sp.textContent !== t) sp.textContent = t;
+    });
     const known = tv.quellen.some(q => q.source === v.source);
     qa('.z-src', Q).forEach((x, i) => x.classList.toggle('z-on', known ? tv.quellen[i].source === v.source : i === 0));
     const pct = v.vol / v.max * 100;
@@ -730,6 +762,10 @@
     $('pwr').addEventListener('click', () => tvPower(!tvView()?.on));
     $('offmsg').addEventListener('click', () => tvPower(true));
     $('tvc-p').addEventListener('click', () => tvPower(!tvView()?.on));
+    $('logobtn')?.addEventListener('click', () => {
+      const v = tvView(); if (!v || S.logosInfo?.laeuft) return;
+      call({ entity_id: v.tv.entity_id, service: 'tv.logos' }).then(ok => { if (ok) toast('App-Logos werden vom Fernseher eingelesen …'); });
+    });
     $('tvc').addEventListener('click', e => { if (!e.target.closest('.z-mb')) go('tv'); });
     $('tvc-u').addEventListener('click', () => volStep(1));
     $('tvc-d').addEventListener('click', () => volStep(-1));
@@ -967,6 +1003,14 @@
       rows[4].querySelector('.z-state').classList.toggle('z-off', bad);
     }
     if (rows[5]) rows[5].querySelector('small').textContent = 'angemeldet als ' + (window.WIR_LOOK?.me?.()?.name || '…');
+    const lr = $('logorow'), li = S.logosInfo || {};
+    if (lr) {
+      lr.hidden = !(m?.mode === 'live' && cfg()?.fernseher?.titel);
+      const n = S.logos?.size || 0;
+      $('logotxt').textContent = li.laeuft ? 'werden vom Fernseher eingelesen …' : li.stand
+        ? `${n} vom Fernseher · Stand ${new Date(li.stand).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'noch nicht eingelesen · Fernseher muss an sein';
+      $('logobtn').classList.toggle('z-off', !!li.laeuft);
+    }
     const info = qa('#zh-p-set .z-info')[0];
     if (info) info.firstChild.textContent = m?.mode === 'test' || !m ? 'Testmodus · alle Werte sind Beispiele.' : S.kalender?.test ? 'Home Assistant · Kalender noch mit Testterminen.' : 'Verbunden mit Home Assistant.';
   }
@@ -1009,7 +1053,14 @@
     tick(); render();
     T.start(onChange).catch(err => { console.error('Zuhause', err); toast('Zuhause ist gerade nicht erreichbar'); });
     tickT = setInterval(tick, 10000);
-    progT = setInterval(() => { if (page === 'tv' && tvView()?.playing) renderTV(); }, 5000);
+    // Position jede Sekunde (nur der Text), der Rest alle 5 s
+    let progN = 0;
+    progT = setInterval(() => {
+      if (page !== 'tv') return;
+      const v = tvView();
+      if (!v?.playing) return;
+      if (++progN % 5 === 0) renderTV(); else renderProg(v);
+    }, 1000);
     idle();
     measureFps();
   }

@@ -221,6 +221,14 @@ function check(conf, cmd, states) {
     return { calls: [], label: '', watch: true };
   }
 
+  // Sonderfall: App-Logos vom Fernseher neu einlesen (wir-home liest sie selbst per ADB, die App startet es nur)
+  if (domain === 'tv' && service === 'logos') {
+    const tv = cfg.fernseher;
+    if (!tv || id !== tv.entity_id) bad('Gerät nicht freigegeben');
+    only();
+    return { calls: [], label: 'App-Logos neu einlesen', logos: true };
+  }
+
   if (ent.domain !== domain) bad('Dienst passt nicht zum Gerät');
   if (!(SERVICES[domain] || []).includes(service)) bad('Dienst nicht erlaubt');
   if (['klima', 'sensor', 'kalender', 'cast'].includes(ent.kind)) bad('Nur lesbar');

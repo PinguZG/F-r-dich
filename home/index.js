@@ -143,7 +143,7 @@ function onState(s) {
   const was = states.get(s.entity_id);
   states.set(s.entity_id, s);
   // interne Entitäten (ADB) nie nach home_state – nur die ausgewertete Antwort
-  if (s.entity_id === intern.adb) { if (s.attributes?.adb_response !== was?.attributes?.adb_response) tvMedia(s.attributes?.adb_response); return; }
+  if (s.entity_id === intern.adb) { adbSeq++; tvEcht(); tvWatchState(s.entity_id, was); return; }
   tvWatchState(s.entity_id, was);
   // Wecker-Helfer tauchen in HA auf (Paket gerade eingespielt) -> Einstellungen übertragen
   if (C.allow.get(s.entity_id)?.kind === 'wecker' && (!was || was.missing) && !s.missing) weckerSoon();
@@ -368,7 +368,20 @@ const TV_OFF = ['off', 'standby', 'unavailable', 'unknown'];
 const WAKE_MS = 25000, WAKE_STEP = 2000;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const intern = { adb: '', wol: '' };      // gefundene interne Entitäten (nie an die App)
-const tvIsOn = () => { const tv = C.cfg.fernseher; return !!tv && !!states.get(tv.entity_id) && !TV_OFF.includes(states.get(tv.entity_id).state); };
+// Ist der Fernseher WIRKLICH an? media_player.fernseher (Android TV Remote) hat assumed_state: nach turn_on steht er sofort
+// auf "an", auch wenn der Fernseher gar nicht aufwacht. Gibt es die ADB-Entität, zählt deshalb nur sie (Bildschirm an =
+// nicht off/unavailable/unknown; "standby" ist dort der Bildschirmschoner, also an).
+const tvIsOn = () => {
+  const tv = C.cfg.fernseher;
+  if (!tv) return false;
+  if (intern.adb && states.get(intern.adb)) return !['off', 'unavailable', 'unknown'].includes(states.get(intern.adb).state);
+  return !!states.get(tv.entity_id) && !TV_OFF.includes(states.get(tv.entity_id).state);
+};
+// für die App: echter Zustand in _meta.tv_an (true/false), null = unbekannt (dann gilt media_player.fernseher)
+function tvEcht() {
+  const v = intern.adb && states.get(intern.adb) ? tvIsOn() : null;
+  if (v !== meta.tv_an) setMeta({ tv_an: v });
+}
 const skriptDa = () => { const id = C.cfg.fernseher?.an_skript; return !!id && !!states.get(id) && !states.get(id).missing; };
 
 // ADB- und Wake-on-LAN-Entität: aus der Konfiguration oder "auto" (ADB = media_player mit adb_response, WOL = button.wake_on_lan_…)
@@ -410,6 +423,8 @@ function tvWake(variante = 'auto') {
         fire('media_player', 'turn_on', tv.entity_id);
         if (['auto', 'wol_adb'].includes(variante)) fire('media_player', 'turn_on', intern.adb);
       }
+      // ADB-Zustand sofort neu abfragen (sonst erst beim nächsten Abfrage-Intervall der Integration)
+      if (!useSkript) fire('homeassistant', 'update_entity', intern.adb);
       const until = t0 + (n + 1) * WAKE_STEP;
       while (Date.now() < until && !tvIsOn()) await sleep(100);
       if (tvIsOn()) return Date.now() - t0;
@@ -434,22 +449,46 @@ function tvWatchState(id, was) {
     log(tvIsOn() ? `Fernseher an (HA-Skript, ${(ms / 1000).toFixed(1)} s)` : 'Fernseher: HA-Skript ohne Erfolg beendet');
     setMeta({ tv_wake: '', tv_fail: tvIsOn() ? '' : new Date().toISOString() });
   }
-  if (id === tv.entity_id && tvIsOn() && meta.tv_fail) setMeta({ tv_fail: '' });
+  if ((id === tv.entity_id || id === intern.adb) && tvIsOn() && meta.tv_fail) setMeta({ tv_fail: '' });
+  // Fernseher gerade angegangen -> ggf. die tägliche Logo-Prüfung (eine Minute später, damit ADB stabil ist)
+  if (id === intern.adb && tvIsOn() && ['off', 'unavailable', 'unknown', undefined].includes(was?.state)) setTimeout(() => logosFaellig(), 60000);
 }
 
 // ----------------------------------------------------------------------
-// "Läuft gerade" mit Titel: wir-home liest per ADB die Media-Session des Fernsehers – nur diesen einen festen
-// Lese-Befehl, nur solange der Fernseher an ist und Zuhause offen ist (die App meldet sich per "tv.watch" alle 30 s),
-// höchstens alle 10 s. Ergebnis in home_state "_tv". Die App darf ADB nicht benutzen.
+// ADB (nur wir-home, nie die App): feste Lese-Befehle über androidtv.adb_command, nacheinander (Warteschlange).
+// Die Antwort steht danach im Attribut adb_response der ADB-Entität.
 // ----------------------------------------------------------------------
-const ADB_CMD = 'dumpsys media_session';
+let adbQ = Promise.resolve(), adbSeq = 0;
+function adb(command, timeoutMs = 20000) {
+  const run = async () => {
+    if (!intern.adb) throw new Error('keine ADB-Entität');
+    const seq = adbSeq;
+    await backend.call('androidtv', 'adb_command', [intern.adb], { command }, timeoutMs);
+    // die Zustandsänderung kommt über das Abo – kurz darauf warten (gleiche Antwort wie vorher = keine Änderung)
+    for (let i = 0; i < 15 && adbSeq === seq; i++) await sleep(100);
+    return String(states.get(intern.adb)?.attributes?.adb_response ?? '');
+  };
+  const p = adbQ.then(run, run);
+  adbQ = p.catch(() => {});
+  return p;
+}
+
+// ----------------------------------------------------------------------
+// "Läuft gerade" mit Titel und Position: wir-home liest per ADB die Media-Session des Fernsehers (+ Laufzeit des
+// Fernsehers, um die Position auf "jetzt" umzurechnen) – nur solange der Fernseher an ist und Zuhause offen ist (die
+// App meldet sich per "tv.watch" alle 30 s), höchstens alle 10 s. Ergebnis in home_state "_tv".
+// ----------------------------------------------------------------------
+const ADB_CMD = 'dumpsys media_session; cat /proc/uptime';
 const POLL_MS = 10000, WATCH_MS = 45000;
 let watchUntil = 0, adbBusy = false, adbErr = '', lastRaw = '', adbLast = 0;
 
-// dumpsys media_session -> Sitzungen (Paket, Zustand, Titel/Untertitel/Beschreibung)
+// dumpsys media_session -> Sitzungen (Paket, Zustand, Position, Titel/Untertitel/Beschreibung)
+// Android 9 gibt von den Metadaten nur "size" und die Beschreibung aus – eine Gesamtdauer steht dort nicht.
 function parseSessions(raw) {
   const out = [];
-  const blocks = String(raw || '').split(/\n(?=\s*package=)/).slice(1);
+  const txt = String(raw || '');
+  const up = parseFloat((txt.match(/\n\s*(\d+\.\d+)\s+\d+\.\d+\s*$/) || [])[1]);   // /proc/uptime (Sekunden seit Start)
+  const blocks = txt.split(/\n(?=\s*package=)/).slice(1);
   for (const b of blocks) {
     const g = re => (b.match(re) || [])[1];
     const pk = g(/package=([\w.]+)/);
@@ -461,7 +500,12 @@ function parseSessions(raw) {
     const beschreibung = parts.length >= 3 ? parts.pop() : '';
     const untertitel = parts.length >= 2 ? parts.pop() : '';
     const titel = parts.join(', ');
-    out.push({ paket: pk, aktiv: /active=true/.test(b), zustand: st, titel, untertitel, beschreibung });
+    // Position: Stand bei "updated" (ms seit Start); spielt sie, läuft sie mit "speed" weiter
+    const p = Number(g(/state=PlaybackState \{[^}]*?position=(-?\d+)/)), upd = Number(g(/state=PlaybackState \{[^}]*?updated=(\d+)/));
+    const speed = Number(g(/state=PlaybackState \{[^}]*?speed=([\d.]+)/) ?? 1);
+    let pos = Number.isFinite(p) && p >= 0 ? p : -1;
+    if (pos >= 0 && st === 3 && Number.isFinite(up) && Number.isFinite(upd) && up * 1000 >= upd) pos += (up * 1000 - upd) * speed;
+    out.push({ paket: pk, aktiv: /active=true/.test(b), zustand: st, titel, untertitel, beschreibung, pos: pos >= 0 ? Math.round(pos / 1000) : -1 });
   }
   return out;
 }
@@ -471,34 +515,100 @@ function staffelFolge(t) {
   return m ? { staffel: +m[1], folge: +m[2] } : null;
 }
 function mediaInfo(raw) {
-  const all = parseSessions(raw).filter(s => s.titel || s.untertitel);
+  // nur, was die App wirklich liefert: Titel und/oder Position (Netflix z. B. nur die Position)
+  const all = parseSessions(raw).filter(s => s.titel || s.untertitel || s.pos >= 0);
   // spielend (3) vor pausiert (2) vor dem Rest, aktive Sitzung bevorzugt
   const rank = s => (s.zustand === 3 ? 4 : s.zustand === 2 ? 2 : 0) + (s.aktiv ? 1 : 0);
   const s = all.sort((a, b) => rank(b) - rank(a))[0];
   if (!s || rank(s) < 2) return {};
   const sf = staffelFolge(s.titel) || staffelFolge(s.untertitel) || staffelFolge(s.beschreibung);
+  // pos = Sekunden zum Zeitpunkt "at" (-1 = liefert die App nicht); die App zählt bei "spielt" selbst weiter
   return { paket: s.paket, titel: s.titel.slice(0, 120), untertitel: s.untertitel.slice(0, 120), staffel: sf?.staffel || 0, folge: sf?.folge || 0,
-    spielt: s.zustand === 3, at: new Date().toISOString() };
+    spielt: s.zustand === 3, pos: s.pos, at: new Date().toISOString() };
 }
+// Zeitstempel "at" nur bei echter Änderung neu setzen – sonst würde home_state alle 10 s geschrieben
+let tvLast = '';
 function tvMedia(raw) {
-  if (typeof raw !== 'string') return;
   lastRaw = raw;
-  put('_tv', tvIsOn() ? mediaInfo(raw) : {});
+  const info = tvIsOn() ? mediaInfo(raw) : {};
+  const { at, pos, ...rest } = info;
+  // Position: nur schreiben, wenn sie von der weitergezählten abweicht (Spulen, Pause) – > 3 s
+  const prev = cache.get('_tv') ? JSON.parse(cache.get('_tv')) : {};
+  const sig = JSON.stringify(rest);
+  const erwartet = prev.pos >= 0 ? prev.pos + (prev.spielt ? (Date.now() - Date.parse(prev.at)) / 1000 : 0) : -1;
+  if (sig === tvLast && (pos ?? -1) >= 0 === erwartet >= 0 && Math.abs((pos ?? -1) - erwartet) <= 3) return;
+  tvLast = sig;
+  put('_tv', info);
 }
 async function tvPoll(force) {
-  if (!intern.adb || !meta.connected || adbBusy) return;
-  if (!tvIsOn()) { if (cache.get('_tv') !== '{}') put('_tv', {}); return; }
+  if (!intern.adb || !meta.connected || adbBusy || logosBusy) return;
+  if (!tvIsOn()) { if (cache.get('_tv') !== '{}') { tvLast = ''; put('_tv', {}); } return; }
   if (!force && Date.now() > watchUntil) return;
   adbBusy = true; adbLast = Date.now();
   try {
-    await backend.call('androidtv', 'adb_command', [intern.adb], { command: ADB_CMD });
-    const s = states.get(intern.adb);
-    if (s) tvMedia(s.attributes?.adb_response);
+    tvMedia(await adb(ADB_CMD));
     adbErr = '';
   } catch (err) {
     if (err.message !== adbErr) log('Titel per ADB nicht lesbar:', err.message);   // jede Fehlerart nur einmal
     adbErr = err.message;
   } finally { adbBusy = false; }
+}
+
+// ----------------------------------------------------------------------
+// App-Logos vom Fernseher (home/tvlogos.js) -> PocketBase home_logos (geschützte Dateien). Einmal täglich, sobald der
+// Fernseher an ist, oder per Knopf in den Einstellungen ("tv.logos"). Nur geänderte App-Versionen werden neu gelesen.
+// Stand in home_state "_logos" (die App lädt die Bilder nur neu, wenn sich "stand" ändert).
+// ----------------------------------------------------------------------
+const tvlogos = require('./tvlogos');
+const LOGO_TAG_MS = 24 * 3600000;
+let logosBusy = null;
+async function pbForm(method, p, form, retry = true) {
+  if (!token || Date.now() - tokenAt > 3600000) await auth();
+  const r = await fetch(PB + p, { method, headers: { Authorization: token }, body: form });
+  if (r.status === 401 && retry) { token = null; return pbForm(method, p, form, false); }
+  if (!r.ok) throw new Error(`${method} ${p} -> ${r.status} ${(await r.text()).slice(0, 200)}`);
+  return r.json();
+}
+function logosRefresh(force) {
+  if (logosBusy) return logosBusy;
+  const tv = C.cfg.fernseher;
+  if (!tv || meta.mode !== 'live' || !intern.adb || !tvIsOn()) return Promise.resolve(null);
+  const pakete = [...new Set(tv.apps.map(a => a.paket).filter(Boolean))];
+  const alt = JSON.parse(cache.get('_logos') || '{}');
+  put('_logos', { ...alt, laeuft: true });
+  logosBusy = tvlogos.refresh(pakete, {
+    adb: cmd => adb(cmd),
+    call: (d, s, ids, data) => backend.call(d, s, ids, data, 300000),
+    signPath: p => backend.signPath(p),
+    haBase: HA_URL.replace(/\/+$/, ''),
+    adbEntity: intern.adb,
+    log,
+    async list() {
+      const r = await api('GET', '/api/collections/home_logos/records?perPage=200&skipTotal=1');
+      return Object.fromEntries(r.items.map(x => [x.paket, x]));
+    },
+    async save(paket, rec, img) {
+      const f = new FormData();
+      f.set('paket', paket);
+      for (const [k, v] of Object.entries(rec)) f.set(k, String(v));
+      if (img) f.set('bild', new Blob([img.buf], { type: img.typ }), `${paket.replace(/\W/g, '_')}.${img.ext}`);
+      const ex = (await this.list())[paket];
+      if (ex) await pbForm('PATCH', `/api/collections/home_logos/records/${ex.id}`, f);
+      else await pbForm('POST', '/api/collections/home_logos/records', f);
+    },
+  }, force).then(erg => {
+    put('_logos', { stand: new Date().toISOString(), laeuft: false, ergebnis: erg.map(([p, r]) => `${p}: ${r}`) });
+    return erg;
+  }).catch(err => {
+    log('Logos:', err.message);
+    put('_logos', { ...alt, laeuft: false });
+    return null;
+  }).finally(() => { logosBusy = null; });
+  return logosBusy;
+}
+function logosFaellig() {
+  const st = JSON.parse(cache.get('_logos') || '{}').stand;
+  if (!st || Date.now() - Date.parse(st) > LOGO_TAG_MS) logosRefresh(false);
 }
 
 // ----------------------------------------------------------------------
@@ -542,8 +652,15 @@ async function handle(cmd) {
       : sz.aktionen.flatMap(a => conf.check(C, a, states).calls);
     label = `Szene ${sz.name}`;
   }
-  let wake = false, watch = false;
-  if (!sz) ({ calls, label, wake, watch } = conf.check(C, cmd, states));
+  let wake = false, watch = false, logos = false;
+  if (!sz) ({ calls, label, wake, watch, logos } = conf.check(C, cmd, states));
+  if (logos) {
+    if (meta.mode !== 'live') { const e = new Error('Im Testmodus gibt es keine Logos'); e.status = 400; throw e; }
+    if (!intern.adb) { const e = new Error('Android Debug Bridge in HA fehlt'); e.status = 400; throw e; }
+    if (!tvIsOn()) { const e = new Error('Dafür muss der Fernseher an sein'); e.status = 400; throw e; }
+    logosRefresh(false);
+    return { ok: true, label };
+  }
   if (watch) { watchUntil = Date.now() + WATCH_MS; if (cache.get('_tv') === undefined || Date.now() - adbLast > POLL_MS) tvPoll(); return { ok: true, label: '' }; }
   if (!meta.connected) { const e = new Error(meta.mode === 'test' ? 'Testmodus startet noch' : 'Home Assistant nicht verbunden'); e.status = 503; throw e; }
   // Fernseher einschalten -> Einschalt-Routine (läuft im Hintergrund weiter, die App sieht den Fortschritt in _meta)
@@ -597,9 +714,16 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && u.pathname === '/diag/tv-aus') {
     const tv = C.cfg.fernseher, t0 = Date.now();
     return backend.call('media_player', 'turn_off', [tv.entity_id], {}).then(async () => {
-      while (tvIsOn() && Date.now() - t0 < 15000) await sleep(200);
+      for (let n = 0; tvIsOn() && Date.now() - t0 < 25000; n++) {
+        if (n % 10 === 0 && intern.adb) backend.call('homeassistant', 'update_entity', [intern.adb], {}).catch(() => {});
+        await sleep(200);
+      }
       send(200, { aus: !tvIsOn(), ms: Date.now() - t0 });
     }, err => send(502, { message: err.message }));
+  }
+  if (req.method === 'POST' && u.pathname === '/diag/logos') {
+    if (!intern.adb || !tvIsOn()) return send(400, { message: 'Fernseher aus oder keine ADB-Entität' });
+    return logosRefresh(u.searchParams.get('force') === '1').then(r => send(200, { ergebnis: r }));
   }
   if (req.method === 'POST' && u.pathname === '/diag/medien') {
     if (!intern.adb) return send(400, { message: 'keine ADB-Entität', intern });
@@ -652,6 +776,7 @@ async function main() {
   setInterval(() => weckerSoon(0), 15 * 60000);
   // Fernseher: Titel abfragen (nur wenn Zuhause offen und TV an), interne Entitäten nachsuchen, solange sie fehlen
   setInterval(() => tvPoll(), POLL_MS);
+  setInterval(() => { if (meta.connected && tvIsOn()) logosFaellig(); }, 10 * 60000);
   setInterval(() => { if (meta.connected && (!intern.adb || !intern.wol)) tvDiscover().catch(() => {}); }, 2 * 60000);
 
   // Konfiguration beobachten (Auto-Deploy startet den Dienst bei Änderungen ohnehin neu)

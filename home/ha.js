@@ -155,9 +155,14 @@ class HA extends EventEmitter {
     }
   }
 
-  async call(domain, service, ids, data) {
+  async call(domain, service, ids, data, timeoutMs) {
     if (!this.ready) throw new Error('Home Assistant nicht verbunden');
-    await this.send({ type: 'call_service', domain, service, service_data: data || {}, target: { entity_id: ids } });
+    await this.send({ type: 'call_service', domain, service, service_data: data || {}, target: { entity_id: ids } }, timeoutMs);
+  }
+
+  // kurzlebiger signierter Link auf eine Datei in HA (z. B. /media/local/…), ohne das Token weiterzugeben
+  async signPath(p, expires = 120) {
+    return (await this.send({ type: 'auth/sign_path', path: p, expires })).path;
   }
 
   // Diagnose: Überblick über Fernseher-nahe Entitäten (nur IDs, Zustand, Namen und Attribut-Namen – keine Werte)
