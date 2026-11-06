@@ -261,3 +261,43 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 #zh:not(.z-phone) .z-aset::-webkit-scrollbar,#zh:not(.z-phone) .z-scol::-webkit-scrollbar{display:none}
 #zh .z-t-left > *,#zh .z-t-right > *{flex-shrink:0}
 #zh:not(.z-phone) .z-remote{flex:1 0 auto}
+
+/* ---------- Licht-Politur (2026-11-06, Tag vor-zuhause-design): ruhiger, feiner, nur Variablen.
+   Keine neuen Blur-/Glow-Flächen, keine Endlos-Animation; Leistungsmodus + reduced-motion bleiben wirksam. ---------- */
+/* Lampen-Pillen: zarter Lichtschein statt Farbblock, feine Helligkeitskante, Glanzlinie oben */
+#zh .z-pill{box-shadow:inset 0 1px 0 rgba(var(--zw),.05);transition:box-shadow .35s,border-color .35s,transform .18s}
+#zh .z-pill:active{transform:scale(.985)}
+#zh .z-pill .z-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),color-mix(in srgb,var(--c) 34%,transparent) 70%,color-mix(in srgb,var(--c) 52%,transparent));border-radius:28px 6px 6px 28px}
+#zh .z-pill .z-fill::after{content:"";position:absolute;right:0;top:22%;bottom:22%;width:3px;border-radius:3px;background:color-mix(in srgb,var(--c) 70%,var(--zt-fff));opacity:.85}
+#zh .z-pill:not(.z-on) .z-fill::after{display:none}
+#zh .z-pill.z-on{border-color:color-mix(in srgb,var(--c) 32%,var(--z-line));box-shadow:inset 0 1px 0 rgba(var(--zw),.08),0 12px 30px -20px var(--c)}
+#zh .z-pill .z-ic{border:1px solid var(--z-line)}
+#zh .z-pill .z-ic svg{width:24px;height:24px}
+#zh .z-pill.z-on .z-ic{background:radial-gradient(circle at 35% 30%,var(--zt-fff),color-mix(in srgb,var(--c) 45%,var(--zt-fff)));color:var(--zt-15161f);border-color:transparent;box-shadow:0 0 14px -2px color-mix(in srgb,var(--c) 75%,transparent)}
+#zh .z-pill h3{letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .z-pill p{color:var(--z-mut);margin-top:1px}
+#zh .z-pill.z-on p{color:var(--zt-c9ccd8)}
+#zh .z-pill .z-in > div:nth-child(2){min-width:0}
+#zh .z-pct{font-variant-numeric:tabular-nums;letter-spacing:-.02em;font-weight:500}
+#zh .z-pill:not(.z-on) .z-pct{font-weight:600;letter-spacing:.02em}
+#zh .z-perf .z-pill.z-on{box-shadow:inset 0 1px 0 rgba(var(--zw),.08)}
+/* Szenen: aktive Szene mit ruhigem Ring statt großem Schein */
+#zh .z-sc .z-b{box-shadow:inset 0 1px 0 rgba(var(--zw),.05);transition:background .35s,box-shadow .35s,transform .18s}
+#zh .z-sc:active .z-b{transform:scale(.94)}
+#zh .z-sc.z-on .z-b{box-shadow:0 0 0 3px var(--z-bg),0 0 0 4.5px color-mix(in srgb,var(--a) 60%,transparent),0 8px 22px -10px var(--a)}
+#zh .z-sc.z-on{font-weight:700}
+#zh .z-perf .z-sc.z-on .z-b{box-shadow:0 0 0 3px var(--z-bg),0 0 0 4.5px color-mix(in srgb,var(--a) 60%,transparent)}
+/* Lampen-Panel: Griff-Leiste, sanftes Hochgleiten, feinere Farbwahl */
+.z-lp-card{position:relative;box-shadow:0 20px 50px -10px rgba(0,0,0,.5),inset 0 1px 0 rgba(var(--zw),.06)}
+.z-lp:not(.z-lp-tab) .z-lp-card::before{content:"";position:absolute;left:50%;top:8px;width:40px;height:4px;margin-left:-20px;border-radius:4px;background:rgba(var(--zw),.18)}
+.z-lp.z-on .z-lp-card{animation:zh-lpup .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes zh-lpup{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+.z-lp-hd{padding-top:6px}
+.z-lp-dot{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 40%,var(--zt-fff,#fff)),var(--c));box-shadow:0 0 16px -2px color-mix(in srgb,var(--c) 70%,transparent);border:1px solid rgba(var(--zw),.15)}
+.z-lp-lab{font-size:12px;font-weight:700;letter-spacing:.1em}
+.z-lp-k i,.z-lp-c{border:1px solid rgba(var(--zw),.12);transition:transform .18s,box-shadow .25s}
+.z-lp-k:active i,.z-lp-c:active{transform:scale(.92)}
+.z-lp-k.z-on i,.z-lp-c.z-on{border-color:transparent;box-shadow:0 0 0 3px var(--z-bg),0 0 0 5px var(--z-txt)}
+.z-lp-k.z-on{color:var(--z-txt);font-weight:600}
+html.perf .z-lp-dot{box-shadow:none}
+@media (prefers-reduced-motion:reduce){.z-lp.z-on .z-lp-card{animation:none}#zh .z-pill,#zh .z-sc .z-b,.z-lp-k i,.z-lp-c{transition:none}}

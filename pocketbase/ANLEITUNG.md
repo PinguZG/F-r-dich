@@ -1721,3 +1721,5 @@ rm /home/pingu/pb/pb_hooks/wir_zuhause_extra.pb.js /home/pingu/pb/pb_hooks/zuhau
 sudo systemctl restart pocketbase
 ```
 Die Collection `home_prefs` bleibt (schadet nicht). Kein `reset --hard`, kein force-push.
+
+- Zuhause-Licht-Design (2026-11-06, sw wir-v51) zurücksetzen: `git revert <commit>` oder `git checkout vor-zuhause-design -- app/zuhause.css app/sw.js` (danach sw-Version hochzählen), Tag `vor-zuhause-design`.
