@@ -301,3 +301,49 @@ html.perf #zh.z-phone .z-rail{background:var(--z-bg)}
 .z-lp-k.z-on{color:var(--z-txt);font-weight:600}
 html.perf .z-lp-dot{box-shadow:none}
 @media (prefers-reduced-motion:reduce){.z-lp.z-on .z-lp-card{animation:none}#zh .z-pill,#zh .z-sc .z-b,.z-lp-k i,.z-lp-c{transition:none}}
+
+/* ---------- Kachel-System (2026-11-06, Tag vor-zuhause-kacheln): Licht-Pille ist der Maßstab.
+   Gemeinsame Werte als Variablen; nur kleine, enge Schatten; kein neuer Blur, keine Endlos-Animation. ---------- */
+#zh{--zk-r:26px;--zk-r-s:18px;--zk-r-i:14px;--zk-hi:inset 0 1px 0 rgba(var(--zw),.06);--zk-hi-on:inset 0 1px 0 rgba(var(--zw),.09);
+  --zk-press:scale(.985);--zk-t:background .35s,border-color .35s,box-shadow .35s,transform .18s;--zk-off:.38}
+/* Grundstil: Glas-Kachel mit feiner Glanzkante oben, gleiche Übergänge */
+#zh :where(.z-card,.z-box,.z-sbox,.z-srow,.z-al,.z-month,.z-rt,.z-dev,.z-tvc,.z-remote,.z-volc,.z-src,.z-ap,.z-f .z-ic,.z-chip,.z-hd .z-act div,.z-btn,.z-seg){box-shadow:var(--zk-hi);transition:var(--zk-t)}
+#zh :where(.z-box,.z-al,.z-month){border-radius:var(--zk-r)}
+#zh :where(.z-sbox,.z-srow){border-radius:calc(var(--zk-r) - 2px)}
+#zh :where(.z-rt,.z-src,.z-it){border-radius:var(--zk-r-s)}
+#zh :where(.z-srow .z-si,.z-f .z-ic,.z-hd .z-act div,.z-chip){border-radius:var(--zk-r-i)}
+/* Drücken: gleiche, kleine Rückmeldung überall */
+#zh :where(.z-dev,.z-tvc,.z-src,.z-rt,.z-chip,.z-hd .z-act div,.z-btn,.z-srow,.z-f):active{transform:var(--zk-press)}
+#zh :where(.z-mb,.z-keys div):active{transform:scale(.94)}
+/* Typo-Hierarchie wie Licht: Titel 600/-.01em, Zweitzeile gedämpft, Zahlen ruhig */
+#zh :where(.z-dev h4,.z-tvc h3,.z-rt h4,.z-srow b,.z-sbox h4,.z-hd h2,.z-box h3){letter-spacing:-.01em}
+#zh :where(.z-dev,.z-rt,.z-srow) :is(h4,b){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh :where(.z-dev,.z-srow) > div{min-width:0}
+#zh :where(.z-f b,.z-tvc .z-n,.z-al b,.z-pct,.z-sbox h4 span){font-variant-numeric:tabular-nums}
+/* An-Zustand wie Lampe: Rand in Gerätefarbe, Schein nur als enger Schatten, Icon als helle Kugel */
+#zh .z-dev.z-on{border-color:color-mix(in srgb,var(--c) 32%,var(--z-line));background:linear-gradient(90deg,color-mix(in srgb,var(--c) 14%,transparent),var(--z-card) 80%);box-shadow:var(--zk-hi-on),0 12px 30px -20px var(--c)}
+#zh .z-dev .z-di{border:1px solid var(--z-line)}
+#zh .z-dev.z-on .z-di{background:radial-gradient(circle at 35% 30%,var(--zt-fff),color-mix(in srgb,var(--c) 45%,var(--zt-fff)));color:var(--zt-15161f);border-color:transparent;box-shadow:0 0 14px -2px color-mix(in srgb,var(--c) 75%,transparent)}
+#zh .z-dev.z-on p{color:var(--zt-c9ccd8)}
+#zh .z-tvc{border-radius:28px;border-color:color-mix(in srgb,var(--app) 26%,var(--z-line));box-shadow:var(--zk-hi-on),0 12px 30px -20px var(--app)}
+#zh .z-tvc .z-ic{border:1px solid var(--z-line)}
+#zh .z-tvc.z-off,#zh .z-tvoff .z-now{box-shadow:var(--zk-hi)}
+#zh .z-tvc.z-off h3{color:var(--zt-c9ccd8)}
+#zh .z-now{box-shadow:var(--zk-hi-on),0 14px 34px -22px var(--app)}
+/* Schalter: an = Akzent ohne Hof, Knopf mit kleinem Schatten */
+#zh .z-sw.z-on{box-shadow:none}
+#zh .z-sw::after{box-shadow:0 1px 3px rgba(0,0,0,.3)}
+#zh .z-al .z-sw.z-on{box-shadow:none}
+/* Aus/disabled: einheitlich gedämpft */
+#zh :where(.z-tvoff .z-srcs,.z-tvoff .z-remote,.z-tvoff .z-volc){opacity:var(--zk-off)}
+#zh .z-tvc.z-off :is(.z-vol .z-mb:not(.z-pw),.z-v,.z-n){opacity:var(--zk-off)}
+/* Routinen & Liste: ruhige Innenflächen */
+#zh .z-rt{gap:8px}
+#zh .z-it{box-shadow:var(--zk-hi)}
+#zh .z-lists .z-on{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--z-teal) 30%,transparent)}
+/* Tastaturfokus sichtbar */
+#zh :where(.z-pill,.z-dev,.z-tvc,.z-sc,.z-src,.z-ap,.z-chip,.z-btn,.z-sw,.z-mb,.z-keys div,.z-rt):focus-visible{outline:2px solid var(--z-txt);outline-offset:3px}
+/* Leistungsmodus: alle farbigen Schatten aus, Glanzkante bleibt */
+#zh .z-perf :is(.z-dev.z-on,.z-tvc,.z-now){box-shadow:var(--zk-hi-on)}
+#zh .z-perf .z-dev.z-on .z-di{box-shadow:none}
+@media (prefers-reduced-motion:reduce){#zh :where(.z-card,.z-box,.z-sbox,.z-srow,.z-al,.z-month,.z-rt,.z-dev,.z-tvc,.z-remote,.z-volc,.z-src,.z-ap,.z-chip,.z-btn){transition:none}}
