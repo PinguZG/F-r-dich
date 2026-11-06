@@ -26,7 +26,18 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
     const hadController = !!navigator.serviceWorker.controller;
-    const showUpdate = () => updateBar.classList.add('show');
+    // Wand-Tablet (Zuhause im Vollbild, niemand tippt den Hinweis an): nach 1 Min. ohne Berührung selbst neu laden
+    let idleT = 0;
+    const autoReload = () => {
+      clearTimeout(idleT);
+      idleT = setTimeout(() => { if (document.body.classList.contains('zh-full') && !document.hidden) reloadApp(); else autoReload(); }, 60000);
+    };
+    const showUpdate = () => {
+      updateBar.classList.add('show');
+      if (idleT) return;
+      autoReload();
+      ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, () => { if (idleT) autoReload(); }, { passive: true }));
+    };
     navigator.serviceWorker.ready.then(reg => {
       swReg = reg;
       if (reg.waiting && hadController) showUpdate();
@@ -37,7 +48,7 @@
         });
       });
       // regelmäßig nach einer neuen Version schauen
-      setInterval(() => reg.update().catch(() => {}), 30 * 60000);
+      setInterval(() => reg.update().catch(() => {}), 10 * 60000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
     });
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdate(); });
