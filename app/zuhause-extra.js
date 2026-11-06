@@ -1,7 +1,7 @@
-// Zuhause-Extras (06.11.2026): vier Karten unter "Licht/Geräte" auf Start – Partner-Ecke, Abfahrten, Pakete, System-Status –
+// Zuhause-Extras (06.11.2026): vier eigene Reiter in Zuhause (wie Fernseher/Wecker) – Partner, Abfahrten, Pakete, System –
 // und die eigenen Haltestellen in Zuhause → Einstellungen. Daten nur über PocketBase (pb_hooks/wir_zuhause_extra.pb.js ->
-// wir-home); Pakete + System-Status prüft der Server (nur Besitzer), hier wird nur ausgeblendet, was eh nicht kommt.
-// Sparsam (iPhone-Speicher!): abgefragt wird nur, solange Zuhause sichtbar ist, Start offen und die Karten im Bild sind.
+// wir-home); Pakete + System-Status prüft der Server (nur Besitzer), hier werden die Reiter nur ausgeblendet.
+// Sparsam (iPhone-Speicher!): abgefragt wird nur, solange Zuhause sichtbar ist und der jeweilige Reiter offen.
 // Ein Takt (15 s) für alles, Inhalte werden nur gesetzt, wenn sich das HTML ändert, Klicks über EINEN Listener je Bereich.
 (() => {
   const host = document.getElementById('zh');
@@ -24,30 +24,32 @@
   const svg = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
 
   // ------------------------------------------------------------ Zustand
-  let built = false, life = false, page = 'start', inView = true, timer = 0, rechte = null, rechteAt = 0, io = null;
+  let built = false, life = false, page = 'start', timer = 0, rechte = null, rechteAt = 0;
   const D = { prefs: null, prefsId: '', abf: null, abfErr: '', pak: null, sys: null, ping: null, open: '' };
   const due = { partner: 0, abf: 0, pak: 0, sys: 0 };
   const last = new Map();   // Element -> zuletzt gesetztes HTML
   const put = (el, h) => { if (el && last.get(el) !== h) { last.set(el, h); el.innerHTML = h; } };
   const $ = id => document.getElementById('zx-' + id);
-  const running = () => life && page === 'start' && inView && !document.hidden;
+  // Reiter: [data-p, Symbol, Name, nur Besitzer]
+  const PAGES = [['partner', 'heart', 'Partner'], ['abf', 'bus', 'Abfahrten'], ['pak', 'box', 'Pakete', true], ['sys', 'pulse', 'System', true]];
+  const running = () => life && PAGES.some(p => p[0] === page) && !document.hidden;
+  const head = (ic, cls, title, sub, right = '') => `<div class="zx-hd"><i class="zx-ic ${cls}">${svg(ic)}</i><div><h3>${title}</h3><small>${sub}</small></div>${right}</div>`;
 
   // ------------------------------------------------------------ Aufbau (einmal, nachdem zuhause.js Zuhause gebaut hat)
   function build() {
     if (built) return;
-    const right = host.querySelector('#zh-p-start .z-s-right');
-    if (!right) return;
+    const rail = host.querySelector('#zh-rail'), main = host.querySelector('#zh-main');
+    if (!rail || !main) return;
     built = true;
-    right.insertAdjacentHTML('beforeend', `<div class="zx" id="zx">
-      <div class="zx-card zx-partner" id="zx-partner" hidden>
+    // Reiter vor dem Abstand zu den Einstellungen; Beschriftung für die Tab-Reihe auf dem Handy wie in zuhause.js
+    rail.querySelector('.z-sp').insertAdjacentHTML('beforebegin', PAGES.map(([p, ic, name, own]) =>
+      `<div class="z-nv zx-nv" data-p="${p}" data-label="${name}" title="${name}"${own ? ' hidden' : ''}>${svg(ic)}</div>`).join(''));
+    const card = (p, inner = '') => `<section class="z-page zx-page" id="zh-p-${p}"><div class="z-scol zx"><div class="zx-card zx-${p}" id="zx-${p}">${inner}</div></div></section>`;
+    main.insertAdjacentHTML('beforeend', card('partner', `
         <div class="zx-ph"><div class="avatar zx-av" id="zx-av"></div><div class="zx-pt"><b id="zx-pname"></b><small id="zx-seen"></small></div><span class="zx-cd" id="zx-cd"></span></div>
         <div class="zx-last" id="zx-lastping"></div>
-        <button class="zx-think" id="zx-think" type="button">${svg('heart')}<span>Ich denk an dich</span></button>
-      </div>
-      <div class="zx-card zx-abf" id="zx-abf" hidden></div>
-      <div class="zx-card zx-pak" id="zx-pak" hidden></div>
-      <div class="zx-card zx-sys" id="zx-sys" hidden></div>
-    </div>`);
+        <button class="zx-think" id="zx-think" type="button">${svg('heart')}<span>Ich denk an dich</span></button>`)
+      + card('abf') + card('pak') + card('sys'));
     $('think').addEventListener('click', think);
     $('sys').addEventListener('click', e => {
       const g = e.target.closest('[data-g]');
@@ -55,11 +57,14 @@
     });
     buildSettings();
     paintPartner();
-    // nur abfragen, solange die Karten im Bild sind (Handy: weit nach unten gescrollt zählt auch)
-    if ('IntersectionObserver' in window) {
-      io = new IntersectionObserver(es => { inView = es.some(x => x.isIntersecting); sync(); });
-      io.observe($('partner').parentNode);
-    }
+    renderAbf(); renderPak(); renderSys();
+  }
+  // Pakete/System-Reiter nur für den Besitzer (der Server prüft trotzdem selbst); offenen Reiter ohne Recht verlassen
+  function paintNav() {
+    if (!built) return;
+    const ok = { pak: !!(rechte?.besitzer && rechte.pakete), sys: !!rechte?.besitzer };
+    for (const p of ['pak', 'sys']) host.querySelector(`.zx-nv[data-p="${p}"]`).hidden = !ok[p];
+    if ((page === 'pak' || page === 'sys') && !ok[page]) host.querySelector('.z-nv[data-p="start"]')?.click();
   }
 
   // ------------------------------------------------------------ Partner-Ecke
@@ -67,8 +72,7 @@
   function paintPartner() {
     if (!built) return;
     const p = partner();
-    $('partner').hidden = !p;
-    if (!p) return;
+    if (!p) { $('pname').textContent = 'Noch kein Partner-Konto'; return; }
     window.WIR_LOOK.paintAvatar($('av'), p);
     $('pname').textContent = p.name || 'Schatz';
   }
@@ -129,9 +133,13 @@
     const el = $('abf');
     if (!el) return;
     const a = D.abf;
-    // ohne Haltestelle oder seit über 20 Min. keine frischen Daten -> Karte weg
-    if (!a || a.aus || (a.at && Date.now() - a.at > 20 * MIN)) { el.hidden = true; return; }
-    el.hidden = false;
+    if (!a) { put(el, head('bus', 'zx-teal', 'Abfahrten', '') + `<div class="zx-empty">${D.abfErr ? esc(D.abfErr) : 'Lädt …'}</div>`); return; }
+    if (a.aus) {
+      put(el, head('bus', 'zx-teal', 'Abfahrten', 'keine Haltestelle gewählt') + '<div class="zx-empty">Wähle deine Haltestelle, dann stehen hier die nächsten Abfahrten.</div><div class="z-btn zx-go" data-go="set">Zu den Einstellungen</div>');
+      return;
+    }
+    // seit über 20 Min. keine frischen Daten -> lieber nichts Veraltetes zeigen
+    if (a.at && Date.now() - a.at > 20 * MIN) { put(el, head('bus', 'zx-teal', 'Abfahrten', esc(a.haltestelle || a.name || '')) + '<div class="zx-empty">Fahrplan gerade nicht erreichbar – versuche es gleich wieder.</div>'); return; }
     const rows = (a.abfahrten || []).map(x => {
       const m = minsTo(x.echt);
       const when = m <= 0 ? 'jetzt' : m < 60 ? `${m} Min` : hm(x.echt);
@@ -169,8 +177,7 @@
     const el = $('pak');
     if (!el) return;
     const p = D.pak;
-    if (!rechte?.besitzer || !rechte.pakete || !p || p.aus) { el.hidden = true; return; }
-    el.hidden = false;
+    if (!p || p.aus) { put(el, head('box', 'zx-warmc', 'Pakete', '') + `<div class="zx-empty">${p ? 'Pakete sind ausgeschaltet' : 'Lädt …'}</div>`); return; }
     const list = p.pakete || [];
     const rows = list.map(x => {
       const [lbl, cls] = PAK[x.status] || PAK.unterwegs;
@@ -196,8 +203,7 @@
     const el = $('sys');
     if (!el) return;
     const s = D.sys;
-    if (!rechte?.besitzer || !s) { el.hidden = true; return; }
-    el.hidden = false;
+    if (!s) { put(el, head('pulse', 'zx-vioc', 'System', '') + '<div class="zx-empty">Lädt …</div>'); return; }
     const tiles = s.gruppen.map(g => `<button type="button" class="zx-tile${D.open === g.k ? ' zx-on' : ''}" data-g="${g.k}"><i class="zx-dot ${AMP[g.a]}"></i><b>${esc(g.name)}</b><small>${AMPT[g.a]}</small></button>`).join('');
     const g = s.gruppen.find(x => x.k === D.open);
     let det = '';
@@ -219,18 +225,21 @@
     if (rechte && Date.now() - rechteAt < 30 * MIN) return;
     try { rechte = await pb().send('/api/home/rechte', { requestKey: 'zx-rechte' }); rechteAt = Date.now(); }
     catch (_) { rechte = rechte || null; }
+    paintNav();
   }
+  // nur der offene Reiter fragt nach
   async function step() {
     if (!running()) return;
     const now = Date.now();
-    if (now >= due.partner) { due.partner = now + MIN; loadPartner(); }
-    if (now >= due.abf) { due.abf = now + MIN; loadAbf(); } else renderAbf();   // Minuten weiterzählen
-    await loadRechte();
-    if (rechte?.besitzer) {
-      if (now >= due.pak) { due.pak = now + 10 * MIN; loadPak(); }
-      if (now >= due.sys) { due.sys = now + MIN; loadSys(); }
+    if (page === 'partner') {
+      if (now >= due.partner) { due.partner = now + MIN; loadPartner(); } else renderPartner();
+    } else if (page === 'abf') {
+      if (now >= due.abf) { due.abf = now + MIN; loadAbf(); } else renderAbf();   // Minuten weiterzählen
+    } else {
+      await loadRechte();
+      if (page === 'pak' && rechte?.besitzer && now >= due.pak) { due.pak = now + 10 * MIN; loadPak(); }
+      if (page === 'sys' && rechte?.besitzer && now >= due.sys) { due.sys = now + MIN; loadSys(); }
     }
-    renderPartner();
   }
   function sync() {
     const on = running();
@@ -334,10 +343,15 @@
 
   // ------------------------------------------------------------ Verdrahtung mit zuhause.js
   document.addEventListener('zh:built', () => { build(); loadPrefs(); });
-  document.addEventListener('zh:page', e => { page = e.detail; if (page === 'set') loadPrefs(); sync(); });
+  document.addEventListener('zh:page', e => {
+    page = e.detail;
+    if (page === 'set') loadPrefs();
+    if (timer) { clearInterval(timer); timer = 0; }   // Reiterwechsel: sofort einmal für den neuen Reiter
+    sync();
+  });
   document.addEventListener('zh:life', e => {
     life = !!e.detail;
-    if (life) { window.WIR_PRESENCE?.reload?.(); due.partner = 0; }
+    if (life) { window.WIR_PRESENCE?.reload?.(); due.partner = 0; loadRechte(); }   // Rechte -> Reiter Pakete/System
     sync();
   });
   document.addEventListener('visibilitychange', sync);
@@ -350,6 +364,6 @@
     authId = myId();
     rechte = null; D.abf = D.pak = D.sys = D.prefs = D.ping = null; D.prefsId = '';
     for (const k of Object.keys(due)) due[k] = 0;
-    if (built) { renderAbf(); renderPak(); renderSys(); renderSettings(); if (authId) loadPrefs(); }
+    if (built) { paintNav(); renderAbf(); renderPak(); renderSys(); renderSettings(); if (authId) loadPrefs(); }
   });
 })();

@@ -1648,3 +1648,76 @@ Danach in HA (optional) `/homeassistant/packages/wir.yaml` löschen und HA neu s
 **Ziel (±20 MB) in der Windows-WebKit-Emulation nicht erreicht.** Der Rest wächst auch außerhalb von Zuhause und lässt sich keinem
 App-Objekt zuordnen. Die Emulation nutzt eine andere Grafik-/Speicherschicht als Safari auf dem iPhone; belastbar ist nur eine
 Messung am echten Gerät (Safari-Webinformationen → Zeitleisten → Speicher, braucht einen Mac).
+
+# Zuhause-Extras 06.11.2026 (Wir `wir-v48`): Partner, Abfahrten, Pakete, System
+
+Vier neue Reiter in **Zuhause** (wie Fernseher/Wecker; Tablet: Seitenleiste, Handy: Tab-Reihe oben). **Keine neuen Reiter in der unteren Leiste.**
+
+| Reiter | Wer | Was |
+|---|---|---|
+| **Partner** | beide | Profilbild + Online-Punkt des anderen, „zuletzt aktiv“, letzter Ping, kleiner Countdown zum Wiedersehen. Knopf **„Ich denk an dich“** = vorhandene Ping-Logik (Typ `support`, inkl. Push) über `window.WIR_PING` aus `app.js`; 10 s Sperre gegen Doppeltipps. |
+| **Abfahrten** | beide, jeder mit eigener Haltestelle | Ohne Haltestelle: Hinweis + Knopf zu den Einstellungen. Sonst die nächsten 5 Abfahrten, Verspätung farbig, Ausfälle durchgestrichen, „Stand hh:mm“ bei alten Daten; nach 20 Min. ohne frische Daten ein Hinweis statt der Liste. **„Fahrt zu <Partner>“** mit bis zu 3 Verbindungen, wenn laut Countdown (`date_events`) ein Treffen in den nächsten 24 h liegt. |
+| **Pakete** | nur Besitzer | 17TRACK aus HA über die Aktion `seventeentrack.get_packages` (Antwort), alle 10 Min.; zugestellte verschwinden nach 2 Tagen; Sendungsnummern werden nie ausgegeben. Leer: „Keine Pakete unterwegs“. |
+| **System** | nur Besitzer | Ampel **VPS / Home Assistant · Pi / Backups**, Details beim Antippen. Push an den Besitzer, wenn ein Punkt 15 Min. rot ist (1× pro Problem und Tag; Erholung wird gemeldet). |
+
+## Datenquelle Abfahrten
+
+**Transitous** (`api.transitous.org`, MOTIS), weil `v6.db.transport.rest` abgeschaltet ist (Abweichung vom ursprünglichen Auftrag).
+Serverseitig in `wir-home` gecacht (60 s je Haltestelle), nach außen gedrosselt auf 30 Anfragen/Min.
+
+## Rechte und Sicherheit
+
+- Der Browser fragt **nur PocketBase** (`/api/home/rechte`, `/abfahrten`, `/orte`, `/pakete`, `/system`). PocketBase schickt die angemeldete
+  Nutzer-ID an `wir-home` (`127.0.0.1:8095`); `wir-home` prüft `extras.besitzer`.
+- Haltestellen liegen in der neuen Collection **`home_prefs`** (additiv per Migration `1794600000_wir_home_prefs.js`), ein Datensatz pro Person.
+  Regeln: list/view/delete nur `@request.auth.collectionName = "users" && user = @request.auth.id`; create nur mit
+  `@request.body.user = @request.auth.id`; update wie list + `user` nicht auf jemand anderen änderbar. Die andere Person kann es nicht lesen.
+  Der Inhalt wird im Hook gesäubert. **Keine Haltestellen/Orte im Repo.**
+
+## Leistung
+
+Abgefragt wird nur, solange Zuhause sichtbar und der jeweilige Reiter offen ist (ein 15-s-Takt; Abfahrten 60 s, Pakete 10 Min., System 60 s).
+Kein neuer Blur/Glow.
+
+## Konfiguration
+
+`home/config.jsonc`, Abschnitt `extras`: `besitzer`, `abfahrten` (Quelle, Cache, Anzahl, Drossel), `pakete` (aktiv, Cache, `zugestellt_tage`),
+`system` (Dienste, Pfade, `ha`-Entitäten, `schwellen`, `push_rot_minuten`). Schwellen `[gelb ab, rot ab]`:
+
+| Wert | gelb | rot |
+|---|---|---|
+| CPU-Temperatur (°C) | 70 | 80 |
+| CPU-Auslastung (%) | 85 | 95 |
+| Festplatte (%) | 80 | 90 |
+| RAM (%) | 85 | 95 |
+| Last pro Kern (5 Min.) | 1,5 | 3 |
+| Backup-Alter (Tage) | 2 | 4 |
+
+## Was Daniel tun muss
+
+- In Zuhause → Einstellungen **Haltestelle** und ggf. Start/Ziel für „Fahrt zu …“ wählen (Ida auf ihrem Handy genauso).
+- Sendungen in der **17TRACK**-App/Website **mit Namen** anlegen (der Name erscheint in der Karte).
+- Automatische PocketBase-Backups: schaltet die Migration `1794700000_wir_backup_cron.js` ein (täglich 03:00, 7 behalten, nur wenn noch kein Zeitplan gesetzt war). Bis zum ersten Lauf bleibt „Backups“ rot.
+
+## Sicherung vorher
+
+Git-Tag **`vor-dashboard-extras`** (= `fa0cf44`), DB-Backup `/home/pingu/backups/vor-dashboard-extras-2026-11-06/`
+(`data.db`, `auxiliary.db`, `storage/`, `pb_migrations/`, `pb_hooks/`). Für den Umbau zu Reitern zusätzlich Git-Tag **`vor-zuhause-reiter`** (= `83c4b5e`) und DB-Backup `/home/pingu/backups/vor-zuhause-reiter-2026-11-06/` (Integritätsprüfung „ok“).
+
+## Zurück
+
+**Nur Reiter → Karten:**
+```bash
+git checkout vor-zuhause-reiter -- app && git commit -m "Zurück zu Karten statt Reitern" && git push
+```
+**Ganz ohne Extras:**
+```bash
+git checkout vor-dashboard-extras -- app home pocketbase/pb_hooks push shared
+git commit -m "Zurück vor Zuhause-Extras" && git push
+```
+Der Auto-Deploy löscht keine Hook-Dateien, daher auf dem Server:
+```bash
+rm /home/pingu/pb/pb_hooks/wir_zuhause_extra.pb.js /home/pingu/pb/pb_hooks/zuhause_extra_lib.js
+sudo systemctl restart pocketbase
+```
+Die Collection `home_prefs` bleibt (schadet nicht). Kein `reset --hard`, kein force-push.

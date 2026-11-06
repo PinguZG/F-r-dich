@@ -1,6 +1,6 @@
 /* Zuhause-Extras (zuhause-extra.js): Partner-Ecke, Abfahrten, Pakete, System – Glas-Karten wie in der Vorlage,
    bewusst ohne backdrop-filter/Glow (iPhone-Leistung), nur Farbflächen und feine Ränder. */
-#zh .zx{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:16px}
+#zh .zx{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 #zh .zx-card{background:var(--z-card);border:1px solid var(--z-line);border-radius:26px;padding:16px 18px;min-width:0}
 #zh .zx-card[hidden],#zh .zx-set [hidden]{display:none}
 #zh .zx svg,#zh .zx-set svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -100,13 +100,19 @@
 #zh .zx-del{height:38px;justify-self:start;color:#ff9aa5}
 #zh .zx-hint{font-size:12px;color:var(--z-mut);padding:0 8px}
 
-/* Handy: größere Schrift wie im Rest von Zuhause; Tablet: rechte Startspalte scrollt (wie die anderen Spalten) */
+/* Handy: größere Schrift wie im Rest von Zuhause */
 #zh.z-phone .zx-card{padding:16px}
 #zh.z-phone .zx-hd small,#zh.z-phone .zx-last{font-size:14px}
 #zh.z-phone .zx-tiles{gap:6px}
 #zh.z-phone .zx-tile{padding:10px}
-#zh:not(.z-phone) #zh-p-start .z-s-right{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-  padding:4px 6px 28px;margin:-4px -6px 0;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
-#zh:not(.z-phone) #zh-p-start .z-s-right::-webkit-scrollbar{display:none}
-#zh:not(.z-phone) #zh-p-start .z-s-right > *{flex-shrink:0}
 #zh.z-sleep .zx *{transition:none!important}
+
+/* Eigene Reiter (Partner, Abfahrten, Pakete, System): eine Karte je Seite, Tablet scrollt über .z-scol (zuhause.css) */
+#zh .zx-nv svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#zh .zx-page.z-on{grid-template-columns:minmax(0,760px);grid-template-rows:minmax(0,1fr);align-content:start}
+#zh .zx-page .zx{align-content:start}
+#zh:not(.z-phone) .zx-page .zx-card{padding:22px 24px}
+#zh:not(.z-phone) .zx-page .zx-hd h3{font-size:22px}
+#zh:not(.z-phone) .zx-partner .zx-av{width:72px;height:72px;font-size:26px}
+#zh:not(.z-phone) .zx-partner .zx-pt b{font-size:22px}
+#zh .zx-go{margin-top:10px;height:44px;display:inline-flex}
