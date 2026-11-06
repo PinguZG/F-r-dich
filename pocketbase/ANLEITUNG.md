@@ -1724,3 +1724,21 @@ Die Collection `home_prefs` bleibt (schadet nicht). Kein `reset --hard`, kein fo
 
 - Zuhause-Licht-Design (2026-11-06, sw wir-v51) zurücksetzen: `git revert <commit>` oder `git checkout vor-zuhause-design -- app/zuhause.css app/sw.js` (danach sw-Version hochzählen), Tag `vor-zuhause-design`.
 - Zuhause-Kacheln einheitlich (2026-11-06, sw wir-v52) zurücksetzen: `git revert <commit>` oder `git checkout vor-zuhause-kacheln -- app/zuhause.css` (danach sw-Version hochzählen), Tag `vor-zuhause-kacheln`.
+
+# Lokale Vorschau am PC 06.11.2026 (nur Entwicklung, ändert nichts live)
+
+Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene PocketBase, **leere Test-Datenbank** (keine echten Daten), zwei Test-Accounts (Daniel/Ida), `wir-home` im Testmodus (simuliertes Home Assistant). Änderungen an `app/` sieht man nach dem Neuladen sofort, Änderungen an `pb_hooks/` lädt PocketBase selbst neu.
+
+| Was | Wo |
+|---|---|
+| Start | `node dev/lokal.js` (oder in Claude Code: Vorschau `wir-lokal` aus `.claude/launch.json`, öffnet sich im Browser-Bereich der Desktop-App) |
+| PocketBase | `lokal/pocketbase.exe` – offiziell von github.com/pocketbase/pocketbase/releases, Version **0.40.5**, `windows_amd64.zip`, SHA-256 mit `checksums.txt` prüfen |
+| Datenbank | `lokal/pb_data/` (löschen = frisch anfangen) |
+| Test-Zugänge | `lokal/zugang.env` (beim ersten Start zufällig erzeugt; Superuser für `/_/` und beide Accounts) |
+| Schema | `dev/lokal-basis/1700000000_lokal_basis.js` baut das alte Hand-/JSON-Schema (`photos` + `collections*.json`) nach, danach laufen die echten `pocketbase/pb_migrations/`. **Nur lokal**, liegt bewusst nicht in `pb_migrations`. |
+
+- `lokal/` steht in `.gitignore` und kommt nie ins Repo.
+- Der Service Worker wird lokal im Browser-Bereich nicht registriert → kein Cache, immer der aktuelle Stand.
+- Nicht lokal testbar: Push aufs iPhone, echtes Home Assistant, Abfahrten/Pakete (brauchen Server-Zugänge). Das bleibt Live-Test nach dem Push.
+
+**Zurück:** `dev/`, `.claude/launch.json` und den Eintrag `lokal/` in `.gitignore` löschen, Ordner `lokal/` löschen. Live ist nichts betroffen.

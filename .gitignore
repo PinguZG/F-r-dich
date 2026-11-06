@@ -2,3 +2,6 @@ push/node_modules/
 home/node_modules/
 home/export/dist/
 *.env
+
+# Lokale Vorschau (dev/lokal.js): PocketBase, Test-DB, Test-Zugänge
+lokal/

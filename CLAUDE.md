@@ -36,6 +36,9 @@ Frontend: plain JS/CSS (kein Build). Backend: PocketBase 0.40.5 + JS-Hooks, dazu
 - Mobile first (iPhone-PWA), Safe Areas (`env(safe-area-inset-*)`), Tablet/PC als Zusatz.
 - Keine neuen Reiter in der unteren Leiste (Start · Erinnerungen · Zuhause · Spiele · Wir zwei) – Neues in bestehende Bereiche.
 
+## Lokale Vorschau
+- `node dev/lokal.js` bzw. Vorschau `wir-lokal` (.claude/launch.json) → http://127.0.0.1:8090, leere Test-DB, Test-Zugänge in `lokal/zugang.env` (nie ausgeben). UI-Änderungen erst dort im Browser-Bereich prüfen (Handy-Größe), dann pushen. Details: ANLEITUNG „Lokale Vorschau“.
+
 ## Effizienz
 - Erst gezielt suchen (Grep/Glob), dann nur den nötigen Ausschnitt lesen. Große Dateien (`app.js`, `index.html`, `zuhause.js`, `ANLEITUNG.md` ~1650 Z.) nie ganz lesen.
 - Breite Suchen über mehrere Dateien/Namensmuster: Agent `finder`.
