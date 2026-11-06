@@ -56,6 +56,9 @@
       if (g) { D.open = D.open === g.dataset.g ? '' : g.dataset.g; renderSys(); }
     });
     buildSettings();
+    // Einstellungen: laufende App-Version (füllt shared/update.js über data-wir-version)
+    host.querySelector('#zh-p-set .z-info')?.insertAdjacentHTML('beforebegin',
+      `<div class="z-srow zx-ver"><div class="z-si">${svg('pulse')}</div><div><b>Version</b><small>läuft gerade auf diesem Gerät</small></div><div class="z-state z-r" data-wir-version>${esc(window.WIR_VERSION || '…')}</div></div>`);
     paintPartner();
     renderAbf(); renderPak(); renderSys();
   }

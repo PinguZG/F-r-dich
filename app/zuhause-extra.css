@@ -3,7 +3,7 @@
 #zh .zx{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 #zh .zx-card{background:var(--z-card);border:1px solid var(--z-line);border-radius:26px;padding:16px 18px;min-width:0}
 #zh .zx-card[hidden],#zh .zx-set [hidden]{display:none}
-#zh .zx svg,#zh .zx-set svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#zh .zx svg,#zh .zx-set svg,#zh .zx-ver svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #zh .zx-hd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 #zh .zx-hd h3{font-size:17px;font-weight:600;line-height:1.2}
 #zh .zx-hd small{font-size:13px;color:var(--z-mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

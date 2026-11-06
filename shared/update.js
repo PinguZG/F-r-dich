@@ -23,8 +23,34 @@
     }
   }
 
+  // laufende Version (Cache-Name aus sw.js) für die Einstellungen: [data-wir-version] füllen, window.WIR_VERSION + Ereignis wir:version
+  function showVersion(v) {
+    if (!v) return;
+    window.WIR_VERSION = v;
+    document.querySelectorAll('[data-wir-version]').forEach(el => { el.textContent = v; });
+    document.dispatchEvent(new CustomEvent('wir:version', { detail: v }));
+  }
+  async function readVersion() {
+    const sw = navigator.serviceWorker?.controller;
+    if (sw) {
+      const v = await new Promise(res => {
+        const t = setTimeout(() => res(''), 1500);
+        navigator.serviceWorker.addEventListener('message', function on(e) {
+          if (e.data?.type !== 'VERSION') return;
+          clearTimeout(t); navigator.serviceWorker.removeEventListener('message', on); res(e.data.v);
+        });
+        sw.postMessage({ type: 'VERSION' });
+      });
+      if (v) return showVersion(v);
+    }
+    // ältere sw.js ohne Antwort: der eigene Cache heißt wie die Version
+    try { showVersion((await caches.keys()).filter(k => /^wir-v\d+$/.test(k)).sort((a, b) => parseInt(b.slice(5)) - parseInt(a.slice(5)))[0] || ''); } catch (_) {}
+  }
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
+    readVersion();
+    navigator.serviceWorker.addEventListener('controllerchange', () => readVersion());
     const hadController = !!navigator.serviceWorker.controller;
     // Wand-Tablet (Zuhause im Vollbild, niemand tippt den Hinweis an): nach 1 Min. ohne Berührung selbst neu laden
     let idleT = 0;

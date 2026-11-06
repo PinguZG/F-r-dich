@@ -1,4 +1,4 @@
-const CACHE = 'wir-v49'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v50'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/draw.js', '/poker.js', '/herzspur.js', '/zuhause-vorlage.css', '/zuhause.css', '/zuhause-markup.js', '/zuhause.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-extra.css',
@@ -9,7 +9,10 @@ self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
   self.skipWaiting();
 });
-self.addEventListener('message', e => { if (e.data?.type === 'SKIP_WAITING') self.skipWaiting(); });
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data?.type === 'VERSION') e.source?.postMessage({ type: 'VERSION', v: CACHE });   // Anzeige in den Einstellungen
+});
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));
   self.clients.claim();
