@@ -165,11 +165,13 @@
     document.body.insertAdjacentHTML('beforeend', '<div class="z-lp" id="zh-lp" role="dialog" aria-label="Lampe"></div>');
     wireLamp();
     wire();
+    document.dispatchEvent(new CustomEvent('zh:built'));   // zuhause-extra.js hängt seine Karten ein
   }
 
   // ---------------------------------------------------------------- Navigation in Zuhause
   function go(p) {
     page = p;
+    document.dispatchEvent(new CustomEvent('zh:page', { detail: p }));
     qa('.z-nv[data-p]').forEach(n => n.classList.toggle('z-on', n.dataset.p === p));
     qa('.z-page').forEach(x => x.classList.toggle('z-on', x.id === 'zh-p-' + p));
     const v = tvView();
@@ -1212,6 +1214,7 @@
     }, 1000);
     idle();
     measureFps();
+    document.dispatchEvent(new CustomEvent('zh:life', { detail: true }));
   }
   function deactivate() {
     if (!active) return;
@@ -1224,6 +1227,7 @@
     $('saver')?.classList.remove('z-on');
     host.classList.add('z-sleep');           // nichts mehr zeichnen (auch keine Animationen), solange unsichtbar
     document.body.classList.remove('zh-full');
+    document.dispatchEvent(new CustomEvent('zh:life', { detail: false }));
   }
   const visible = () => !!document.getElementById('s-zuhause')?.classList.contains('active') && !document.hidden && !!window.WIR_PB?.authStore?.isValid;
   const sync = () => (visible() ? activate() : deactivate());

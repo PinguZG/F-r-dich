@@ -815,6 +815,9 @@
     }
   }
 
+  // Zuhause (Partner-Ecke) nutzt dieselbe Ping-Logik inkl. Push
+  window.WIR_PING = { send: (type, btn) => sendPing(type, '', btn) };
+
   document.querySelectorAll('[data-ping]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.ping === 'love') sendLove(b); else sendPing(b.dataset.ping, '', b);
   }));

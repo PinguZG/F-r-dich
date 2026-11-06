@@ -92,6 +92,7 @@
   function setPresence(p) {
     if (!Array.isArray(p)) return;
     presence = p;
+    document.dispatchEvent(new CustomEvent('wir:presence', { detail: p }));   // Zuhause: Partner-Ecke
     const other = p.find(x => x.id !== myId());
     for (const a of document.querySelectorAll('.js-partner-av')) {
       a.classList.toggle('is-online', !!other?.online);
@@ -244,6 +245,8 @@
     beat();
     schedule();
   }
-  document.addEventListener('wir:show', e => { if ((e.detail === 's-home' || e.detail === 's-games') && started) loadPresence(); });
+  document.addEventListener('wir:show', e => { if ((e.detail === 's-home' || e.detail === 's-games' || e.detail === 's-zuhause') && started) loadPresence(); });
+  // Zuhause (Partner-Ecke): aktueller Stand ohne eigenen Abruf
+  window.WIR_PRESENCE = { get: () => presence, reload: loadPresence };
   document.addEventListener('wir:started', () => { if (!started) start(); });
 })();

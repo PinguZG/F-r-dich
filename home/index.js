@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const conf = require('./config');
 const { Sim } = require('./sim');
+const makeExtras = require('./extras');
 
 const env = (k, d) => (process.env[k] ?? d);
 const need = k => { const v = process.env[k]; if (!v) { console.error('Fehlt: ' + k); process.exit(1); } return v; };
@@ -125,6 +126,7 @@ function publicConfig() {
 // Verbindung zu Home Assistant (oder Simulator)
 // ----------------------------------------------------------------------
 let backend = null;
+let extras = null;
 const states = new Map();
 const meta = { mode: 'test', connected: false, error: '', scene: '', scene_at: '', since: new Date().toISOString(), beat: 0 };
 
@@ -1046,6 +1048,8 @@ const server = http.createServer((req, res) => {
     adbErr = '';
     return tvPoll(true).then(() => send(200, { fehler: adbErr, info: lastRaw ? mediaInfo(lastRaw) : null, sitzungen: parseSessions(lastRaw), roh: lastRaw.slice(0, 8000) }));
   }
+  // Zuhause-Extras: Abfahrten, Pakete, System-Status (extras.js prüft die Rechte anhand des mitgeschickten Nutzers)
+  if (extras && extras.route(req, res, u)) return;
   if (req.method !== 'POST' || req.url !== '/cmd') return send(404, { message: 'Nicht gefunden' });
   let body = '';
   req.on('data', ch => { body += ch; if (body.length > 10000) req.destroy(); });
@@ -1078,6 +1082,7 @@ async function main() {
   setMeta({ connected: false, error: '' });
   // Datensätze von Geräten, die nicht mehr in der Konfiguration stehen, bleiben liegen – die App zeigt nur Konfiguriertes.
 
+  extras = makeExtras({ log, api, configFile: CONFIG, backend: () => backend, meta });
   server.listen(PORT, '127.0.0.1', () => log(`wir-home hört auf 127.0.0.1:${PORT}`));
   startBackend();
 
@@ -1111,6 +1116,7 @@ async function main() {
         log('Konfiguration neu geladen');
         if (meta.mode === 'test') for (const s of backend.states.values()) onState(s);
         wx(); kal(); tvDiscover().catch(() => {});
+        extras.reload();
       } catch (err) { log('Konfiguration fehlerhaft, alte bleibt aktiv:', err.message); }
     }, 500);
   });

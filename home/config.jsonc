@@ -132,5 +132,47 @@
       { "s": "2026-11-27", "to": "2026-11-29", "n": "Besuch Kiel", "w": "g" },
       { "d": "2026-12-01", "t": "08:00", "e": "", "n": "Berufsschule", "w": "d" }
     ]
+  },
+
+  // Zuhause-Extras (Karten auf Start): Partner-Ecke, Abfahrten, Pakete, System-Status. Nichts davon geht in home_state –
+  // die App fragt über PocketBase, wir-home prüft den Nutzer. Ausführlich: ANLEITUNG.md, Abschnitt "Zuhause-Extras".
+  "extras": {
+    // PocketBase-ID des Besitzers (Daniel): nur er sieht Pakete und System-Status (serverseitig geprüft)
+    "besitzer": "dtm8ddyyr9ns4h3",
+
+    // Abfahrten + "Fahrt zu …": Transitous (MOTIS, frei, deutschlandweit). v6.db.transport.rest gibt es nicht mehr.
+    // Haltestellen wählt jede Person selbst in Zuhause → Einstellungen (gespeichert in home_prefs, nicht hier).
+    // Zwischenspeicher pro Haltestelle, egal wie viele Handys offen sind; Anfragen nach außen gedrosselt.
+    "abfahrten": { "quelle": "https://api.transitous.org", "cache_sekunden": 60, "anzahl": 5, "max_anfragen_pro_minute": 30 },
+
+    // Pakete aus der HA-Integration 17TRACK (Aktion seventeentrack.get_packages). Zugestellte nach "zugestellt_tage" ausblenden.
+    "pakete": { "aktiv": true, "cache_minuten": 10, "zugestellt_tage": 2 },
+
+    // System-Status. "ha": Entitäten aus HA (nur lesen; "updates": "update.*" = alle Update-Entitäten mit Update verfügbar).
+    // "schwellen": [gelb ab, rot ab]. "last_pro_kern" = 5-Minuten-Last geteilt durch Kerne. Backup-Alter in Tagen.
+    // "push_rot_minuten": so lange rot -> ein Push an den Besitzer (0 = aus).
+    "system": {
+      "dienste": ["pocketbase", "wir-push", "wir-home", "wir-deploy.timer"],
+      "repo": "/home/pingu/F-r-dich",
+      "pocketbase": "/home/pingu/pb/pocketbase",
+      "backups": "/home/pingu/backups",
+      "ha": {
+        "cpu_temp":   "sensor.system_monitor_prozessortemperatur",
+        "cpu":        "sensor.system_monitor_prozessor_auslastung",
+        "ram":        "sensor.system_monitor_arbeitsspeicher_auslastung",
+        "festplatte": "sensor.system_monitor_massenspeicher_auslastung",
+        "backup":     "sensor.backup_last_successful_automatic_backup",
+        "updates":    "update.*"
+      },
+      "schwellen": {
+        "cpu_temp":      [70, 80],
+        "cpu":           [85, 95],
+        "festplatte":    [80, 90],
+        "ram":           [85, 95],
+        "last_pro_kern": [1.5, 3],
+        "backup_tage":   [2, 4]
+      },
+      "push_rot_minuten": 15
+    }
   }
 }

@@ -1,0 +1,112 @@
+/* Zuhause-Extras (zuhause-extra.js): Partner-Ecke, Abfahrten, Pakete, System – Glas-Karten wie in der Vorlage,
+   bewusst ohne backdrop-filter/Glow (iPhone-Leistung), nur Farbflächen und feine Ränder. */
+#zh .zx{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:16px}
+#zh .zx-card{background:var(--z-card);border:1px solid var(--z-line);border-radius:26px;padding:16px 18px;min-width:0}
+#zh .zx-card[hidden],#zh .zx-set [hidden]{display:none}
+#zh .zx svg,#zh .zx-set svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#zh .zx-hd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+#zh .zx-hd h3{font-size:17px;font-weight:600;line-height:1.2}
+#zh .zx-hd small{font-size:13px;color:var(--z-mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .zx-hd > div{min-width:0}
+#zh .zx-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none;font-style:normal}
+#zh .zx-teal{color:var(--z-teal)} #zh .zx-ic.zx-teal{background:color-mix(in srgb,var(--z-teal) 14%,transparent)}
+#zh .zx-warmc{color:#ffc27a;background:rgba(255,179,107,.13)}
+#zh .zx-vioc{color:var(--zt-b9a8ff);background:color-mix(in srgb,var(--z-vio) 14%,transparent)}
+#zh .zx-stand{margin-left:auto;font-size:12px;color:var(--z-mut);white-space:nowrap;flex:none}
+#zh .zx-empty{font-size:14px;color:var(--z-mut);padding:6px 2px}
+#zh .zx-ok{color:#5fe0a0} #zh .zx-warn{color:var(--z-warn)} #zh .zx-bad{color:#ff6b7a} #zh .zx-vio{color:var(--zt-b9a8ff)} #zh .zx-mut{color:var(--z-mut)}
+#zh .zx-dot{width:10px;height:10px;border-radius:50%;flex:none;background:currentColor;display:inline-block}
+
+/* Partner-Ecke */
+#zh .zx-partner{background:linear-gradient(120deg,color-mix(in srgb,var(--z-pink) 14%,transparent),color-mix(in srgb,var(--z-vio) 8%,transparent) 60%,var(--z-card))}
+#zh .zx-ph{display:flex;align-items:center;gap:12px}
+#zh .zx-av{width:52px;height:52px;font-size:20px;flex:none;border-radius:50%;background-size:cover;background-position:center;display:grid;place-items:center;font-weight:700}
+#zh .zx-pt{min-width:0}
+#zh .zx-pt b{font-size:17px;font-weight:600;display:block}
+#zh .zx-pt small{font-size:13px;color:var(--z-mut)}
+#zh .zx-cd{margin-left:auto;font-size:12px;font-weight:600;color:var(--zt-ffd3a6);text-align:right;flex:none;max-width:42%}
+#zh .zx-last{font-size:13px;color:var(--z-mut);margin:10px 2px 0;min-height:1em}
+#zh .zx-last:empty{display:none}
+#zh .zx-think{margin-top:12px;width:100%;height:52px;border-radius:18px;border:1px solid color-mix(in srgb,var(--z-pink) 40%,transparent);
+  background:color-mix(in srgb,var(--z-pink) 20%,transparent);color:#fff;font:inherit;font-size:16px;font-weight:650;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;transition:transform .15s,background .3s}
+#zh .zx-think:active{transform:scale(.98)}
+#zh .zx-think.zx-sent{background:color-mix(in srgb,var(--z-pink) 34%,transparent)}
+#zh .zx-think svg{color:#ff8fc4}
+
+/* Abfahrten */
+#zh .zx-deps{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;min-width:0}
+#zh .zx-dep{display:flex;min-width:0;align-items:center;gap:10px;min-height:38px;border-top:1px solid var(--z-line);padding-top:2px}
+#zh .zx-dep:first-child{border-top:0}
+#zh .zx-line{--lc:#4d5262;min-width:42px;height:26px;padding:0 7px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;
+  background:color-mix(in srgb,var(--lc) 70%,#000 0%);flex:none}
+#zh .zx-dir{flex:1;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .zx-min{font-weight:650;font-size:15px;white-space:nowrap}
+#zh .zx-dl{font-style:normal;font-size:12px;font-weight:650;white-space:nowrap}
+#zh .zx-dep .zx-dl{min-width:52px;text-align:right}
+#zh .zx-x .zx-dir,#zh .zx-x .zx-min,#zh .zx-x .zx-line,#zh .zx-strike{text-decoration:line-through;opacity:.55}
+#zh .zx-trip{margin-top:12px;padding-top:12px;border-top:1px solid var(--z-line)}
+#zh .zx-th{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;color:var(--zt-ffd3a6)}
+#zh .zx-th b{font-size:15px;color:var(--z-txt)}
+#zh .zx-th small{font-size:12px;color:var(--z-mut);width:100%}
+#zh .zx-con{padding:8px 0;border-top:1px dashed var(--z-line)}
+#zh .zx-con:first-of-type{border-top:0}
+#zh .zx-ct{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:15px}
+#zh .zx-ct small{margin-left:auto;font-size:12px;color:var(--z-mut)}
+#zh .zx-cl{font-size:12px;color:var(--zt-c9ccd8);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .zx-con.zx-x .zx-ct b{text-decoration:line-through;opacity:.6}
+
+/* Pakete */
+#zh .zx-pks{display:grid;gap:2px}
+#zh .zx-pk{display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--z-line)}
+#zh .zx-pk:first-child{border-top:0}
+#zh .zx-pi{flex:1;min-width:0}
+#zh .zx-pi b{font-size:15px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .zx-pi small{font-size:12px;color:var(--z-mut);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#zh .zx-ps{text-align:right;flex:none}
+#zh .zx-ps span{font-size:13px;font-weight:650;display:block}
+#zh .zx-ps small{font-size:12px;color:var(--z-mut)}
+
+/* System */
+#zh .zx-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#zh .zx-tile{font:inherit;color:inherit;text-align:left;border-radius:18px;background:rgba(var(--zw),.04);border:1px solid var(--z-line);padding:11px 12px;cursor:pointer;display:grid;gap:3px;min-width:0}
+#zh .zx-tile.zx-on{border-color:color-mix(in srgb,var(--z-vio) 50%,transparent);background:color-mix(in srgb,var(--z-vio) 12%,transparent)}
+#zh .zx-tile b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zh .zx-tile small{font-size:12px;color:var(--z-mut)}
+#zh .zx-det{margin-top:10px;display:grid;gap:2px}
+#zh .zx-di{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px;padding:7px 2px;border-top:1px solid var(--z-line);font-size:14px}
+#zh .zx-di:first-child{border-top:0}
+#zh .zx-di span{color:var(--zt-c9ccd8);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#zh .zx-di b{font-weight:600;text-align:right}
+#zh .zx-di small{grid-column:2 / 4;font-size:12px;color:var(--z-mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#zh .zx-up{margin-top:6px;padding:10px 12px;border-radius:14px;background:rgba(255,179,107,.08);display:grid;gap:4px;font-size:13px}
+#zh .zx-up span{color:var(--z-warn);font-weight:650}
+#zh .zx-up small{color:var(--z-mut);margin-left:6px}
+
+/* Einstellungen: Haltestellen */
+#zh .zx-set{display:grid;gap:10px}
+#zh .zx-set .z-si svg{width:22px;height:22px}
+#zh .zx-set .z-seg div.z-on{background:rgba(var(--zw),.1);color:var(--z-txt)}
+#zh .zx-two{display:flex;gap:8px}
+#zh .zx-two .z-btn{height:40px}
+#zh .zx-search{border-radius:22px;background:var(--z-card);border:1px solid var(--z-line);padding:14px;display:grid;gap:10px}
+#zh .zx-sh{display:flex;align-items:center;gap:10px}
+#zh .zx-sh .z-btn{margin-left:auto;height:38px}
+#zh .zx-search input{height:46px;border-radius:14px;border:1px solid var(--z-line);background:rgba(var(--zw),.05);color:var(--z-txt);font:inherit;font-size:16px;padding:0 14px;outline:none;width:100%}
+#zh .zx-search input:focus{border-color:color-mix(in srgb,var(--z-vio) 60%,transparent)}
+#zh .zx-res{display:grid;gap:4px;max-height:280px;overflow-y:auto}
+#zh .zx-ort{padding:10px 12px;border-radius:12px;background:rgba(var(--zw),.04);cursor:pointer}
+#zh .zx-ort b{display:block;font-size:15px;font-weight:600}
+#zh .zx-ort small{font-size:12px;color:var(--z-mut)}
+#zh .zx-del{height:38px;justify-self:start;color:#ff9aa5}
+#zh .zx-hint{font-size:12px;color:var(--z-mut);padding:0 8px}
+
+/* Handy: größere Schrift wie im Rest von Zuhause; Tablet: rechte Startspalte scrollt (wie die anderen Spalten) */
+#zh.z-phone .zx-card{padding:16px}
+#zh.z-phone .zx-hd small,#zh.z-phone .zx-last{font-size:14px}
+#zh.z-phone .zx-tiles{gap:6px}
+#zh.z-phone .zx-tile{padding:10px}
+#zh:not(.z-phone) #zh-p-start .z-s-right{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:4px 6px 28px;margin:-4px -6px 0;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+#zh:not(.z-phone) #zh-p-start .z-s-right::-webkit-scrollbar{display:none}
+#zh:not(.z-phone) #zh-p-start .z-s-right > *{flex-shrink:0}
+#zh.z-sleep .zx *{transition:none!important}
