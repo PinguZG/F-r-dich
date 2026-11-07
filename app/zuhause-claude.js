@@ -42,10 +42,27 @@
       svgRoot = hostEl.attachShadow({ mode: 'open' });
       lastSvg = '';
     }
-    if (svg !== lastSvg) {
-      lastSvg = svg;
-      svgRoot.innerHTML = `<style>${SHADOW_CSS}</style>${svg}`;
-    }
+    if (svg === lastSvg) return;
+    lastSvg = svg;
+    const tpl = document.createElement('template');
+    tpl.innerHTML = svg;
+    const next = tpl.content.querySelector('svg');
+    const cur = svgRoot.querySelector('svg');
+    if (!cur || !next) { svgRoot.innerHTML = `<style>${SHADOW_CSS}</style>${svg}`; return; }
+    morph(cur, next);
+  }
+
+  // Nur ändern, was sich geändert hat: so laufen Animationen weiter und nichts flackert beim Aktualisieren.
+  function morph(a, b) {
+    for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+    for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+    const ac = [...a.childNodes], bc = [...b.childNodes];
+    const sameShape = ac.length === bc.length && ac.every((n, i) => n.nodeType === bc[i].nodeType && n.nodeName === bc[i].nodeName);
+    if (!sameShape) { a.replaceChildren(...bc.map(n => document.importNode(n, true))); return; }
+    ac.forEach((n, i) => {
+      if (n.nodeType === 1) morph(n, bc[i]);
+      else if (n.nodeValue !== bc[i].nodeValue) n.nodeValue = bc[i].nodeValue;
+    });
   }
 
   function render() {

@@ -1767,3 +1767,8 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Sicherung:** Tag `vor-cockpit-shadow`, DB-Backup `/home/pingu/backups/vor-cockpit-shadow-2026-11-07/`.
 
 **Rücksetz-Weg:** `git checkout vor-cockpit-shadow -- app/sw.js app/zuhause-claude.js app/zuhause-claude.css app/zuhause-claude-svg.js`, `wir-vNN` in `app/sw.js` hochzählen, committen, pushen (kein reset/force).
+
+### Nachtrag 07.11.2026: Cockpit ruhig aktualisieren, nur zuletzt genutzter Chat (wir-v55)
+**Was neu ist:** Neue Daten ändern im Cockpit-SVG nur noch die geänderten Teile (kleiner DOM-Abgleich in `app/zuhause-claude.js`) statt das ganze Bild neu zu setzen: kein Flackern, Animationen laufen weiter. Die Chat-Liste zeigt nur noch den zuletzt genutzten Chat. Neue Chats zeigen die zuletzt gemessenen Limits.
+**Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-ruhig` (reine App-Änderung, DB-Stand wie `vor-cockpit-shadow`).
+**Rücksetz-Weg:** `git checkout vor-cockpit-ruhig -- app/zuhause-claude.js app/zuhause-claude-svg.js`, `wir-vNN` hochzählen, committen, pushen.

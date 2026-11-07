@@ -632,8 +632,8 @@ function dashboardSvg(d      )         {
   const chatsSvg = chats.length
     ? `
   <rect x="24" y="${chatsTop - 8}" width="${W - 48}" height="1" fill="url(#d-line)"/>
-  <text x="20" y="${chatsTop + 22}" font-size="12" font-weight="600" fill="${C.ember}" letter-spacing="1.5">CHATS</text>
-  <text x="${W - 20}" y="${chatsTop + 22}" text-anchor="end" font-size="11" fill="${C.muted}">${busy ? `Claude arbeitet in ${busy === 1 ? 'einem Chat' : `${busy} Chats`}` : 'alle warten auf dich'}</text>
+  <text x="20" y="${chatsTop + 22}" font-size="12" font-weight="600" fill="${C.ember}" letter-spacing="1.5">ZULETZT GENUTZTER CHAT</text>
+  <text x="${W - 20}" y="${chatsTop + 22}" text-anchor="end" font-size="11" fill="${C.muted}">${busy ? 'Claude arbeitet dort gerade' : 'wartet auf dich'}</text>
   ${chatRows}`
     : ''
 
