@@ -16,7 +16,28 @@ routerAdd('POST', '/api/cockpit/status', (e) => {
   const body = e.requestInfo().body || {};
   const dash = body.dash;
   if (!dash || typeof dash !== 'object' || Array.isArray(dash)) return e.json(400, { ok: false });
-  const raw = JSON.stringify(dash);
+  // Nur bekannte Felder übernehmen (wie bei /cowork): Texte gekürzt, Listen begrenzt, Tiefe begrenzt.
+  const clean = (v, depth) => {
+    if (v == null || typeof v === 'boolean') return v;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+    if (typeof v === 'string') return v.replace(/[\u0000-\u001f]/g, ' ').slice(0, 300);
+    if (depth > 5) return null;
+    if (Array.isArray(v)) return v.slice(0, 40).map(x => clean(x, depth + 1));
+    if (typeof v === 'object') { const o = {}; Object.keys(v).slice(0, 40).forEach(k => { if (/^[A-Za-z0-9_]{1,30}$/.test(k)) o[k] = clean(v[k], depth + 1); }); return o; }
+    return null;
+  };
+  const TOP = ['teamNote', 'team', 'mood', 'pose', 'isPoked', 'status', 'saying', 'agents', 'moreAgents', 'rings', 'tiles', 'chats'];
+  const safe = {};
+  TOP.forEach(k => { if (k in dash) safe[k] = clean(dash[k], 1); });
+  // Helfer-Art nur aus der festen Liste: ein unbekannter Name würde die Grafik in der App abstürzen lassen
+  const KINDS = ['pip', 'bubbles', 'inky', 'coral', 'shelly', 'luma', 'generic'];
+  ['team', 'agents'].forEach(k => {
+    if (!Array.isArray(safe[k])) { delete safe[k]; return; }
+    safe[k] = safe[k].filter(x => x && typeof x === 'object')
+      .map(x => ({ ...x, kind: KINDS.includes(x.kind) ? x.kind : 'generic' }))
+      .filter(x => k !== 'team' || x.kind !== 'generic');
+  });
+  const raw = JSON.stringify(safe);
   if (raw.length > 50000) return e.json(413, { ok: false });
 
   const col = e.app.findCollectionByNameOrId('cockpit');
@@ -63,6 +84,37 @@ routerAdd('POST', '/api/cockpit/cowork', (e) => {
   rec.set('data', out);
   rec.set('sent_at', Date.now());
   e.app.save(rec);
+
+  // Verbrauch der Antwort (seit Plugin 0.4.3, nur beim Antwort-Ende): pro Tag (Berliner Zeit) aufsummieren, damit
+  // Verlauf und Luma Cowork mitzählen. Datensatz coworkverlauf00: { days: { "JJJJ-MM-TT": { turns, units, out, hours[24] } } }
+  const t = body.turn;
+  if (t && typeof t === 'object' && !Array.isArray(t)) {
+    const units = n(t.units, 5e7), outTok = n(t.out, 1e8), msgs = n(t.msgs, 1000);
+    if (units > 0 && msgs > 0) {
+      const now = new Date();
+      const y = now.getUTCFullYear();
+      const lastSun = m => { const d = new Date(Date.UTC(y, m + 1, 0)); return d.getUTCDate() - d.getUTCDay(); };
+      const dstStart = Date.UTC(y, 2, lastSun(2), 1), dstEnd = Date.UTC(y, 9, lastSun(9), 1);
+      const b = new Date(now.getTime() + (now.getTime() >= dstStart && now.getTime() < dstEnd ? 2 : 1) * 3600000);
+      const p2 = x => (x < 10 ? '0' : '') + x;
+      const key = b.getUTCFullYear() + '-' + p2(b.getUTCMonth() + 1) + '-' + p2(b.getUTCDate());
+      let vr;
+      try { vr = e.app.findRecordById(col, 'coworkverlauf00'); } catch (_) { vr = new Record(col); vr.set('id', 'coworkverlauf00'); }
+      let data = {};
+      try { data = JSON.parse(vr.getString('data') || '{}') || {}; } catch (_) { data = {}; }
+      const days = data.days && typeof data.days === 'object' ? data.days : {};
+      const d = days[key] || { turns: 0, units: 0, out: 0, hours: [] };
+      const hours = Array.isArray(d.hours) ? d.hours.slice(0, 24) : [];
+      while (hours.length < 24) hours.push(0);
+      hours[b.getUTCHours()] += 1;
+      days[key] = { turns: (Number(d.turns) || 0) + 1, units: (Number(d.units) || 0) + units, out: (Number(d.out) || 0) + outTok, hours };
+      const keep = {};
+      Object.keys(days).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().slice(-62).forEach(k => { keep[k] = days[k]; });
+      vr.set('data', { days: keep });
+      vr.set('sent_at', Date.now());
+      e.app.save(vr);
+    }
+  }
   return e.json(200, { ok: true });
 });
 
@@ -83,7 +135,7 @@ routerAdd('POST', '/api/cockpit/verlauf', (e) => {
   if (!src || typeof src !== 'object' || Array.isArray(src)) return e.json(400, { ok: false });
   const num = v => { const x = Number(v); return Number.isFinite(x) && x >= 0 ? Math.min(Math.round(x * 10) / 10, 1e12) : 0; };
   const days = {};
-  const keys = Object.keys(src).filter(k => /^d{4}-d{2}-d{2}$/.test(k)).sort().slice(-62);
+  const keys = Object.keys(src).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().slice(-62);
   for (const k of keys) {
     const d = src[k] || {};
     const helpers = {};

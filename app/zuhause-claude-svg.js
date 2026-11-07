@@ -114,7 +114,7 @@ const HELPER_LOOK                                                               
 const FONT = "font-family=\"'Segoe UI', system-ui, -apple-system, sans-serif\""
 
 function esc(s        )         {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 function levelColor(pct        )         {

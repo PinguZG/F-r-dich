@@ -22,6 +22,14 @@
       `<div class="z-nv zc-nv" data-p="claude" data-label="Claude" title="Claude">${ICON}</div>`);
     main.insertAdjacentHTML('beforeend',
       `<section class="z-page zc-page" id="zh-p-claude"><div class="z-scol zc"><div class="zc-card" id="zc-card"><p class="zc-empty">Lade …</p></div></div></section>`);
+    // Umschalter oben: Zuletzt / Claude Code / Cowork
+    main.querySelector('#zc-card').addEventListener('click', e => {
+      const b = e.target.closest('[data-mode]');
+      if (!b) return;
+      setMode(b.dataset.mode);
+      lastHtml = ''; svgRoot = null;   // Ansicht neu aufbauen (anderes Dashboard)
+      render();
+    });
   }
 
   const mins = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? `${m} Min.` : `${Math.floor(m / 60)} Std. ${m % 60} Min.`; };
@@ -100,18 +108,33 @@
     const box = svgRoot && svgRoot.querySelector(`[data-h="${k}"]`);
     if (box && lastExtras[k] !== html) { lastExtras[k] = html; box.innerHTML = html; }
   }
+  // Verlauf von Claude Code (cockpitverlauf0) und Cowork (coworkverlauf00, seit Plugin 0.4.3) zusammenzählen,
+  // damit Luma und der Verlauf die ganze Nutzung sehen. Cowork bringt nur Antworten, Verbrauch, Ausgabe und Stunden mit.
+  function mergedVerlauf() {
+    const a = (vl && vl.data && vl.data.days) || {}, b = (cwv && cwv.data && cwv.data.days) || {};
+    if (!Object.keys(b).length) return vl && vl.data && vl.data.days ? vl.data : null;
+    const days = {};
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      const x = { turns: 0, out: 0, units: 0, helperUnits: 0, helperAtMain: 0, peak5h: 0, peakWeek: 0, helpers: {}, ...(a[k] || {}) };
+      const y = b[k];
+      const h = Array.from({ length: 24 }, (_, i) => (Number((x.hours || [])[i]) || 0) + (Number(((y && y.hours) || [])[i]) || 0));
+      days[k] = y ? { ...x, turns: x.turns + (Number(y.turns) || 0), units: x.units + (Number(y.units) || 0), out: x.out + (Number(y.out) || 0), hours: h } : { ...x, hours: h };
+    }
+    return { days };
+  }
   function showExtras() {
     if (!svgRoot) return;
-    const days = vl && vl.data && vl.data.days;
+    const data = mergedVerlauf();
+    const days = data && data.days;
     const now = Date.now();
     const L = window.WIR_LUMA, V = window.WIR_COCKPIT_VERLAUF;
     if (L) {
-      const a = days ? L.analyse(vl.data, now, span()) : null;
+      const a = days ? L.analyse(data, now, span()) : null;
       setSummary('luma', a ? ({ besser: '↘ sparsamer', schlechter: '↗ teurer', gleich: '→ stabil', neu: 'sammelt Daten' })[a.tr.dir] + ` · ${a.sp.label}` : 'wartet auf Daten');
-      if (svgRoot.querySelector('details[data-k="luma"]')?.open) setHtml('luma', L.html(vl && vl.data, now, span()));
+      if (svgRoot.querySelector('details[data-k="luma"]')?.open) setHtml('luma', L.html(data, now, span()));
     }
     if (V) {
-      const s = days ? V.summarize(vl.data, now) : null;
+      const s = days ? V.summarize(data, now) : null;
       setSummary('verlauf', s ? `heute ${s.today.turns} · 7 Tage ${s.weekTurns} Antworten` : '');
       if (svgRoot.querySelector('details[data-k="verlauf"]')?.open) {
         setHtml('verlauf', s ? V.historySvg(s) : '<p class="vl-empty">Noch kein Verlauf. Er kommt, sobald das Cockpit in Claude Code läuft.</p>');
@@ -168,6 +191,8 @@
   const CW_ID = 'coworkstatus000';
   const CW_BUSY = 3 * 60000, CW_SHOW = 60 * 60000;
   let cw = null, cwSub = null;
+  const CWV_ID = 'coworkverlauf00';   // Cowork-Verbrauch je Tag (Server zählt pro Antwort mit)
+  let cwv = null, cwvSub = null;
 
   function cwAge() { return cw && cw.data ? Date.now() - (Number(cw.sent_at) || Date.parse(cw.updated) || 0) : Infinity; }
   // Millisekunden seit der letzten Cowork-Meldung, wenn Cowork gerade arbeitet; sonst 0.
@@ -176,55 +201,83 @@
     return a < CW_BUSY && cw.data.state !== 'idle' ? Math.max(1, a) : 0;
   }
 
-  function withCowork(d, ccAge, ccStale) {
-    const age = cwAge();
-    if (age > CW_SHOW) return d;
-    // Lesbar machen: „cockpit-team:inky“ → „Inky“, MCP-Werkzeugnamen ohne Server-Vorsilbe.
-    const nice = t => String(t || '').replace(/cockpit-team:(\w+)/g, (_, k) => k[0].toUpperCase() + k.slice(1)).replace(/mcp__.*?__/g, '');
-    const c = { ...cw.data, text: nice(cw.data.text) };
-    const busy = coworkBusy();
+  // Ansicht oben umschaltbar (07.11.2026): „Zuletzt“ zeigt automatisch die Quelle, die zuletzt benutzt wurde,
+  // „Claude Code“ und „Cowork“ halten die Ansicht fest. Die Wahl merkt sich das Gerät.
+  const MODE_KEY = 'zc-mode';
+  const getMode = () => { try { const m = localStorage.getItem(MODE_KEY); return m === 'cc' || m === 'cw' ? m : 'auto'; } catch (_) { return 'auto'; } };
+  const setMode = m => { try { localStorage.setItem(MODE_KEY, m); } catch (_) { /* nur bis zum Neuladen */ } };
+  const cwOk = () => !!(cw && cw.data && cw.data.source === 'cowork');
+  const cleanTitle = t => { const s = String(t || '').trim(); return !s || s.startsWith('<') ? 'Cowork-Aufgabe' : s; };
+  const nice = t => String(t || '').replace(/cockpit-team:(\w+)/g, (_, k) => k[0].toUpperCase() + k.slice(1)).replace(/mcp__.*?__/g, '');
+  const KINDS = ['pip', 'bubbles', 'inky', 'coral', 'shelly', 'luma'];
+  const dayKey = ms => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+  // Das Cowork-Dashboard: dieselbe Grafik wie für Claude Code, gefüllt mit dem, was das Cowork-Plugin meldet.
+  // Die Limits (5 Std./Woche) gelten fürs ganze Konto; Cowork verrät sie nicht, darum kommen sie aus Claude Code.
+  function coworkDash(base) {
+    const c = cwOk() ? cw.data : null;
+    const age = cwAge(), busy = c ? coworkBusy() : 0;
+    const HL = G().HELPER_LOOK, fk = G().fmtK;
     const state = busy ? (c.state === 'thinking' ? 'thinking' : 'working') : 'idle';
+    const title = cleanTitle(c && c.title);
+    const kind = c ? String(c.agent || '').replace(/^cockpit-team:/, '') : '';
+    const team0 = base && Array.isArray(base.team) && base.team.length ? base.team
+      : KINDS.map(k => ({ kind: k, model: k === 'coral' || k === 'shelly' ? 'Sonnet' : 'Haiku' }));
+    const team = team0.map((m, i) => {
+      const idle = (HL[m.kind] && HL[m.kind].idle) || ['bereit'];
+      return busy && c.event !== 'SubagentStop' && m.kind === kind ? { ...m, state: 'active', text: 'hilft in Cowork' }
+        : { ...m, state: 'idle', text: idle[i % idle.length] };
+    });
     const m = Math.round(age / 60000);
-    const ago = m < 1 ? 'gerade eben' : m < 60 ? `vor ${m} Min.` : `vor ${Math.floor(m / 60)} Std.`;
-    const out = { ...d };
-    if (ccStale || age < ccAge) {
-      out.chats = [{ title: c.title || 'Cowork-Aufgabe', project: 'Cowork', state, text: c.text || '', ago }];
-      // Kontext und Cache gehören zum zuletzt benutzten Chat: hier Cowork (seit Plugin 0.4.0 mitgeschickt)
-      if (c.ctx > 0) {
-        const fk = G().fmtK, win = c.win || 200000, p = Math.min(100, Math.round((c.ctx / win) * 100));
-        const all = (c.fresh || 0) + (c.cread || 0) + (c.cwrite || 0);
-        out.rings = (out.rings || []).map(r => r.label === 'Kontext'
-          ? { ...r, pct: p, detail: `${fk(c.ctx)} / ${fk(win)}`, tooltip: 'Wie voll das Gedächtnis des Cowork-Chats ist.' } : r);
-        out.tiles = {
-          ...out.tiles,
-          ctx: { value: fk(c.ctx), sub: `von ${fk(win)} Tokens · ${p}% · Cowork`, pct: p, series: [] },
-          cache: { value: all ? `${Math.round(((c.cread || 0) / all) * 100)}%` : '–', sub: 'aus dem Cache (Cowork)', read: c.cread || 0, write: c.cwrite || 0, fresh: c.fresh || 0 },
-        };
-      }
-    }
-    if (busy && ccStale) {
-      out.mood = 'focused';
-      out.pose = state;
-      out.status = { state, text: `Cowork: ${c.text || 'arbeitet'}` };
-      out.saying = c.title ? `In Cowork: ${c.title}` : 'Ich arbeite gerade in Cowork.';
-      const kind = String(c.agent || '').replace(/^cockpit-team:/, '');
-      if (c.event !== 'SubagentStop' && (out.team || []).some(t => t.kind === kind)) {
-        out.team = out.team.map(t => t.kind === kind ? { ...t, state: 'active', text: 'hilft in Cowork' } : t);
-      }
-    }
-    return out;
+    const ago = !c ? '' : m < 1 ? 'gerade eben' : m < 60 ? `vor ${m} Min.` : m < 1440 ? `vor ${Math.floor(m / 60)} Std.` : `vor ${Math.floor(m / 1440)} T.`;
+    const lim = (base && base.rings || []).filter(r => r.label !== 'Kontext')
+      .map(r => ({ ...r, tooltip: `${r.tooltip} (gilt fürs ganze Konto, gemessen in Claude Code)` }));
+    const hasCtx = c && c.ctx > 0;
+    const win = (c && c.win) || 200000, p = hasCtx ? Math.min(100, Math.round((c.ctx / win) * 100)) : null;
+    const all = hasCtx ? (c.fresh || 0) + (c.cread || 0) + (c.cwrite || 0) : 0;
+    const days = (cwv && cwv.data && cwv.data.days) || {};
+    const now = Date.now();
+    const last14 = Array.from({ length: 14 }, (_, i) => days[dayKey(now - (13 - i) * 864e5)] || null);
+    const today = last14[13] || { turns: 0, units: 0 };
+    return {
+      teamNote: 'Helfer-Team in Cowork (Plugin cockpit-team)',
+      team,
+      mood: busy ? 'focused' : c && age < CW_SHOW ? 'happy' : 'sleepy',
+      pose: busy ? state : c && age < CW_SHOW ? 'idle' : 'sleepy',
+      isPoked: false,
+      status: !c ? { state: 'sleepy', text: 'noch keine Cowork-Meldung' } : busy ? { state, text: nice(c.text) || 'arbeitet' } : { state: 'idle', text: `wartet · ${ago}` },
+      saying: !c ? 'Starte eine Aufgabe in Cowork – dann erscheint sie hier.' : busy ? `In Cowork: ${title}` : `Zuletzt in Cowork: ${title}`,
+      agents: [], moreAgents: 0,
+      rings: [...lim, { label: 'Kontext', pct: p, detail: hasCtx ? `${fk(c.ctx)} / ${fk(win)}` : 'noch keine Daten', tooltip: 'Wie voll das Gedächtnis des Cowork-Chats ist.' }],
+      tiles: {
+        ctx: { value: hasCtx ? fk(c.ctx) : '–', sub: hasCtx ? `von ${fk(win)} Tokens · ${p}%` : 'Gedächtnis des Cowork-Chats', pct: p, series: [] },
+        cache: { value: all ? `${Math.round(((c.cread || 0) / all) * 100)}%` : '–', sub: 'aus dem Cache (letzte Antwort)', read: hasCtx ? c.cread || 0 : 0, write: hasCtx ? c.cwrite || 0 : 0, fresh: hasCtx ? c.fresh || 0 : 0 },
+        session: { value: today.turns ? String(today.turns) : '–', sub: 'Cowork-Antworten heute', bars: last14.map(d => (d && d.turns) || 0) },
+        cost: { value: today.units ? fk(Math.round(today.units)) : '–', sub: 'Verbrauchspunkte heute (Cowork)', series: last14.map(d => (d && d.units) || 0) },
+      },
+      chats: c ? [{ title, project: 'Cowork', state, text: nice(c.text), isThis: false, ago }] : [],
+    };
   }
 
   function render() {
     const el = document.getElementById('zc-card');
     if (!el || !G()) return;
-    if (!rec || !rec.data || !rec.data.rings) {
-      const html = '<p class="zc-empty">Noch keine Daten. Sobald auf dem PC eine Claude-Session mit dem Cockpit läuft, erscheint hier Okti mit seinem Team.</p>';
-      if (html !== lastHtml) { lastHtml = html; svgRoot = null; el.innerHTML = html; }
-    } else {
-      const age = Date.now() - (Number(rec.sent_at) || Date.parse(rec.updated) || 0);
-      let d = rec.data;
-      const stale = age > STALE;
+    const ccAge = rec ? Date.now() - (Number(rec.sent_at) || Date.parse(rec.updated) || 0) : Infinity;
+    const hasCc = !!(rec && rec.data && rec.data.rings);
+    const mode = getMode();
+    // „Zuletzt“: die Quelle mit der jüngsten Meldung (Kontext und Cache gehören damit immer zum zuletzt benutzten Chat)
+    const view = mode === 'cc' ? 'cc' : mode === 'cw' ? 'cw' : (cwOk() && cwAge() < ccAge) || (!hasCc && cwOk()) ? 'cw' : 'cc';
+    const seg = [['auto', 'Zuletzt'], ['cc', 'Claude Code'], ['cw', 'Cowork']]
+      .map(([k, l]) => `<button type="button" data-mode="${k}" class="${k === mode ? 'on' : ''}" aria-pressed="${k === mode}">${l}${k === 'auto' ? ` <i>${view === 'cw' ? 'Cowork' : 'Code'}</i>` : ''}</button>`).join('');
+    let note, live, d = null;
+    if (view === 'cw') {
+      const busy = cwOk() ? coworkBusy() : 0;
+      note = !cwOk() ? 'noch keine Meldung' : busy ? `arbeitet · vor ${Math.round(busy / 1000)} s` : `zuletzt aktiv vor ${mins(cwAge())}`;
+      live = !!busy;
+      d = coworkDash(hasCc ? rec.data : null);
+    } else if (hasCc) {
+      const stale = ccAge > STALE;
+      d = rec.data;
       if (stale) {
         d = {
           ...d, mood: 'sleepy', pose: 'sleepy', isPoked: false,
@@ -235,16 +288,22 @@
           team: (d.team || []).map(m => ({ ...m, state: 'idle', text: G().HELPER_LOOK[m.kind]?.idle?.[0] || 'ruht' })),
         };
       }
-      const cwBusy = coworkBusy();
-      d = withCowork(d, age, stale);
-      const note = stale && cwBusy ? `Cowork aktiv · vor ${Math.round(cwBusy / 1000)} s`
-        : stale ? `Claude schläft · zuletzt aktiv vor ${mins(age)}` : `live · vor ${Math.max(0, Math.round(age / 1000))} s`;
-      const top = `<b>Claude</b><small class="${stale && !cwBusy ? '' : 'zc-live'}">${G().esc(note)}</small>`;
-      if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; lastLayout = ''; el.innerHTML = `<div class="zc-top">${top}</div>`; }
-      else if (el.firstElementChild.innerHTML !== top) el.firstElementChild.innerHTML = top;
-      lastDash = d;
-      showDash(el, d);
+      note = stale ? `schläft · zuletzt aktiv vor ${mins(ccAge)}` : `live · vor ${Math.max(0, Math.round(ccAge / 1000))} s`;
+      live = !stale;
+    } else {
+      note = 'noch keine Daten';
+      live = false;
     }
+    const top = `<div class="zc-seg" role="group" aria-label="Ansicht">${seg}</div><div class="zc-tt"><b>${view === 'cw' ? 'Cowork' : 'Claude Code'}</b><small class="${live ? 'zc-live' : ''}">${G().esc(note)}</small></div>`;
+    if (!d) {
+      const html = `<div class="zc-top">${top}</div><p class="zc-empty">Noch keine Daten. Sobald auf dem PC eine Claude-Session mit dem Cockpit läuft, erscheint hier Okti mit seinem Team.</p>`;
+      if (html !== lastHtml) { lastHtml = html; svgRoot = null; el.innerHTML = html; }
+      return;
+    }
+    if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; lastLayout = ''; el.innerHTML = `<div class="zc-top">${top}</div>`; }
+    else if (el.firstElementChild.innerHTML !== top) el.firstElementChild.innerHTML = top;
+    lastDash = d;
+    showDash(el, d);
   }
 
   // Dreht oder ändert sich die Breite (Handy ↔ Tablet), passt sich die Ansicht an.
@@ -263,6 +322,7 @@
     try { rec = await pb().collection('cockpit').getOne(ID); } catch (_) { rec = null; }
     try { cw = await pb().collection('cockpit').getOne(CW_ID); } catch (_) { cw = null; }
     try { vl = await pb().collection('cockpit').getOne(VL_ID); } catch (_) { vl = null; }
+    try { cwv = await pb().collection('cockpit').getOne(CWV_ID); } catch (_) { cwv = null; }
     render();
     try {
       sub = await pb().collection('cockpit').subscribe(ID, e => { rec = e.record; render(); });
@@ -273,6 +333,9 @@
     try {
       vlSub = await pb().collection('cockpit').subscribe(VL_ID, e => { vl = e.record; showExtras(); });
     } catch (_) { vlSub = null; }
+    try {
+      cwvSub = await pb().collection('cockpit').subscribe(CWV_ID, e => { cwv = e.record; showExtras(); if (getMode() !== 'cc') render(); });
+    } catch (_) { cwvSub = null; }
     tick = setInterval(render, 20000);   // "vor X s" und Schlaf-Erkennung ohne neue Daten
   }
   function stop() {
@@ -285,6 +348,9 @@
     if (typeof vlSub === 'function') vlSub();
     else if (vlSub) pb()?.collection('cockpit').unsubscribe(VL_ID);
     vlSub = null;
+    if (typeof cwvSub === 'function') cwvSub();
+    else if (cwvSub) pb()?.collection('cockpit').unsubscribe(CWV_ID);
+    cwvSub = null;
     if (tick) { clearInterval(tick); tick = 0; }
   }
   function sync() {
