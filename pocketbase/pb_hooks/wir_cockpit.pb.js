@@ -152,7 +152,27 @@ routerAdd('POST', '/api/cockpit/verlauf', (e) => {
   const col = e.app.findCollectionByNameOrId('cockpit');
   let rec;
   try { rec = e.app.findRecordById(col, 'cockpitverlauf0'); } catch (_) { rec = new Record(col); rec.set('id', 'cockpitverlauf0'); }
-  rec.set('data', { days });
+  // Zusammenführen statt ersetzen: Tage, die nur der Server kennt (z. B. rückwirkend aus den Gesprächsprotokollen
+  // eingespielt), bleiben erhalten. Kennen beide einen Tag, gilt je Wert das Größere (der Mod zählt erst seit seinem
+  // Start, die Protokolle zählen alles).
+  let old = {};
+  try { old = (JSON.parse(rec.getString('data') || '{}') || {}).days || {}; } catch (_) { old = {}; }
+  const mx = (a, b) => Math.max(Number(a) || 0, Number(b) || 0);
+  Object.keys(old).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).forEach(k => {
+    const o = old[k] || {}, nw = days[k];
+    if (!nw) { days[k] = o; return; }
+    const helpers = { ...(o.helpers || {}) };
+    Object.keys(nw.helpers || {}).forEach(h => { helpers[h] = mx(helpers[h], nw.helpers[h]); });
+    const oh = Array.isArray(o.hours) ? o.hours : [];
+    days[k] = {
+      turns: mx(o.turns, nw.turns), out: mx(o.out, nw.out), units: mx(o.units, nw.units), helperUnits: mx(o.helperUnits, nw.helperUnits),
+      helperAtMain: mx(o.helperAtMain, nw.helperAtMain), peak5h: mx(o.peak5h, nw.peak5h), peakWeek: mx(o.peakWeek, nw.peakWeek),
+      hours: nw.hours.map((v, i) => mx(v, oh[i])), helpers,
+    };
+  });
+  const keep = {};
+  Object.keys(days).sort().slice(-62).forEach(k => { keep[k] = days[k]; });
+  rec.set('data', { days: keep });
   rec.set('sent_at', Number(body.sentAt) || Date.now());
   e.app.save(rec);
   return e.json(200, { ok: true });

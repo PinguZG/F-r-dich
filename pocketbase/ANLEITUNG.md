@@ -1833,3 +1833,9 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - Lösung `app/sw.js`: Dateien werden mit `cache: 'no-cache'` geholt (Browser fragt immer beim Server nach, unverändert = kurze 304-Antwort), beim Installieren mit `cache: 'reload'`. Seitenaufrufe (navigate) unverändert.
 - System-Kurven: Beschriftung „24 Std.“ nur, wenn wirklich 24 Stunden Daten da sind, sonst „seit HH:MM Uhr“.
 - **Sicherung:** Tag `vor-sw-frisch`, DB `/home/pingu/backups/vor-sw-frisch-2026-11-07/`. **Rücksetz-Weg:** `git revert` des Commits, pushen.
+
+### Nachtrag 07.11.2026: Verlauf rückwirkend, Tage zusammenführen (nur Server)
+- `POST /api/cockpit/verlauf` ersetzt den Verlauf nicht mehr, sondern führt zusammen: Tage, die nur der Server kennt, bleiben; kennen Mod und Server einen Tag, gilt je Wert das Größere. So bleibt ein rückwirkend eingespielter Verlauf erhalten, wenn der Mod alle 10 Min. seinen (kürzeren) Verlauf schickt.
+- Rückwirkend eingespielt aus den Claude-Code-Gesprächsprotokollen (`~/.claude/projects`, nur Zahlen/Zeiten/Helfer-Arten, Skript außerhalb des Repos). Limit-Spitzen (5 Std./Woche) stehen nicht in den Protokollen und fehlen für ältere Tage. Cowork-Protokolle liegen in Anthropics Cloud und lassen sich nicht rückwirkend lesen; Cowork zählt ab Plugin 0.4.3.
+- **Sicherung:** Tag `vor-verlauf-rueckwirkend`, DB `/home/pingu/backups/vor-verlauf-rueckwirkend-2026-11-07/data.db` (integrity ok).
+- **Rücksetz-Weg:** `git checkout vor-verlauf-rueckwirkend -- pocketbase/pb_hooks/wir_cockpit.pb.js`, committen, pushen (kein reset/force). Nur den Verlauf leeren: Datensatz `cockpitverlauf0` im Admin löschen (der Mod füllt ihn wieder ab heute).
