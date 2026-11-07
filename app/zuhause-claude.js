@@ -33,6 +33,8 @@
   const FONT = `'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif`;
   const SHADOW_CSS = `:host{all:initial;display:block;contain:content;font-family:${FONT};-webkit-font-smoothing:antialiased}
     .wrap{display:grid;gap:10px}
+    .wrap.tab{gap:8px}
+    .wrap.tab summary{padding:10px 14px}
     svg{display:block;width:100%;height:auto;border-radius:22px;font-family:${FONT};text-rendering:geometricPrecision}
     svg text{stroke:none;font-synthesis:none}
     details{border-radius:20px;background:linear-gradient(160deg,rgba(43,26,18,.95),rgba(10,7,6,.98));border:1px solid rgba(255,155,94,.28);overflow:hidden}
@@ -65,9 +67,9 @@
     svgRoot = hostEl.attachShadow({ mode: 'open' });
     lastLayout = layout; lastSvgs = {};
     const open = openSet();
-    svgRoot.innerHTML = `<style>${SHADOW_CSS}</style><div class="wrap">
+    svgRoot.innerHTML = `<style>${SHADOW_CSS}</style><div class="wrap${layout === 'tablet' ? ' tab' : ''}">
       <div class="part" data-k="ov"></div>
-      <details data-k="tiles"${open.has('tiles') ? ' open' : ''}><summary><span class="t">📊 Kontext, Cache &amp; Session</span><span class="s"></span></summary><div class="b part" data-k="tiles"></div></details>
+      ${layout === 'tablet' ? `<div class="part" data-k="tiles"></div>` : `<details data-k="tiles"${open.has('tiles') ? ' open' : ''}><summary><span class="t">📊 Kontext, Cache &amp; Session</span><span class="s"></span></summary><div class="b part" data-k="tiles"></div></details>`}
       <details data-k="more"${open.has('more') ? ' open' : ''}><summary><span class="t">💬 Letzter Chat &amp; Helfer</span><span class="s"></span></summary><div class="b part" data-k="more"></div></details>
     </div>`;
     svgRoot.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', () => saveOpen(dt.dataset.k, dt.open)));

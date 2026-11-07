@@ -492,11 +492,11 @@ function stackBar(x        , y        , w        , parts                        
   return `<clipPath id="sb-clip"><rect x="${x}" y="${y}" width="${w}" height="8" rx="4"/></clipPath><g clip-path="url(#sb-clip)">${segs}</g>`
 }
 
-function tileHead(x        , y        , icon        , label        , value        , sub        )         {
+function tileHead(x        , y        , icon        , label        , value        , sub        , subMax = 34)         {
   return `
     <text x="${x + 20}" y="${y + 32}" font-size="12" font-weight="600" fill="${C.ember}" letter-spacing="1.2">${icon} ${esc(label.toUpperCase())}</text>
     <text x="${x + 20}" y="${y + 72}" font-size="30" font-weight="800" fill="${C.cream}">${esc(value)}</text>
-    <text x="${x + 20}" y="${y + 94}" font-size="12" fill="${C.muted}">${esc(cut(sub, 34))}</text>`
+    <text x="${x + 20}" y="${y + 94}" font-size="12" fill="${C.muted}">${esc(cut(sub, subMax))}</text>`
 }
 
 /** Stile und Animationen, die alle Cockpit-Grafiken teilen. */
@@ -879,14 +879,14 @@ function statusBlock(d      , x        , y        , w        , statusChars      
 }
 
 /** Das Team in einer Reihe: vier Oktopusse mit Name und Tätigkeit. */
-function teamRow(d      , W        , top        , scale        , textMax        )                             {
+function teamRow(d      , W        , top        , scale        , textMax        , x0 = 0)                             {
   const n = Math.max(1, d.team.length)
   const cellW = W / n
   const octoH = 150 * scale
   const cells = d.team
     .map((m, i) => {
       const look = HELPER_LOOK[m.kind]
-      const cx = cellW * i + cellW / 2
+      const cx = x0 + cellW * i + cellW / 2
       const y = top + 34
       const dot = m.state === 'active' ? look.color : m.state === 'done' ? '#9BE3A8' : m.state === 'off' ? C.dim : C.muted
       // Schmal: Tätigkeit auf bis zu zwei Zeilen statt stark gekürzt.
@@ -905,9 +905,9 @@ function teamRow(d      , W        , top        , scale        , textMax        
     })
     .join('')
   const svg = `
-  <rect x="20" y="${top}" width="${W - 40}" height="1" fill="url(#d-line)"/>
-  ${label(16, top + 22, 'DAS TEAM')}
-  <text x="${W - 16}" y="${top + 22}" text-anchor="end" font-size="10.5" fill="${C.muted}">${esc(cut(d.teamNote, W < 400 ? 30 : 48))}</text>
+  <rect x="${x0 + 20}" y="${top}" width="${W - 40}" height="1" fill="url(#d-line)"/>
+  ${label(x0 + 16, top + 22, 'DAS TEAM')}
+  <text x="${x0 + W - 16}" y="${top + 22}" text-anchor="end" font-size="10.5" fill="${C.muted}">${esc(cut(d.teamNote, W < 400 ? 30 : 48))}</text>
   ${cells}`
   return { svg, h: 34 + octoH + 6 + 38 + (scale > 0.8 ? 0 : 12) }
 }
@@ -933,35 +933,42 @@ function overviewSvg(d      , layout        )         {
   ${rings}
   ${team.svg}`)
   }
-  // Tablet: links Okti mit Status, rechts die Ringe, darunter das Team.
-  const W = 640
-  const SB = 220
-  const head = statusBlock(d, 14, 214, SB - 28, 22, 30)
-  const leftH = 214 + head.h + 10
-  const r = 50
-  const step = (W - SB) / 3
-  const rings = d.rings.map((ring, i) => ringSvg(ring, Math.round(SB + step * i + step / 2), 70 + r, r, 14, 20)).join('')
-  const topH = Math.max(leftH, 70 + r * 2 + 50)
-  const team = teamRow(d, W, topH, 0.86, 22)
-  const H = topH + team.h
+  // Tablet im Breitformat, damit alles auf einen Bildschirm passt:
+  // links Okti mit Status, rechts oben die Ringe, rechts unten das Team.
+  const W = TABLET_W
+  const SB = 230
+  const MW = W - SB
+  const head = statusBlock(d, 14, 172, SB - 28, 26, 32)
+  const leftH = 172 + head.h + 8
+  const r = 42
+  const step = MW / 3
+  const rings = d.rings.map((ring, i) => ringSvg(ring, Math.round(SB + step * i + step / 2), 46 + r, r, 12, 22)).join('')
+  const teamTop = 46 + r * 2 + 38
+  const team = teamRow(d, MW, teamTop, 0.5, 24, SB)
+  const H = Math.max(leftH, teamTop + team.h - 4)
   return frame('ov', W, H, `
-  ${label(18, 32, 'OKTI · CLAUDE')}
-  <g transform="translate(16 38) scale(0.72)">${okti(d.mood, d.pose, d.isPoked)}</g>
+  ${label(18, 30, 'OKTI · CLAUDE')}
+  <g transform="translate(28 32) scale(0.55)">${okti(d.mood, d.pose, d.isPoked)}</g>
   ${head.svg}
-  <rect x="${SB}" y="24" width="1" height="${topH - 48}" fill="url(#d-vline)"/>
-  ${label(SB + 20, 32, 'LIMITS & KONTEXT')}
+  <rect x="${SB}" y="22" width="1" height="${H - 44}" fill="url(#d-vline)"/>
+  ${label(SB + 20, 30, 'LIMITS & KONTEXT')}
   ${rings}
   ${team.svg}`)
 }
 
+/** Breite der Tablet-Grafiken: breit statt hoch, damit alles auf eine Seite passt. */
+const TABLET_W = 900
+
 /** Die vier Kacheln (Kontext, Cache, Session, Wert) zum Aufklappen. */
 function tilesSvg(d      , layout        )         {
-  const W = layout === 'phone' ? 360 : 640
-  const cols = layout === 'phone' ? 1 : 2
+  const W = layout === 'phone' ? 360 : TABLET_W
+  // Handy: untereinander (zum Aufklappen). Tablet: alle vier in einer flachen Reihe, immer sichtbar.
+  const cols = layout === 'phone' ? 1 : 4
   const cw = W / cols
   const ch = 150
   const t = d.tiles
   const vw = cw - 40
+  const sm = Math.floor(vw / 6.4)
   const at = (i        ) => [(i % cols) * cw, Math.floor(i / cols) * ch]         
   const [x0, y0] = at(0)
   const [x1, y1] = at(1)
@@ -979,28 +986,28 @@ function tilesSvg(d      , layout        )         {
       : 'Noch keine Antwort gemessen …'
   const rows = 4 / cols
   const lines = Array.from({ length: rows - 1 }, (_, i) => `<rect x="20" y="${(i + 1) * ch}" width="${W - 40}" height="1" fill="url(#d-line)"/>`).join('')
-  const vline = cols === 2 ? `<rect x="${cw}" y="16" width="1" height="${ch * rows - 32}" fill="url(#d-vline)"/>` : ''
+  const vline = Array.from({ length: cols - 1 }, (_, i) => `<rect x="${cw * (i + 1)}" y="16" width="1" height="${ch * rows - 32}" fill="url(#d-vline)"/>`).join('')
   return frame('tl', W, ch * rows, `
   ${lines}${vline}
-  ${tileHead(x0, y0, '🧠', 'Kontext', t.ctx.value, t.ctx.sub)}
+  ${tileHead(x0, y0, '🧠', 'Kontext', t.ctx.value, t.ctx.sub, sm)}
   ${ctxBar}
   ${sparkline('k-sp1', x0 + 20, y0 + 114, vw, 24, t.ctx.series, ctxColor)}
-  ${tileHead(x1, y1, '⚡', 'Cache', t.cache.value, t.cache.sub)}
+  ${tileHead(x1, y1, '⚡', 'Cache', t.cache.value, t.cache.sub, sm)}
   ${stackBar(x1 + 20, y1 + 108, vw, [
     { v: t.cache.read, color: C.ember },
     { v: t.cache.write, color: C.amber },
     { v: t.cache.fresh, color: C.dim },
   ])}
-  <text x="${x1 + 20}" y="${y1 + 134}" font-size="11" fill="${C.muted}">${esc(cut(cacheLegend, Math.floor(vw / 5.6)))}</text>
-  ${tileHead(x2, y2, '⏱️', 'Session', t.session.value, t.session.sub)}
+  <text x="${x1 + 20}" y="${y1 + 134}" font-size="11" fill="${C.muted}">${esc(cut(cacheLegend, Math.floor(vw / 6.2)))}</text>
+  ${tileHead(x2, y2, '⏱️', 'Session', t.session.value, t.session.sub, sm)}
   ${bars(x2 + 20, y2 + 106, vw, 32, t.session.bars, C.ember)}
-  ${tileHead(x3, y3, '💸', 'Wert', t.cost.value, t.cost.sub)}
+  ${tileHead(x3, y3, '💸', 'Wert', t.cost.value, t.cost.sub, sm)}
   ${sparkline('k-sp2', x3 + 20, y3 + 108, vw, 30, t.cost.series, C.amber)}`)
 }
 
 /** Der zuletzt genutzte Chat und weitere Helfer außerhalb des Teams, zum Aufklappen. */
 function moreSvg(d      , layout        )         {
-  const W = layout === 'phone' ? 360 : 640
+  const W = layout === 'phone' ? 360 : TABLET_W
   const narrow = W < 400
   const chats = d.chats ?? []
   let y = 16

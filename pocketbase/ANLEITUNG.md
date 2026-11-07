@@ -1777,3 +1777,8 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Was neu ist:** Zuhause → Claude zeigt oben auf einen Blick Okti mit Status, Limits und Kontext (Ringe) und das ganze Team; Kacheln (Kontext, Cache, Session, Wert) und „Letzter Chat & Helfer“ sind Bereiche zum Aufklappen (Zustand bleibt per localStorage `zc-open`). Unter 560 px Kartenbreite Handy-Grafik (360 breit), sonst Tablet (640 breit); Grafiken aus `overviewSvg`/`tilesSvg`/`moreSvg` im Mod (`hooks/svg.ts`). Fernseher: auf dem Handy steht die Fernbedienung (mit Lautstärke) vor den Apps (`app/zuhause.css`, Regeln `#zh.z-phone #zh-p-tv … {order:…}`).
 **Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-mobil`.
 **Rücksetz-Weg:** `git checkout vor-cockpit-mobil -- app/zuhause-claude.js app/zuhause-claude-svg.js app/zuhause.css`, `wir-vNN` hochzählen, committen, pushen.
+
+### Nachtrag 07.11.2026: Cockpit-Tablet-Ansicht kompakt (wir-v57)
+**Was neu ist:** Tablet-Grafiken im Breitformat (900 breit): links Okti mit Status, rechts Ringe und Team; die vier Kacheln stehen immer sichtbar in einer flachen Reihe darunter, nur „Letzter Chat & Helfer“ ist aufklappbar. Passt quer (1024×768) und hochkant auf einen Bildschirm. Handy unverändert.
+**Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-tablet`.
+**Rücksetz-Weg:** `git checkout vor-cockpit-tablet -- app/zuhause-claude.js app/zuhause-claude-svg.js`, `wir-vNN` hochzählen, committen, pushen.
