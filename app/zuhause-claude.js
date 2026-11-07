@@ -118,6 +118,47 @@
     });
   }
 
+  // Cowork (07.11.2026): das Cowork-Plugin „cockpit-team“ meldet per Hook in den Datensatz `coworkstatus000`.
+  // War Cowork zuletzt dran, steht es unter „Zuletzt genutzter Chat“; arbeitet es gerade und Claude Code ruht,
+  // zeigt Okti, was Cowork tut, und der laufende Helfer leuchtet im Team.
+  const CW_ID = 'coworkstatus000';
+  const CW_BUSY = 3 * 60000, CW_SHOW = 60 * 60000;
+  let cw = null, cwSub = null;
+
+  function cwAge() { return cw && cw.data ? Date.now() - (Number(cw.sent_at) || Date.parse(cw.updated) || 0) : Infinity; }
+  // Millisekunden seit der letzten Cowork-Meldung, wenn Cowork gerade arbeitet; sonst 0.
+  function coworkBusy() {
+    const a = cwAge();
+    return a < CW_BUSY && cw.data.state !== 'idle' ? Math.max(1, a) : 0;
+  }
+
+  function withCowork(d, ccAge, ccStale) {
+    const age = cwAge();
+    if (age > CW_SHOW) return d;
+    // Lesbar machen: „cockpit-team:inky“ → „Inky“, MCP-Werkzeugnamen ohne Server-Vorsilbe.
+    const nice = t => String(t || '').replace(/cockpit-team:(\w+)/g, (_, k) => k[0].toUpperCase() + k.slice(1)).replace(/mcp__.*?__/g, '');
+    const c = { ...cw.data, text: nice(cw.data.text) };
+    const busy = coworkBusy();
+    const state = busy ? (c.state === 'thinking' ? 'thinking' : 'working') : 'idle';
+    const m = Math.round(age / 60000);
+    const ago = m < 1 ? 'gerade eben' : m < 60 ? `vor ${m} Min.` : `vor ${Math.floor(m / 60)} Std.`;
+    const out = { ...d };
+    if (ccStale || age < ccAge) {
+      out.chats = [{ title: c.title || 'Cowork-Aufgabe', project: 'Cowork', state, text: c.text || '', ago }];
+    }
+    if (busy && ccStale) {
+      out.mood = 'focused';
+      out.pose = state;
+      out.status = { state, text: `Cowork: ${c.text || 'arbeitet'}` };
+      out.saying = c.title ? `In Cowork: ${c.title}` : 'Ich arbeite gerade in Cowork.';
+      const kind = String(c.agent || '').replace(/^cockpit-team:/, '');
+      if (c.event !== 'SubagentStop' && (out.team || []).some(t => t.kind === kind)) {
+        out.team = out.team.map(t => t.kind === kind ? { ...t, state: 'active', text: 'hilft in Cowork' } : t);
+      }
+    }
+    return out;
+  }
+
   function render() {
     const el = document.getElementById('zc-card');
     if (!el || !G()) return;
@@ -138,8 +179,11 @@
           team: (d.team || []).map(m => ({ ...m, state: 'idle', text: G().HELPER_LOOK[m.kind]?.idle?.[0] || 'ruht' })),
         };
       }
-      const note = stale ? `Claude schläft · zuletzt aktiv vor ${mins(age)}` : `live · vor ${Math.max(0, Math.round(age / 1000))} s`;
-      const top = `<b>Claude</b><small class="${stale ? '' : 'zc-live'}">${G().esc(note)}</small>`;
+      const cwBusy = coworkBusy();
+      d = withCowork(d, age, stale);
+      const note = stale && cwBusy ? `Cowork aktiv · vor ${Math.round(cwBusy / 1000)} s`
+        : stale ? `Claude schläft · zuletzt aktiv vor ${mins(age)}` : `live · vor ${Math.max(0, Math.round(age / 1000))} s`;
+      const top = `<b>Claude</b><small class="${stale && !cwBusy ? '' : 'zc-live'}">${G().esc(note)}</small>`;
       if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; lastLayout = ''; el.innerHTML = `<div class="zc-top">${top}</div>`; }
       else if (el.firstElementChild.innerHTML !== top) el.firstElementChild.innerHTML = top;
       lastDash = d;
@@ -161,16 +205,23 @@
     if (sub || !pb()) return;
     sub = 'pending';
     try { rec = await pb().collection('cockpit').getOne(ID); } catch (_) { rec = null; }
+    try { cw = await pb().collection('cockpit').getOne(CW_ID); } catch (_) { cw = null; }
     render();
     try {
       sub = await pb().collection('cockpit').subscribe(ID, e => { rec = e.record; render(); });
     } catch (_) { sub = null; }
+    try {
+      cwSub = await pb().collection('cockpit').subscribe(CW_ID, e => { cw = e.record; render(); });
+    } catch (_) { cwSub = null; }
     tick = setInterval(render, 20000);   // "vor X s" und Schlaf-Erkennung ohne neue Daten
   }
   function stop() {
     if (typeof sub === 'function') sub();
     else if (sub) pb()?.collection('cockpit').unsubscribe(ID);
     sub = null;
+    if (typeof cwSub === 'function') cwSub();
+    else if (cwSub) pb()?.collection('cockpit').unsubscribe(CW_ID);
+    cwSub = null;
     if (tick) { clearInterval(tick); tick = 0; }
   }
   function sync() {

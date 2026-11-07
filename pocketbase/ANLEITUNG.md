@@ -1795,3 +1795,15 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Sicherung:** Tag `vor-cowork-status`, DB-Backup `/home/pingu/backups/vor-cowork-status-2026-11-07/`.
 
 **Rücksetz-Weg:** `git checkout vor-cowork-status -- pocketbase/pb_hooks/wir_cockpit.pb.js`, committen, pushen (kein reset/force). `cowork.key` löschen. Der Datensatz `coworkstatus000` darf bleiben oder im Admin gelöscht werden.
+
+### Nachtrag 07.11.2026: Cowork im Cockpit (wir-v58)
+
+**Was neu ist:** Zuhause → Claude zeigt jetzt auch Cowork. Die Hooks des Cowork-Plugins „cockpit-team“ laufen in Anthropics Cloud-VM und melden über `POST /api/cockpit/cowork` (siehe Nachtrag „Cowork-Status“) in den Datensatz `coworkstatus000`. Die App liest ihn zusätzlich per Realtime (`app/zuhause-claude.js`, `withCowork`).
+- War Cowork zuletzt dran (innerhalb 1 Std.), steht die Cowork-Aufgabe unter „Zuletzt genutzter Chat“ (Projekt „Cowork“).
+- Arbeitet Cowork gerade (Meldung jünger als 3 Min.) und Claude Code ruht, zeigt Okti „Cowork: …“, die Kopfzeile „Cowork aktiv“, und der laufende Helfer (Pip/Bubbles/Inky/Coral) leuchtet im Team.
+
+**Datenbank:** keine Änderung.
+
+**Sicherung:** Tag `vor-cowork-anzeige`, DB-Backup `/home/pingu/backups/vor-cowork-anzeige-2026-11-07/`.
+
+**Rücksetz-Weg:** `git checkout vor-cowork-anzeige -- app/zuhause-claude.js app/sw.js`, dann `CACHE` in `app/sw.js` auf eine neue Nummer über wir-v58 setzen, committen, pushen (kein reset/force).
