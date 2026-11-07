@@ -26,12 +26,34 @@
 
   const mins = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? `${m} Min.` : `${Math.floor(m / 60)} Std. ${m % 60} Min.`; };
 
+  // Das Cockpit-SVG bringt eigene Stile und Animationen mit (.page, .live, .shake …). Direkt im Dokument würden sie
+  // die ganze App treffen (alles wackelt) und die App-Stile das Cockpit (fette, fremde Schrift). Darum steckt es in
+  // einem Shadow-DOM: beide Seiten sehen die Stile der anderen nicht.
+  const SHADOW_CSS = `:host{all:initial;display:block;contain:content}
+    svg{display:block;width:100%;height:auto;border-radius:22px;font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+    svg text{stroke:none;font-synthesis:none}`;
+  let svgRoot = null, lastSvg = '';
+
+  function showSvg(el, svg) {
+    if (!svgRoot || !el.contains(svgRoot.host)) {
+      const hostEl = document.createElement('div');
+      hostEl.className = 'zc-svg';
+      el.appendChild(hostEl);
+      svgRoot = hostEl.attachShadow({ mode: 'open' });
+      lastSvg = '';
+    }
+    if (svg !== lastSvg) {
+      lastSvg = svg;
+      svgRoot.innerHTML = `<style>${SHADOW_CSS}</style>${svg}`;
+    }
+  }
+
   function render() {
     const el = document.getElementById('zc-card');
     if (!el || !G()) return;
-    let html;
     if (!rec || !rec.data || !rec.data.rings) {
-      html = '<p class="zc-empty">Noch keine Daten. Sobald auf dem PC eine Claude-Session mit dem Cockpit läuft, erscheint hier Okti mit seinem Team.</p>';
+      const html = '<p class="zc-empty">Noch keine Daten. Sobald auf dem PC eine Claude-Session mit dem Cockpit läuft, erscheint hier Okti mit seinem Team.</p>';
+      if (html !== lastHtml) { lastHtml = html; svgRoot = null; el.innerHTML = html; }
     } else {
       const age = Date.now() - (Number(rec.sent_at) || Date.parse(rec.updated) || 0);
       let d = rec.data;
@@ -42,13 +64,16 @@
           status: { state: 'sleepy', text: 'keine Session aktiv' },
           saying: 'Gerade läuft nichts. Bis gleich!',
           agents: [], moreAgents: 0,
+          chats: (d.chats || []).map(c => ({ ...c, state: 'idle', ago: 'ruht' })),
           team: (d.team || []).map(m => ({ ...m, state: 'idle', text: G().HELPER_LOOK[m.kind]?.idle?.[0] || 'ruht' })),
         };
       }
       const note = stale ? `Claude schläft · zuletzt aktiv vor ${mins(age)}` : `live · vor ${Math.max(0, Math.round(age / 1000))} s`;
-      html = `<div class="zc-top"><b>Claude</b><small class="${stale ? '' : 'zc-live'}">${G().esc(note)}</small></div><div class="zc-svg">${G().dashboardSvg(d)}</div>`;
+      const top = `<b>Claude</b><small class="${stale ? '' : 'zc-live'}">${G().esc(note)}</small>`;
+      if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; el.innerHTML = `<div class="zc-top">${top}</div>`; }
+      else if (el.firstElementChild.innerHTML !== top) el.firstElementChild.innerHTML = top;
+      showSvg(el, G().dashboardSvg(d));
     }
-    if (html !== lastHtml) { lastHtml = html; el.innerHTML = html; }
   }
 
   async function start() {

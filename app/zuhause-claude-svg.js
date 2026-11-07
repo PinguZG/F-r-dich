@@ -85,6 +85,18 @@ const HELPER_LOOK                                                               
                     
                
               
+                                                                     
+                    
+ 
+
+/** Ein Chat in der Liste „CHATS“. */
+                        
+               
+                 
+                                        
+              
+                 
+             
  
 
 const FONT = "font-family=\"'Segoe UI', system-ui, -apple-system, sans-serif\""
@@ -596,8 +608,37 @@ function dashboardSvg(d      )         {
   const sideH = rowsTop + Math.max(1, d.agents.length) * rowH + (d.moreAgents > 0 ? 24 : 6)
   const running = d.agents.filter(a => !a.isDone).length
 
+  // ---- Mitte: alle Chats mit Cockpit, an welchem Claude gerade arbeitet
+  const chats = d.chats ?? []
+  const chatsTop = Math.max(mainH, sideH) + 8
+  const chatRowH = 36
+  const chatsH = chats.length ? 46 + chats.length * chatRowH : 0
+  const busy = chats.filter(c => c.state !== 'idle').length
+  const chatRows = chats
+    .map((c, i) => {
+      const y = chatsTop + 44 + i * chatRowH
+      const color = c.state === 'working' ? C.ember : c.state === 'thinking' ? C.amber : C.dim
+      const right = c.state === 'idle' ? `wartet · ${c.ago}` : c.text
+      return `
+    <g>
+      <title>${esc(`${c.title} (${c.project}): ${right}`)}</title>
+      <rect x="16" y="${y}" width="${W - 32}" height="${chatRowH - 6}" rx="10" fill="#FFFFFF" fill-opacity="${c.state === 'idle' ? 0.03 : 0.07}" stroke="${color}" stroke-opacity="${c.state === 'idle' ? 0.12 : 0.45}"/>
+      <circle cx="32" cy="${y + 15}" r="4.5" fill="${color}" class="${c.state === 'idle' ? '' : 'live'}"/>
+      <text x="46" y="${y + 19.5}" font-size="12.5" font-weight="600" fill="${c.state === 'idle' ? C.muted : C.cream}">${esc(cut(c.title, 34))}<tspan font-size="10.5" font-weight="400" fill="${C.dim}"> ${esc(cut(c.project, 18))}${c.isThis ? ' · dieser Chat' : ''}</tspan></text>
+      <text x="${W - 30}" y="${y + 19.5}" text-anchor="end" font-size="11.5" fill="${c.state === 'idle' ? C.dim : color}">${esc(cut(right, 30))}</text>
+    </g>`
+    })
+    .join('')
+  const chatsSvg = chats.length
+    ? `
+  <rect x="24" y="${chatsTop - 8}" width="${W - 48}" height="1" fill="url(#d-line)"/>
+  <text x="20" y="${chatsTop + 22}" font-size="12" font-weight="600" fill="${C.ember}" letter-spacing="1.5">CHATS</text>
+  <text x="${W - 20}" y="${chatsTop + 22}" text-anchor="end" font-size="11" fill="${C.muted}">${busy ? `Claude arbeitet in ${busy === 1 ? 'einem Chat' : `${busy} Chats`}` : 'alle warten auf dich'}</text>
+  ${chatRows}`
+    : ''
+
   // ---- unten: das feste Team, immer sichtbar
-  const teamTop = Math.max(mainH, sideH) + 8
+  const teamTop = chatsTop + chatsH
   const cellW = W / Math.max(1, d.team.length)
   const teamH = 252
   const teamCells = d.team
@@ -722,11 +763,11 @@ function dashboardSvg(d      )         {
       <circle class="blob2" cx="${W - 60}" cy="90" r="110" fill="url(#d-blob)"/>
       <circle cx="90" cy="150" r="110" fill="url(#d-blob)" opacity="0.8"/>
     </g>
-    <rect width="${SB}" height="${teamTop - 8}" fill="#FFFFFF" fill-opacity="0.025"/>
+    <rect width="${SB}" height="${chatsTop - 8}" fill="#FFFFFF" fill-opacity="0.025"/>
     <rect width="${W}" height="${H * 0.4}" fill="url(#d-sheen)"/>
   </g>
   <rect x="0.6" y="0.6" width="${W - 1.2}" height="${H - 1.2}" rx="25.5" fill="none" stroke="url(#d-edge)" stroke-width="1.3"/>
-  <rect x="${SB}" y="24" width="1" height="${teamTop - 48}" fill="url(#d-vline)"/>
+  <rect x="${SB}" y="24" width="1" height="${chatsTop - 48}" fill="url(#d-vline)"/>
   <rect x="${SB + 20}" y="${tileTop}" width="${MW - 40}" height="1" fill="url(#d-line)"/>
   <rect x="${SB + 20}" y="${tileTop + ch}" width="${MW - 40}" height="1" fill="url(#d-line)"/>
   <rect x="${SB + cw}" y="${tileTop + 16}" width="1" height="${ch * 2 - 32}" fill="url(#d-vline)"/>
@@ -754,6 +795,9 @@ function dashboardSvg(d      )         {
 
   <!-- rechts: Kacheln -->
   ${tiles}
+
+  <!-- Mitte: die Chats -->
+  ${chatsSvg}
 
   <!-- unten: das Team -->
   ${teamSvg}

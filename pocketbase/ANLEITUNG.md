@@ -1756,3 +1756,14 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Sicherung:** Tag `vor-claude-cockpit`, DB-Backup `/home/pingu/backups/vor-claude-cockpit-2026-11-07/`.
 
 **Rücksetz-Weg:** `git checkout vor-claude-cockpit -- app/index.html app/sw.js` und die neuen Dateien `app/zuhause-claude*.{js,css}`, `pocketbase/pb_hooks/wir_cockpit.pb.js` entfernen, committen, pushen (kein reset/force). Die Collection `cockpit` darf bleiben (stört nicht) oder im Admin gelöscht werden. Den Mod stoppt man, indem man `wir.key` im Mod-Ordner löscht.
+
+### Nachtrag 07.11.2026: Cockpit abgeschottet + Chat-Liste (wir-v54)
+**Was neu ist:** Das Cockpit-SVG steckt jetzt in einem Shadow-DOM. Vorher galten seine Animationen (`.page`, `.live`, `.shake` …) für die ganze App (alles wackelte) und die App-Stile für das Cockpit (fette Schrift mit Kontur). Neu im Cockpit: die Liste „CHATS“ (an welchem Claude-Chat auf dem PC gerade gearbeitet wird); nur der zuletzt aktive Chat sendet.
+- Mod-Ordner jetzt dauerhaft: `C:\Users\Danie\.claude\mods\cockpit` (dort liegt auch `wir.key`), geladen über `CLAUDE_CODE_PLUGIN_DIRS` in `~/.claude/settings.json`.
+- `app/zuhause-claude-svg.js` neu erzeugt aus `hooks/svg.ts` (Node: `stripTypeScriptTypes`, `export ` entfernt, in IIFE mit `window.WIR_COCKPIT_SVG`).
+
+**Datenbank:** unverändert.
+
+**Sicherung:** Tag `vor-cockpit-shadow`, DB-Backup `/home/pingu/backups/vor-cockpit-shadow-2026-11-07/`.
+
+**Rücksetz-Weg:** `git checkout vor-cockpit-shadow -- app/sw.js app/zuhause-claude.js app/zuhause-claude.css app/zuhause-claude-svg.js`, `wir-vNN` in `app/sw.js` hochzählen, committen, pushen (kein reset/force).
