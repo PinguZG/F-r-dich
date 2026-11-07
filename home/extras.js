@@ -265,20 +265,36 @@ module.exports = function extras({ log, api, configFile, backend, meta }) {
   const tageAlt = iso => (iso ? (Date.now() - Date.parse(iso)) / 86400000 : NaN);
   let pbVersion = { at: 0, v: '' };
 
+  // Verlauf für die Kurven im System-Reiter: Last (in % der Kerne), RAM und Speicher (belegt in %), alle 5 Min. ein Punkt,
+  // 24 Stunden lang, nur im Speicher (nach einem Neustart fängt die Kurve neu an).
+  const KURVE_MS = 5 * MIN, KURVE_N = 288;
+  const kurve = [];
+  function merke(p) {
+    const now = Date.now(), last = kurve[kurve.length - 1];
+    if (last && now - last.t < KURVE_MS - 20000) return;
+    kurve.push({ t: now, ...p });
+    if (kurve.length > KURVE_N) kurve.splice(0, kurve.length - KURVE_N);
+  }
+  const r1 = v => (Number.isFinite(v) ? Math.round(v * 10) / 10 : null);
+
   async function vps() {
     const items = [];
     const cores = os.cpus().length || 1, [l1, l5, l15] = os.loadavg();
+    const p = { last: r1((l1 / cores) * 100), ram: null, disk: null };
     items.push({ k: 'last', name: 'Last', wert: [l1, l5, l15].map(x => x.toFixed(2).replace('.', ',')).join(' · '), info: `${cores} Kerne`, a: ampel(l5 / cores, X.sys.sw.last) });
     try {
       const mi = Object.fromEntries(fs.readFileSync('/proc/meminfo', 'utf8').split('\n').map(l => l.split(/:\s+/)).filter(x => x[1]).map(([k, v]) => [k, parseInt(v, 10)]));
       const used = 100 - (mi.MemAvailable / mi.MemTotal) * 100;
+      p.ram = r1(used);
       items.push({ k: 'vps_ram', name: 'RAM', wert: `${Math.round(used)} %`, info: `${(mi.MemAvailable / 1048576).toFixed(1).replace('.', ',')} von ${(mi.MemTotal / 1048576).toFixed(1).replace('.', ',')} GB frei`, a: ampel(used, X.sys.sw.ram) });
     } catch (_) { items.push({ k: 'vps_ram', name: 'RAM', wert: '–', a: 'n' }); }
     try {
       const s = await fs.promises.statfs('/');
       const used = 100 - (s.bavail / s.blocks) * 100;
+      p.disk = r1(used);
       items.push({ k: 'vps_disk', name: 'Speicher', wert: `${(s.bavail * s.bsize / 1e9).toFixed(1).replace('.', ',')} GB frei`, info: `${Math.round(used)} % belegt`, a: ampel(used, X.sys.sw.festplatte) });
     } catch (_) { items.push({ k: 'vps_disk', name: 'Speicher', wert: '–', a: 'n' }); }
+    merke(p);
     const up = os.uptime(), d = Math.floor(up / 86400), h = Math.floor(up % 86400 / 3600);
     items.push({ k: 'uptime', name: 'Laufzeit', wert: d ? `${d} T ${h} Std.` : `${h} Std. ${Math.floor(up % 3600 / 60)} Min.`, a: 'g' });
     if (X.sys.dienste.length) {
@@ -374,7 +390,16 @@ module.exports = function extras({ log, api, configFile, backend, meta }) {
       { k: 'ha', name: 'Home Assistant · Pi', items: h.items, updates: h.updates, a: worst(h.items) },
       { k: 'backup', name: 'Backups', items: b, a: worst(b) },
     ];
-    return { gruppen, a: worst(gruppen.flatMap(g => g.items)), at: Date.now() };
+    // Testmodus (lokale Vorschau): ausgedachte 24-Stunden-Kurve, damit der Reiter etwas zu zeigen hat
+    if (meta.mode !== 'live' && kurve.length < 12) {
+      const now = Date.now();
+      const test = Array.from({ length: KURVE_N }, (_, i) => {
+        const t = now - (KURVE_N - 1 - i) * KURVE_MS, h = new Date(t).getHours() + new Date(t).getMinutes() / 60;
+        return { t, last: r1(8 + 10 * Math.max(0, Math.sin((h - 7) / 24 * 2 * Math.PI)) + (i % 7) * 1.3), ram: r1(41 + 6 * Math.sin(i / 23) + (i % 5)), disk: r1(52 + i * 0.004) };
+      });
+      return { gruppen, a: worst(gruppen.flatMap(g => g.items)), at: now, kurve: test, test: true };
+    }
+    return { gruppen, a: worst(gruppen.flatMap(g => g.items)), at: Date.now(), kurve: kurve.slice() };
   }
   async function system() {
     if (sysCache.data && Date.now() - sysCache.at < 30000) return sysCache.data;

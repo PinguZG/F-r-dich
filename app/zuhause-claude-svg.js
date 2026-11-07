@@ -30,7 +30,7 @@ const C = {
                                                         
  
 
-                                                                         
+                                                                                             
 
                                                                                                                             
 
@@ -59,6 +59,18 @@ const HELPER_LOOK                                                               
     name: 'Coral',
     role: 'Handwerk · kleine Fixes',
     idle: ['poliert den Schraubenschlüssel', 'misst zweimal, schraubt einmal', 'räumt die Werkbank auf', 'prüft den Helm'],
+  },
+  shelly: {
+    color: '#7BD88F',
+    name: 'Shelly',
+    role: 'Wache · prüft Sicherheit',
+    idle: ['dreht ihre Runde', 'poliert das Schild', 'prüft die Schlösser', 'zählt offene Türen: keine'],
+  },
+  luma: {
+    color: '#7FC8FF',
+    name: 'Luma',
+    role: 'Coach · spart Limit',
+    idle: ['rechnet den Wochenschnitt', 'malt Kurven', 'sammelt Spartipps', 'stoppt die Zeit'],
   },
   generic: { color: '#FF9B5E', name: 'Helfer', role: 'Allzweck', idle: ['wartet'] },
 }
@@ -302,6 +314,12 @@ function accessory(kind            )         {
     case 'coral': // Schraubenschlüssel
       return `<path d="M 27 31 L 35 23" stroke="#5A5A66" stroke-width="3" stroke-linecap="round"/>
         <path d="M 33 19 a 4 4 0 1 0 5 5 l -2.5 -0.5 l -2 -2 Z" fill="#8A8A96"/>`
+    case 'shelly': // Schild
+      return `<path d="M 26 20 L 32 18 L 38 20 L 38 26 Q 38 31 32 34 Q 26 31 26 26 Z" fill="#2E6B45" stroke="#1C3F2A" stroke-width="1.3"/>
+        <path d="M 29 26 l 2.2 2.2 l 4 -4.4" stroke="#DFF7E5" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    case 'luma': // Klemmbrett mit Kurve
+      return `<rect x="25" y="19" width="12" height="15" rx="2" fill="#F6E7DA" stroke="#24476A" stroke-width="1.3"/>
+        <path d="M 27.5 30 L 30.5 27 L 32.5 28.5 L 35 23.5" stroke="#2F80C9" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
     default:
       return ''
   }
@@ -409,6 +427,34 @@ function helperOcto(kind                    , state                     )       
         <g class="${active ? 'twist' : ''}">
           <path d="M 86 104 L 100 86" stroke="#7A7A86" stroke-width="5" stroke-linecap="round"/>
           <path d="M 97 80 a 7 7 0 1 0 8 9 l -4 -1 l -3 -3 Z" fill="#9A9AA6"/>
+        </g>`
+      break
+    case 'shelly': // Wachhelm mit Visier, Umhang, Schild mit Häkchen
+      back = `<path d="M 32 70 Q 60 78 88 70 L 98 118 Q 60 128 22 118 Z" fill="#245A3A" opacity="0.85"/>`
+      front = `
+        <path d="M 28 46 Q 30 14 60 12 Q 90 14 92 46 Z" fill="#9AA7B0"/>
+        <path d="M 28 46 Q 30 14 60 12 Q 90 14 92 46" stroke="#6E7C86" stroke-width="2" fill="none"/>
+        <path d="M 60 12 L 60 46" stroke="#6E7C86" stroke-width="2.4"/>
+        <path d="M 56 8 Q 60 -2 64 8 Z" fill="#E8825A"/>
+        <rect x="26" y="43" width="68" height="6" rx="3" fill="#7F8C96"/>
+        <g class="${active ? 'scan' : ''}">
+          <path d="M 80 84 L 100 80 L 112 84 L 112 98 Q 112 110 96 118 Q 80 110 80 98 Z" fill="#2E6B45" stroke="#1C3F2A" stroke-width="2.2"/>
+          <path d="M 87 98 l 6 6 l 11 -12" stroke="#DFF7E5" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>`
+      break
+    case 'luma': // Schirmmütze, Trillerpfeife, Klemmbrett mit Kurve
+      front = `
+        <path d="M 30 42 Q 60 10 90 42 Z" fill="#2F80C9"/>
+        <path d="M 26 42 Q 60 50 94 42 Q 60 46 26 42 Z" fill="#24639E"/>
+        <path d="M 88 40 Q 104 40 106 46 Q 96 47 86 44 Z" fill="#24639E"/>
+        <circle cx="60" cy="18" r="2.6" fill="#BFE3FF"/>
+        <path d="M 46 80 Q 60 96 74 80" stroke="#F6E7DA" stroke-width="1.6" fill="none"/>
+        <rect x="56" y="90" width="10" height="6" rx="3" fill="#C9D3DC" stroke="#7A8794" stroke-width="1"/>
+        <g class="${active ? 'page' : ''}">
+          <rect x="84" y="80" width="26" height="32" rx="3" fill="#F6E7DA" stroke="#24476A" stroke-width="2"/>
+          <rect x="92" y="77" width="10" height="5" rx="1.5" fill="#7A8794"/>
+          <path d="M 88 104 L 94 97 L 99 100 L 106 89" stroke="#2F80C9" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="106" cy="89" r="2" fill="#E8825A"/>
         </g>`
       break
   }
@@ -723,24 +769,31 @@ function dashboardSvg(d      )         {
 
   // ---- unten: das feste Team, immer sichtbar
   const teamTop = chatsTop + chatsH
-  const cellW = W / Math.max(1, d.team.length)
-  const teamH = 252
+  // Bis vier Helfer in einer Reihe, mehr (sechs) in zwei Reihen zu je drei, etwas kleiner.
+  const perRow = d.team.length > 4 ? 3 : Math.max(1, d.team.length)
+  const teamRows = Math.ceil(d.team.length / perRow)
+  const octoScale = teamRows > 1 ? 0.82 : 1
+  const teamRowH = teamRows > 1 ? 178 : 212
+  const cellW = W / perRow
+  const teamH = 40 + teamRows * teamRowH
   const teamCells = d.team
-    .map((m, i) => {
+    .map((m, idx) => {
       const look = HELPER_LOOK[m.kind]
+      const i = idx % perRow
       const cx = cellW * i + cellW / 2
-      const y = teamTop + 40
+      const y = teamTop + 40 + Math.floor(idx / perRow) * teamRowH - (teamRows > 1 ? 4 : 0)
+      const ty = y + 140 * octoScale - 140
       const dot =
         m.state === 'active' ? look.color : m.state === 'done' ? '#9BE3A8' : m.state === 'off' ? C.dim : C.muted
       const statusText = cut(m.text, 24)
       return `
     <g>
       <title>${esc(`${look.name} (${m.model}): ${look.role}. ${m.text}`)}</title>
-      <g transform="translate(${(cx - 60).toFixed(1)} ${y})">${helperOcto(m.kind, m.state)}</g>
-      <text x="${cx.toFixed(1)}" y="${y + 158}" text-anchor="middle" font-size="15" font-weight="800" fill="${m.state === 'off' ? C.dim : look.color}">${esc(look.name)}<tspan font-size="10" font-weight="500" fill="${C.dim}"> ${esc(m.model)}</tspan></text>
-      <text x="${cx.toFixed(1)}" y="${y + 174}" text-anchor="middle" font-size="10.5" fill="${C.dim}">${esc(look.role)}</text>
-      <circle cx="${(cx - statusText.length * 2.9 - 8).toFixed(1)}" cy="${y + 187}" r="3.2" fill="${dot}" class="${m.state === 'active' ? 'live' : ''}"/>
-      <text x="${cx.toFixed(1)}" y="${y + 191}" text-anchor="middle" font-size="11.5" font-style="${m.state === 'idle' ? 'italic' : 'normal'}" fill="${m.state === 'active' ? C.cream : C.muted}">${esc(statusText)}</text>
+      <g transform="translate(${(cx - 60 * octoScale).toFixed(1)} ${y}) scale(${octoScale})">${helperOcto(m.kind, m.state)}</g>
+      <text x="${cx.toFixed(1)}" y="${ty + 158}" text-anchor="middle" font-size="15" font-weight="800" fill="${m.state === 'off' ? C.dim : look.color}">${esc(look.name)}<tspan font-size="10" font-weight="500" fill="${C.dim}"> ${esc(m.model)}</tspan></text>
+      <text x="${cx.toFixed(1)}" y="${ty + 174}" text-anchor="middle" font-size="10.5" fill="${C.dim}">${esc(look.role)}</text>
+      <circle cx="${(cx - statusText.length * 2.9 - 8).toFixed(1)}" cy="${ty + 187}" r="3.2" fill="${dot}" class="${m.state === 'active' ? 'live' : ''}"/>
+      <text x="${cx.toFixed(1)}" y="${ty + 191}" text-anchor="middle" font-size="11.5" font-style="${m.state === 'idle' ? 'italic' : 'normal'}" fill="${m.state === 'active' ? C.cream : C.muted}">${esc(statusText)}</text>
     </g>`
     })
     .join('')
@@ -881,13 +934,22 @@ function statusBlock(d      , x        , y        , w        , statusChars      
 /** Das Team in einer Reihe: vier Oktopusse mit Name und Tätigkeit. */
 function teamRow(d      , W        , top        , scale        , textMax        , x0 = 0)                             {
   const n = Math.max(1, d.team.length)
-  const cellW = W / n
+  // Zu schmal für alle nebeneinander (z. B. sechs auf dem Handy): auf zwei Reihen verteilen.
+  const perRow = W / n < 120 * scale + 14 ? Math.ceil(n / 2) : n
+  const rows = Math.ceil(n / perRow)
+  const cellW = W / perRow
   const octoH = 150 * scale
+  const rowH = octoH + 6 + 38 + (scale > 0.8 ? 0 : 12)
+  textMax = Math.min(textMax, Math.max(10, Math.floor(cellW / 5.6)))
   const cells = d.team
-    .map((m, i) => {
+    .map((m, idx) => {
       const look = HELPER_LOOK[m.kind]
-      const cx = x0 + cellW * i + cellW / 2
-      const y = top + 34
+      const i = idx % perRow
+      const row = Math.floor(idx / perRow)
+      const inRow = row === rows - 1 ? n - row * perRow : perRow
+      const off = ((perRow - inRow) * cellW) / 2
+      const cx = x0 + off + cellW * i + cellW / 2
+      const y = top + 34 + row * rowH
       const dot = m.state === 'active' ? look.color : m.state === 'done' ? '#9BE3A8' : m.state === 'off' ? C.dim : C.muted
       // Schmal: Tätigkeit auf bis zu zwei Zeilen statt stark gekürzt.
       const lines = scale > 0.8 ? [cut(m.text, textMax)] : wrap(m.text, textMax, 2)
@@ -909,7 +971,7 @@ function teamRow(d      , W        , top        , scale        , textMax        
   ${label(x0 + 16, top + 22, 'DAS TEAM')}
   <text x="${x0 + W - 16}" y="${top + 22}" text-anchor="end" font-size="10.5" fill="${C.muted}">${esc(cut(d.teamNote, W < 400 ? 30 : 48))}</text>
   ${cells}`
-  return { svg, h: 34 + octoH + 6 + 38 + (scale > 0.8 ? 0 : 12) }
+  return { svg, h: 34 + rows * rowH }
 }
 
 /** Auf einen Blick: Okti mit Status, Limits und Kontext als Ringe, das ganze Team. */

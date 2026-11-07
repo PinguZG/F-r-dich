@@ -67,12 +67,16 @@
     svgRoot = hostEl.attachShadow({ mode: 'open' });
     lastLayout = layout; lastSvgs = {};
     const open = openSet();
-    svgRoot.innerHTML = `<style>${SHADOW_CSS}</style><div class="wrap${layout === 'tablet' ? ' tab' : ''}">
+    svgRoot.innerHTML = `<style>${SHADOW_CSS}${window.WIR_LUMA?.CSS || ''}</style><div class="wrap${layout === 'tablet' ? ' tab' : ''}">
       <div class="part" data-k="ov"></div>
       ${layout === 'tablet' ? `<div class="part" data-k="tiles"></div>` : `<details data-k="tiles"${open.has('tiles') ? ' open' : ''}><summary><span class="t">📊 Kontext, Cache &amp; Session</span><span class="s"></span></summary><div class="b part" data-k="tiles"></div></details>`}
       <details data-k="more"${open.has('more') ? ' open' : ''}><summary><span class="t">💬 Letzter Chat &amp; Helfer</span><span class="s"></span></summary><div class="b part" data-k="more"></div></details>
+      <details data-k="luma"${open.has('luma') ? ' open' : ''}><summary><span class="t">🪼 Luma · Limit-Coach</span><span class="s"></span></summary><div class="b" data-h="luma"></div></details>
+      <details data-k="verlauf"${open.has('verlauf') ? ' open' : ''}><summary><span class="t">📈 Verlauf</span><span class="s"></span></summary><div class="b vl" data-h="verlauf"></div></details>
     </div>`;
-    svgRoot.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', () => saveOpen(dt.dataset.k, dt.open)));
+    svgRoot.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', () => { saveOpen(dt.dataset.k, dt.open); if (dt.open) showExtras(); }));
+    svgRoot.addEventListener('click', onShadowClick);
+    lastExtras = {};
   }
 
   function showPart(k, svg) {
@@ -85,6 +89,45 @@
     const cur = box.querySelector('svg');
     if (!cur || !next) { box.innerHTML = svg; return; }
     morph(cur, next);
+  }
+
+  // Luma (Limit-Coach) und Verlauf: HTML aus dem Datensatz `cockpitverlauf0`, nur neu gesetzt, wenn sich etwas ändert
+  // und nur, solange der Bereich offen ist (der Verlauf ist ein großes SVG).
+  const VL_ID = 'cockpitverlauf0', SPAN_KEY = 'zc-luma-span';
+  let vl = null, vlSub = null, lastExtras = {};
+  const span = () => { try { return localStorage.getItem(SPAN_KEY) || 'woche'; } catch (_) { return 'woche'; } };
+  function setHtml(k, html) {
+    const box = svgRoot && svgRoot.querySelector(`[data-h="${k}"]`);
+    if (box && lastExtras[k] !== html) { lastExtras[k] = html; box.innerHTML = html; }
+  }
+  function showExtras() {
+    if (!svgRoot) return;
+    const days = vl && vl.data && vl.data.days;
+    const now = Date.now();
+    const L = window.WIR_LUMA, V = window.WIR_COCKPIT_VERLAUF;
+    if (L) {
+      const a = days ? L.analyse(vl.data, now, span()) : null;
+      setSummary('luma', a ? ({ besser: '↘ sparsamer', schlechter: '↗ teurer', gleich: '→ stabil', neu: 'sammelt Daten' })[a.tr.dir] + ` · ${a.sp.label}` : 'wartet auf Daten');
+      if (svgRoot.querySelector('details[data-k="luma"]')?.open) setHtml('luma', L.html(vl && vl.data, now, span()));
+    }
+    if (V) {
+      const s = days ? V.summarize(vl.data, now) : null;
+      setSummary('verlauf', s ? `heute ${s.today.turns} · 7 Tage ${s.weekTurns} Antworten` : '');
+      if (svgRoot.querySelector('details[data-k="verlauf"]')?.open) {
+        setHtml('verlauf', s ? V.historySvg(s) : '<p class="vl-empty">Noch kein Verlauf. Er kommt, sobald das Cockpit in Claude Code läuft.</p>');
+      }
+    }
+  }
+  function onShadowClick(e) {
+    const b = e.target.closest('[data-span]');
+    if (b) { try { localStorage.setItem(SPAN_KEY, b.dataset.span); } catch (_) { /* nur diese Sitzung */ } showExtras(); return; }
+    const hit = e.target.closest('.hit');
+    if (hit) {
+      const chart = hit.closest('.lu-chart'), tip = chart && chart.querySelector('.lu-tip');
+      chart.querySelectorAll('.hit.sel').forEach(x => x.classList.remove('sel'));
+      hit.classList.add('sel');
+      if (tip) { tip.textContent = hit.dataset.tip; tip.classList.add('set'); }
+    }
   }
 
   function setSummary(k, text) {
@@ -103,6 +146,7 @@
     const chat = (d.chats || [])[0];
     const busy = (d.agents || []).filter(a => !a.isDone).length;
     setSummary('more', [chat && chat.title, busy ? `${busy} Helfer aktiv` : ''].filter(Boolean).join(' · '));
+    showExtras();
   }
 
   // Nur ändern, was sich geändert hat: so laufen Animationen weiter und nichts flackert beim Aktualisieren.
@@ -145,6 +189,18 @@
     const out = { ...d };
     if (ccStale || age < ccAge) {
       out.chats = [{ title: c.title || 'Cowork-Aufgabe', project: 'Cowork', state, text: c.text || '', ago }];
+      // Kontext und Cache gehören zum zuletzt benutzten Chat: hier Cowork (seit Plugin 0.4.0 mitgeschickt)
+      if (c.ctx > 0) {
+        const fk = G().fmtK, win = c.win || 200000, p = Math.min(100, Math.round((c.ctx / win) * 100));
+        const all = (c.fresh || 0) + (c.cread || 0) + (c.cwrite || 0);
+        out.rings = (out.rings || []).map(r => r.label === 'Kontext'
+          ? { ...r, pct: p, detail: `${fk(c.ctx)} / ${fk(win)}`, tooltip: 'Wie voll das Gedächtnis des Cowork-Chats ist.' } : r);
+        out.tiles = {
+          ...out.tiles,
+          ctx: { value: fk(c.ctx), sub: `von ${fk(win)} Tokens · ${p}% · Cowork`, pct: p, series: [] },
+          cache: { value: all ? `${Math.round(((c.cread || 0) / all) * 100)}%` : '–', sub: 'aus dem Cache (Cowork)', read: c.cread || 0, write: c.cwrite || 0, fresh: c.fresh || 0 },
+        };
+      }
     }
     if (busy && ccStale) {
       out.mood = 'focused';
@@ -206,6 +262,7 @@
     sub = 'pending';
     try { rec = await pb().collection('cockpit').getOne(ID); } catch (_) { rec = null; }
     try { cw = await pb().collection('cockpit').getOne(CW_ID); } catch (_) { cw = null; }
+    try { vl = await pb().collection('cockpit').getOne(VL_ID); } catch (_) { vl = null; }
     render();
     try {
       sub = await pb().collection('cockpit').subscribe(ID, e => { rec = e.record; render(); });
@@ -213,6 +270,9 @@
     try {
       cwSub = await pb().collection('cockpit').subscribe(CW_ID, e => { cw = e.record; render(); });
     } catch (_) { cwSub = null; }
+    try {
+      vlSub = await pb().collection('cockpit').subscribe(VL_ID, e => { vl = e.record; showExtras(); });
+    } catch (_) { vlSub = null; }
     tick = setInterval(render, 20000);   // "vor X s" und Schlaf-Erkennung ohne neue Daten
   }
   function stop() {
@@ -222,6 +282,9 @@
     if (typeof cwSub === 'function') cwSub();
     else if (cwSub) pb()?.collection('cockpit').unsubscribe(CW_ID);
     cwSub = null;
+    if (typeof vlSub === 'function') vlSub();
+    else if (vlSub) pb()?.collection('cockpit').unsubscribe(VL_ID);
+    vlSub = null;
     if (tick) { clearInterval(tick); tick = 0; }
   }
   function sync() {
