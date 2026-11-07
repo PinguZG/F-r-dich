@@ -1827,3 +1827,9 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Cockpit-Mod (nicht im Repo):** sendet an die Wir-App jetzt auch bei geschlossenem Cockpit-Panel (Takt 5 s, nur bei Änderung); hängende Helfer gelten nach 30 Min. als beendet.
 - **Sicherung:** Tag `vor-cockpit-umschalter`, DB `/home/pingu/backups/vor-cockpit-umschalter-2026-11-07/data.db` (integrity ok).
 - **Rücksetz-Weg:** `git checkout vor-cockpit-umschalter -- app/zuhause-claude.js app/zuhause-claude.css pocketbase/pb_hooks/wir_cockpit.pb.js`, dann `CACHE` in `app/sw.js` auf eine Nummer über wir-v60 setzen, committen, pushen (kein reset/force). Der Datensatz `coworkverlauf00` kann bleiben oder im Admin gelöscht werden.
+
+### Nachtrag 07.11.2026: App-Dateien immer frisch (wir-v61)
+- Problem: Nach dem Update auf wir-v60 zeigte das Tablet die neuen Zuhause-Reiter nicht. Der Server schickt kein Cache-Control, der Browser durfte Dateien daher „heuristisch“ aus seinem eigenen Cache nehmen – der Service Worker bekam alte Dateien trotz neuer Version.
+- Lösung `app/sw.js`: Dateien werden mit `cache: 'no-cache'` geholt (Browser fragt immer beim Server nach, unverändert = kurze 304-Antwort), beim Installieren mit `cache: 'reload'`. Seitenaufrufe (navigate) unverändert.
+- System-Kurven: Beschriftung „24 Std.“ nur, wenn wirklich 24 Stunden Daten da sind, sonst „seit HH:MM Uhr“.
+- **Sicherung:** Tag `vor-sw-frisch`, DB `/home/pingu/backups/vor-sw-frisch-2026-11-07/`. **Rücksetz-Weg:** `git revert` des Commits, pushen.

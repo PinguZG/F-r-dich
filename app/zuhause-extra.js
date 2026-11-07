@@ -345,7 +345,7 @@
       const vals = ok.map(p => p[key]);
       const range = vals.length ? `min ${Math.round(Math.min(...vals))} · max ${Math.round(Math.max(...vals))} %` : '';
       return `<div class="zx-chart zx-kv zx-k-${key}"><div class="zx-chh"><b>${name}<small>${sub}</small></b><span class="zx-big">${last ? Math.round(last[key]) + '<small> %</small>' : '–'}</span></div>`
-        + `<div class="zx-cap zx-capl">${range ? range + ' · 24 Std.' : ''}</div>${areaChart(k, key, 520, host.classList.contains('z-phone') ? 120 : 150)}</div>`;
+        + `<div class="zx-cap zx-capl">${range ? range + ' · ' + (ok.length > 1 && ok[ok.length - 1].t - ok[0].t > 23 * 3600e3 ? '24 Std.' : 'seit ' + hm(ok[0].t) + ' Uhr') : ''}</div>${areaChart(k, key, 520, host.classList.contains('z-phone') ? 120 : 150)}</div>`;
     }).join('');
     put(el, `<div class="zx-hd"><i class="zx-ic zx-vioc">${svg('pulse')}</i><div><h3>System</h3><small>VPS, Home Assistant und Backups${s.test ? ' · Testdaten' : ''}</small></div><span class="zx-stand">${hm(s.at)}</span></div>`
       + `<div class="zx-lay"><div class="zx-col">${hero}<div class="zx-tiles">${tiles}</div>${det}</div><div class="zx-col zx-kurven">${charts}</div></div>`);

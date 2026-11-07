@@ -1,4 +1,4 @@
-const CACHE = 'wir-v60'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v61'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/draw.js', '/poker.js', '/herzspur.js', '/zuhause-vorlage.css', '/zuhause.css', '/zuhause-markup.js', '/zuhause.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-extra.css', '/zuhause-claude.js', '/zuhause-claude.css', '/zuhause-claude-svg.js', '/zuhause-claude-verlauf.js', '/zuhause-claude-luma.js',
@@ -6,7 +6,8 @@ const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.
   '/shared/fx.js', '/shared/fx.css'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
+  // cache:'reload': beim Installieren nie alte Dateien aus dem Browser-Cache übernehmen
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))));
   self.skipWaiting();
 });
 self.addEventListener('message', e => {
@@ -21,7 +22,9 @@ self.addEventListener('fetch', e => {
   const p = new URL(e.request.url).pathname;
   if (e.request.method !== 'GET' || p.startsWith('/api/') || p.startsWith('/_/')) return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: immer beim Server nachfragen (kurze 304-Antwort, wenn unverändert) – sonst konnte der Browser-Cache
+    // trotz neuer App-Version alte Dateien liefern (Server schickt kein Cache-Control).
+    (e.request.mode === 'navigate' ? fetch(e.request) : fetch(e.request, { cache: 'no-cache' }))
       .then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r; })
       .catch(() => caches.match(e.request))
   );
