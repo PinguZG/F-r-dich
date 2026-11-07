@@ -97,6 +97,9 @@ body.zh-full #s-zuhause > #zh{position:absolute;inset:0;height:100%}
 #zh.z-phone .z-srcs{flex-wrap:wrap}
 #zh.z-phone .z-src{flex:1 1 40%}
 #zh.z-phone .z-t-right{gap:14px}
+#zh.z-phone #zh-p-tv .z-t-head{order:0}
+#zh.z-phone #zh-p-tv .z-t-right{order:1}
+#zh.z-phone #zh-p-tv .z-t-left{order:2}
 /* Kalender */
 #zh.z-phone .z-c-head{flex-wrap:wrap;gap:8px}
 #zh.z-phone .z-c-head .z-h1{min-width:0;flex:1;font-size:22px}

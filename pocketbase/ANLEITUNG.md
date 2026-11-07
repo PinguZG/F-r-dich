@@ -1772,3 +1772,8 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Was neu ist:** Neue Daten ändern im Cockpit-SVG nur noch die geänderten Teile (kleiner DOM-Abgleich in `app/zuhause-claude.js`) statt das ganze Bild neu zu setzen: kein Flackern, Animationen laufen weiter. Die Chat-Liste zeigt nur noch den zuletzt genutzten Chat. Neue Chats zeigen die zuletzt gemessenen Limits.
 **Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-ruhig` (reine App-Änderung, DB-Stand wie `vor-cockpit-shadow`).
 **Rücksetz-Weg:** `git checkout vor-cockpit-ruhig -- app/zuhause-claude.js app/zuhause-claude-svg.js`, `wir-vNN` hochzählen, committen, pushen.
+
+### Nachtrag 07.11.2026: Cockpit für Handy/Tablet, Fernbedienung zuerst (wir-v56)
+**Was neu ist:** Zuhause → Claude zeigt oben auf einen Blick Okti mit Status, Limits und Kontext (Ringe) und das ganze Team; Kacheln (Kontext, Cache, Session, Wert) und „Letzter Chat & Helfer“ sind Bereiche zum Aufklappen (Zustand bleibt per localStorage `zc-open`). Unter 560 px Kartenbreite Handy-Grafik (360 breit), sonst Tablet (640 breit); Grafiken aus `overviewSvg`/`tilesSvg`/`moreSvg` im Mod (`hooks/svg.ts`). Fernseher: auf dem Handy steht die Fernbedienung (mit Lautstärke) vor den Apps (`app/zuhause.css`, Regeln `#zh.z-phone #zh-p-tv … {order:…}`).
+**Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-mobil`.
+**Rücksetz-Weg:** `git checkout vor-cockpit-mobil -- app/zuhause-claude.js app/zuhause-claude-svg.js app/zuhause.css`, `wir-vNN` hochzählen, committen, pushen.

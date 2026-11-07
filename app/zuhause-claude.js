@@ -29,27 +29,78 @@
   // Das Cockpit-SVG bringt eigene Stile und Animationen mit (.page, .live, .shake …). Direkt im Dokument würden sie
   // die ganze App treffen (alles wackelt) und die App-Stile das Cockpit (fette, fremde Schrift). Darum steckt es in
   // einem Shadow-DOM: beide Seiten sehen die Stile der anderen nicht.
-  const SHADOW_CSS = `:host{all:initial;display:block;contain:content}
-    svg{display:block;width:100%;height:auto;border-radius:22px;font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
-    svg text{stroke:none;font-synthesis:none}`;
-  let svgRoot = null, lastSvg = '';
+  // Handy und Tablet: oben auf einen Blick Okti, Limits, Kontext und das ganze Team; der Rest in Bereichen zum Aufklappen.
+  const FONT = `'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif`;
+  const SHADOW_CSS = `:host{all:initial;display:block;contain:content;font-family:${FONT};-webkit-font-smoothing:antialiased}
+    .wrap{display:grid;gap:10px}
+    svg{display:block;width:100%;height:auto;border-radius:22px;font-family:${FONT};text-rendering:geometricPrecision}
+    svg text{stroke:none;font-synthesis:none}
+    details{border-radius:20px;background:linear-gradient(160deg,rgba(43,26,18,.95),rgba(10,7,6,.98));border:1px solid rgba(255,155,94,.28);overflow:hidden}
+    details[open]{border-color:rgba(255,155,94,.45)}
+    summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 16px;color:#F6E7DA;font-size:14px;font-weight:600;letter-spacing:.2px;-webkit-tap-highlight-color:transparent;user-select:none}
+    summary::-webkit-details-marker{display:none}
+    summary .t{flex:none}
+    summary .s{flex:1;min-width:0;text-align:right;color:#B09A8A;font-size:12px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid #FF9B5E;border-bottom:2px solid #FF9B5E;transform:rotate(45deg) translateY(-2px);transition:transform .25s}
+    details[open] summary::after{transform:rotate(225deg) translate(-2px,-1px)}
+    details .b{padding:0 6px 6px}
+    details .b svg{border-radius:16px}
+    @media (prefers-reduced-motion:reduce){summary::after{transition:none}}`;
+  const OPEN_KEY = 'zc-open';
+  let svgRoot = null, lastLayout = '', lastSvgs = {};
 
-  function showSvg(el, svg) {
-    if (!svgRoot || !el.contains(svgRoot.host)) {
-      const hostEl = document.createElement('div');
-      hostEl.className = 'zc-svg';
-      el.appendChild(hostEl);
-      svgRoot = hostEl.attachShadow({ mode: 'open' });
-      lastSvg = '';
-    }
-    if (svg === lastSvg) return;
-    lastSvg = svg;
+  function openSet() { try { return new Set(JSON.parse(localStorage.getItem(OPEN_KEY) || '[]')); } catch (_) { return new Set(); } }
+  function saveOpen(k, isOpen) {
+    try { const s = openSet(); if (isOpen) s.add(k); else s.delete(k); localStorage.setItem(OPEN_KEY, JSON.stringify([...s])); } catch (_) { /* ohne Speicher bleibt es zu */ }
+  }
+
+  function layoutFor(el) { return (el.clientWidth || window.innerWidth) < 560 ? 'phone' : 'tablet'; }
+
+  function ensureShadow(el, layout) {
+    if (svgRoot && el.contains(svgRoot.host) && lastLayout === layout) return;
+    el.querySelector('.zc-svg')?.remove();
+    const hostEl = document.createElement('div');
+    hostEl.className = 'zc-svg';
+    el.appendChild(hostEl);
+    svgRoot = hostEl.attachShadow({ mode: 'open' });
+    lastLayout = layout; lastSvgs = {};
+    const open = openSet();
+    svgRoot.innerHTML = `<style>${SHADOW_CSS}</style><div class="wrap">
+      <div class="part" data-k="ov"></div>
+      <details data-k="tiles"${open.has('tiles') ? ' open' : ''}><summary><span class="t">📊 Kontext, Cache &amp; Session</span><span class="s"></span></summary><div class="b part" data-k="tiles"></div></details>
+      <details data-k="more"${open.has('more') ? ' open' : ''}><summary><span class="t">💬 Letzter Chat &amp; Helfer</span><span class="s"></span></summary><div class="b part" data-k="more"></div></details>
+    </div>`;
+    svgRoot.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', () => saveOpen(dt.dataset.k, dt.open)));
+  }
+
+  function showPart(k, svg) {
+    if (lastSvgs[k] === svg) return;
+    lastSvgs[k] = svg;
+    const box = svgRoot.querySelector(`.part[data-k="${k}"]`);
     const tpl = document.createElement('template');
     tpl.innerHTML = svg;
     const next = tpl.content.querySelector('svg');
-    const cur = svgRoot.querySelector('svg');
-    if (!cur || !next) { svgRoot.innerHTML = `<style>${SHADOW_CSS}</style>${svg}`; return; }
+    const cur = box.querySelector('svg');
+    if (!cur || !next) { box.innerHTML = svg; return; }
     morph(cur, next);
+  }
+
+  function setSummary(k, text) {
+    const s = svgRoot.querySelector(`details[data-k="${k}"] .s`);
+    if (s && s.textContent !== text) s.textContent = text;
+  }
+
+  function showDash(el, d) {
+    const layout = layoutFor(el);
+    ensureShadow(el, layout);
+    showPart('ov', G().overviewSvg(d, layout));
+    showPart('tiles', G().tilesSvg(d, layout));
+    showPart('more', G().moreSvg(d, layout));
+    const t = d.tiles || {};
+    setSummary('tiles', [t.cache && `Cache ${t.cache.value}`, t.session && t.session.value, t.cost && t.cost.value].filter(Boolean).join(' · '));
+    const chat = (d.chats || [])[0];
+    const busy = (d.agents || []).filter(a => !a.isDone).length;
+    setSummary('more', [chat && chat.title, busy ? `${busy} Helfer aktiv` : ''].filter(Boolean).join(' · '));
   }
 
   // Nur ändern, was sich geändert hat: so laufen Animationen weiter und nichts flackert beim Aktualisieren.
@@ -87,11 +138,22 @@
       }
       const note = stale ? `Claude schläft · zuletzt aktiv vor ${mins(age)}` : `live · vor ${Math.max(0, Math.round(age / 1000))} s`;
       const top = `<b>Claude</b><small class="${stale ? '' : 'zc-live'}">${G().esc(note)}</small>`;
-      if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; el.innerHTML = `<div class="zc-top">${top}</div>`; }
+      if (lastHtml !== 'svg') { lastHtml = 'svg'; svgRoot = null; lastLayout = ''; el.innerHTML = `<div class="zc-top">${top}</div>`; }
       else if (el.firstElementChild.innerHTML !== top) el.firstElementChild.innerHTML = top;
-      showSvg(el, G().dashboardSvg(d));
+      lastDash = d;
+      showDash(el, d);
     }
   }
+
+  // Dreht oder ändert sich die Breite (Handy ↔ Tablet), passt sich die Ansicht an.
+  let lastDash = null, resizeT = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => {
+      const el = document.getElementById('zc-card');
+      if (el && lastDash && G() && layoutFor(el) !== lastLayout) showDash(el, lastDash);
+    }, 150);
+  });
 
   async function start() {
     if (sub || !pb()) return;

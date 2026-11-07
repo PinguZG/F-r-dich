@@ -499,6 +499,90 @@ function tileHead(x        , y        , icon        , label        , value      
     <text x="${x + 20}" y="${y + 94}" font-size="12" fill="${C.muted}">${esc(cut(sub, 34))}</text>`
 }
 
+/** Stile und Animationen, die alle Cockpit-Grafiken teilen. */
+const STYLE = `<style>
+    .octo { transform-origin: 110px 120px; transition: transform .35s cubic-bezier(.3,1.7,.5,1); cursor: pointer; }
+    #octo:hover .octo { transform: scale(1.06) rotate(-3deg); }
+    .blush { opacity: .3; transition: opacity .3s; }
+    #octo:hover .blush { opacity: .85; }
+    .bob { animation: bob 3.4s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-5px); } }
+    .tent { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3s ease-in-out infinite; }
+    .t1 { animation-delay: -.5s } .t2 { animation-delay: -1s } .t3 { animation-delay: -1.5s } .t4 { animation-delay: -2s } .t5 { animation-delay: -2.5s }
+    #octo:hover .tent { animation-duration: .9s; }
+    @keyframes sway { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+    .blink { transform-box: fill-box; transform-origin: center; animation: blink 4.8s infinite; }
+    @keyframes blink { 0%,93%,100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
+    .tap { animation: tap .32s ease-in-out infinite; }
+    .tap2 { animation-delay: -.16s; }
+    @keyframes tap { 50% { transform: translateY(3px); } }
+    .wave { transform-box: fill-box; transform-origin: 0% 0%; animation: wave 6s ease-in-out infinite; }
+    @keyframes wave { 0%,70%,100% { transform: rotate(0); } 76% { transform: rotate(-38deg); } 82% { transform: rotate(-22deg); } 88% { transform: rotate(-38deg); } 94% { transform: rotate(0); } }
+    .dot { animation: dot 1.5s ease-in-out infinite; opacity: .2; }
+    .d2 { animation-delay: .25s; } .d3 { animation-delay: .5s; }
+    @keyframes dot { 30%,60% { opacity: .95; } }
+    .shake { animation: shake .45s linear infinite; }
+    @keyframes shake { 25% { transform: translateX(-1.4px); } 75% { transform: translateX(1.4px); } }
+    .drop { animation: drop 1.8s ease-in infinite; } .dr2 { animation-delay: -.9s; }
+    @keyframes drop { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } 100% { transform: translateY(14px); opacity: 0; } }
+    .zzz { animation: zzz 2.6s ease-in-out infinite; }
+    @keyframes zzz { 0% { transform: translate(0,6px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translate(6px,-8px); opacity: 0; } }
+    .mbob { animation: mbob 1.4s ease-in-out infinite; }
+    @keyframes mbob { 50% { transform: translateY(-3px) rotate(-3deg); } }
+    .hbob { animation: hbob 4.2s ease-in-out infinite; }
+    @keyframes hbob { 50% { transform: translateY(-3px); } }
+    .hbob-fast { animation: hbobf 1.1s ease-in-out infinite; }
+    @keyframes hbobf { 50% { transform: translateY(-6px) rotate(-2deg); } }
+    .hleg { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3.4s ease-in-out infinite; }
+    .hl1 { animation-delay: -.6s } .hl2 { animation-delay: -1.2s } .hl3 { animation-delay: -1.8s } .hl4 { animation-delay: -2.4s }
+    .hbob-fast .hleg { animation-duration: 1s; }
+    .hblink { transform-box: fill-box; transform-origin: center; animation: blink 5.2s infinite; }
+    .hglow { animation: hglow 1.6s ease-in-out infinite; }
+    @keyframes hglow { 50% { opacity: .45; } }
+    .scan { animation: scan 1.6s ease-in-out infinite; }
+    @keyframes scan { 0%,100% { transform: translate(0,0); } 33% { transform: translate(-8px,-4px); } 66% { transform: translate(4px,-8px); } }
+    .twist { transform-box: fill-box; transform-origin: 0% 100%; animation: twist .7s ease-in-out infinite; }
+    @keyframes twist { 50% { transform: rotate(-22deg); } }
+    .page { transform-box: fill-box; transform-origin: 50% 100%; animation: page 2s ease-in-out infinite; }
+    @keyframes page { 50% { transform: rotate(6deg) translateY(-2px); } }
+    .fizz1, .fizz2 { animation: tube 1.2s ease-in infinite; } .fizz2 { animation-delay: -.6s; }
+    @keyframes tube { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
+    .live, .pulse-dot { animation: live 1.2s ease-in-out infinite; }
+    @keyframes live { 50% { opacity: .25; } }
+    .ring { transition: transform .3s cubic-bezier(.3,1.6,.5,1); transform-box: fill-box; transform-origin: center; }
+    .ring:hover { transform: scale(1.07); }
+    .arc { transition: stroke-width .3s; }
+    .ring:hover .arc { stroke-width: 19; }
+    .hot .arc { animation: hot 1.4s ease-in-out infinite; }
+    @keyframes hot { 50% { stroke-opacity: .45; } }
+    .blob1 { animation: blob1 12s ease-in-out infinite; } .blob2 { animation: blob2 10s ease-in-out infinite; }
+    @keyframes blob1 { 50% { transform: translate(60px, -40px); } }
+    @keyframes blob2 { 50% { transform: translate(-50px, 60px); } }
+  </style>`
+
+/** Verläufe und Filter, die alle Cockpit-Grafiken teilen (Kennungen d-…). */
+const DEFS = `    <linearGradient id="d-glass" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#2B1A12" stop-opacity="0.95"/><stop offset="1" stop-color="#0A0706" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="d-sheen" x1="0" y1="0" x2="0.9" y2="0.9">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.13"/><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.03"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="d-edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${C.ember}" stop-opacity="0.9"/><stop offset="0.5" stop-color="${C.claude}" stop-opacity="0.15"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="d-blob"><stop offset="0" stop-color="${C.ember}" stop-opacity="0.42"/><stop offset="1" stop-color="${C.claude}" stop-opacity="0"/></radialGradient>
+    <linearGradient id="d-arc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${C.amber}"/><stop offset="1" stop-color="${C.claude}"/></linearGradient>
+    <linearGradient id="d-line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${C.ember}" stop-opacity="0"/><stop offset="0.5" stop-color="${C.ember}" stop-opacity="0.35"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="d-vline" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${C.ember}" stop-opacity="0"/><stop offset="0.5" stop-color="${C.ember}" stop-opacity="0.35"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="d-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="d-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>`
+
 // ---------------------------------------------------------------- Dashboard
 
 function dashboardSvg(d      )         {
@@ -671,87 +755,9 @@ function dashboardSvg(d      )         {
   const H = teamTop + (d.team.length ? teamH : 0)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" ${FONT}>
-  <style>
-    .octo { transform-origin: 110px 120px; transition: transform .35s cubic-bezier(.3,1.7,.5,1); cursor: pointer; }
-    #octo:hover .octo { transform: scale(1.06) rotate(-3deg); }
-    .blush { opacity: .3; transition: opacity .3s; }
-    #octo:hover .blush { opacity: .85; }
-    .bob { animation: bob 3.4s ease-in-out infinite; }
-    @keyframes bob { 50% { transform: translateY(-5px); } }
-    .tent { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3s ease-in-out infinite; }
-    .t1 { animation-delay: -.5s } .t2 { animation-delay: -1s } .t3 { animation-delay: -1.5s } .t4 { animation-delay: -2s } .t5 { animation-delay: -2.5s }
-    #octo:hover .tent { animation-duration: .9s; }
-    @keyframes sway { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
-    .blink { transform-box: fill-box; transform-origin: center; animation: blink 4.8s infinite; }
-    @keyframes blink { 0%,93%,100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
-    .tap { animation: tap .32s ease-in-out infinite; }
-    .tap2 { animation-delay: -.16s; }
-    @keyframes tap { 50% { transform: translateY(3px); } }
-    .wave { transform-box: fill-box; transform-origin: 0% 0%; animation: wave 6s ease-in-out infinite; }
-    @keyframes wave { 0%,70%,100% { transform: rotate(0); } 76% { transform: rotate(-38deg); } 82% { transform: rotate(-22deg); } 88% { transform: rotate(-38deg); } 94% { transform: rotate(0); } }
-    .dot { animation: dot 1.5s ease-in-out infinite; opacity: .2; }
-    .d2 { animation-delay: .25s; } .d3 { animation-delay: .5s; }
-    @keyframes dot { 30%,60% { opacity: .95; } }
-    .shake { animation: shake .45s linear infinite; }
-    @keyframes shake { 25% { transform: translateX(-1.4px); } 75% { transform: translateX(1.4px); } }
-    .drop { animation: drop 1.8s ease-in infinite; } .dr2 { animation-delay: -.9s; }
-    @keyframes drop { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } 100% { transform: translateY(14px); opacity: 0; } }
-    .zzz { animation: zzz 2.6s ease-in-out infinite; }
-    @keyframes zzz { 0% { transform: translate(0,6px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translate(6px,-8px); opacity: 0; } }
-    .mbob { animation: mbob 1.4s ease-in-out infinite; }
-    @keyframes mbob { 50% { transform: translateY(-3px) rotate(-3deg); } }
-    .hbob { animation: hbob 4.2s ease-in-out infinite; }
-    @keyframes hbob { 50% { transform: translateY(-3px); } }
-    .hbob-fast { animation: hbobf 1.1s ease-in-out infinite; }
-    @keyframes hbobf { 50% { transform: translateY(-6px) rotate(-2deg); } }
-    .hleg { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 3.4s ease-in-out infinite; }
-    .hl1 { animation-delay: -.6s } .hl2 { animation-delay: -1.2s } .hl3 { animation-delay: -1.8s } .hl4 { animation-delay: -2.4s }
-    .hbob-fast .hleg { animation-duration: 1s; }
-    .hblink { transform-box: fill-box; transform-origin: center; animation: blink 5.2s infinite; }
-    .hglow { animation: hglow 1.6s ease-in-out infinite; }
-    @keyframes hglow { 50% { opacity: .45; } }
-    .scan { animation: scan 1.6s ease-in-out infinite; }
-    @keyframes scan { 0%,100% { transform: translate(0,0); } 33% { transform: translate(-8px,-4px); } 66% { transform: translate(4px,-8px); } }
-    .twist { transform-box: fill-box; transform-origin: 0% 100%; animation: twist .7s ease-in-out infinite; }
-    @keyframes twist { 50% { transform: rotate(-22deg); } }
-    .page { transform-box: fill-box; transform-origin: 50% 100%; animation: page 2s ease-in-out infinite; }
-    @keyframes page { 50% { transform: rotate(6deg) translateY(-2px); } }
-    .fizz1, .fizz2 { animation: tube 1.2s ease-in infinite; } .fizz2 { animation-delay: -.6s; }
-    @keyframes tube { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-14px); opacity: 0; } }
-    .live, .pulse-dot { animation: live 1.2s ease-in-out infinite; }
-    @keyframes live { 50% { opacity: .25; } }
-    .ring { transition: transform .3s cubic-bezier(.3,1.6,.5,1); transform-box: fill-box; transform-origin: center; }
-    .ring:hover { transform: scale(1.07); }
-    .arc { transition: stroke-width .3s; }
-    .ring:hover .arc { stroke-width: 19; }
-    .hot .arc { animation: hot 1.4s ease-in-out infinite; }
-    @keyframes hot { 50% { stroke-opacity: .45; } }
-    .blob1 { animation: blob1 12s ease-in-out infinite; } .blob2 { animation: blob2 10s ease-in-out infinite; }
-    @keyframes blob1 { 50% { transform: translate(60px, -40px); } }
-    @keyframes blob2 { 50% { transform: translate(-50px, 60px); } }
-  </style>
+  ${STYLE}
   <defs>
-    <linearGradient id="d-glass" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#2B1A12" stop-opacity="0.95"/><stop offset="1" stop-color="#0A0706" stop-opacity="0.98"/>
-    </linearGradient>
-    <linearGradient id="d-sheen" x1="0" y1="0" x2="0.9" y2="0.9">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.13"/><stop offset="0.3" stop-color="#FFFFFF" stop-opacity="0.03"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="d-edge" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${C.ember}" stop-opacity="0.9"/><stop offset="0.5" stop-color="${C.claude}" stop-opacity="0.15"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0.6"/>
-    </linearGradient>
-    <radialGradient id="d-blob"><stop offset="0" stop-color="${C.ember}" stop-opacity="0.42"/><stop offset="1" stop-color="${C.claude}" stop-opacity="0"/></radialGradient>
-    <linearGradient id="d-arc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${C.amber}"/><stop offset="1" stop-color="${C.claude}"/></linearGradient>
-    <linearGradient id="d-line" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="${C.ember}" stop-opacity="0"/><stop offset="0.5" stop-color="${C.ember}" stop-opacity="0.35"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="d-vline" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${C.ember}" stop-opacity="0"/><stop offset="0.5" stop-color="${C.ember}" stop-opacity="0.35"/><stop offset="1" stop-color="${C.ember}" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="d-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="d-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
+${DEFS}
     <clipPath id="d-clip"><rect width="${W}" height="${H}" rx="26"/></clipPath>
   </defs>
 
@@ -802,6 +808,241 @@ function dashboardSvg(d      )         {
   <!-- unten: das Team -->
   ${teamSvg}
 </svg>`
+}
+
+// ---------------------------------------------------------------- Kompakte Ansichten (Handy, Tablet)
+
+                                       
+
+/** Rahmen einer kompakten Grafik: Glas, Lichtflecken, Kante – wie das große Cockpit. */
+function frame(id        , W        , H        , body        )         {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" ${FONT}>
+  ${STYLE}
+  <defs>
+${DEFS}
+    <clipPath id="${id}-clip"><rect width="${W}" height="${H}" rx="22"/></clipPath>
+  </defs>
+  <rect width="${W}" height="${H}" rx="22" fill="url(#d-glass)"/>
+  <g clip-path="url(#${id}-clip)">
+    <g filter="url(#d-soft)">
+      <circle class="blob1" cx="${(W * 0.3).toFixed(0)}" cy="${(H * 0.75).toFixed(0)}" r="${Math.min(110, W / 3).toFixed(0)}" fill="url(#d-blob)"/>
+      <circle class="blob2" cx="${W - 40}" cy="60" r="${Math.min(100, W / 3).toFixed(0)}" fill="url(#d-blob)"/>
+    </g>
+    <rect width="${W}" height="${(H * 0.4).toFixed(0)}" fill="url(#d-sheen)"/>
+  </g>
+  <rect x="0.6" y="0.6" width="${W - 1.2}" height="${H - 1.2}" rx="21.5" fill="none" stroke="url(#d-edge)" stroke-width="1.3"/>
+  ${body}
+</svg>`
+}
+
+function label(x        , y        , text        , anchor                  = 'start')         {
+  return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="11.5" font-weight="600" fill="${C.ember}" letter-spacing="1.4">${esc(text)}</text>`
+}
+
+/** Ein Limit- oder Kontext-Ring in beliebiger Größe. */
+function ringSvg(ring      , cx        , cy        , r        , stroke        , detailMax        )         {
+  const circ = 2 * Math.PI * r
+  const has = ring.pct !== null
+  const pct = ring.pct ?? 0
+  const color = has ? levelColor(pct) : C.dim
+  const dash = ((Math.min(100, Math.max(0, pct)) / 100) * circ).toFixed(1)
+  const big = Math.round(r * 0.6)
+  return `
+    <g class="ring ${has && pct >= 85 ? 'hot' : ''}">
+      <title>${esc(ring.tooltip)}</title>
+      <circle cx="${cx}" cy="${cy}" r="${r + 10}" fill="transparent"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="0.14" stroke-width="${stroke}"/>
+      <circle class="arc" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${has && pct >= 65 ? color : 'url(#d-arc)'}" stroke-width="${stroke}"
+        stroke-linecap="round" stroke-dasharray="${dash} ${circ.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})" filter="url(#d-glow)"/>
+      <text x="${cx}" y="${cy + big * 0.3}" text-anchor="middle" font-size="${big}" font-weight="800" fill="${has ? C.cream : C.dim}">${has ? Math.round(pct) : '–'}<tspan font-size="${Math.round(big * 0.5)}" font-weight="600" fill="${C.muted}">${has ? '%' : ''}</tspan></text>
+      <text x="${cx}" y="${cy + big * 0.3 + 14}" text-anchor="middle" font-size="${r > 44 ? 10.5 : 9}" fill="${C.muted}" letter-spacing="0.5">${esc(ring.label.toUpperCase())}</text>
+      <text x="${cx}" y="${cy + r + stroke / 2 + 18}" text-anchor="middle" font-size="${r > 44 ? 12 : 10.5}" fill="${has ? C.muted : C.dim}">${esc(cut(ring.detail, detailMax))}</text>
+    </g>`
+}
+
+function statusColor(state                         )         {
+  return state === 'working' ? C.ember : state === 'thinking' ? C.amber : state === 'sleepy' ? C.dim : '#9BE3A8'
+}
+
+/** Status-Kasten und Spruch von Okti; gibt Grafik und Höhe zurück. */
+function statusBlock(d      , x        , y        , w        , statusChars        , sayChars        )                             {
+  const color = statusColor(d.status.state)
+  const lines = wrap(d.status.text, statusChars, 2)
+  const say = wrap(d.saying, sayChars, 3)
+  const boxH = 20 + lines.length * 16
+  const svg = `
+  <rect x="${x}" y="${y}" width="${w}" height="${boxH}" rx="12" fill="#FFFFFF" fill-opacity="0.06" stroke="${color}" stroke-opacity="0.5"/>
+  <circle cx="${x + 15}" cy="${y + 17}" r="4.5" fill="${color}" class="${d.status.state === 'idle' || d.status.state === 'sleepy' ? '' : 'pulse-dot'}" filter="url(#d-glow)"/>
+  ${lines.map((l, i) => `<text x="${x + 28}" y="${y + 21 + i * 16}" font-size="12.5" font-weight="600" fill="${C.cream}">${esc(l)}</text>`).join('')}
+  ${say.map((l, i) => `<text x="${x + 2}" y="${y + boxH + 20 + i * 15}" font-size="11.5" font-style="italic" fill="${C.muted}">${esc(l)}</text>`).join('')}`
+  return { svg, h: boxH + 12 + say.length * 15 }
+}
+
+/** Das Team in einer Reihe: vier Oktopusse mit Name und Tätigkeit. */
+function teamRow(d      , W        , top        , scale        , textMax        )                             {
+  const n = Math.max(1, d.team.length)
+  const cellW = W / n
+  const octoH = 150 * scale
+  const cells = d.team
+    .map((m, i) => {
+      const look = HELPER_LOOK[m.kind]
+      const cx = cellW * i + cellW / 2
+      const y = top + 34
+      const dot = m.state === 'active' ? look.color : m.state === 'done' ? '#9BE3A8' : m.state === 'off' ? C.dim : C.muted
+      // Schmal: Tätigkeit auf bis zu zwei Zeilen statt stark gekürzt.
+      const lines = scale > 0.8 ? [cut(m.text, textMax)] : wrap(m.text, textMax, 2)
+      const text = lines[0] ?? ''
+      const ny = y + octoH + 6
+      return `
+    <g>
+      <title>${esc(`${look.name} (${m.model}): ${look.role}. ${m.text}`)}</title>
+      <g transform="translate(${(cx - 60 * scale).toFixed(1)} ${y}) scale(${scale})">${helperOcto(m.kind, m.state)}</g>
+      <text x="${cx.toFixed(1)}" y="${ny}" text-anchor="middle" font-size="${scale > 0.8 ? 14.5 : 12.5}" font-weight="800" fill="${m.state === 'off' ? C.dim : look.color}">${esc(look.name)}</text>
+      <text x="${cx.toFixed(1)}" y="${ny + 13}" text-anchor="middle" font-size="9.5" fill="${C.dim}">${esc(m.model)}</text>
+      <circle cx="${(cx - text.length * (scale > 0.8 ? 2.8 : 2.45) - 7).toFixed(1)}" cy="${ny + 25}" r="3" fill="${dot}" class="${m.state === 'active' ? 'live' : ''}"/>
+      ${lines.map((l, li) => `<text x="${cx.toFixed(1)}" y="${ny + 29 + li * 12}" text-anchor="middle" font-size="${scale > 0.8 ? 11 : 10}" font-style="${m.state === 'idle' ? 'italic' : 'normal'}" fill="${m.state === 'active' ? C.cream : C.muted}">${esc(l)}</text>`).join('')}
+    </g>`
+    })
+    .join('')
+  const svg = `
+  <rect x="20" y="${top}" width="${W - 40}" height="1" fill="url(#d-line)"/>
+  ${label(16, top + 22, 'DAS TEAM')}
+  <text x="${W - 16}" y="${top + 22}" text-anchor="end" font-size="10.5" fill="${C.muted}">${esc(cut(d.teamNote, W < 400 ? 30 : 48))}</text>
+  ${cells}`
+  return { svg, h: 34 + octoH + 6 + 38 + (scale > 0.8 ? 0 : 12) }
+}
+
+/** Auf einen Blick: Okti mit Status, Limits und Kontext als Ringe, das ganze Team. */
+function overviewSvg(d      , layout        )         {
+  if (layout === 'phone') {
+    const W = 360
+    const head = statusBlock(d, 128, 44, W - 128 - 14, 22, 30)
+    const headH = Math.max(150, 44 + head.h + 8)
+    const ringTop = headH
+    const r = 34
+    const rings = d.rings.map((ring, i) => ringSvg(ring, Math.round((W / 6) * (2 * i + 1)), ringTop + 36 + r, r, 10, 19)).join('')
+    const teamTop = ringTop + 36 + r * 2 + 44
+    const team = teamRow(d, W, teamTop, 0.6, 13)
+    const H = teamTop + team.h
+    return frame('ov', W, H, `
+  ${label(16, 30, 'OKTI · CLAUDE')}
+  <g transform="translate(2 34) scale(0.52)">${okti(d.mood, d.pose, d.isPoked)}</g>
+  ${head.svg}
+  <rect x="20" y="${ringTop}" width="${W - 40}" height="1" fill="url(#d-line)"/>
+  ${label(16, ringTop + 22, 'LIMITS & KONTEXT')}
+  ${rings}
+  ${team.svg}`)
+  }
+  // Tablet: links Okti mit Status, rechts die Ringe, darunter das Team.
+  const W = 640
+  const SB = 220
+  const head = statusBlock(d, 14, 214, SB - 28, 22, 30)
+  const leftH = 214 + head.h + 10
+  const r = 50
+  const step = (W - SB) / 3
+  const rings = d.rings.map((ring, i) => ringSvg(ring, Math.round(SB + step * i + step / 2), 70 + r, r, 14, 20)).join('')
+  const topH = Math.max(leftH, 70 + r * 2 + 50)
+  const team = teamRow(d, W, topH, 0.86, 22)
+  const H = topH + team.h
+  return frame('ov', W, H, `
+  ${label(18, 32, 'OKTI · CLAUDE')}
+  <g transform="translate(16 38) scale(0.72)">${okti(d.mood, d.pose, d.isPoked)}</g>
+  ${head.svg}
+  <rect x="${SB}" y="24" width="1" height="${topH - 48}" fill="url(#d-vline)"/>
+  ${label(SB + 20, 32, 'LIMITS & KONTEXT')}
+  ${rings}
+  ${team.svg}`)
+}
+
+/** Die vier Kacheln (Kontext, Cache, Session, Wert) zum Aufklappen. */
+function tilesSvg(d      , layout        )         {
+  const W = layout === 'phone' ? 360 : 640
+  const cols = layout === 'phone' ? 1 : 2
+  const cw = W / cols
+  const ch = 150
+  const t = d.tiles
+  const vw = cw - 40
+  const at = (i        ) => [(i % cols) * cw, Math.floor(i / cols) * ch]         
+  const [x0, y0] = at(0)
+  const [x1, y1] = at(1)
+  const [x2, y2] = at(2)
+  const [x3, y3] = at(3)
+  const ctxColor = t.ctx.pct === null ? C.ember : levelColor(t.ctx.pct)
+  const ctxBar =
+    t.ctx.pct === null
+      ? ''
+      : `<rect x="${x0 + 20}" y="${y0 + 104}" width="${vw}" height="5" rx="2.5" fill="#FFFFFF" fill-opacity="0.08"/>
+         <rect x="${x0 + 20}" y="${y0 + 104}" width="${((vw * Math.min(100, t.ctx.pct)) / 100).toFixed(1)}" height="5" rx="2.5" fill="${ctxColor}" filter="url(#d-glow)"/>`
+  const cacheLegend =
+    t.cache.read + t.cache.write + t.cache.fresh > 0
+      ? `${fmtK(t.cache.read)} Cache · ${fmtK(t.cache.write)} gespeichert · ${fmtK(t.cache.fresh)} neu`
+      : 'Noch keine Antwort gemessen …'
+  const rows = 4 / cols
+  const lines = Array.from({ length: rows - 1 }, (_, i) => `<rect x="20" y="${(i + 1) * ch}" width="${W - 40}" height="1" fill="url(#d-line)"/>`).join('')
+  const vline = cols === 2 ? `<rect x="${cw}" y="16" width="1" height="${ch * rows - 32}" fill="url(#d-vline)"/>` : ''
+  return frame('tl', W, ch * rows, `
+  ${lines}${vline}
+  ${tileHead(x0, y0, '🧠', 'Kontext', t.ctx.value, t.ctx.sub)}
+  ${ctxBar}
+  ${sparkline('k-sp1', x0 + 20, y0 + 114, vw, 24, t.ctx.series, ctxColor)}
+  ${tileHead(x1, y1, '⚡', 'Cache', t.cache.value, t.cache.sub)}
+  ${stackBar(x1 + 20, y1 + 108, vw, [
+    { v: t.cache.read, color: C.ember },
+    { v: t.cache.write, color: C.amber },
+    { v: t.cache.fresh, color: C.dim },
+  ])}
+  <text x="${x1 + 20}" y="${y1 + 134}" font-size="11" fill="${C.muted}">${esc(cut(cacheLegend, Math.floor(vw / 5.6)))}</text>
+  ${tileHead(x2, y2, '⏱️', 'Session', t.session.value, t.session.sub)}
+  ${bars(x2 + 20, y2 + 106, vw, 32, t.session.bars, C.ember)}
+  ${tileHead(x3, y3, '💸', 'Wert', t.cost.value, t.cost.sub)}
+  ${sparkline('k-sp2', x3 + 20, y3 + 108, vw, 30, t.cost.series, C.amber)}`)
+}
+
+/** Der zuletzt genutzte Chat und weitere Helfer außerhalb des Teams, zum Aufklappen. */
+function moreSvg(d      , layout        )         {
+  const W = layout === 'phone' ? 360 : 640
+  const narrow = W < 400
+  const chats = d.chats ?? []
+  let y = 16
+  let body = ''
+  if (chats.length) {
+    body += label(16, y + 14, 'ZULETZT GENUTZTER CHAT')
+    y += 26
+    for (const c of chats) {
+      const color = c.state === 'working' ? C.ember : c.state === 'thinking' ? C.amber : C.dim
+      const right = c.state === 'idle' ? `wartet · ${c.ago}` : c.text
+      body += `
+  <g><title>${esc(`${c.title} (${c.project}): ${right}`)}</title>
+    <rect x="12" y="${y}" width="${W - 24}" height="${narrow ? 46 : 30}" rx="10" fill="#FFFFFF" fill-opacity="${c.state === 'idle' ? 0.03 : 0.07}" stroke="${color}" stroke-opacity="${c.state === 'idle' ? 0.12 : 0.45}"/>
+    <circle cx="27" cy="${y + 15}" r="4.5" fill="${color}" class="${c.state === 'idle' ? '' : 'live'}"/>
+    <text x="40" y="${y + 19.5}" font-size="12.5" font-weight="600" fill="${c.state === 'idle' ? C.muted : C.cream}">${esc(cut(c.title, narrow ? 34 : 40))}${narrow ? '' : `<tspan font-size="10.5" font-weight="400" fill="${C.dim}"> ${esc(cut(c.project, 18))}</tspan>`}</text>
+    <text x="${narrow ? 40 : W - 26}" y="${narrow ? y + 36 : y + 19.5}" text-anchor="${narrow ? 'start' : 'end'}" font-size="11" fill="${c.state === 'idle' ? C.dim : color}">${esc(cut(narrow ? `${c.project} · ${right}` : right, narrow ? 44 : 34))}</text>
+  </g>`
+      y += narrow ? 54 : 36
+    }
+    y += 10
+  }
+  const running = d.agents.filter(a => !a.isDone).length
+  body += label(16, y + 14, `WEITERE HELFER${running ? ` · ${running}` : ''}`)
+  y += 24
+  if (d.agents.length === 0) {
+    body += `<text x="16" y="${y + 14}" font-size="11.5" fill="${C.dim}">Gerade keine Agenten außerhalb des Teams aktiv</text>`
+    y += 28
+  } else {
+    d.agents.forEach((a, i) => {
+      const color = a.kind === 'generic' ? MINI_COLORS[i % MINI_COLORS.length]  : HELPER_LOOK[a.kind].color
+      body += `
+  ${mini(10, y, color, a.isDone, i, a.kind)}
+  <text x="54" y="${y + 15}" font-size="12.5" font-weight="700" fill="${a.isDone ? C.muted : C.cream}">${esc(cut(a.label, 30))}<tspan font-size="10" font-weight="500" fill="${C.dim}"> ${esc(a.model)}</tspan></text>
+  <text x="54" y="${y + 32}" font-size="11" fill="${a.isDone ? C.dim : C.muted}">${esc(cut(a.isDone ? `✓ fertig · ${a.tools} Schritte` : a.activity, narrow ? 40 : 70))}</text>`
+      y += 50
+    })
+    if (d.moreAgents > 0) {
+      body += `<text x="16" y="${y + 10}" font-size="11" fill="${C.dim}">+ ${d.moreAgents} weitere</text>`
+      y += 22
+    }
+  }
+  return frame('mo', W, y + 8, body)
 }
 
 // ---------------------------------------------------------------- Skills-Galerie
@@ -865,5 +1106,5 @@ function fitWidth(bodyColumns                    , zoom        , max        )   
   return Math.round(Math.max(320, Math.min(max, px)) * zoom)
 }
 
-window.WIR_COCKPIT_SVG = { C, HELPER_LOOK, esc, levelColor, fmtK, dashboardSvg, galleryHeaderSvg, viewBoxSize, fitWidth };
+window.WIR_COCKPIT_SVG = { C, HELPER_LOOK, esc, levelColor, fmtK, dashboardSvg, overviewSvg, tilesSvg, moreSvg, galleryHeaderSvg, viewBoxSize, fitWidth };
 })();
