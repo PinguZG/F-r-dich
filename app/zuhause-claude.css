@@ -1,0 +1,10 @@
+/* Zuhause → Claude (zuhause-claude.js): Okti, Helfer-Team, Limits – das SVG bringt seine eigenen Farben (schwarz/orange) mit */
+#zh .zc-card{background:var(--z-card);border:1px solid var(--z-line);border-radius:26px;padding:14px;min-width:0}
+#zh .zc-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 4px 10px}
+#zh .zc-top b{font-size:17px;font-weight:600}
+#zh .zc-top small{font-size:12px;color:var(--z-mut);white-space:nowrap}
+#zh .zc-top small.zc-live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#7CF29A;margin-right:6px;vertical-align:1px;animation:zc-pulse 1.4s ease-in-out infinite}
+@keyframes zc-pulse{50%{opacity:.3}}
+#zh .zc-svg svg{display:block;width:100%;height:auto;border-radius:22px}
+#zh .zc-empty{color:var(--z-mut);font-size:14px;line-height:1.5;margin:6px 4px}
+#zh .zc-nv svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}

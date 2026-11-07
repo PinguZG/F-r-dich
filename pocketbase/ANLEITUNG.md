@@ -1742,3 +1742,17 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - Nicht lokal testbar: Push aufs iPhone, echtes Home Assistant, Abfahrten/Pakete (brauchen Server-Zugänge). Das bleibt Live-Test nach dem Push.
 
 **Zurück:** `dev/`, `.claude/launch.json` und den Eintrag `lokal/` in `.gitignore` löschen, Ordner `lokal/` löschen. Live ist nichts betroffen.
+
+## Zuhause → Claude (Claude-Cockpit, 07.11.2026)
+**Was neu ist:** Reiter „Claude“ in Zuhause. Zeigt live, was Claude Code auf Daniels PC tut: Okti (Claude) mit Tätigkeit, das Helfer-Team (Pip, Bubbles, Inky, Coral) mit Status, weitere Agenten, Limits (5 Std./Woche), Kontext, Cache. Kommt 3 Min. nichts, zeigt die Kachel „Claude schläft“.
+- Sender: der Cockpit-Mod (Claude Code) schickt bei Änderungen (höchstens alle 3 s) an `POST /api/cockpit/status`, Header `x-cockpit-key`.
+- Server: `pb_hooks/wir_cockpit.pb.js` prüft den Schlüssel gegen `/home/pingu/pb/cockpit.key` (Datei nur für pingu, `chmod 600`, nie im Repo; fehlt sie, ist die Route aus) und speichert in den einen Datensatz `cockpitstatus00`.
+- App: `app/zuhause-claude.js` (Reiter, Realtime-Abo nur solange der Reiter offen ist), `app/zuhause-claude.css`, `app/zuhause-claude-svg.js` (automatisch aus dem Mod `hooks/svg.ts` erzeugt, nicht von Hand ändern).
+- Schlüssel tauschen: neuen Wert in `/home/pingu/pb/cockpit.key` und in `wir.key` im Mod-Ordner schreiben, fertig (kein Neustart nötig).
+- Lokal: Testschlüssel in `pocketbase/cockpit.key` (per .gitignore ausgeschlossen).
+
+**Datenbank:** neue Collection `cockpit` (Migration `1794800000_wir_cockpit.js`), nur additiv. Lesen: angemeldete Nutzer. Schreiben: nur der Hook.
+
+**Sicherung:** Tag `vor-claude-cockpit`, DB-Backup `/home/pingu/backups/vor-claude-cockpit-2026-11-07/`.
+
+**Rücksetz-Weg:** `git checkout vor-claude-cockpit -- app/index.html app/sw.js` und die neuen Dateien `app/zuhause-claude*.{js,css}`, `pocketbase/pb_hooks/wir_cockpit.pb.js` entfernen, committen, pushen (kein reset/force). Die Collection `cockpit` darf bleiben (stört nicht) oder im Admin gelöscht werden. Den Mod stoppt man, indem man `wir.key` im Mod-Ordner löscht.

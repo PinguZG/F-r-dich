@@ -5,3 +5,6 @@ home/export/dist/
 
 # Lokale Vorschau (dev/lokal.js): PocketBase, Test-DB, Test-Zugänge
 lokal/
+
+# Claude-Cockpit: Schlüssel (lokal zum Testen, auf dem Server /home/pingu/pb/cockpit.key)
+pocketbase/cockpit.key
