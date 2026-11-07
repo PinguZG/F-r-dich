@@ -1782,3 +1782,16 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 **Was neu ist:** Tablet-Grafiken im Breitformat (900 breit): links Okti mit Status, rechts Ringe und Team; die vier Kacheln stehen immer sichtbar in einer flachen Reihe darunter, nur „Letzter Chat & Helfer“ ist aufklappbar. Passt quer (1024×768) und hochkant auf einen Bildschirm. Handy unverändert.
 **Datenbank:** unverändert. **Sicherung:** Tag `vor-cockpit-tablet`.
 **Rücksetz-Weg:** `git checkout vor-cockpit-tablet -- app/zuhause-claude.js app/zuhause-claude-svg.js`, `wir-vNN` hochzählen, committen, pushen.
+
+### Nachtrag 07.11.2026: Cowork-Status (Testversion, nur Server)
+
+**Was neu ist:** Route `POST /api/cockpit/cowork` in `pb_hooks/wir_cockpit.pb.js`. Das Cowork-Plugin „cockpit-team“ (liegt auf Daniels PC unter `Documents/Claude-Terminal/cowork-cockpit-team`) meldet per Hook, was Cowork gerade tut. Testversion: speichert zusätzlich ein paar Angaben, wo der Hook läuft (`diag`).
+- Ausweis: Header `x-cowork-key` gegen `/home/pingu/pb/cowork.key` (nur pingu, `chmod 600`, nie im Repo; fehlt die Datei, ist die Route aus). Eigener Schlüssel, getrennt von `cockpit.key`: er darf nur den Datensatz `coworkstatus000` setzen, nur bekannte Felder, kurze Texte.
+- Prüfen: `ssh pingu@wir 'sqlite3 /home/pingu/pb/pb_data/data.db "select sent_at, data from cockpit where id=\"coworkstatus000\""'`
+- Abschalten: `rm /home/pingu/pb/cowork.key` (kein Neustart nötig).
+
+**Datenbank:** keine Schemaänderung, nur ein weiterer Datensatz in `cockpit`. App unverändert (kein neues `wir-vNN`).
+
+**Sicherung:** Tag `vor-cowork-status`, DB-Backup `/home/pingu/backups/vor-cowork-status-2026-11-07/`.
+
+**Rücksetz-Weg:** `git checkout vor-cowork-status -- pocketbase/pb_hooks/wir_cockpit.pb.js`, committen, pushen (kein reset/force). `cowork.key` löschen. Der Datensatz `coworkstatus000` darf bleiben oder im Admin gelöscht werden.
