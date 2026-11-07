@@ -9,3 +9,4 @@ lokal/
 # Claude-Cockpit: Schlüssel (lokal zum Testen, auf dem Server /home/pingu/pb/cockpit.key)
 pocketbase/cockpit.key
 pocketbase/cowork.key
+*.key
