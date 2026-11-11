@@ -78,10 +78,10 @@
   // { "name": "Abends dimmen", "entity_id": "automation.abends_dimmen", "info": "täglich · 22:00", "icon": "moon" }
   "routinen": [],
 
-  // Raumklima + Strom (sensor.…). Leer ("") = ausgeblendet. Gibt es noch keine.
+  // Raumklima + Strom (sensor.…). Leer ("") = ausgeblendet. Thermometer: SONOFF SNZB-02D „Temp“.
   "klima": {
-    "temperatur":  "",
-    "luftfeuchte": "",
+    "temperatur":  "sensor.temp_temperatur",
+    "luftfeuchte": "sensor.temp_luftfeuchtigkeit",
     "co2":         "",
     "strom_heute": "",
     "leistung":    ""
