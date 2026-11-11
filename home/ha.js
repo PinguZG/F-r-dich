@@ -171,7 +171,7 @@ class HA extends EventEmitter {
     const [all, svc] = await Promise.all([this.send({ type: 'get_states' }, 30000), this.send({ type: 'get_services' }, 30000)]);
     return {
       services: Object.fromEntries(['wake_on_lan', 'androidtv', 'androidtv_remote', 'button'].map(d => [d, Object.keys(svc[d] || {})])),
-      entities: all.filter(s => /^(media_player|remote|button|script|switch)\./.test(s.entity_id))
+      entities: all.filter(s => /^(media_player|remote|button|script|switch|sensor)\./.test(s.entity_id))
         .map(s => ({ id: s.entity_id, state: s.state, name: s.attributes?.friendly_name || '', attrs: Object.keys(s.attributes || {}) })),
     };
   }
