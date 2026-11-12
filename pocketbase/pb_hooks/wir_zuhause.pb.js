@@ -17,7 +17,7 @@ routerAdd('POST', '/api/home/cmd', (e) => {
   let res;
   try {
     res = $http.send({
-      url: 'http://127.0.0.1:8095/cmd',
+      url: ($os.getenv('WIR_HOME_URL') || 'http://127.0.0.1:8095') + '/cmd',   // lokal testen: anderer Port
       method: 'POST',
       body: JSON.stringify(cmd),
       headers: { 'content-type': 'application/json' },
@@ -67,7 +67,7 @@ function wirWeckerSync(e) {
   e.next();
   if (e.record.getString('key') !== 'wecker') return;
   try {
-    $http.send({ url: 'http://127.0.0.1:8095/wecker', method: 'POST', body: '{}', headers: { 'content-type': 'application/json' }, timeout: 3 });
+    $http.send({ url: ($os.getenv('WIR_HOME_URL') || 'http://127.0.0.1:8095') + '/wecker', method: 'POST', body: '{}', headers: { 'content-type': 'application/json' }, timeout: 3 });
   } catch (err) {
     e.app.logger().warn('zuhause wecker sync', 'error', String(err));   // wir-home gleicht ohnehin alle 15 Min ab
   }

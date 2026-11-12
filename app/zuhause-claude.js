@@ -11,24 +11,30 @@
   const STALE = 3 * 60000;
   const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-4 0-6.5 2.8-6.5 6.3 0 2 .8 3.4 2 4.4L5 19M12 3c4 0 6.5 2.8 6.5 6.3 0 2-.8 3.4-2 4.4L19 19M9.5 14.5 8.5 21M14.5 14.5l1 6.5M12 15v6"/><circle cx="9.7" cy="9" r=".9"/><circle cx="14.3" cy="9" r=".9"/></svg>';
 
-  let built = false, life = false, page = 'start', sub = null, rec = null, tick = 0, lastHtml = '';
+  let built = false, life = false, page = 'start', sub = null, rec = null, tick = 0, lastHtml = '', cardEl = null;
+  // Karte liegt im Shadow-DOM von Zuhause (neues Design 12.11.2026): Zugriff nur über cardEl, nicht über document
+  const card = () => (cardEl && cardEl.isConnected ? cardEl : null);
 
+  // Eigener Reiter in Zuhause: zuhause.js legt Navigation + Seite an (Tablet: Seitenleiste, Handy: unter „Mehr“)
   function build() {
-    if (built) return;
-    const rail = host.querySelector('#zh-rail'), main = host.querySelector('#zh-main');
-    if (!rail || !main) return;
+    if (built || !window.ZH?.registerPage) return;
     built = true;
-    rail.querySelector('.z-sp').insertAdjacentHTML('beforebegin',
-      `<div class="z-nv zc-nv" data-p="claude" data-label="Claude" title="Claude">${ICON}</div>`);
-    main.insertAdjacentHTML('beforeend',
-      `<section class="z-page zc-page" id="zh-p-claude"><div class="z-scol zc"><div class="zc-card" id="zc-card"><p class="zc-empty">Lade …</p></div></div></section>`);
-    // Umschalter oben: Zuletzt / Claude Code / Cowork
-    main.querySelector('#zc-card').addEventListener('click', e => {
-      const b = e.target.closest('[data-mode]');
-      if (!b) return;
-      setMode(b.dataset.mode);
-      lastHtml = ''; svgRoot = null;   // Ansicht neu aufbauen (anderes Dashboard)
-      render();
+    window.ZH.registerPage({
+      key: 'claude', label: 'Claude', icon: ICON, sub: 'Was Claude gerade tut',
+      html: '<div class="zc-card" id="zc-card"><p class="zc-empty">Lade …</p></div>',
+      mount(el) {
+        cardEl = el.querySelector('#zc-card');
+        lastHtml = ''; svgRoot = null;
+        // Umschalter oben: Zuletzt / Claude Code / Cowork
+        cardEl.addEventListener('click', e => {
+          const b = e.target.closest('[data-mode]');
+          if (!b) return;
+          setMode(b.dataset.mode);
+          lastHtml = ''; svgRoot = null;   // Ansicht neu aufbauen (anderes Dashboard)
+          render();
+        });
+        if (sub) render();
+      },
     });
   }
 
@@ -260,7 +266,7 @@
   }
 
   function render() {
-    const el = document.getElementById('zc-card');
+    const el = card();
     if (!el || !G()) return;
     const ccAge = rec ? Date.now() - (Number(rec.sent_at) || Date.parse(rec.updated) || 0) : Infinity;
     const hasCc = !!(rec && rec.data && rec.data.rings);
@@ -311,7 +317,7 @@
   window.addEventListener('resize', () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      const el = document.getElementById('zc-card');
+      const el = card();
       if (el && lastDash && G() && layoutFor(el) !== lastLayout) showDash(el, lastDash);
     }, 150);
   });
@@ -357,6 +363,7 @@
     if (life && page === 'claude' && !document.hidden) start(); else stop();
   }
 
+  build();
   document.addEventListener('zh:built', build);
   document.addEventListener('zh:page', e => { page = e.detail; sync(); });
   document.addEventListener('zh:life', e => { life = !!e.detail; sync(); });

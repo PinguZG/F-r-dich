@@ -4,6 +4,16 @@
    ab 1100 px: breite Seitenleiste mit Beschriftung, Start mehrspaltig, Chat als Seitenpanel (💬 oben rechts),
                Spiele zentriert in fester Größe
    ====================================================================== */
+/* Zuhause (zuhause.js): Vollbild auf Handy und Tablet, Inhalt im Shadow-DOM von #zh (eigene Stile zuhause-tab.css / zuhause-handy.css) */
+#s-zuhause > #zh{max-width:none;width:100%}
+#zh.z-sleep{display:none}
+body.zh-full .topbar,body.zh-full .tabbar{display:none!important}
+body.zh-full #s-zuhause.page{position:fixed;inset:0;padding:0;overflow:hidden;z-index:40;background:#0b0a12;transform:none}
+body.zh-full #s-zuhause > #zh{position:absolute;inset:0;height:100%;max-width:none}
+/* Leistungsmodus (Schalter, schwache Geräte, iPhone): kein Weichzeichner in der ganzen App */
+html.perf *,html.perf *::before,html.perf *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.perf body::before{filter:none!important}
+
 /* Start: auf dem Handy wirkt der Spalten-Container nicht */
 .home-cols{display:contents}
 
