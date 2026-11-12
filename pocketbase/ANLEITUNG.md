@@ -1855,7 +1855,7 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Vor dem Deploy:** Tag `vor-zuhause-neudesign` setzen + DB-Backup wie üblich (keine Migration nötig).
 - **Rücksetz-Weg:** `git checkout vor-zuhause-neudesign -- app/ pocketbase/pb_hooks/wir_zuhause.pb.js` (stellt auch die entfernten Dateien wieder her), `CACHE` in `app/sw.js` hochzählen, commit, push.
 
-## Spiele-Shop 2: Sudoku-Bretter/-Rahmen, Sonder-Kartendecks, Lösbarkeits-Anzeige, Sudoku-Schutz (13.11.2026, wir-v63)
+## Spiele-Shop 2: Sudoku-Bretter/-Rahmen, Sonder-Kartendecks, Lösbarkeits-Anzeige, Sudoku-Schutz (13.11.2026, wir-v64)
 - **Sudoku:** Über dem Brett steht dauerhaft „✓ Noch lösbar“ bzw. „✗ So nicht mehr lösbar“. Bei gewählter Zahl: Felder, in denen sie noch möglich ist, sind hell; unmögliche sind schraffiert. Brett liegt jetzt in `#sdFrame` (für Rahmen).
 - **Shop:** 4 neue Decks (Ganz in Rosa, Sternennacht, Regenbogen, Glitzer) und alle Decks mit eingefärbter Vorderseite + Motiv-Wasserzeichen. Neu: 6 Sudoku-Bretter (`PRICES.boards`, kind `board`) und 5 Sudoku-Rahmen (`PRICES.sdframes`, kind `sdframe`). Katalog liefert `ownedCos` (alle Kosmetik in einer Abfrage).
 - **Sicherheit (Shelly-Prüfung):** neue Migration `1794900000_wir_sudoku_start.js` (Feld `sudoku_progress.started`, nur additiv). Hook in `wir_spiele.pb.js` setzt die Startzeit selbst (Client-Werte werden ignoriert). `/api/games/sudoku/finish` gibt Coins und Punkte nur bei realistischer Dauer (Leicht 60 s, Mittel 120 s, Schwer 180 s).
