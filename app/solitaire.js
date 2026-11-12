@@ -101,7 +101,7 @@
     save();
     layout();
     renderBar();
-    if (g.st.found.every(p => p.length === 13)) won();
+    if (g.st.found.every(p => p.length === 13)) won(); else scheduleCheck();
   }
 
   // ======================================================================
@@ -125,6 +125,184 @@
     return { ids: [], text: 'Kein Zug möglich 😕' };
   }
   const name = id => RANKS[rank(id)] + SUITS[suit(id)];
+
+  // ======================================================================
+  // Lösbarkeit: Solver mit voller Kartenkenntnis (Seed ist bekannt), läuft in kleinen Häppchen,
+  // damit nichts ruckelt. Ergebnis 'yes' | 'no' (sicher unlösbar) | 'unknown' (zu groß) | 'cancel'.
+  // ======================================================================
+  const CH = n => String.fromCharCode(n + 40);
+  function toSolver(st) {
+    const fr = [0, 0, 0, 0];
+    st.found.forEach(p => { if (p.length) fr[suit(p[0])] = p.length; });
+    // Talon als Folge D (Ablage unten→oben, dann Stapel oben→unten); k = Anzahl Karten in der Ablage
+    return { tab: st.tab.map(p => p.map(x => x.id)), down: st.tab.map(p => p.filter(x => !x.up).length), fr, D: st.waste.concat(st.stock.slice().reverse()), k: st.waste.length };
+  }
+  const cloneS = s => ({ tab: s.tab.slice(), down: s.down.slice(), fr: s.fr.slice(), D: s.D, k: s.k });
+  function hashS(s, n) {
+    const piles = s.tab.map((p, c) => CH(s.down[c]) + p.map(CH).join('')).sort().join('|');
+    return s.fr.map(CH).join('') + (n === 3 ? CH(s.k) : '') + s.D.map(CH).join('') + '#' + piles;
+  }
+  const fitsFound = (id, s) => s.fr[suit(id)] === rank(id) - 1;
+  function canOnS(id, s, d) { const p = s.tab[d]; if (!p.length) return rank(id) === 13; const t = p[p.length - 1]; return red(t) !== red(id) && rank(t) === rank(id) + 1; }
+  function popTab(s, c, n) { const p = s.tab[c].slice(0, s.tab[c].length - n); s.tab[c] = p; if (p.length && s.down[c] >= p.length) s.down[c] = p.length - 1; }
+  function takeTalon(s, k) { const D = s.D.slice(); D.splice(k - 1, 1); s.D = D; s.k = k - 1; }
+  // erreichbare Talon-Positionen k (Karte D[k-1] liegt dann oben) – mit beliebig vielen Durchgängen
+  function talonOpts(s, n) {
+    const L = s.D.length, out = [], seen = new Set();
+    if (!L) return out;
+    let k = s.k;
+    while (!seen.has(k)) { seen.add(k); if (k > 0) out.push(k); k = k === L ? 0 : Math.min(k + n, L); }
+    return out;
+  }
+  // Ablegen ohne Risiko: niemand braucht die Karte mehr als Unterlage
+  function isSafe(id, s) {
+    const r = rank(id);
+    if (r <= 2) return true;
+    const opp = red(id) ? [0, 3] : [1, 2], other = (red(id) ? [1, 2] : [0, 3]).find(x => x !== suit(id));
+    return s.fr[opp[0]] >= r - 1 && s.fr[opp[1]] >= r - 1 && s.fr[other] >= r - 2;
+  }
+  function safeAuto(s) {
+    for (let moved = true; moved;) {
+      moved = false;
+      for (let c = 0; c < 7; c++) { const p = s.tab[c]; if (!p.length) continue; const id = p[p.length - 1]; if (fitsFound(id, s) && isSafe(id, s)) { popTab(s, c, 1); s.fr[suit(id)]++; moved = true; } }
+      if (s.k > 0) { const id = s.D[s.k - 1]; if (fitsFound(id, s) && isSafe(id, s)) { takeTalon(s, s.k); s.fr[suit(id)]++; moved = true; } }
+    }
+  }
+  // quick = nur die üblichen sinnvollen Züge (findet Lösungen schnell, beweist aber keine Unlösbarkeit)
+  function children(s, n, quick) {
+    const out = [];
+    const add = (pr, f) => { const t = cloneS(s); f(t); out.push([pr, t]); };
+    for (let c = 0; c < 7; c++) { const p = s.tab[c]; if (p.length) { const id = p[p.length - 1]; if (fitsFound(id, s)) add(0, t => { popTab(t, c, 1); t.fr[suit(id)]++; }); } }
+    const tal = talonOpts(s, n);
+    for (const k of tal) { const id = s.D[k - 1]; if (fitsFound(id, s)) add(1, t => { takeTalon(t, k); t.fr[suit(id)]++; }); }
+    for (let c = 0; c < 7; c++) {
+      const p = s.tab[c];
+      for (let i = s.down[c]; i < p.length; i++) {
+        const id = p[i], whole = i === 0;
+        let emptyTried = false;
+        for (let d = 0; d < 7; d++) {
+          if (d === c || !canOnS(id, s, d)) continue;
+          if (!s.tab[d].length) { if (whole || emptyTried) continue; emptyTried = true; }
+          if (quick && i > s.down[c] && !fitsFound(p[i - 1], s)) continue;
+          add(i === s.down[c] ? (whole ? 3 : 2) : 6, t => { const mv = p.slice(i); popTab(t, c, p.length - i); t.tab[d] = t.tab[d].concat(mv); });
+        }
+      }
+    }
+    for (const k of tal) {
+      const id = s.D[k - 1];
+      let emptyTried = false;
+      for (let d = 0; d < 7; d++) {
+        if (!canOnS(id, s, d)) continue;
+        if (!s.tab[d].length) { if (emptyTried) continue; emptyTried = true; }
+        add(4, t => { takeTalon(t, k); t.tab[d] = t.tab[d].concat([id]); });
+      }
+    }
+    for (let sv = 0; sv < 4 && !quick; sv++) {
+      const r = s.fr[sv];
+      if (r < 2) continue;
+      const id = sv * 13 + r - 1;
+      let emptyTried = false;
+      for (let d = 0; d < 7; d++) {
+        if (!canOnS(id, s, d)) continue;
+        if (!s.tab[d].length) { if (emptyTried) continue; emptyTried = true; }
+        add(7, t => { t.fr[sv]--; t.tab[d] = t.tab[d].concat([id]); });
+      }
+    }
+    out.sort((a, b) => a[0] - b[0]);
+    return out.map(x => x[1]);
+  }
+  // gewonnen bzw. sicher gewinnbar: alles offen und (Talon leer oder 1-Karte-Ziehen)
+  const solvedS = (s, n) => s.fr.every(x => x === 13) || (s.down.every(x => !x) && (n === 1 || !s.D.length));
+  let solveRun = 0;
+  // erst schnell suchen (meist sofort „lösbar“), dann vollständig (nur die kann „unlösbar“ beweisen)
+  async function solveAsync(st, n, limit = 30000) {
+    const run = ++solveRun;
+    const q = await searchS(st, n, Math.min(limit, 8000), true, run);
+    if (q === 'yes' || q === 'cancel') return q;
+    // mit vielen verdeckten Karten ist ein Beweis zu teuer (und fast nie nötig) -> Handy schonen
+    if (st.tab.reduce((a, p) => a + p.filter(x => !x.up).length, 0) > 15) return 'unknown';
+    return searchS(st, n, limit, false, run);
+  }
+  function searchS(st, n, limit, quick, run) {
+    return new Promise(res => {
+      const root = toSolver(st);
+      safeAuto(root);
+      if (solvedS(root, n)) { res('yes'); return; }
+      const seen = new Set([hashS(root, n)]);
+      const stack = [{ kids: children(root, n, quick), i: 0 }];
+      let nodes = 0;
+      const step = () => {
+        if (run !== solveRun) { res('cancel'); return; }
+        const end = performance.now() + 8;
+        let tick = 0;
+        while (stack.length) {
+          if (++tick % 32 === 0 && performance.now() > end) { setTimeout(step, 0); return; }
+          const top = stack[stack.length - 1];
+          if (top.i >= top.kids.length) { stack.pop(); continue; }
+          const s = top.kids[top.i++];
+          safeAuto(s);
+          if (solvedS(s, n)) { res('yes'); return; }
+          const h = hashS(s, n);
+          if (seen.has(h)) continue;
+          seen.add(h);
+          if (++nodes > limit) { res('unknown'); return; }
+          stack.push({ kids: children(s, n, quick), i: 0 });
+        }
+        res(quick ? 'unknown' : 'no');
+      };
+      setTimeout(step, 0);
+    });
+  }
+
+  // nach jedem Zug (gebündelt) prüfen; bei „sicher unlösbar“ Hinweis + Sprung zum letzten lösbaren Stand
+  let chkT = 0, stuckFor = -1, backTo = null;
+  function scheduleCheck() {
+    clearTimeout(chkT);
+    solveRun++; // laufende Prüfung abbrechen
+    $('solStuck').hidden = true;
+    if (!g || g.won) return;
+    chkT = setTimeout(checkSolvable, 450);
+  }
+  async function checkSolvable() {
+    if (!g || g.won) return;
+    const gid = g.id, st = clone(g.st), moves = g.moves, n = g.draw;
+    const r = await solveAsync(st, n);
+    if (!g || g.id !== gid || g.moves !== moves) return;
+    if (r === 'yes') { g.ok = { st, moves }; save(); return; }
+    if (r !== 'no' || stuckFor === gid) return;
+    // jüngsten lösbaren Stand im Rückgängig-Verlauf suchen (neuer als der zuletzt bestätigte)
+    backTo = null;
+    const cands = undo.filter(u => u.moves > (g.ok?.moves ?? -1)).reverse().slice(0, 6);
+    for (const u of cands) {
+      const ru = await solveAsync(u.st, n, 20000);
+      if (!g || g.id !== gid || g.moves !== moves) return;
+      if (ru === 'cancel') return;
+      if (ru === 'yes') { backTo = { st: clone(u.st), moves: u.moves }; break; }
+    }
+    if (!backTo && g.ok) backTo = { st: clone(g.ok.st), moves: g.ok.moves };
+    showStuck();
+  }
+  function showStuck() {
+    $('solBack').hidden = !backTo;
+    $('solStuckTitle').textContent = backTo ? 'Hier geht es nicht mehr auf' : 'Diese Mischung ist nicht lösbar';
+    $('solStuckText').textContent = backTo
+      ? `Egal was du jetzt ziehst – die Partie lässt sich nicht mehr lösen. Nach Zug ${backTo.moves} ging es noch. Spring einfach dorthin zurück.`
+      : 'Mit diesen Karten kann man leider gar nicht gewinnen. Misch einfach neu.';
+    $('solStuck').hidden = false;
+  }
+  $('solBack').addEventListener('click', () => {
+    if (!g || !backTo) return;
+    snap();
+    g.st = clone(backTo.st);
+    g.moves++;
+    g.ok = { st: clone(backTo.st), moves: g.moves };
+    backTo = null; stuckFor = -1;
+    hintIds = []; hintStock = false;
+    $('solMsg').textContent = '↩︎ Zurück – ab hier ist es wieder lösbar 💗';
+    save(); layout(); renderBar(); scheduleCheck();
+  });
+  $('solStuckOn').addEventListener('click', () => { stuckFor = g?.id ?? -1; $('solStuck').hidden = true; });
+  $('solStuckNew').addEventListener('click', () => newGame(true));
 
   // ======================================================================
   // Darstellung
@@ -215,12 +393,14 @@
   function render() {
     $('solStart').hidden = !!g;
     $('solGame').hidden = !g;
+    window.WIR_SHOP?.applyLooks();
     document.querySelectorAll('#solDraw [data-draw]').forEach(b => b.classList.toggle('on', +b.dataset.draw === draw));
     if (!g) return;
     for (const c of cards) c?.remove();
     cards.length = 0;
     layout();
     renderBar();
+    scheduleCheck();
   }
 
   // ======================================================================
@@ -276,7 +456,7 @@
     if (!u || !g) return;
     g.st = u.st; g.moves = u.moves + 1; // Rückgängig zählt als Zug
     hintIds = []; hintStock = false;
-    save(); layout(); renderBar();
+    save(); layout(); renderBar(); scheduleCheck();
   });
 
   // alles Aufgedeckte nacheinander ablegen
@@ -304,8 +484,8 @@
   // ======================================================================
   // Partie: neu, Zeit, Gewinn
   // ======================================================================
-  async function newGame() {
-    if (g && !g.won && g.moves && !confirm('Diese Partie abbrechen und neu mischen?')) return;
+  async function newGame(force) {
+    if (force !== true && g && !g.won && g.moves && !confirm('Diese Partie abbrechen und neu mischen?')) return;
     $('solMsg').textContent = '';
     try {
       const r = await post('/api/games/solitaire/new', { draw });
@@ -325,6 +505,7 @@
   async function won() {
     if (!g || g.won) return;
     g.won = true; save();
+    clearTimeout(chkT); solveRun++; $('solStuck').hidden = true;
     try {
       const r = await post(`/api/games/solitaire/${g.id}/finish`, { seconds: g.secs, moves: g.moves });
       $('solDonePts').textContent = `+${r.game.points} Punkte`;

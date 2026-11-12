@@ -410,6 +410,7 @@
       <span class="sd-chip" id="sdMist">Fehler 0</span>
     </div>
     <div class="sd-grid glass" id="sdGrid"></div>
+    <div class="sd-msg" id="sdMsg" aria-live="polite"></div>
     <div class="sd-tools">
       <button class="sd-tool" id="sdUndo" type="button"><span>↶</span>Rückgängig</button>
       <button class="sd-tool" id="sdErase" type="button"><span>⌫</span>Radierer</button>
@@ -477,6 +478,16 @@
       <button class="sd-tool" id="solUndo" type="button"><span>↶</span>Rückgängig</button>
       <button class="sd-tool" id="solTip" type="button"><span>💡</span><small>Tipp</small></button>
       <button class="sd-tool" id="solAuto" type="button" hidden><span>⚡</span>Ablegen</button>
+    </div>
+    <div class="sol-stuck glass" id="solStuck" hidden aria-live="polite">
+      <div class="ss-ico">🥺</div>
+      <b id="solStuckTitle">Nicht mehr lösbar</b>
+      <small id="solStuckText"></small>
+      <div class="ss-btns">
+        <button class="mem-btn" id="solBack" type="button">↩︎ Zurück zum lösbaren Stand</button>
+        <button class="chip-btn" id="solStuckNew" type="button">🃏 Neu mischen</button>
+        <button class="chip-btn" id="solStuckOn" type="button">Weiterspielen</button>
+      </div>
     </div>
   </div>
   <div class="mem-status" id="solMsg"></div>

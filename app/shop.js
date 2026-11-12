@@ -17,6 +17,7 @@
   async function loadCatalog() {
     cat = await pb.send('/api/shop/catalog', {});
     window.WIR_COINS?.setBalance(cat.balance, false);
+    applyLooks();
     render();
     renderFrameSetting();
     return cat;
@@ -38,6 +39,7 @@
     if (!box || !cat) return;
     const me = window.WIR_LOOK?.me();
     box.replaceChildren();
+    readLooks();
 
     // Profilrahmen
     box.append(el('h3', 'coin-sub', '🖼️ Profilrahmen'), el('p', 'shop-hint', 'Einmal kaufen, für immer behalten. Erscheint überall an deinem Profilbild – auch bei ' + partnerName() + '.'));
@@ -53,6 +55,40 @@
       grid.append(b);
     }
     box.append(grid);
+
+    // Solitär-Kartendecks
+    box.append(el('h3', 'coin-sub', '🃏 Solitär-Kartendecks'), el('p', 'shop-hint', 'Einmal kaufen, für immer behalten. Antippen legt das Deck an – nochmal tippen nimmt es wieder ab.'));
+    const dg = el('div', 'frame-grid');
+    for (const d of cat.prices.decks || []) {
+      const owned = (cat.ownedDecks || []).includes(d.key), on = looks.deck === d.key;
+      const b = el('button', 'frame-item glass' + (on ? ' on' : ''));
+      b.type = 'button';
+      const pv = el('span', 'deck-prev');
+      pv.dataset.deck = d.key;
+      const face = el('span', 'mini-face red');
+      face.append(el('b', '', 'A'), el('i', '', '♥'));
+      pv.append(el('span', 'mini-back'), face);
+      b.append(pv, el('b', '', d.name), el('small', '', owned ? (on ? 'Angelegt ✓' : 'Anlegen') : fmt(d.price) + ' Coins'));
+      b.addEventListener('click', () => owned ? setLook('deck', on ? '' : d.key) : buyCosmetic('deck', d));
+      dg.append(b);
+    }
+    box.append(dg);
+
+    // Sudoku-Schriften
+    box.append(el('h3', 'coin-sub', '🔢 Sudoku-Schriften'), el('p', 'shop-hint', 'Süße Zahlen fürs Sudoku-Brett. Antippen legt die Schrift an, nochmal tippen nimmt sie ab.'));
+    loadFonts();
+    const fg = el('div', 'frame-grid');
+    for (const f of cat.prices.fonts || []) {
+      const owned = (cat.ownedFonts || []).includes(f.key), on = looks.font === f.key;
+      const b = el('button', 'frame-item glass' + (on ? ' on' : ''));
+      b.type = 'button';
+      const pv = el('span', 'font-prev', '1 2 3');
+      pv.dataset.sdfont = f.key;
+      b.append(pv, el('b', '', f.name), el('small', '', owned ? (on ? 'Angelegt ✓' : 'Anlegen') : fmt(f.price) + ' Coins'));
+      b.addEventListener('click', () => owned ? setLook('font', on ? '' : f.key) : buyCosmetic('font', f));
+      fg.append(b);
+    }
+    box.append(fg);
 
     // Bomben
     box.append(el('h3', 'coin-sub', '💣 Benachrichtigungs-Bomben'),
@@ -112,6 +148,52 @@
       await post('/api/shop/frame/set', { frame: key });
       await window.WIR_LOOK?.reload();
       await loadCatalog();
+    } catch (err) { status(errText(err)); }
+  }
+
+  // ======================================================================
+  // Kartendecks + Sudoku-Schriften: Besitz auf dem Server, Auswahl pro Gerät (reine Optik)
+  // ======================================================================
+  const looks = { deck: '', font: '' };
+  const lookKey = k => `wir-${k}-${myId()}`;
+  function readLooks() {
+    try { looks.deck = localStorage.getItem(lookKey('deck')) || ''; looks.font = localStorage.getItem(lookKey('sdfont')) || ''; } catch (_) {}
+    // nur Gekauftes anlegen (sobald der Katalog da ist)
+    if (cat) {
+      if (looks.deck && !(cat.ownedDecks || []).includes(looks.deck)) looks.deck = '';
+      if (looks.font && !(cat.ownedFonts || []).includes(looks.font)) looks.font = '';
+    }
+  }
+  let fontsLoaded = false;
+  function loadFonts() {
+    if (fontsLoaded) return;
+    fontsLoaded = true;
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Chewy&family=Fredoka:wght@600&family=Gaegu:wght@700&family=Mali:wght@600&family=Sniglet:wght@800&display=swap';
+    document.head.append(l);
+  }
+  function applyLooks() {
+    readLooks();
+    const board = $('solBoard'), sd = $('s-sudoku');
+    if (board) { if (looks.deck) board.dataset.deck = looks.deck; else delete board.dataset.deck; }
+    if (sd) { if (looks.font) { loadFonts(); sd.dataset.sdfont = looks.font; } else delete sd.dataset.sdfont; }
+  }
+  function setLook(kind, key) {
+    try { localStorage.setItem(lookKey(kind === 'deck' ? 'deck' : 'sdfont'), key); } catch (_) {}
+    applyLooks();
+    render();
+    status(key ? 'Angelegt ✓' : 'Abgenommen');
+  }
+  async function buyCosmetic(kind, item) {
+    if (!confirmBuy(`${kind === 'deck' ? 'Kartendeck' : 'Sudoku-Schrift'} „${item.name}“`, item.price)) return;
+    try {
+      const r = await post('/api/shop/cosmetic', { kind, item: item.key });
+      window.WIR_COINS?.setBalance(r.balance);
+      await loadCatalog();
+      setLook(kind, item.key);
+      UI.burst(window.innerWidth / 2, window.innerHeight / 2, 18);
+      status(`„${item.name}“ gehört jetzt dir und ist angelegt ✓`);
     } catch (err) { status(errText(err)); }
   }
 
@@ -213,5 +295,5 @@
   document.addEventListener('wir:users', () => { if (cat) { render(); renderFrameSetting(); } });
   document.addEventListener('wir:started', () => { if (!started) start(); });
 
-  window.WIR_SHOP = { tipPrice: g => cat?.prices.tips[g], confirmBuy, newKey, buyTip, reload: loadCatalog };
+  window.WIR_SHOP = { applyLooks, tipPrice: g => cat?.prices.tips[g], confirmBuy, newKey, buyTip, reload: loadCatalog };
 })();

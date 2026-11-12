@@ -437,6 +437,23 @@
 
   let sd = null;          // { id, difficulty, puzzle, solution, cells:int[], notes:int[], elapsed, mistakes, show_errors }
   let sdSel = -1, sdNoteMode = false, sdUndoStack = [], sdBusy = false;
+  let sdPick = 0;         // ausgewählte Zahl (Zahl zuerst wählen, dann Felder antippen); 0 = keine
+  let sdLastErr = -1;     // zuletzt falsch gesetztes Feld (für den Hinweis unter dem Brett)
+  // Nachbarn je Feld (gleiche Zeile, Spalte, Block)
+  const SD_PEERS = Array.from({ length: 81 }, (_, i) => {
+    const r = Math.floor(i / 9), c = i % 9, out = [];
+    for (let j = 0; j < 81; j++) { const rj = Math.floor(j / 9), cj = j % 9; if (j !== i && (rj === r || cj === c || box(rj, cj) === box(r, c))) out.push(j); }
+    return out;
+  });
+  // Wo kollidiert die Zahl in Feld i? -> { cells: [...], where: 'Zeile'|'Spalte'|'Block' }
+  function sdClashOf(i) {
+    const v = sd.cells[i];
+    if (!v) return null;
+    const cells = SD_PEERS[i].filter(j => sd.cells[j] === v);
+    if (!cells.length) return null;
+    const r = Math.floor(i / 9), c = i % 9, j = cells[0], rj = Math.floor(j / 9), cj = j % 9;
+    return { cells, where: rj === r ? 'dieser Zeile' : cj === c ? 'dieser Spalte' : 'diesem Block' };
+  }
   let sdScores = [];
   const sdKey = () => 'wir-sudoku-' + myId();
 
@@ -506,7 +523,7 @@
       const old = await pb.collection('sudoku_progress').getFullList({ filter: pb.filter('user = {:u}', { u: myId() }) });
       const rec = old[0] ? await pb.collection('sudoku_progress').update(old[0].id, data) : await pb.collection('sudoku_progress').create(data);
       sd = sdFromRec(rec);
-      sdSel = -1; sdUndoStack = []; sdNoteMode = false; sdDirty = false;
+      sdSel = -1; sdUndoStack = []; sdNoteMode = false; sdDirty = false; sdPick = 0; sdLastErr = -1;
       sdLocal();
       $('sdGenMsg').textContent = '';
       renderSudoku();
@@ -532,6 +549,7 @@
   function renderSudoku() {
     $('sdStart').hidden = !!sd;
     $('sdGame').hidden = !sd;
+    window.WIR_SHOP?.applyLooks();
     if (!sd) return;
     $('sdLevel').textContent = LEVELS[sd.difficulty];
     $('sdTime').textContent = '⏱ ' + fmtTime(sd.elapsed);
@@ -543,9 +561,32 @@
     renderSdPad();
   }
 
+  // Hinweiszeile unter dem Brett: Fehlerursache oder kurze Bedienhilfe
+  function renderSdMsg(clash) {
+    const m = $('sdMsg');
+    if (!m) return;
+    m.className = 'sd-msg';
+    const i = sdLastErr;
+    if (sd.show_errors && i >= 0 && sd.cells[i] && String(sd.cells[i]) !== sd.solution[i]) {
+      const c = sdClashOf(i), v = sd.cells[i];
+      m.classList.add('bad');
+      m.textContent = c ? `✗ Die ${v} gibt es schon in ${c.where} – rot umrandet.` : `✗ Die ${v} passt hier nicht – sie führt später zu einem Widerspruch.`;
+      return;
+    }
+    const wrong = sd.show_errors ? sd.cells.filter((v, k) => v && String(v) !== sd.solution[k]).length : 0;
+    if (wrong) { m.classList.add('bad'); m.textContent = `✗ ${wrong} ${wrong === 1 ? 'Feld ist' : 'Felder sind'} noch falsch` + (clash.size ? ' · doppelte Zahlen sind rot umrandet' : ''); return; }
+    m.textContent = sdPick
+      ? (sdNoteMode ? `✏️ ${sdPick} gewählt – Feld antippen setzt/entfernt die Notiz` : `${sdPick} gewählt – Feld antippen zum Setzen · ${sdPick} nochmal tippen zum Abwählen`)
+      : 'Zahl unten wählen, dann Felder antippen';
+  }
+
   function renderSdGrid() {
-    const selVal = sdSel >= 0 ? sd.cells[sdSel] : 0;
+    const selVal = sdPick || (sdSel >= 0 ? sd.cells[sdSel] : 0);
     const sr = Math.floor(sdSel / 9), sc = sdSel % 9;
+    // doppelte Zahlen in Zeile/Spalte/Block (nur wenn Fehler angezeigt werden)
+    const clash = new Set();
+    if (sd.show_errors) for (let i = 0; i < 81; i++) if (sd.cells[i]) for (const j of SD_PEERS[i]) if (sd.cells[j] === sd.cells[i]) { clash.add(i); clash.add(j); }
+    const errClash = sdLastErr >= 0 && sd.show_errors ? (sdClashOf(sdLastErr)?.cells || []) : [];
     const cells = [];
     for (let i = 0; i < 81; i++) {
       const r = Math.floor(i / 9), c = i % 9;
@@ -559,8 +600,10 @@
       if (sdSel >= 0) {
         if (i === sdSel) b.classList.add('sel');
         else if (r === sr || c === sc || box(r, c) === box(sr, sc)) b.classList.add('peer');
-        if (v && v === selVal && i !== sdSel) b.classList.add('same');
       }
+      if (v && v === selVal && i !== sdSel) b.classList.add('same');
+      if (clash.has(i)) b.classList.add('clash');
+      if (errClash.includes(i)) b.classList.add('cause');
       if (v) {
         b.textContent = v;
         if (sd.show_errors && String(v) !== sd.solution[i]) b.classList.add('err');
@@ -572,15 +615,17 @@
       cells.push(b);
     }
     $('sdGrid').replaceChildren(...cells);
+    renderSdMsg(clash);
   }
 
   function renderSdPad() {
     const counts = Array(10).fill(0);
     sd.cells.forEach((v, i) => { if (v && String(v) === sd.solution[i]) counts[v]++; });
     $('sdPad').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => {
-      const b = el('button', 'sd-num' + (counts[d] >= 9 ? ' done' : ''));
+      const b = el('button', 'sd-num' + (counts[d] >= 9 ? ' done' : '') + (sdPick === d ? ' on' : ''));
       b.type = 'button';
       b.dataset.d = d;
+      b.setAttribute('aria-pressed', sdPick === d);
       b.append(el('b', '', String(d)), el('small', '', counts[d] >= 9 ? '✓' : String(9 - counts[d])));
       return b;
     }));
@@ -591,13 +636,16 @@
 
   $('sdGrid').addEventListener('click', e => {
     const b = e.target.closest('.sd-cell');
-    if (!b) return;
-    sdSel = +b.dataset.i;
+    if (!b || !sd) return;
+    const i = +b.dataset.i;
+    sdSel = i;
+    // Zahl gewählt + Feld änderbar -> setzen (gleiche Zahl nochmal = wieder entfernen)
+    if (sdPick && sdEditable(i)) { sdInput(sdPick, true); return; }
     renderSdGrid();
   });
 
   const sdSolved = () => sd && sd.cells.every((v, k) => String(v) === sd.solution[k]);
-  function sdInput(d) {
+  function sdInput(d, toggle) {
     if (sdSolved()) { sdFinish(); return; } // Speichern war fehlgeschlagen -> nochmal
     if (!sd || !sdEditable(sdSel)) return;
     const i = sdSel;
@@ -605,15 +653,20 @@
       if (sd.cells[i]) return;
       sdSnap();
       sd.notes[i] ^= 1 << d;
+    } else if (sd.cells[i] === d) {
+      if (!toggle) return;
+      sdSnap();
+      sd.cells[i] = 0;
+      if (sdLastErr === i) sdLastErr = -1;
     } else {
-      if (sd.cells[i] === d) return;
       sdSnap();
       sd.cells[i] = d;
       sd.notes[i] = 0;
       if (String(d) !== sd.solution[i]) {
         sd.mistakes++;
-        if (sd.show_errors) UI.shake($('sdGrid').children[i]);
+        sdLastErr = i;
       } else {
+        if (sdLastErr === i) sdLastErr = -1;
         // passende Notizen in Zeile/Spalte/Block entfernen
         const r = Math.floor(i / 9), c = i % 9;
         for (let j = 0; j < 81; j++) {
@@ -623,10 +676,18 @@
       }
     }
     renderSudoku();
+    if (sd.show_errors && sdLastErr === i && sd.cells[i]) UI.shake($('sdGrid').children[i]);
     sdSaveSoon();
     if (sdSolved()) sdFinish();
   }
-  $('sdPad').addEventListener('click', e => { const b = e.target.closest('.sd-num'); if (b) sdInput(+b.dataset.d); });
+  // Zahlenleiste: Zahl auswählen bzw. nochmal tippen zum Abwählen (setzt nichts von selbst)
+  $('sdPad').addEventListener('click', e => {
+    const b = e.target.closest('.sd-num');
+    if (!b || !sd) return;
+    const d = +b.dataset.d;
+    sdPick = sdPick === d ? 0 : d;
+    renderSudoku();
+  });
   $('sdErase').addEventListener('click', () => {
     if (!sd || !sdEditable(sdSel) || (!sd.cells[sdSel] && !sd.notes[sdSel])) return;
     sdSnap();

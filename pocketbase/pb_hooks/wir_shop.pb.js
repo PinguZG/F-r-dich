@@ -18,6 +18,10 @@ routerAdd('POST', '/api/shop/frame/set', (e) => {
   return e.json(200, require(`${__hooks}/shop_lib.js`).setFrame(e.app, e.auth.id, e.requestInfo().body || {}));
 }, $apis.requireAuth('users'));
 
+routerAdd('POST', '/api/shop/cosmetic', (e) => {
+  return e.json(200, require(`${__hooks}/shop_lib.js`).buyCosmetic(e.app, e.auth.id, e.requestInfo().body || {}));
+}, $apis.requireAuth('users'));
+
 routerAdd('POST', '/api/shop/bomb', (e) => {
   return e.json(200, require(`${__hooks}/shop_lib.js`).buyBomb(e.app, e.auth.id, e.requestInfo().body || {}));
 }, $apis.requireAuth('users'));

@@ -23,7 +23,27 @@ const PRICES = {
     msg: { name: 'Nachrichten-Bombe', price: 150, count: 10, maxLen: 60 },
   },
   bombGapMs: 1500,       // Abstand zwischen zwei Pushs einer Bombe
+  // Kosmetik für Spiele: einmal kaufen, für immer behalten; ausgewählt wird im Spiel (nur Optik)
+  decks: [
+    { key: 'schmetterling', name: 'Schmetterlinge', price: 250 },
+    { key: 'katze', name: 'Kätzchen', price: 250 },
+    { key: 'teddy', name: 'Teddybär', price: 250 },
+    { key: 'beeren', name: 'Beeren', price: 250 },
+    { key: 'blume', name: 'Gänseblümchen', price: 250 },
+    { key: 'hase', name: 'Häschen', price: 250 },
+    { key: 'pilz', name: 'Pilzwald', price: 250 },
+    { key: 'mond', name: 'Mond & Sterne', price: 250 },
+    { key: 'pinguin', name: 'Pinguin', price: 250 },
+  ],
+  fonts: [
+    { key: 'fredoka', name: 'Bubble', price: 120 },
+    { key: 'gaegu', name: 'Kritzel', price: 120 },
+    { key: 'sniglet', name: 'Marshmallow', price: 120 },
+    { key: 'chewy', name: 'Kaugummi', price: 120 },
+    { key: 'mali', name: 'Schulheft', price: 120 },
+  ],
 };
+const COSMETIC = { deck: { list: 'decks', label: '🃏 Kartendeck' }, font: { list: 'fonts', label: '🔢 Sudoku-Schrift' } };
 
 // Coins fürs Spielen (zusätzlich zu den bestehenden EARN-Regeln in coins_lib.js)
 const GAME_EARN = {
@@ -54,11 +74,17 @@ function ownedFrames(app, uid) {
   return app.findRecordsByFilter('shop_purchases', "user = {:u} && kind = 'frame'", '', 50, 0, { u: uid }).map(r => r.getString('item'));
 }
 
+function ownedOf(app, uid, kind) {
+  return app.findRecordsByFilter('shop_purchases', 'user = {:u} && kind = {:k}', '', 100, 0, { u: uid, k: kind }).map(r => r.getString('item'));
+}
+
 function catalog(app, uid) {
   const w = coins.ensureWallet(app, uid);
   return {
     prices: PRICES, earn: GAME_EARN,
     owned: ownedFrames(app, uid),
+    ownedDecks: ownedOf(app, uid, 'deck'),
+    ownedFonts: ownedOf(app, uid, 'font'),
     frame: app.findRecordById('users', uid).getString('frame'),
     balance: app.findRecordById('coin_wallets', w.id).getInt('balance'),
   };
@@ -140,6 +166,23 @@ function setFrame(app, uid, body) {
   return { frame: key };
 }
 
+// ---------- Kartendecks (Solitär) + Zahlen-Schriften (Sudoku) ----------
+function buyCosmetic(app, uid, body) {
+  const kind = String(body.kind || '');
+  const c = COSMETIC[kind];
+  if (!c) throw new BadRequestError('Unbekannte Art');
+  const item = PRICES[c.list].find(x => x.key === String(body.item || ''));
+  if (!item) throw new BadRequestError('Gibt es nicht');
+  if (ownedOf(app, uid, kind).includes(item.key)) throw new ApiError(409, 'Das hast du schon 💗');
+  let out;
+  app.runInTransaction((tx) => {
+    const r = coins.book(tx, { user: uid, amount: -item.price, reason: kind, label: `${c.label}: ${item.name}`, ref: item.key, key: `${kind}:${uid}:${item.key}` });
+    if (!r.dup) purchase(tx, { user: uid, kind, item: item.key, price: item.price });
+    out = { balance: r.balance, item: item.key };
+  });
+  return out;
+}
+
 // ---------- Benachrichtigungs-Bomben ----------
 function buyBomb(app, uid, body) {
   const kind = String(body.kind || '');
@@ -199,4 +242,4 @@ function earnGame(app, uid, game, amount, ref, label) {
   }
 }
 
-module.exports = { PRICES, GAME_EARN, catalog, buyTip, buyFrame, setFrame, buyBomb, tipsFor, ownedFrames, earnGame };
+module.exports = { PRICES, GAME_EARN, catalog, buyTip, buyFrame, buyCosmetic, setFrame, buyBomb, tipsFor, ownedFrames, earnGame };
