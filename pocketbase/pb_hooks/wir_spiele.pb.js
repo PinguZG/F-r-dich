@@ -121,3 +121,16 @@ routerAdd('POST', '/api/games/sudoku/finish', (e) => {
   e.app.runInTransaction((tx) => { rec = lib.sudokuFinish(tx, e.auth.id, e.requestInfo().body || {}); });
   return e.json(200, rec);
 }, $apis.requireAuth('users'));
+
+// Sudoku: Startzeit nur vom Server (neues Rätsel = neue Startzeit, sonst unveränderlich)
+onRecordCreateRequest((e) => {
+  if (!e.hasSuperuserAuth()) e.record.set('started', Date.now());
+  e.next();
+}, 'sudoku_progress');
+onRecordUpdateRequest((e) => {
+  if (!e.hasSuperuserAuth()) {
+    const o = e.record.original();
+    e.record.set('started', o.getString('puzzle') !== e.record.getString('puzzle') ? Date.now() : o.getInt('started'));
+  }
+  e.next();
+}, 'sudoku_progress');

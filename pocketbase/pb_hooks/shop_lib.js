@@ -34,6 +34,10 @@ const PRICES = {
     { key: 'pilz', name: 'Pilzwald', price: 250 },
     { key: 'mond', name: 'Mond & Sterne', price: 250 },
     { key: 'pinguin', name: 'Pinguin', price: 250 },
+    { key: 'rosa', name: 'Ganz in Rosa', price: 300 },
+    { key: 'nacht', name: 'Sternennacht', price: 300 },
+    { key: 'regenbogen', name: 'Regenbogen', price: 300 },
+    { key: 'glitzer', name: 'Glitzer ✨', price: 450 },
   ],
   fonts: [
     { key: 'fredoka', name: 'Bubble', price: 120 },
@@ -42,8 +46,26 @@ const PRICES = {
     { key: 'chewy', name: 'Kaugummi', price: 120 },
     { key: 'mali', name: 'Schulheft', price: 120 },
   ],
+  boards: [
+    { key: 'erdbeer', name: 'Erdbeermilch', price: 150 },
+    { key: 'minze', name: 'Minze', price: 150 },
+    { key: 'lavendel', name: 'Lavendel', price: 150 },
+    { key: 'honig', name: 'Honig', price: 150 },
+    { key: 'wolke', name: 'Himmelblau', price: 150 },
+    { key: 'nacht', name: 'Mitternacht', price: 200 },
+  ],
+  sdframes: [
+    { key: 'herz', name: 'Herzchen', price: 150 },
+    { key: 'blumen', name: 'Blumenwiese', price: 150 },
+    { key: 'spitze', name: 'Spitze', price: 150 },
+    { key: 'sterne', name: 'Sternenhimmel', price: 200 },
+    { key: 'glitzer', name: 'Glitzer ✨', price: 300 },
+  ],
 };
-const COSMETIC = { deck: { list: 'decks', label: '🃏 Kartendeck' }, font: { list: 'fonts', label: '🔢 Sudoku-Schrift' } };
+const COSMETIC = {
+  deck: { list: 'decks', label: '🃏 Kartendeck' }, font: { list: 'fonts', label: '🔢 Sudoku-Schrift' },
+  board: { list: 'boards', label: '🎨 Sudoku-Brett' }, sdframe: { list: 'sdframes', label: '🖼️ Sudoku-Rahmen' },
+};
 
 // Coins fürs Spielen (zusätzlich zu den bestehenden EARN-Regeln in coins_lib.js)
 const GAME_EARN = {
@@ -80,11 +102,16 @@ function ownedOf(app, uid, kind) {
 
 function catalog(app, uid) {
   const w = coins.ensureWallet(app, uid);
+  // alle Kosmetik-Käufe in einer Abfrage
+  const ownedCos = {};
+  for (const k of Object.keys(COSMETIC)) ownedCos[k] = [];
+  app.findRecordsByFilter('shop_purchases', "user = {:u} && (kind = 'deck' || kind = 'font' || kind = 'board' || kind = 'sdframe')", '', 200, 0, { u: uid })
+    .forEach(r => ownedCos[r.getString('kind')].push(r.getString('item')));
   return {
+    ownedCos,
     prices: PRICES, earn: GAME_EARN,
     owned: ownedFrames(app, uid),
-    ownedDecks: ownedOf(app, uid, 'deck'),
-    ownedFonts: ownedOf(app, uid, 'font'),
+    ownedDecks: ownedCos.deck, ownedFonts: ownedCos.font, // für ältere App-Stände
     frame: app.findRecordById('users', uid).getString('frame'),
     balance: app.findRecordById('coin_wallets', w.id).getInt('balance'),
   };

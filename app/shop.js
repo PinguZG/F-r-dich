@@ -56,39 +56,23 @@
     }
     box.append(grid);
 
-    // Solitär-Kartendecks
-    box.append(el('h3', 'coin-sub', '🃏 Solitär-Kartendecks'), el('p', 'shop-hint', 'Einmal kaufen, für immer behalten. Antippen legt das Deck an – nochmal tippen nimmt es wieder ab.'));
-    const dg = el('div', 'frame-grid');
-    for (const d of cat.prices.decks || []) {
-      const owned = (cat.ownedDecks || []).includes(d.key), on = looks.deck === d.key;
-      const b = el('button', 'frame-item glass' + (on ? ' on' : ''));
-      b.type = 'button';
-      const pv = el('span', 'deck-prev');
-      pv.dataset.deck = d.key;
-      const face = el('span', 'mini-face red');
-      face.append(el('b', '', 'A'), el('i', '', '♥'));
-      pv.append(el('span', 'mini-back'), face);
-      b.append(pv, el('b', '', d.name), el('small', '', owned ? (on ? 'Angelegt ✓' : 'Anlegen') : fmt(d.price) + ' Coins'));
-      b.addEventListener('click', () => owned ? setLook('deck', on ? '' : d.key) : buyCosmetic('deck', d));
-      dg.append(b);
+    // Kosmetik für Spiele: Kartendecks, Sudoku-Schriften, -Bretter, -Rahmen
+    for (const c of COS) {
+      const list = cat.prices[c.list] || [];
+      if (!list.length) continue;
+      box.append(el('h3', 'coin-sub', c.title), el('p', 'shop-hint', c.hint));
+      if (c.kind === 'font') loadFonts();
+      const grid = el('div', 'frame-grid');
+      for (const it of list) {
+        const owned = ownedList(c.kind).includes(it.key), on = looks[c.kind] === it.key;
+        const b = el('button', 'frame-item glass' + (on ? ' on' : ''));
+        b.type = 'button';
+        b.append(c.prev(it.key), el('b', '', it.name), el('small', '', owned ? (on ? 'Angelegt ✓' : 'Anlegen') : fmt(it.price) + ' Coins'));
+        b.addEventListener('click', () => owned ? setLook(c.kind, on ? '' : it.key) : buyCosmetic(c, it));
+        grid.append(b);
+      }
+      box.append(grid);
     }
-    box.append(dg);
-
-    // Sudoku-Schriften
-    box.append(el('h3', 'coin-sub', '🔢 Sudoku-Schriften'), el('p', 'shop-hint', 'Süße Zahlen fürs Sudoku-Brett. Antippen legt die Schrift an, nochmal tippen nimmt sie ab.'));
-    loadFonts();
-    const fg = el('div', 'frame-grid');
-    for (const f of cat.prices.fonts || []) {
-      const owned = (cat.ownedFonts || []).includes(f.key), on = looks.font === f.key;
-      const b = el('button', 'frame-item glass' + (on ? ' on' : ''));
-      b.type = 'button';
-      const pv = el('span', 'font-prev', '1 2 3');
-      pv.dataset.sdfont = f.key;
-      b.append(pv, el('b', '', f.name), el('small', '', owned ? (on ? 'Angelegt ✓' : 'Anlegen') : fmt(f.price) + ' Coins'));
-      b.addEventListener('click', () => owned ? setLook('font', on ? '' : f.key) : buyCosmetic('font', f));
-      fg.append(b);
-    }
-    box.append(fg);
 
     // Bomben
     box.append(el('h3', 'coin-sub', '💣 Benachrichtigungs-Bomben'),
@@ -152,16 +136,34 @@
   }
 
   // ======================================================================
-  // Kartendecks + Sudoku-Schriften: Besitz auf dem Server, Auswahl pro Gerät (reine Optik)
+  // Kosmetik: Besitz auf dem Server, Auswahl pro Gerät (reine Optik).
+  // kind = Art beim Server, attr = data-Attribut am Ziel, store = localStorage-Name
   // ======================================================================
-  const looks = { deck: '', font: '' };
+  const miniGrid = () => { const g = el('span', 'mini-grid'); for (let i = 0; i < 9; i++) g.append(el('i', i === 4 ? 'g' : '', i % 4 === 0 ? String(i / 4 + 1) : '')); return g; };
+  const COS = [
+    { kind: 'deck', list: 'decks', name: 'Kartendeck', title: '🃏 Solitär-Kartendecks', target: 'solBoard', attr: 'deck', store: 'deck',
+      hint: 'Rückseite und Vorderseite im eigenen Look. Antippen legt das Deck an – nochmal tippen nimmt es wieder ab.',
+      prev: k => { const pv = el('span', 'deck-prev'); pv.dataset.deck = k; const f = el('span', 'mini-face red'); f.append(el('b', '', 'A'), el('i', '', '♥')); const f2 = el('span', 'mini-face'); f2.append(el('b', '', 'K'), el('i', '', '♠')); pv.append(el('span', 'mini-back'), f, f2); return pv; } },
+    { kind: 'font', list: 'fonts', name: 'Sudoku-Schrift', title: '🔢 Sudoku-Schriften', target: 's-sudoku', attr: 'sdfont', store: 'sdfont',
+      hint: 'Süße Zahlen fürs Sudoku-Brett. Antippen legt die Schrift an, nochmal tippen nimmt sie ab.',
+      prev: k => { const pv = el('span', 'font-prev', '1 2 3'); pv.dataset.sdfont = k; return pv; } },
+    { kind: 'board', list: 'boards', name: 'Sudoku-Brett', title: '🎨 Sudoku-Bretter', target: 's-sudoku', attr: 'sdboard', store: 'sdboard',
+      hint: 'Farben für die Felder im Sudoku.',
+      prev: k => { const pv = el('span', 'board-prev'); pv.dataset.sdboard = k; pv.append(miniGrid()); return pv; } },
+    { kind: 'sdframe', list: 'sdframes', name: 'Sudoku-Rahmen', title: '🖼️ Sudoku-Rahmen', target: 's-sudoku', attr: 'sdframe', store: 'sdframe',
+      hint: 'Ein hübscher Rand ums Sudoku-Brett.',
+      prev: k => { const pv = el('span', 'frame-prev sd-frame'); pv.dataset.sdframe = k; pv.append(miniGrid()); return pv; } },
+  ];
+  const looks = {};
   const lookKey = k => `wir-${k}-${myId()}`;
+  // was gehört mir? (Server liefert ownedCos; ältere Server-Antwort: ownedDecks/ownedFonts)
+  const ownedList = kind => cat?.ownedCos?.[kind] || (kind === 'deck' ? cat?.ownedDecks : kind === 'font' ? cat?.ownedFonts : null) || [];
   function readLooks() {
-    try { looks.deck = localStorage.getItem(lookKey('deck')) || ''; looks.font = localStorage.getItem(lookKey('sdfont')) || ''; } catch (_) {}
-    // nur Gekauftes anlegen (sobald der Katalog da ist)
-    if (cat) {
-      if (looks.deck && !(cat.ownedDecks || []).includes(looks.deck)) looks.deck = '';
-      if (looks.font && !(cat.ownedFonts || []).includes(looks.font)) looks.font = '';
+    for (const c of COS) {
+      let v = '';
+      try { v = localStorage.getItem(lookKey(c.store)) || ''; } catch (_) {}
+      // nur Gekauftes anlegen (sobald der Katalog da ist)
+      looks[c.kind] = cat && v && !ownedList(c.kind).includes(v) ? '' : v;
     }
   }
   let fontsLoaded = false;
@@ -175,23 +177,27 @@
   }
   function applyLooks() {
     readLooks();
-    const board = $('solBoard'), sd = $('s-sudoku');
-    if (board) { if (looks.deck) board.dataset.deck = looks.deck; else delete board.dataset.deck; }
-    if (sd) { if (looks.font) { loadFonts(); sd.dataset.sdfont = looks.font; } else delete sd.dataset.sdfont; }
+    for (const c of COS) {
+      const t = $(c.target);
+      if (!t) continue;
+      if (looks[c.kind]) t.dataset[c.attr] = looks[c.kind]; else delete t.dataset[c.attr];
+    }
+    if (looks.font) loadFonts();
   }
   function setLook(kind, key) {
-    try { localStorage.setItem(lookKey(kind === 'deck' ? 'deck' : 'sdfont'), key); } catch (_) {}
+    const c = COS.find(x => x.kind === kind);
+    try { localStorage.setItem(lookKey(c.store), key); } catch (_) {}
     applyLooks();
     render();
     status(key ? 'Angelegt ✓' : 'Abgenommen');
   }
-  async function buyCosmetic(kind, item) {
-    if (!confirmBuy(`${kind === 'deck' ? 'Kartendeck' : 'Sudoku-Schrift'} „${item.name}“`, item.price)) return;
+  async function buyCosmetic(c, item) {
+    if (!confirmBuy(`${c.name} „${item.name}“`, item.price)) return;
     try {
-      const r = await post('/api/shop/cosmetic', { kind, item: item.key });
+      const r = await post('/api/shop/cosmetic', { kind: c.kind, item: item.key });
       window.WIR_COINS?.setBalance(r.balance);
       await loadCatalog();
-      setLook(kind, item.key);
+      setLook(c.kind, item.key);
       UI.burst(window.innerWidth / 2, window.innerHeight / 2, 18);
       status(`„${item.name}“ gehört jetzt dir und ist angelegt ✓`);
     } catch (err) { status(errText(err)); }

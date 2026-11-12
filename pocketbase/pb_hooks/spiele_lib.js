@@ -270,6 +270,7 @@ function validSolved(cells) {
   return true;
 }
 
+const SUDOKU_MIN_SECONDS = { easy: 60, medium: 120, hard: 180 };
 function sudokuFinish(app, uid, body) {
   let prog;
   try { prog = app.findFirstRecordByFilter('sudoku_progress', 'user = {:u}', { u: uid }); }
@@ -287,19 +288,26 @@ function sudokuFinish(app, uid, body) {
   if (givens < conf.givens[0] || givens > conf.givens[1]) throw new BadRequestError('Rätsel passt nicht zur Schwierigkeit');
   if (!validSolved(cells)) throw new BadRequestError('Die Lösung stimmt noch nicht');
 
-  const seconds = Math.max(0, Math.min(86400 * 7, Math.floor(Number(body.elapsed) || prog.getInt('elapsed'))));
+  // echte Dauer seit Rätselstart (vom Server gesetzt); angezeigte Zeit kann kleiner sein (zählt nur bei offener App)
+  const started = prog.getInt('started');
+  const wall = started ? Math.floor((Date.now() - started) / 1000) : null;
+  let seconds = Math.max(0, Math.min(86400 * 7, Math.floor(Number(body.elapsed) || prog.getInt('elapsed'))));
+  if (wall !== null) seconds = Math.min(seconds, wall);
+  seconds = Math.max(seconds, SUDOKU_MIN_SECONDS[diff]);
+  // Coins nur, wenn das Lösen realistisch lange gedauert hat (Schutz vor Löser-Programmen)
+  const fair = wall === null || wall >= SUDOKU_MIN_SECONDS[diff];
   const mistakes = Math.max(prog.getInt('mistakes'), Math.floor(Number(body.mistakes) || 0));
   const rec = new Record(app.findCollectionByNameOrId('sudoku_scores'));
   rec.set('user', uid);
   rec.set('difficulty', diff);
   rec.set('seconds', seconds);
   rec.set('mistakes', mistakes);
-  rec.set('points', sudokuPoints(diff, seconds, mistakes));
+  rec.set('points', fair ? sudokuPoints(diff, seconds, mistakes) : 0);
   const shop = require(`${__hooks}/shop_lib.js`);
   rec.set('hints', shop.tipsFor(app, uid, 'sudoku', prog.id));
   app.save(rec);
   app.delete(prog);
-  shop.earnGame(app, uid, 'sudoku', shop.GAME_EARN.sudoku[diff], rec.id, '🧩 Sudoku gelöst (' + ({ easy: 'Leicht', medium: 'Mittel', hard: 'Schwer' })[diff] + ')');
+  if (fair) shop.earnGame(app, uid, 'sudoku', shop.GAME_EARN.sudoku[diff], rec.id, '🧩 Sudoku gelöst (' + ({ easy: 'Leicht', medium: 'Mittel', hard: 'Schwer' })[diff] + ')');
   return rec;
 }
 

@@ -562,6 +562,15 @@
   }
 
   // Hinweiszeile unter dem Brett: Fehlerursache oder kurze Bedienhilfe
+  // Dauer-Anzeige: Ist das Rätsel mit den eingetragenen Zahlen noch lösbar?
+  function renderSdState() {
+    const st = $('sdState');
+    if (!st) return;
+    const wrong = sd.cells.reduce((n, v, k) => n + (v && String(v) !== sd.solution[k] ? 1 : 0), 0);
+    st.className = 'sd-state ' + (wrong ? 'bad' : 'ok');
+    st.textContent = wrong ? `✗ So nicht mehr lösbar – ${wrong} ${wrong === 1 ? 'Zahl passt' : 'Zahlen passen'} nicht` : '✓ Noch lösbar – alles passt bisher';
+  }
+
   function renderSdMsg(clash) {
     const m = $('sdMsg');
     if (!m) return;
@@ -575,12 +584,21 @@
     }
     const wrong = sd.show_errors ? sd.cells.filter((v, k) => v && String(v) !== sd.solution[k]).length : 0;
     if (wrong) { m.classList.add('bad'); m.textContent = `✗ ${wrong} ${wrong === 1 ? 'Feld ist' : 'Felder sind'} noch falsch` + (clash.size ? ' · doppelte Zahlen sind rot umrandet' : ''); return; }
+    const free = sdPick ? sdPossible(sdPick).size : 0;
     m.textContent = sdPick
-      ? (sdNoteMode ? `✏️ ${sdPick} gewählt – Feld antippen setzt/entfernt die Notiz` : `${sdPick} gewählt – Feld antippen zum Setzen · ${sdPick} nochmal tippen zum Abwählen`)
+      ? (!free ? `Die ${sdPick} ist nirgends mehr möglich ✓` : sdNoteMode ? `✏️ ${sdPick} gewählt – Feld antippen setzt/entfernt die Notiz` : `${sdPick} noch möglich in ${free} ${free === 1 ? 'Feld' : 'Feldern'} (hell) · nicht möglich: schraffiert`)
       : 'Zahl unten wählen, dann Felder antippen';
   }
 
+  // leere Felder, in denen d nach Zeile/Spalte/Block noch erlaubt ist
+  function sdPossible(d) {
+    const out = new Set();
+    for (let i = 0; i < 81; i++) if (!sd.cells[i] && !SD_PEERS[i].some(j => sd.cells[j] === d)) out.add(i);
+    return out;
+  }
+
   function renderSdGrid() {
+    const poss = sdPick ? sdPossible(sdPick) : null;
     const selVal = sdPick || (sdSel >= 0 ? sd.cells[sdSel] : 0);
     const sr = Math.floor(sdSel / 9), sc = sdSel % 9;
     // doppelte Zahlen in Zeile/Spalte/Block (nur wenn Fehler angezeigt werden)
@@ -603,6 +621,7 @@
       }
       if (v && v === selVal && i !== sdSel) b.classList.add('same');
       if (clash.has(i)) b.classList.add('clash');
+      if (poss && !v) b.classList.add(poss.has(i) ? 'can' : 'no');
       if (errClash.includes(i)) b.classList.add('cause');
       if (v) {
         b.textContent = v;
@@ -616,6 +635,7 @@
     }
     $('sdGrid').replaceChildren(...cells);
     renderSdMsg(clash);
+    renderSdState();
   }
 
   function renderSdPad() {

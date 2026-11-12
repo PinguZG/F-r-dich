@@ -1854,3 +1854,11 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Lokal:** `pb_hooks/wir_zuhause.pb.js` nimmt wie `zuhause_extra_lib.js` die Umgebung `WIR_HOME_URL` (Standard `http://127.0.0.1:8095`), damit zwei lokale Vorschauen nebeneinander laufen können.
 - **Vor dem Deploy:** Tag `vor-zuhause-neudesign` setzen + DB-Backup wie üblich (keine Migration nötig).
 - **Rücksetz-Weg:** `git checkout vor-zuhause-neudesign -- app/ pocketbase/pb_hooks/wir_zuhause.pb.js` (stellt auch die entfernten Dateien wieder her), `CACHE` in `app/sw.js` hochzählen, commit, push.
+
+## Spiele-Shop 2: Sudoku-Bretter/-Rahmen, Sonder-Kartendecks, Lösbarkeits-Anzeige, Sudoku-Schutz (13.11.2026, wir-v63)
+- **Sudoku:** Über dem Brett steht dauerhaft „✓ Noch lösbar“ bzw. „✗ So nicht mehr lösbar“. Bei gewählter Zahl: Felder, in denen sie noch möglich ist, sind hell; unmögliche sind schraffiert. Brett liegt jetzt in `#sdFrame` (für Rahmen).
+- **Shop:** 4 neue Decks (Ganz in Rosa, Sternennacht, Regenbogen, Glitzer) und alle Decks mit eingefärbter Vorderseite + Motiv-Wasserzeichen. Neu: 6 Sudoku-Bretter (`PRICES.boards`, kind `board`) und 5 Sudoku-Rahmen (`PRICES.sdframes`, kind `sdframe`). Katalog liefert `ownedCos` (alle Kosmetik in einer Abfrage).
+- **Sicherheit (Shelly-Prüfung):** neue Migration `1794900000_wir_sudoku_start.js` (Feld `sudoku_progress.started`, nur additiv). Hook in `wir_spiele.pb.js` setzt die Startzeit selbst (Client-Werte werden ignoriert). `/api/games/sudoku/finish` gibt Coins und Punkte nur bei realistischer Dauer (Leicht 60 s, Mittel 120 s, Schwer 180 s).
+- **Offen aus der Prüfung:** `wir_header.pb.js` (CSP/HSTS) ist noch nicht committet; PocketBase-Admin `/_/` ist über Funnel erreichbar.
+- **Sicherung:** Tag `vor-spiele-shop2`, Backup `/home/pingu/backups/vor-spiele-shop2-2026-11-13/` (integrity ok).
+- **Rücksetz-Weg:** `git checkout vor-spiele-shop2 -- app/games.js app/shop.js app/games.css app/index.html app/sw.js pocketbase/pb_hooks/shop_lib.js pocketbase/pb_hooks/spiele_lib.js pocketbase/pb_hooks/wir_spiele.pb.js`, sw-Version hochzählen, committen, pushen (kein reset/force). Das Feld `started` darf bleiben (stört nicht).
