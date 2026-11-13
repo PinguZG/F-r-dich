@@ -1890,3 +1890,8 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Datenbank:** keine Änderung, Backup nicht nötig.
 - **Sicherung:** Git-Tag `vor-mockup-abgleich`.
 - **Rücksetz-Weg:** `git checkout vor-mockup-abgleich -- app && git rm -q --cached app/match.css; rm app/match.css`, dann `wir-v68` hochzählen und pushen.
+
+## Update-Log (2026-11-13, sw wir-v70)
+- Neu: `shared/changelog.js` – nach einem Update zeigt ein Fenster „Was ist neu?“ (Neue Funktionen / Kleine Features / Hotfix). Einträge oben in `ENTRIES`, Nummer = `wir-vNN`. Knopf „Was ist neu?“ in den Einstellungen.
+- Datenbank: keine Änderung, kein Backup nötig. Gemerkt wird die Version nur im Browser (`localStorage`).
+- Rücksetz-Weg: `git checkout vor-update-log -- app/index.html app/sw.js`, Datei `shared/changelog.js` löschen, Version hochzählen, committen (kein reset/force).
