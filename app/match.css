@@ -1,0 +1,48 @@
+/* Mockup-Abgleich 2026-11-13: Überschriften, Stimmung, Schicken-Kacheln, Balken wie im Mockup */
+.list-head,.g-group,.hd-h{font-size:18px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink)}
+.list-head{margin:22px 2px 11px}
+.g-group{margin:4px 2px 11px}
+.g-group:not(:first-child){margin-top:22px}
+.wz-hd .list-head{margin:0}
+.wz-hd{margin-top:20px}
+
+/* Stimmung: linksbündig wie im Mockup */
+.wz-m b{text-align:left}
+.wz-m{text-align:left}
+.mbar i{background:linear-gradient(90deg,var(--accent2),var(--accent3,var(--accent)))}
+
+/* Schicken: Kacheln mit Icon-Badge statt großer Farbfläche */
+#s-wir .ping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#s-wir .ping-btn{flex-direction:row;justify-content:flex-start;gap:12px;min-height:74px;padding:12px 14px;border-radius:22px;font-size:15px;font-weight:700;text-align:left;color:var(--ink)}
+#s-wir .ping-btn span{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--accent) 18%,transparent)}
+
+/* Herz: Linie und Glow wie im Mockup */
+.glass-heart.big svg{filter:drop-shadow(0 0 22px color-mix(in srgb,var(--accent3,var(--accent)) 60%,transparent))}
+
+/* Kopfleiste wie im Mockup: Titel links, Coins/Chat und Avatar rechts */
+.topbar h1{order:1;flex:1 1 auto;min-width:0;text-align:left;font-size:22px;font-weight:600;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-right{order:2;flex:0 0 auto;min-width:0;margin-left:auto}
+.top-left{order:3;flex:0 0 auto;min-width:0}
+
+/* Spiele-Karten wie im Mockup (Handy): zwei Spalten, Icon oben links, Titel unten, Glow-Ecke */
+@media (max-width:767px){
+  .g-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .g-card{--c:var(--accent2);height:128px;min-height:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;text-align:left;gap:2px;padding:13px 15px;border-radius:24px;overflow:hidden;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--c) 26%,transparent),var(--glass) 70%)}
+  .g-card:nth-child(4n+2){--c:var(--accent3,var(--accent))}
+  .g-card:nth-child(4n+3){--c:var(--accent)}
+  .g-card:nth-child(4n+4){--c:#ffb36b}
+  .g-card::before{content:"";position:absolute;width:80px;height:80px;border-radius:50%;right:-16px;top:-16px;background:var(--c);filter:blur(24px);opacity:.5;pointer-events:none}
+  .g-card .gc-ico{position:absolute;top:14px;left:15px;width:42px;height:42px;border-radius:14px;margin:0;background:var(--glass-strong)}
+  .g-card .gc-ico svg{width:26px;height:26px}
+  .g-card b{position:relative;font-size:16px;font-weight:700;white-space:normal;line-height:1.2}
+  .g-card small{position:relative}
+  .g-badge{top:14px;right:14px}
+}
+@media (max-width:767px){.g-card small{display:none}}
+
+/* Herz wie im Mockup: flächiger Körper, rosa Umriss, keine Glas-Striche */
+.h-glass{fill:var(--glass-strong)}
+.h-rim{stroke:color-mix(in srgb,var(--accent3,var(--accent)) 60%,var(--glass-border));stroke-width:2}
+.h-ticks,.h-shine,.h-shine2{display:none}
+.love-who .dot{box-shadow:0 0 8px var(--c)}

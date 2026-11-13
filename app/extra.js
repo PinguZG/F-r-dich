@@ -204,7 +204,7 @@
       b.addEventListener('click', () => { if (empty) { UI.shake(b); return; } openLetter(c); });
       return b;
     }));
-    if (!cats.length) $('owInbox').append(el('div', 'empty-note', 'Hier ist noch nichts für dich – bald 💭'));
+    // leer = nichts anzeigen (keine Kommentartexte, wie im Mockup)
   }
 
   let letterBusy = false;

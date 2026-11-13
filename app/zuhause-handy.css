@@ -525,3 +525,15 @@ img.shot{display:block;width:100%;border-radius:16px;margin-top:6px;box-shadow:0
 :host([data-th="pastell"]) #zh.zp .zvol>button{background:rgba(255,255,255,.75)}
 :host([data-th="pastell"]) #zh.zp .zvol .zpw.on{background:var(--p-grad-d);box-shadow:0 4px 14px rgba(229,80,143,.4);color:#fff}
 :host([data-th="pastell"]) #zh.zp .zact .chipb{background:rgba(255,255,255,.7)}
+
+/* Mockup-Abgleich: Szenen als runde Knöpfe in einer Reihe, Reiter immer mit Beschriftung */
+.ztabs button:not(.on) span{display:inline}
+.ztabs button{font-weight:600}
+#zh .zscenes{display:flex;grid-template-columns:none;gap:6px;overflow-x:auto;scrollbar-width:none}
+#zh .zscenes::-webkit-scrollbar{display:none}
+#zh .zs,#zh .zs.on{flex:1 0 64px;background:none;border:0;box-shadow:none;padding:0;gap:7px;min-width:0}
+#zh .zs .em{width:58px;height:58px;font-size:22px}
+#zh .zs b{font-size:12px;font-weight:600;white-space:nowrap}
+:host([data-th="pastell"]) #zh.zp .zs,:host([data-th="pastell"]) #zh.zp .zs.on{background:none;box-shadow:none;border:0}
+:host([data-th="pastell"]) #zh.zp .zs .em{background:rgba(255,255,255,.7);border:1px solid var(--line);box-shadow:none}
+:host([data-th="pastell"]) #zh.zp .zs.on .em{background:radial-gradient(circle at 35% 30%,#ffb8d6,#ff86b9);border-color:transparent;box-shadow:0 0 24px -2px #ff86b9}

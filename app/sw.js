@@ -1,7 +1,7 @@
-const CACHE = 'wir-v66'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v67'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
-  '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/draw.js', '/poker.js', '/herzspur.js', '/zuhause.js', '/zuhause-verlauf.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-tab.js', '/zuhause-tab-markup.js', '/zuhause-tab.css', '/zuhause-handy.js', '/zuhause-handy.css', '/zuhause-claude.js', '/zuhause-claude.css', '/zuhause-pastell.css', '/zuhause-claude-svg.js', '/zuhause-claude-verlauf.js', '/zuhause-claude-luma.js',
+  '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/match.css', '/draw.js', '/poker.js', '/herzspur.js', '/zuhause.js', '/zuhause-verlauf.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-tab.js', '/zuhause-tab-markup.js', '/zuhause-tab.css', '/zuhause-handy.js', '/zuhause-handy.css', '/zuhause-claude.js', '/zuhause-claude.css', '/zuhause-pastell.css', '/zuhause-claude-svg.js', '/zuhause-claude-verlauf.js', '/zuhause-claude-luma.js',
   '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js',
   '/shared/fx.js', '/shared/fx.css'];
 

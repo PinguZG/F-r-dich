@@ -1884,3 +1884,9 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Datenbank:** keine Änderung, kein Schema-Update. Backup: nicht nötig (nur Hooks + App-Dateien).
 - **Sicherung:** Git-Tag `vor-mockup-live`.
 - **Rücksetz-Weg:** `git checkout vor-mockup-live -- app shared pocketbase/pb_hooks && git rm -q --cached app/zuhause-verlauf.js; git commit -m "Zurück vor Mockup-Live" && git push` (kein reset/force); sw-Version hochzählen.
+
+## Mockup-Abgleich: Kopfleiste, Überschriften, Herz, Spiele, Zuhause-Szenen 13.11.2026 (Wir `wir-v67`)
+- **Neu:** `app/match.css` (lädt zuletzt): Titel links, Coins/Chat/Avatar rechts, Überschriften 18px, Herz flächig mit rosa Umriss, Spiele-Karten 2 Spalten, Schicken-Kacheln mit Icon-Badge. `zuhause-handy.css`: Szenen als runde Knöpfe, Reiter mit Beschriftung. Emojis aus Einstellungs-Überschriften, Kommentartext bei „Öffne wenn“ entfernt.
+- **Datenbank:** keine Änderung, Backup nicht nötig.
+- **Sicherung:** Git-Tag `vor-mockup-abgleich`.
+- **Rücksetz-Weg:** `git checkout vor-mockup-abgleich -- app && git rm -q --cached app/match.css; rm app/match.css`, dann `wir-v68` hochzählen und pushen.
