@@ -28,10 +28,20 @@
     fill:   { ico: '🪣', name: 'Füllen',   size: 0,  op: 1 },
   };
   const DEFAULT_PALETTE = ['#1f1a24', '#ffffff', '#e0457b', '#ff7ab8', '#f26d5b', '#f7a072', '#f5c518', '#34d399', '#14b8c4', '#3b9eff', '#7b5cff', '#8a5a3c'];
-  const pref = Object.assign({ tool: 'pen', color: '#e0457b', sizes: {}, ops: {} }, store.get('wir-draw-pref') || {});
+  const SPECIAL = {
+    fill: { ico: '🪣', name: 'Füllen', size: 0, op: 1 }, grad: { ico: '🌈', name: 'Verlauf', size: 1, op: 1 },
+    line: { ico: '╱', name: 'Linie', size: 8, op: 1 }, rect: { ico: '▭', name: 'Rechteck', size: 8, op: 1 }, ell: { ico: '◯', name: 'Ellipse', size: 8, op: 1 },
+    text: { ico: 'T', name: 'Text', size: 70, op: 1 },
+    sel_rect: { ico: '⬚', name: 'Auswahl Rechteck', size: 0, op: 1 }, sel_ell: { ico: '◌', name: 'Auswahl Ellipse', size: 0, op: 1 },
+    sel_lasso: { ico: '➰', name: 'Lasso', size: 0, op: 1 }, sel_wand: { ico: '✨', name: 'Zauberstab', size: 0, op: 1 },
+  };
+  const pref = Object.assign({ tool: 'pen', color: '#e0457b', color2: '#ffffff', sizes: {}, ops: {}, bp: {}, custom: [], sym: 'off', fillShape: false, tol: 32 }, store.get('wir-draw-pref') || {});
+  pref.pen = Object.assign({ cs: 1, co: 1, speed: true, only: false, smooth: 0.45, tilt: true }, pref.pen || {});
   const savePref = () => store.set('wir-draw-pref', pref);
-  const sizeOf = t => pref.sizes[t] ?? TOOLS[t].size;
-  const opOf = t => pref.ops[t] ?? TOOLS[t].op;
+  const info = t => TOOLS[t] || SPECIAL[t] || window.WIR_BRUSHES?.def(t) || TOOLS.pen;
+  const isSel = t => typeof t === 'string' && t.startsWith('sel_');
+  const sizeOf = t => pref.sizes[t] ?? info(t).size;
+  const opOf = t => pref.ops[t] ?? info(t).op;
   let palette = store.get('wir-draw-palette') || DEFAULT_PALETTE.slice();
   let recent = store.get('wir-draw-recent') || [];
 
@@ -46,15 +56,31 @@
   // malt die Punkte ab Index `from` (Paint-Zustand st hält Zufall + Fortschritt) auf ctx – immer mit Deckkraft 1,
   // die Deckkraft des Strichs kommt erst beim Zusammensetzen dazu (so dunkeln Überlappungen im selben Strich nicht nach)
   function paint(ctx, d, st, final) {
+    if (d.mir && d.k === 's') {
+      paintOne(ctx, d, st, final);
+      mirrorsOf(d).forEach((v, i) => paintOne(ctx, v, st['m' + i] || (st['m' + i] = {}), final));
+      return;
+    }
+    paintOne(ctx, d, st, final);
+  }
+  const mirrorsOf = d => d.mir === 'v' ? [mirrorData(d, 1, 0)] : d.mir === 'h' ? [mirrorData(d, 0, 1)] : d.mir === 'q' ? [mirrorData(d, 1, 0), mirrorData(d, 0, 1), mirrorData(d, 1, 1)] : [];
+  function mirrorData(d, mx, my) {
+    const p = d.p.slice();
+    for (let i = 0; i < p.length; i += 3) { if (mx) p[i] = W - p[i]; if (my) p[i + 1] = H - p[i + 1]; }
+    return { ...d, p, r: (d.r + 7) | 0, mir: 0 };
+  }
+  function paintOne(ctx, d, st, final) {
+    if (d.k === 's' && window.WIR_BRUSHES?.has(d.t)) { WIR_BRUSHES.paint(ctx, d, st, final); return; }
     const P = d.p, n = P.length / 3;
     const col = d.t === 'eraser' ? '#000' : d.c;
     ctx.save();
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.strokeStyle = col; ctx.fillStyle = col;
-    if (d.k === 'l' || d.k === 'e') {
+    if (d.k === 'l' || d.k === 'e' || d.k === 'r') {
       ctx.lineWidth = d.s;
       ctx.beginPath();
-      if (d.k === 'l') { ctx.moveTo(P[0], P[1]); ctx.lineTo(P[3], P[4]); }
+      if (d.k === 'r') { const x = Math.min(P[0], P[3]), y = Math.min(P[1], P[4]), w = Math.abs(P[3] - P[0]), h = Math.abs(P[4] - P[1]); if (d.fl) { ctx.fillRect(x, y, w, h); ctx.restore(); st.done = n; return; } ctx.lineJoin = 'miter'; ctx.rect(x, y, w, h); }
+      else if (d.k === 'l') { ctx.moveTo(P[0], P[1]); ctx.lineTo(P[3], P[4]); }
       else ctx.ellipse(P[0], P[1], Math.max(1, Math.abs(P[3])), Math.max(1, Math.abs(P[4])), 0, 0, Math.PI * 2);
       ctx.stroke(); ctx.restore(); st.done = n; return;
     }
@@ -140,18 +166,48 @@
     const d = s.data;
     if (!d || !layers().some(l => l.id === s.layer)) return;
     const lc = layerCanvas(s.layer)._ctx;
+    const lay = layers().find(l => l.id === s.layer) || {};
     if (d.k === 'f') { fillAt(lc, d); return; }
+    if (d.k === 'x') { applyX(s, lay); return; }
     const sc = scratch._ctx;
     sc.clearRect(0, 0, W, H);
-    paint(sc, d, {}, true);
+    if (d.k === 'g') { drawGradient(sc, d); }
+    else if (d.k === 'tx') { drawText(sc, d); }
+    else paint(sc, d, {}, true);
     lc.save();
     lc.globalAlpha = strokeAlpha(d);
-    lc.globalCompositeOperation = d.t === 'eraser' ? 'destination-out' : 'source-over';
+    lc.globalCompositeOperation = brushErase(d) ? 'destination-out' : lay.alock ? 'source-atop' : (window.WIR_BRUSHES?.comp(d) || 'source-over');
     lc.drawImage(scratch, 0, 0);
     lc.restore();
     sc.clearRect(0, 0, W, H);
   }
 
+  const brushErase = d => d.t === 'eraser' || !!window.WIR_BRUSHES?.isErase(d);
+  function drawGradient(c, d) {
+    const P = d.p, g = c.createLinearGradient(P[0], P[1], P[3], P[4]);
+    g.addColorStop(0, d.c); g.addColorStop(1, d.c2 || '#ffffff');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+  }
+  function drawText(c, d) {
+    c.fillStyle = d.c; c.textBaseline = 'middle';
+    c.font = `700 ${Math.max(8, d.s)}px Quicksand, system-ui, sans-serif`;
+    c.fillText(d.tx || '', d.p[0], d.p[1]);
+  }
+  // Auswahl verschieben/kopieren (auch: Ebene duplizieren / zusammenführen): Bereich aus Quell-Ebene -> Ziel-Ebene mit Matrix
+  const selTmp = mkCanvas();
+  function polyPath(c, P) { c.beginPath(); for (let i = 0; i < P.length; i += 3) i ? c.lineTo(P[i], P[i + 1]) : c.moveTo(P[i], P[i + 1]); c.closePath(); }
+  function applyX(s, lay) {
+    const d = s.data;
+    if (!layers().some(l => l.id === d.sl) || !d.p || d.p.length < 9) return;
+    const src = layerCanvas(d.sl), dst = layerCanvas(s.layer), t = selTmp._ctx;
+    t.clearRect(0, 0, W, H); t.save(); polyPath(t, d.p); t.clip(); t.drawImage(src, 0, 0); t.restore();
+    if (!d.cp) { const sc = src._ctx; sc.save(); polyPath(sc, d.p); sc.clip(); sc.clearRect(0, 0, W, H); sc.restore(); }
+    const c = dst._ctx, m = d.m || [1, 0, 0, 1, 0, 0];
+    c.save(); c.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+    c.globalCompositeOperation = lay.alock ? 'source-atop' : 'source-over';
+    c.drawImage(selTmp, 0, 0); c.restore();
+    t.clearRect(0, 0, W, H);
+  }
   function rerender() {
     for (const c of layerCv.values()) c._ctx.clearRect(0, 0, W, H);
     appliedSeq = 0;
@@ -192,25 +248,43 @@
   }
 
   // alle sichtbaren Ebenen auf weißem Papier zusammensetzen
-  function composite(ctx, withLive) {
+  const BLEND = { multiply: 'multiply', screen: 'screen', overlay: 'overlay', add: 'lighter', color: 'color' };
+  const clipCv = mkCanvas();
+  function drawStack(ctx, withLive) {
+    const ls = layers();
+    for (let i = 0; i < ls.length; i++) {
+      const l = ls[i];
+      if (!l.visible) continue;
+      let src = layerSource(l.id, withLive);
+      if (l.clip && i > 0) {
+        const k = clipCv._ctx;
+        k.globalCompositeOperation = 'source-over'; k.clearRect(0, 0, W, H); k.drawImage(src, 0, 0);
+        k.globalCompositeOperation = 'destination-in'; k.drawImage(layerCanvas(ls[i - 1].id), 0, 0);
+        src = clipCv;
+      }
+      ctx.globalAlpha = l.opacity ?? 1;
+      ctx.globalCompositeOperation = BLEND[l.blend] || 'source-over';
+      ctx.drawImage(src, 0, 0);
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  function composite(ctx, withLive, bg = '#fff') {
     ctx.save();
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
-    for (const l of layers()) {
-      if (!l.visible) continue;
-      ctx.globalAlpha = l.opacity ?? 1;
-      ctx.drawImage(layerSource(l.id, withLive), 0, 0);
-    }
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); } else ctx.clearRect(0, 0, W, H);
+    drawStack(ctx, withLive);
     ctx.restore();
   }
   // Ebene inkl. laufendem eigenen/fremden Strich (nur für die Anzeige)
   function layerSource(id, withLive) {
     const c = layerCanvas(id);
+    const hole = withLive && window.WIR_DRAWX?.hole?.(id);
     const mine = withLive && live && liveLayer() === id, theirs = withLive && partnerLive && partnerLive.layer === id;
-    if (!mine && !theirs) return c;
+    if (!mine && !theirs && !hole) return c;
     const w = work._ctx;
     w.clearRect(0, 0, W, H); w.drawImage(c, 0, 0);
-    const put = (src, d) => { w.save(); w.globalAlpha = strokeAlpha(d); w.globalCompositeOperation = d.t === 'eraser' ? 'destination-out' : 'source-over'; w.drawImage(src, 0, 0); w.restore(); };
+    if (hole) { w.save(); polyPath(w, hole); w.globalCompositeOperation = 'destination-out'; w.fill(); w.restore(); }
+    const put = (src, d) => { w.save(); w.globalAlpha = strokeAlpha(d); w.globalCompositeOperation = brushErase(d) ? 'destination-out' : (window.WIR_BRUSHES?.comp(d) || 'source-over'); w.drawImage(src, 0, 0); w.restore(); };
     if (theirs) put(partnerCv, partnerLive.data);
     if (mine) put(scratch, live.data);
     return work;
@@ -258,13 +332,9 @@
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
     ctx.shadowColor = 'transparent';
     ctx.imageSmoothingQuality = 'high';
-    for (const l of layers()) {
-      if (!l.visible) continue;
-      ctx.globalAlpha = l.opacity ?? 1;
-      ctx.drawImage(layerSource(l.id, true), 0, 0);
-    }
+    drawStack(ctx, true);
     ctx.globalAlpha = 1;
-    // Vorschau für Linie/Ellipse (Quick-Shape)
+    window.WIR_DRAWX?.overlay?.(ctx);
     placeCursor();
   }
 
@@ -277,22 +347,56 @@
   let stageRect = { left: 0, top: 0 };
   const ox = ev => ev.clientX - stageRect.left, oy = ev => ev.clientY - stageRect.top;
   let gesture = null, penAt = 0, holdTimer = 0, lastTap = 0, tapUndoTimer = 0;
-  const STREAM = 0.45;          // Glättung (0 = keine)
+  const stream = () => pref.pen.smooth;   // Glättung (0 = keine)
+  let penSeen = false, drag = null, playing = false, lastSpeed = { x: 0, y: 0, t: 0, p: 0.5 };
 
   const cid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   const canDraw = () => drawing && !drawing.locked;
 
+  // Druck: Stift = echter Druck; Finger/Maus = Geschwindigkeit als Ersatz (langsam = dick), wenn eingeschaltet
+  function pressureOf(ev, x, y) {
+    if (ev.pointerType === 'pen') { lastSpeed.p = Math.max(0.05, ev.pressure || 0.5); return lastSpeed.p; }
+    if (!pref.pen.speed) return 1;
+    const now = performance.now(), dt = Math.max(1, now - lastSpeed.t), v = Math.hypot(x - lastSpeed.x, y - lastSpeed.y) * view.s / dt;
+    lastSpeed.x = x; lastSpeed.y = y; lastSpeed.t = now;
+    const target = Math.min(1, Math.max(0.18, 1.05 - v * 0.55));
+    lastSpeed.p = lastSpeed.p * 0.8 + target * 0.2;
+    return lastSpeed.p;
+  }
+  const tiltOf = ev => ev.pointerType === 'pen' && pref.pen.tilt ? Math.min(1, Math.max(Math.abs(ev.tiltX || 0), Math.abs(ev.tiltY || 0)) / 80) : 0;
+  const mirMode = () => ({ off: 0, v: 'v', h: 'h', q: 'q' }[pref.sym] || 0);
+
   function startStroke(e) {
     const tool = pref.tool;
     const [x, y] = toDoc(ox(e), oy(e));
+    lastSpeed = { x, y, t: performance.now(), p: 0.5 };
     if (tool === 'fill') {
-      commit({ k: 'f', t: 'fill', c: pref.color, s: 1, o: opOf('pen'), r: 1, x, y, tol: 32 }, curLayer);
+      commit({ k: 'f', t: 'fill', c: pref.color, s: 1, o: opOf('pen'), r: 1, x, y, tol: pref.tol }, curLayer);
       useColor(pref.color);
       return;
     }
-    const p = e.pointerType === 'pen' ? Math.max(0.05, e.pressure || 0.5) : 1;
+    if (tool === 'text') { addText(x, y); return; }
+    if (isSel(tool)) { window.WIR_DRAWX?.selStart?.(e, tool, x, y); return; }
+    const shapeK = { grad: 'g', line: 'l', rect: 'r', ell: 'e' }[tool];
+    if (shapeK) {
+      const d = { k: shapeK, t: 'pen', c: pref.color, s: shapeK === 'g' ? 1 : sizeOf(tool), o: shapeK === 'g' ? 1 : opOf(tool), r: 1, p: [x, y, 1, x, y, 1] };
+      if (shapeK === 'g') d.c2 = pref.color2;
+      if (shapeK === 'r') d.fl = !!pref.fillShape;
+      live = { data: d, layer: curLayer, st: {}, sid: cid(), sent: 0, sx: x, sy: y, lx: ox(e), ly: oy(e), t0: performance.now(), path: 0, still: performance.now(), shape: true };
+      scratch._ctx.clearRect(0, 0, W, H); requestDraw();
+      return;
+    }
+    const p = pressureOf(e, x, y);
+    const data = { k: 's', t: tool, c: pref.color, s: sizeOf(tool), o: opOf(tool), r: (Math.random() * 2147483647) | 0, p: [x, y, p] };
+    if (window.WIR_BRUSHES?.has(tool)) {
+      if (pref.bp[tool] && Object.keys(pref.bp[tool]).length) data.bp = { ...pref.bp[tool] };
+      if (pref.pen.cs !== 1) data.cs = pref.pen.cs;
+      if (pref.pen.co !== 1) data.co = pref.pen.co;
+      const tl = tiltOf(e); if (tl) data.tl = Math.round(tl * 100) / 100;
+      const m = mirMode(); if (m) data.mir = m;
+    }
     live = {
-      data: { k: 's', t: tool, c: pref.color, s: sizeOf(tool), o: opOf(tool), r: (Math.random() * 2147483647) | 0, p: [x, y, p] },
+      data,
       layer: curLayer, st: {}, sid: cid(), sent: 0, sx: x, sy: y, lx: ox(e), ly: oy(e), t0: performance.now(), path: 0, still: performance.now(),
     };
     scratch._ctx.clearRect(0, 0, W, H);
@@ -306,11 +410,11 @@
     for (const ev of (evs.length ? evs : [e])) {
       const [rx, ry] = toDoc(ox(ev), oy(ev));
       const lx = P[P.length - 3], ly = P[P.length - 2];
-      const x = lx + (rx - lx) * (1 - STREAM), y = ly + (ry - ly) * (1 - STREAM);
+      const x = lx + (rx - lx) * (1 - stream()), y = ly + (ry - ly) * (1 - stream());
       const dist = Math.hypot(x - lx, y - ly);
       if (dist < 1.2 / Math.max(0.3, view.s)) continue;
       if (P.length >= 8997) { endStroke(); return; }
-      const p = ev.pointerType === 'pen' ? Math.max(0.05, ev.pressure || 0.5) : 1;
+      const p = pressureOf(ev, x, y);
       P.push(Math.round(x * 10) / 10, Math.round(y * 10) / 10, Math.round(p * 100) / 100);
       live.path += dist;
     }
@@ -319,12 +423,17 @@
     sendLive();
     requestDraw();
   }
+  function addText(x, y) {
+    const t = (window.prompt('Text') || '').trim();
+    if (!t) return;
+    commit({ k: 'tx', t: 'pen', c: pref.color, s: sizeOf('text'), o: opOf('text'), r: 1, p: [x, y, 1], tx: t }, curLayer);
+  }
   // Halten: am Anfang ohne Bewegung = Pipette, nach Bewegung = gerade Linie / Ellipse
   function armHold(e) {
     clearTimeout(holdTimer);
     const hx = ox(e), hy = oy(e);
     holdTimer = setTimeout(() => {
-      if (!live) return;
+      if (!live || live.shape) return;
       if (live.path < 6 && live.data.p.length <= 6) { pickColor(hx, hy); cancelStroke(); return; }
       if (live.path > 30 && live.data.t !== 'eraser') snapShape();
     }, live && live.path > 30 ? 550 : 500);
@@ -346,18 +455,18 @@
   }
   function moveShape(e) {
     const [x, y] = toDoc(ox(e), oy(e)), d = live.data;
-    if (d.k === 'l') { d.p[3] = x; d.p[4] = y; }
+    if (d.k === 'l' || d.k === 'r' || d.k === 'g') { d.p[3] = x; d.p[4] = y; }
     else { d.p[3] = Math.abs(x - d.p[0]); d.p[4] = Math.abs(y - d.p[1]); }
     scratch._ctx.clearRect(0, 0, W, H);
     live.st = {};
-    paint(scratch._ctx, d, live.st, true);
+    if (d.k === 'g') drawGradient(scratch._ctx, d); else paint(scratch._ctx, d, live.st, true);
     requestDraw();
   }
   function endStroke() {
     clearTimeout(holdTimer);
     if (!live) return;
     const l = live;
-    paint(scratch._ctx, l.data, l.st, true);
+    if (l.data.k === 'g') drawGradient(scratch._ctx, l.data); else paint(scratch._ctx, l.data, l.st, true);
     post(`/api/draw/${drawing.id}/live`, { t: 'end', sid: l.sid }).catch(() => {});
     live = null;
     scratch._ctx.clearRect(0, 0, W, H);
@@ -470,9 +579,16 @@
       stageRect = stage.getBoundingClientRect();
       if (e.pointerType === 'mouse' && e.button === 1) { e.preventDefault(); pointers.set(e.pointerId, { x: ox(e), y: oy(e), pan: true }); stage.setPointerCapture(e.pointerId); return; }
       if (e.pointerType === 'mouse' && e.button !== 0) return;
-      if (e.pointerType === 'pen') penAt = performance.now();
+      if (playing) { playing = false; return; }
+      if (e.pointerType === 'pen') { penAt = performance.now(); if (!penSeen) { penSeen = true; $('dwPenInd')?.removeAttribute('hidden'); } }
       if (e.pointerType === 'touch' && performance.now() - penAt < 1500) return;   // Handballen beim Stift ignorieren
       try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      // „Nur Stift zeichnet“: Finger schieben und zoomen nur (ein Finger = schieben, zwei = zoomen/drehen)
+      if (e.pointerType === 'touch' && pref.pen.only && penSeen) {
+        if (pointers.size === 0) { pointers.set(e.pointerId, { x: ox(e), y: oy(e), pan: true, type: 'touch' }); return; }
+        const first = [...pointers.values()][0]; if (first.pan) first.pan = false;
+      }
+      if (drag && pointers.size === 0) { pointers.set(e.pointerId, { x: ox(e), y: oy(e), type: e.pointerType }); drag.move(e, true); return; }
       pointers.set(e.pointerId, { x: ox(e), y: oy(e), type: e.pointerType });
       if (pointers.size >= 2) {
         // zweiter Finger kurz nach dem ersten: kein Strich, sondern Geste
@@ -490,6 +606,7 @@
       if (p.pan) { if (!viewLocked) { view.x += ox(e) - p.x; view.y += oy(e) - p.y; requestDraw(); } p.x = ox(e); p.y = oy(e); return; }
       p.x = ox(e); p.y = oy(e);
       if (gesture) { gestureMove(); return; }
+      if (drag) { drag.move(e); return; }
       if (live) addPoint(e);
     });
     const up = e => {
@@ -498,6 +615,7 @@
       pointers.delete(e.pointerId);
       if (gesture) { if (pointers.size < 2) gestureEnd(); return; }
       if (p.pan) return;
+      if (drag) { if (drag.end) drag.end(e); return; }
       if (live) { if (e.type === 'pointercancel') cancelStroke(); else endStroke(); }
     };
     stage.addEventListener('pointerup', up);
@@ -566,7 +684,7 @@
     }
   }
   function redrawLive() {
-    if (live) { scratch._ctx.clearRect(0, 0, W, H); live.st = {}; paint(scratch._ctx, live.data, live.st, !!live.shape); }
+    if (live) { scratch._ctx.clearRect(0, 0, W, H); live.st = {}; if (live.data.k === 'g') drawGradient(scratch._ctx, live.data); else paint(scratch._ctx, live.data, live.st, !!live.shape); }
   }
   function placeCursor() {
     const dot = $('dwCursor');
@@ -645,10 +763,28 @@
     await pb.send(`/api/draw/${drawing.id}/thumb`, { method: 'POST', body: fd, requestKey: null }).catch(console.error);
   }
 
-  async function exportBlob(type = 'image/png') {
+  async function exportBlob(type = 'image/png', transparent = false) {
     const c = mkCanvas();
-    composite(c._ctx, false);
+    composite(c._ctx, false, type === 'image/png' && transparent ? null : '#fff');
     return new Promise(r => c.toBlob(r, type, 0.92));
+  }
+  // Zeitraffer: alle Striche der Reihe nach neu zeichnen (Tippen beendet)
+  async function timelapse() {
+    if (playing || !drawing) return;
+    playing = true;
+    const saved = layerCv, savedSeq = appliedSeq;
+    layerCv = new Map();
+    const list = strokes.filter(s => !s.undone);
+    const per = Math.max(1, Math.ceil(list.length / 160));
+    toast('Tippen beendet den Zeitraffer');
+    for (let i = 0; i < list.length && playing; i += per) {
+      for (let k = i; k < Math.min(list.length, i + per); k++) apply(list[k]);
+      requestDraw();
+      await new Promise(r => setTimeout(r, 35));
+    }
+    playing = false;
+    layerCv = saved; appliedSeq = savedSeq;
+    rerender();
   }
 
   // ======================================================================
@@ -712,6 +848,7 @@
     $('s-canvas').classList.toggle('locked', !!drawing.locked);
     $('dwMoreLock').textContent = drawing.locked ? '🔓 Bild entsperren' : '🔒 Bild sperren';
     $('dwMoreView').textContent = viewLocked ? '🔓 Ansicht entsperren' : '📌 Ansicht sperren';
+    if ($('dwMoreSend')) $('dwMoreSend').hidden = !drawing.solo;
     $('dwViewLockIco').hidden = !viewLocked;
     $('dwRename').value = drawing.title || '';
   }
@@ -719,19 +856,22 @@
   const sliderToSize = v => Math.round((1 + 199 * (v / 100) ** 2) * 10) / 10;
   function renderTools() {
     const t = pref.tool;
-    $('dwToolBtn').textContent = TOOLS[t].ico;
+    $('dwToolBtn').textContent = (SPECIAL[t] || TOOLS[t])?.ico || '🖌️';
+    $('dwToolBtn').title = info(t).name || '';
     $('dwColorBtn').style.background = pref.color;
-    $('dwSize').value = sizeToSlider(sizeOf(t === 'fill' ? 'pen' : t));
-    $('dwOpacity').value = Math.round(opOf(t === 'fill' ? 'pen' : t) * 100);
-    $('dwSide').classList.toggle('off', t === 'fill');
+    const st = (t === 'fill' || isSel(t)) ? 'pen' : t;
+    $('dwSize').value = sizeToSlider(sizeOf(st));
+    $('dwOpacity').value = Math.round(opOf(st) * 100);
+    $('dwSide').classList.toggle('off', t === 'fill' || isSel(t));
     document.querySelectorAll('[data-dwtool]').forEach(b => b.classList.toggle('on', b.dataset.dwtool === t));
-    const dot = $('dwSizeDot'), px = Math.max(4, Math.min(40, sizeOf(t) * view.s));
+    const dot = $('dwSizeDot'), px = Math.max(4, Math.min(40, sizeOf(st) * view.s));
     dot.style.width = dot.style.height = px + 'px';
-    dot.style.background = t === 'eraser' ? 'transparent' : pref.color;
+    dot.style.background = (t === 'eraser' || window.WIR_BRUSHES?.def(t).erase) ? 'transparent' : pref.color;
+    window.WIR_DRAWX?.toolChanged?.(t);
   }
   function setColor(c) {
     pref.color = c.toLowerCase(); savePref();
-    if (pref.tool === 'eraser') pref.tool = 'pen';
+    if (pref.tool === 'eraser' || window.WIR_BRUSHES?.def(pref.tool).erase) pref.tool = 'pen';
     renderTools(); renderColor();
   }
   function useColor(c) {
@@ -833,18 +973,52 @@
       const op = el('input'); op.type = 'range'; op.min = 0; op.max = 100; op.value = Math.round((l.opacity ?? 1) * 100); op.setAttribute('aria-label', 'Deckkraft');
       op.addEventListener('input', () => { l.opacity = op.value / 100; requestDraw(); });
       op.addEventListener('change', () => saveLayers(ls.map(x => x.id === l.id ? { ...x, opacity: op.value / 100 } : x)));
-      mid.append(name, op);
+      const bl = el('select', 'dw-lblend'); bl.setAttribute('aria-label', 'Mischmodus');
+      [['normal', 'Normal'], ['multiply', 'Multiplizieren'], ['screen', 'Bildschirm'], ['overlay', 'Überlagern'], ['add', 'Addieren'], ['color', 'Farbe']].forEach(([v, t]) => { const o = el('option', '', t); o.value = v; bl.append(o); });
+      bl.value = l.blend || 'normal';
+      bl.addEventListener('change', () => saveLayers(ls.map(x => x.id === l.id ? { ...x, blend: bl.value } : x)));
+      const flags = el('div', 'dw-lflags');
+      const flag = (t, label, key) => { const b = el('button', 'dw-lflag' + (l[key] ? ' on' : ''), t); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label); b.setAttribute('aria-pressed', l[key] ? 'true' : 'false'); b.addEventListener('click', () => saveLayers(ls.map(x => x.id === l.id ? { ...x, [key]: !l[key] } : x))); return b; };
+      flags.append(flag('🔒', 'Ebene sperren', 'lock'), flag('α', 'Alpha-Sperre', 'alock'), flag('⤵', 'Schnittmaske (auf Ebene darunter)', 'clip'));
+      mid.append(name, op, bl, flags);
       const tools = el('div', 'dw-ltools');
       const btn = (t, label, fn, off) => { const b = el('button', '', t); b.type = 'button'; b.disabled = !!off; b.setAttribute('aria-label', label); b.addEventListener('click', fn); return b; };
       const swap = (a, b) => { const c = ls.slice(); [c[a], c[b]] = [c[b], c[a]]; saveLayers(c); };
       tools.append(
         btn('▲', 'Nach oben', () => swap(idx, idx + 1), idx === ls.length - 1),
         btn('▼', 'Nach unten', () => swap(idx, idx - 1), idx === 0),
-        btn('🗑', 'Löschen', () => { if (ls.length > 1 && confirm(`„${l.name}“ löschen?`)) saveLayers(ls.filter(x => x.id !== l.id)); }, ls.length < 2),
+        btn('⧉', 'Duplizieren', () => dupLayer(l), ls.length >= 12),
+        btn('⤓', 'Nach unten zusammenführen', () => mergeDown(l), idx === 0),
+        btn('🗑', 'Löschen', () => {
+          if (strokes.some(x => x.data?.k === 'x' && x.data.sl === l.id)) { toast('Wird von einer Zusammenführung gebraucht'); return; }
+          if (ls.length > 1 && confirm(`„${l.name}“ löschen?`)) saveLayers(ls.filter(x => x.id !== l.id));
+        }, ls.length < 2),
       );
       row.append(eye, prev, mid, tools);
       return row;
     }));
+  }
+
+  const FULL = [0, 0, 0, W, 0, 0, W, H, 0, 0, H, 0];
+  async function dupLayer(l) {
+    const ls = layers();
+    if (ls.length >= 12) return;
+    const id = 'l' + Date.now().toString(36);
+    const copy = { ...l, id, name: (l.name + ' Kopie').slice(0, 30) };
+    const at = ls.indexOf(l) + 1;
+    await saveLayers([...ls.slice(0, at), copy, ...ls.slice(at)]);
+    curLayer = id;
+    commit({ k: 'x', t: 'pen', c: '#000000', s: 1, o: 1, r: 1, p: FULL.slice(), m: [1, 0, 0, 1, 0, 0], sl: l.id, cp: true }, id);
+  }
+  async function mergeDown(l) {
+    const ls = layers(), i = ls.indexOf(l);
+    if (i < 1) return;
+    const below = ls[i - 1];
+    if (below.lock) { toast('Die Ebene darunter ist gesperrt'); return; }
+    curLayer = below.id;
+    await commit({ k: 'x', t: 'pen', c: '#000000', s: 1, o: 1, r: 1, p: FULL.slice(), m: [1, 0, 0, 1, 0, 0], sl: l.id, cp: false }, below.id);
+    saveLayers(layers().map(x => x.id === l.id ? { ...x, visible: false } : x));
+    toast('Zusammengeführt (leere Ebene bleibt, ausgeblendet)');
   }
 
   // ---------- Kopfleiste + Sheets verdrahten ----------
@@ -863,8 +1037,8 @@
       b.addEventListener('click', () => { pref.tool = k; savePref(); renderTools(); UI.sheet('dwToolSheet', false); });
       return b;
     }));
-    $('dwSize').addEventListener('input', () => { const t = pref.tool === 'fill' ? 'pen' : pref.tool; pref.sizes[t] = sliderToSize(+$('dwSize').value); savePref(); renderTools(); });
-    $('dwOpacity').addEventListener('input', () => { const t = pref.tool === 'fill' ? 'pen' : pref.tool; pref.ops[t] = Math.max(0.02, +$('dwOpacity').value / 100); savePref(); });
+    $('dwSize').addEventListener('input', () => { const t = (pref.tool === 'fill' || isSel(pref.tool)) ? 'pen' : pref.tool; pref.sizes[t] = sliderToSize(+$('dwSize').value); savePref(); renderTools(); });
+    $('dwOpacity').addEventListener('input', () => { const t = (pref.tool === 'fill' || isSel(pref.tool)) ? 'pen' : pref.tool; pref.ops[t] = Math.max(0.02, +$('dwOpacity').value / 100); savePref(); });
     $('dwAddLayer').addEventListener('click', () => {
       const ls = layers();
       if (ls.length >= 12) { toast('Höchstens 12 Ebenen'); return; }
@@ -883,10 +1057,17 @@
     });
     $('dwMoreView').addEventListener('click', () => { viewLocked = !viewLocked; store.set('wir-draw-viewlock', viewLocked); renderTop(); UI.sheet('dwMoreSheet', false); });
     $('dwMoreFit').addEventListener('click', () => { fit(); UI.sheet('dwMoreSheet', false); });
+    $('dwMoreTime')?.addEventListener('click', () => { UI.sheet('dwMoreSheet', false); setTimeout(timelapse, 250); });
+    $('dwMoreSend')?.addEventListener('click', async () => {
+      try { drawing = await post(`/api/draw/${drawing.id}/meta`, { solo: false }); renderTop(); UI.sheet('dwMoreSheet', false); toast('Geschickt ✓'); }
+      catch (err) { toast(UI.errText(err)); }
+    });
     $('dwMoreExport').addEventListener('click', async () => {
-      const blob = await exportBlob('image/png');
-      const name = (drawing.title || 'bild').replace(/[^\wäöüÄÖÜß -]/g, '').trim() + '.png';
-      const file = new File([blob], name, { type: 'image/png' });
+      const kind = window.WIR_DRAWX?.exportKind || 'png';
+      const jpg = kind === 'jpg';
+      const blob = await exportBlob(jpg ? 'image/jpeg' : 'image/png', kind === 'png-t');
+      const name = (drawing.title || 'bild').replace(/[^\wäöüÄÖÜß -]/g, '').trim() + (jpg ? '.jpg' : '.png');
+      const file = new File([blob], name, { type: blob.type });
       if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file] }); return; } catch (_) { return; } }
       const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -923,12 +1104,16 @@
     const box = $('dwGallery');
     const add = el('button', 'dw-card dw-new glass'); add.type = 'button';
     add.append(el('span', 'dw-plus', '＋'), el('b', '', 'Neues Bild'));
-    add.addEventListener('click', newDrawing);
-    box.replaceChildren(add, ...list.map(d => {
+    add.addEventListener('click', () => newDrawing(false));
+    const solo = el('button', 'dw-card dw-new glass'); solo.type = 'button';
+    solo.append(el('span', 'dw-plus dw-plus-solo', '＋'), el('b', '', 'Allein zeichnen'));
+    solo.addEventListener('click', () => newDrawing(true));
+    box.replaceChildren(add, solo, ...list.map(d => {
       const b = el('button', 'dw-card glass'); b.type = 'button';
       const pic = el('div', 'dw-thumb');
       if (d.thumb) { const i = el('img'); i.alt = ''; i.loading = 'lazy'; i.src = pb.files.getURL(d, d.thumb, { token }); pic.append(i); }
       if (d.locked) pic.append(el('span', 'dw-lock', '🔒'));
+      if (d.solo) pic.append(el('span', 'dw-solo', 'privat'));
       const who = d.expand?.last_by?.id === myId() ? 'du' : d.expand?.last_by?.name || '';
       b.append(pic, el('b', '', d.title || 'Unser Bild'), el('small', '', [who, ago(pbMs(d.last_at || d.updated))].filter(Boolean).join(' · ')));
       b.addEventListener('click', () => openDrawing(d.id));
@@ -945,10 +1130,10 @@
     if (s < 86400) return `vor ${Math.round(s / 3600)} Std.`;
     const d = Math.round(s / 86400); return d === 1 ? 'gestern' : `vor ${d} Tagen`;
   }
-  async function newDrawing() {
+  async function newDrawing(solo = false) {
     try {
       const n = (await pb.collection('drawings').getList(1, 1)).totalItems + 1;
-      const d = await post('/api/draw/new', { title: 'Bild ' + n });
+      const d = await post('/api/draw/new', { title: (solo === true ? 'Skizze ' : 'Bild ') + n, solo: solo === true });
       openDrawing(d.id);
     } catch (err) { alert('Ging nicht: ' + UI.errText(err)); }
   }
@@ -973,6 +1158,11 @@
   });
   cv = $('dwCanvas'); ctx = cv.getContext('2d');
   bindStage(); bindUi(); renderTools();
+  window.WIR_DRAWX = Object.assign(window.WIR_DRAWX || {}, {
+    W, H, pref, savePref, info, isSel, SPECIAL, TOOLS, renderTools, toast, paint, mkCanvas, layerCanvas, layers, commit, toDoc, toScreen, view, requestDraw,
+    drawing: () => drawing, strokes: () => strokes, curLayer: () => curLayer, canDraw, undo, redo, timelapse, composite, polyPath, setDrag: d => { drag = d; },
+    stageRect: () => stageRect, ox, oy, fit, exportKind: 'png', saveLayers,
+  });
   window.WIR_DRAW = {
     open: openDrawing, gallery: loadGallery,
     state: () => ({ id: drawing?.id, n: strokes.filter(s => !s.undone).length, layers: layers().length, locked: !!drawing?.locked, partnerLive: !!partnerLive, cursor: !!partnerCur }),

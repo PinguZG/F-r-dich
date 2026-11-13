@@ -1,0 +1,33 @@
+/* ======================================================================
+   Tablet-Feinschliff (lädt nach layout.css). Alles nach FENSTERBREITE, nicht nach Gerät:
+   schmale Split-View-/Slide-Over-Fenster (<768) behalten das Handy-Layout.
+   Handy <768 | Tablet 768–1180 | groß >1180
+   ====================================================================== */
+@media (min-width:768px){
+  .page > *{max-width:min(860px,100%)}
+  .page.sub[data-area="games"] > *{max-width:min(760px,100%)}
+  /* Start: Karten in zwei Spalten */
+  #s-home > .home-cols{display:block;max-width:1000px;columns:2 320px;column-gap:18px}
+  .home-cols > *{break-inside:avoid;margin:0 0 14px!important;width:100%}
+  .home-cols > .opt{display:flex}
+  .home-cols > #homeMeet:empty{display:none}
+  .photos{grid-template-columns:repeat(4,1fr)}
+  .g-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* größere Touch-Ziele */
+  .tab-btn{min-height:64px}
+  .opt,.g-card,.pack-btn,.logout{min-height:48px}
+  .a1-fab{width:60px;height:60px}
+  /* Tastatur (Magic Keyboard) und Maus */
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .tab-btn:focus-visible{outline-offset:-3px}
+  @media (hover:hover){.opt:hover,.g-card:hover{transform:translateY(-1px);transition:transform .15s}}
+}
+@media (min-width:1024px) and (max-width:1180px){
+  #s-home > .home-cols{columns:3 280px;max-width:1100px}
+  .photos{grid-template-columns:repeat(5,1fr)}
+}
+@media (min-width:1181px){
+  .page > *{max-width:min(1100px,100%)}
+  .page.sub[data-area="games"] > *{max-width:min(900px,100%)}
+  .g-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}

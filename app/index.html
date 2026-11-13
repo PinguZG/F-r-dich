@@ -30,7 +30,9 @@
 <link rel="stylesheet" href="/layout.css">
 <link rel="stylesheet" href="/a1.css">
 <link rel="stylesheet" href="/draw.css">
+<link rel="stylesheet" href="/drawpro.css">
 <link rel="stylesheet" href="/match.css">
+<link rel="stylesheet" href="/tablet.css">
 </head>
 <body>
 
@@ -681,6 +683,7 @@
     <span class="dw-vl" id="dwViewLockIco" hidden aria-label="Ansicht gesperrt">📌</span>
     <button class="dw-btn" id="dwUndo" type="button" aria-label="Rückgängig">↶</button>
     <button class="dw-btn" id="dwRedo" type="button" aria-label="Wiederholen">↷</button>
+    <button class="dw-btn dw-pen" id="dwPenInd" type="button" hidden aria-label="Stift erkannt – Einstellungen" title="Stift erkannt"><svg class="ico-line" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19z"/><path d="M14.5 6.5l3 3"/></svg></button>
     <button class="dw-btn" id="dwToolBtn" type="button" aria-label="Werkzeuge">🖊️</button>
     <button class="dw-btn" id="dwLayerBtn" type="button" aria-label="Ebenen"><svg class="ico-line" viewBox="0 0 24 24"><path d="M12 4 3 8.5 12 13l9-4.5z"/><path d="m3 12.5 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg></button>
     <button class="dw-color" id="dwColorBtn" type="button" aria-label="Farbe"></button>
@@ -690,6 +693,17 @@
     <div class="dw-vr"><input type="range" id="dwSize" min="0" max="100" aria-label="Größe"></div>
     <div class="dw-dotbox"><i class="dw-dot" id="dwSizeDot"></i></div>
     <div class="dw-vr"><input type="range" id="dwOpacity" min="2" max="100" aria-label="Deckkraft"></div>
+  </div>
+  <div class="dw-selbar glass" id="dwSelBar" hidden>
+    <label class="dw-selr"><span>Größe</span><input type="range" id="dwSelScale" min="20" max="300" value="100"></label>
+    <label class="dw-selr"><span>Drehen</span><input type="range" id="dwSelRot" min="-180" max="180" value="0"></label>
+    <div class="dw-selb">
+      <button type="button" id="dwSelCopy">Kopie</button>
+      <button type="button" id="dwSelLayer">Neue Ebene</button>
+      <button type="button" id="dwSelDel">Löschen</button>
+      <button type="button" id="dwSelNo" aria-label="Abbrechen">✕</button>
+      <button type="button" id="dwSelOk" class="ok" aria-label="Anwenden">✓</button>
+    </div>
   </div>
   <div class="dw-lockbar" id="dwLockBar" hidden></div>
   <div class="dw-toast" id="dwToast" hidden></div>
@@ -1262,7 +1276,10 @@
       <button class="pack-btn" id="dwMoreFit" type="button">⤢ Ganzes Bild</button>
       <button class="pack-btn" id="dwMoreView" type="button">📌 Ansicht sperren</button>
       <button class="pack-btn" id="dwMoreLock" type="button">🔒 Bild sperren</button>
-      <button class="pack-btn" id="dwMoreExport" type="button">⬇️ Als PNG</button>
+      <select class="mem-input" id="dwExportKind" aria-label="Exportformat"><option value="png">PNG</option><option value="png-t">PNG (transparent)</option><option value="jpg">JPEG</option></select>
+      <button class="pack-btn" id="dwMoreExport" type="button">⬇️ Exportieren</button>
+      <button class="pack-btn" id="dwMoreTime" type="button">⏯ Zeitraffer</button>
+      <button class="pack-btn" id="dwMoreSend" type="button" hidden>📤 An Schatz schicken</button>
       <button class="pack-btn" id="dwMoreMem" type="button">📸 In Erinnerungen</button>
       <button class="link-btn dt-del" id="dwMoreDel" type="button">🗑 Bild löschen</button>
     </div>
@@ -1383,7 +1400,9 @@
 <script src="/poker.js"></script>
 <script src="/herzspur.js"></script>
 <script src="/shared/activity.js"></script>
+<script src="/brushes.js"></script>
 <script src="/draw.js"></script>
+<script src="/drawpro.js"></script>
 <script src="/zuhause-data.js"></script>
 <script src="/zuhause.js"></script>
 <script src="/zuhause-tab-markup.js"></script>

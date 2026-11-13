@@ -10,10 +10,10 @@ routerAdd('POST', '/api/draw/new', (e) => {
   const r = new Record(e.app.findCollectionByNameOrId('drawings'));
   const title = String(b.title || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80) || 'Unser Bild';
   r.set('title', title); r.set('author', e.auth.id); r.set('w', Z.W); r.set('h', Z.H);
-  r.set('layers', Z.DEFAULT_LAYERS); r.set('seq', 0);
+  r.set('layers', Z.DEFAULT_LAYERS); r.set('seq', 0); r.set('solo', !!b.solo);
   r.set('last_by', e.auth.id); r.set('last_at', new DateTime());
   e.app.save(r);
-  Z.notify(e.app, e.auth.id, `🎨 ${Z.nameOf(e.app, e.auth.id)} hat ein neues Bild angefangen`, `„${title}“ – zeichnest du mit?`);
+  if (!b.solo) Z.notify(e.app, e.auth.id, `🎨 ${Z.nameOf(e.app, e.auth.id)} hat ein neues Bild angefangen`, `„${title}“ – zeichnest du mit?`);
   return e.json(200, r);
 }, $apis.requireAuth('users'));
 
@@ -32,12 +32,15 @@ routerAdd('POST', '/api/draw/{id}/stroke', (e) => {
     try { layers = JSON.parse(d.getString('layers') || '[]'); } catch (_) {}
     const layer = String(b.layer || '');
     if (!Array.isArray(layers) || !layers.some(l => l.id === layer)) throw new BadRequestError('Ebene gibt es nicht');
+    if (data.k === 'x' && !layers.some(l => l.id === data.sl)) throw new BadRequestError('Quell-Ebene gibt es nicht');
+    const tl = layers.find(l => l.id === layer);
+    if (tl && tl.lock) throw new ApiError(423, 'Die Ebene ist gesperrt.');
     // doppelt geschickt (z. B. nach Funkloch)? -> den vorhandenen Strich zurückgeben
     if (cid) { try { out = tx.findFirstRecordByFilter('drawing_strokes', 'drawing = {:d} && cid = {:c}', { d: id, c: cid }); return; } catch (_) {} }
     const seq = d.getInt('seq') + 1;
     const lastAt = wir.fromPb(d.getString('last_at'));
     pause = !lastAt || Date.now() - lastAt > Z.PAUSE;
-    title = d.getString('title');
+    title = d.getBool('solo') ? '' : d.getString('title');
     d.set('seq', seq); d.set('last_by', uid); d.set('last_at', new DateTime());
     tx.save(d);
     // neuer Strich -> eigene rückgängig gemachte Striche können nicht mehr wiederholt werden
@@ -49,7 +52,7 @@ routerAdd('POST', '/api/draw/{id}/stroke', (e) => {
     tx.save(s);
     out = s;
   });
-  if (pause) {
+  if (pause && title) {
     try { Z.notify(e.app, uid, `🎨 ${Z.nameOf(e.app, uid)} zeichnet an „${title}“`, 'Malst du mit?'); }
     catch (err) { e.app.logger().error('draw push', 'error', String(err)); }
   }
@@ -90,6 +93,10 @@ routerAdd('POST', '/api/draw/{id}/meta', (e) => {
   if (b.layers != null) {
     if (d.getBool('locked')) throw new ApiError(423, 'Das Bild ist gesperrt.');
     d.set('layers', Z.cleanLayers(b.layers));
+  }
+  if (b.solo != null && !b.solo && d.getString('author') === e.auth.id && d.getBool('solo')) {
+    d.set('solo', false);
+    Z.notify(e.app, e.auth.id, `🎨 ${Z.nameOf(e.app, e.auth.id)} schickt dir ein Bild`, `„${d.getString('title')}“`);
   }
   if (b.locked != null) { d.set('locked', !!b.locked); d.set('locked_by', b.locked ? e.auth.id : ''); }
   e.app.save(d);
