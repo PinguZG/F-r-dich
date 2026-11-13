@@ -193,7 +193,7 @@ button.st-fact{cursor:pointer}
 .love-who{background:var(--chip);border:none}
 .love-send{height:56px;margin-top:12px;background:var(--a1-grad);box-shadow:0 10px 26px rgba(var(--shadow),.32)}
 .love-glass .ping-status{margin-top:6px}
-#loveHeart{cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;outline:none}
+#loveHeart{cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;outline:none}
 /* Sync: Herz halten -> blinkt in beiden Herzfarben, Countdown 5 -> 1, dann explodiert es (fx.js) */
 .h-sync{fill:var(--sync-me,#ff5fa2);opacity:0;pointer-events:none}
 .glass-heart.holding .h-sync{opacity:.8;animation:hBlink .7s steps(1) infinite}

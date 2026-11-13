@@ -246,9 +246,8 @@
     btn.addEventListener('pointerup', () => release(false));
     btn.addEventListener('pointercancel', () => release(true));
     btn.addEventListener('lostpointercapture', () => release(true));
-    btn.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     // iOS: kein Lupen-/Kontextmenü und keine Textauswahl beim langen Halten (Pointer-Events kommen trotzdem)
-    btn.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    // iOS: Lupen-/Kontextmenü und Textauswahl sind per CSS aus (-webkit-touch-callout, user-select); Scrollen bleibt erlaubt (touch-action: pan-y)
     btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); document.dispatchEvent(new CustomEvent('wir:heart-tap')); } });
   }
 
