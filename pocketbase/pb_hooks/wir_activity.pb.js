@@ -23,7 +23,7 @@ routerAdd('GET', '/api/console/online', (e) => {
 routerAdd('GET', '/api/console/log', (e) => {
   const act = require(`${__hooks}/activity_lib.js`);
   const q = e.request.url.query();
-  return e.json(200, act.activityLog(e.app, { limit: q.get('limit'), user: q.get('user') }));
+  return e.json(200, act.activityLog(e.app, { limit: q.get('limit'), user: q.get('user'), kind: q.get('kind') }));
 }, $apis.requireAuth('users'));
 
 // ---------- Öffne wenn: Brief geöffnet -> Push an die schreibende Person ----------

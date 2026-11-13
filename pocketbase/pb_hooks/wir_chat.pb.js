@@ -9,6 +9,7 @@ onRecordAfterCreateSuccess((e) => {
 
 // ---------- Support ----------
 routerAdd('POST', '/api/support', (e) => e.json(200, require(`${__hooks}/chat_lib.js`).supportNew(e.app, e.auth.id, e.requestInfo().body || {})), $apis.requireAuth('users'));
+routerAdd('POST', '/api/mood/ask', (e) => e.json(200, require(`${__hooks}/chat_lib.js`).moodAsk(e.app, e.auth.id)), $apis.requireAuth('users'));
 routerAdd('POST', '/api/support/{id}/answer', (e) => e.json(200, require(`${__hooks}/chat_lib.js`).supportAnswer(e.app, e.auth.id, e.request.pathValue('id'), e.requestInfo().body || {})), $apis.requireAuth('users'));
 routerAdd('POST', '/api/support/{id}/close', (e) => e.json(200, require(`${__hooks}/chat_lib.js`).supportClose(e.app, e.auth.id, e.request.pathValue('id'))), $apis.requireAuth('users'));
 

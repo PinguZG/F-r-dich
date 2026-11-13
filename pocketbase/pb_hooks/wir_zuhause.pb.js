@@ -62,6 +62,44 @@ onRecordUpdateRequest((e) => {
   } catch (_) {}
 }, 'home_todos');
 
+// Wecker geändert (home_settings "wecker") -> kurze Zeilen im Aktivitäts-Log ("Wecker 5:00 an", "Wecker 5:00 → 6:30" …).
+// Nur Unterschiede zum vorherigen Stand; gleiche Zeile innerhalb von 4 s nur einmal.
+// (Handler laufen isoliert: alles muss in der Funktion selbst stehen.)
+function wirWeckerLog(e) {
+  const before = e.record.original().getString('data');
+  e.next();
+  try {
+    if (e.record.getString('key') !== 'wecker') return;
+    const parse = (t) => { try { return JSON.parse(t) || {}; } catch (_) { return {}; } };
+    const a = parse(before), b = parse(e.record.getString('data'));
+    const old = {}; (a.alarms || []).forEach((x) => { old[x.id] = x; });
+    const seen = {}; const lines = [];
+    (b.alarms || []).forEach((x) => {
+      seen[x.id] = 1;
+      const o = old[x.id];
+      if (!o) { lines.push('Wecker ' + x.zeit + ' neu'); return; }
+      if (o.zeit !== x.zeit) lines.push('Wecker ' + o.zeit + ' → ' + x.zeit);
+      if (!!o.an !== !!x.an) lines.push('Wecker ' + x.zeit + (x.an ? ' an' : ' aus'));
+      if (JSON.stringify(o.tage) !== JSON.stringify(x.tage) || o.bis !== x.bis || o.alle !== x.alle || o.titel !== x.titel || !!o.ton !== !!x.ton) lines.push('Wecker ' + x.zeit + ' geändert');
+    });
+    (a.alarms || []).forEach((o) => { if (!seen[o.id]) lines.push('Wecker ' + o.zeit + ' entfernt'); });
+    if ((a.aussetzen || '') !== (b.aussetzen || '')) lines.push(b.aussetzen ? 'Wecker morgen aussetzen' : 'Wecker wieder aktiv');
+    if (!lines.length && before !== e.record.getString('data')) lines.push('Wecker-Einstellungen');
+    const act = require(`${__hooks}/activity_lib.js`);
+    const k = 'zh_wk_' + e.auth.id, now = Date.now(), last = $app.store().get(k) || {};
+    lines.slice(0, 3).forEach((l) => {
+      if (last[l] && now - last[l] < 4000) return;
+      last[l] = now;
+      act.log(e.app, e.auth.id, 'home', 'zuhause', l);
+    });
+    $app.store().set(k, last);
+  } catch (err) {
+    e.app.logger().error('wecker log', 'error', String(err));
+  }
+}
+onRecordUpdateRequest(wirWeckerLog, 'home_settings');
+onRecordCreateRequest(wirWeckerLog, 'home_settings');
+
 // Wecker-Einstellungen geändert -> wir-home überträgt sie in die Helfer des Lichtweckers in Home Assistant
 function wirWeckerSync(e) {
   e.next();

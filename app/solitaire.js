@@ -260,16 +260,26 @@
     clearTimeout(chkT);
     solveRun++; // laufende Prüfung abbrechen
     $('solStuck').hidden = true;
-    if (!g || g.won) return;
+    if (!g || g.won) { setSolState(g ? 'ok' : ''); return; }
+    setSolState('wait');
     chkT = setTimeout(checkSolvable, 450);
+  }
+  // immer sichtbare Anzeige: Prüfe … / Lösbar / Nicht mehr lösbar (+ Sprung zurück, wenn das Panel zu ist)
+  function setSolState(k) {
+    const b = $('solState'); if (!b) return;
+    b.hidden = !k;
+    b.className = 'sol-state' + (k ? ' ' + k : '');
+    b.querySelector('span').textContent = { ok: 'Lösbar', bad: 'Nicht mehr lösbar', wait: 'Prüfe …', unk: 'Nicht geprüft' }[k] || '';
+    $('solBack2').hidden = !(k === 'bad' && backTo && $('solStuck').hidden);
   }
   async function checkSolvable() {
     if (!g || g.won) return;
     const gid = g.id, st = clone(g.st), moves = g.moves, n = g.draw;
     const r = await solveAsync(st, n);
     if (!g || g.id !== gid || g.moves !== moves) return;
-    if (r === 'yes') { g.ok = { st, moves }; save(); return; }
-    if (r !== 'no' || stuckFor === gid) return;
+    if (r === 'yes') { g.ok = { st, moves }; backTo = null; setSolState('ok'); save(); return; }
+    if (r !== 'no') { if (r !== 'cancel') setSolState('unk'); return; }
+    if (stuckFor === gid) { setSolState('bad'); return; }
     // jüngsten lösbaren Stand im Rückgängig-Verlauf suchen (neuer als der zuletzt bestätigte)
     backTo = null;
     const cands = undo.filter(u => u.moves > (g.ok?.moves ?? -1)).reverse().slice(0, 6);
@@ -289,7 +299,9 @@
       ? `Egal was du jetzt ziehst – die Partie lässt sich nicht mehr lösen. Nach Zug ${backTo.moves} ging es noch. Spring einfach dorthin zurück.`
       : 'Mit diesen Karten kann man leider gar nicht gewinnen. Misch einfach neu.';
     $('solStuck').hidden = false;
+    setSolState('bad');
   }
+  $('solBack2').addEventListener('click', () => $('solBack').click());
   $('solBack').addEventListener('click', () => {
     if (!g || !backTo) return;
     snap();
@@ -301,7 +313,7 @@
     $('solMsg').textContent = '↩︎ Zurück – ab hier ist es wieder lösbar 💗';
     save(); layout(); renderBar(); scheduleCheck();
   });
-  $('solStuckOn').addEventListener('click', () => { stuckFor = g?.id ?? -1; $('solStuck').hidden = true; });
+  $('solStuckOn').addEventListener('click', () => { stuckFor = g?.id ?? -1; $('solStuck').hidden = true; setSolState('bad'); });
   $('solStuckNew').addEventListener('click', () => newGame(true));
 
   // ======================================================================

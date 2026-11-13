@@ -600,3 +600,16 @@ html[data-theme="aurora"] .sd-cell{color:#5a3fd6}
 @keyframes glitzerRahmen{to{background-position:0 0,3px 5px,100% 50%}}
 .frame-prev.sd-frame{padding:5px;border-radius:12px}
 @media (prefers-reduced-motion:reduce){[data-deck="glitzer"] .mini-back,#s-sudoku[data-sdframe="glitzer"] .sd-frame,.sd-frame[data-sdframe="glitzer"]{animation:none}}
+
+/* Versteckte Spiele (HIDDEN_GAMES in games.js) */
+#s-games .g-card[hidden],#s-games .g-grid[hidden],#s-games .g-group[hidden]{display:none}
+/* Solitär: immer sichtbare Lösbarkeits-Anzeige */
+.sol-statebar{display:flex;justify-content:flex-start;margin:0 0 10px}
+.sol-state{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--ink-soft);font-weight:700;font-size:13px;line-height:1.2;white-space:nowrap;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.sol-state::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.55}
+.sol-state.ok{color:var(--ok)}.sol-state.ok::before{opacity:1}
+.sol-state.bad{color:var(--warn)}.sol-state.bad::before{opacity:1}
+.sol-state.wait::before{animation:solPulse 1s ease-in-out infinite}
+@keyframes solPulse{50%{opacity:.15}}
+.sol-state[hidden],.sol-back2[hidden]{display:none}
+.sol-back2{display:block;width:100%;margin:0 0 10px}

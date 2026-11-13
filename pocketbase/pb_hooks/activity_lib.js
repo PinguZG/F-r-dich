@@ -15,6 +15,7 @@ const AREAS = [
   's-duo', 's-brain', 's-casino', 's-shop', // Spiele-App (s-games = deren Startseite)
 ];
 const SEEN = ['photo', 'tab'];
+const KINDS = ['home', 'game', 'fx', 'seen', 'view'];   // erlaubte Filter für /api/console/log?kind=
 
 const now = () => Date.now();
 const ms = (s) => wir.fromPb(s);
@@ -117,8 +118,11 @@ function activityLog(app, q) {
   const who = String(q.user || '').toLowerCase();
   const ids = users.filter(u => !who || u.getString('name').toLowerCase().indexOf(who) === 0).map(u => u.id);
   if (!ids.length) return [];
-  const filter = '(' + ids.map((_, i) => `user = {:u${i}}`).join(' || ') + ')';
+  let filter = '(' + ids.map((_, i) => `user = {:u${i}}`).join(' || ') + ')';
   const params = Object.assign({}, ...ids.map((id, i) => ({ ['u' + i]: id })));
+  // optional nur eine Art (z. B. home, game); ohne kind unverändert
+  const kind = String(q.kind || '').toLowerCase();
+  if (KINDS.indexOf(kind) >= 0) { filter += ' && kind = {:k}'; params.k = kind; }
   const rows = app.findRecordsByFilter('activity', filter, '-started', limit * 2, 0, params);
   const t = now();
   const out = [];

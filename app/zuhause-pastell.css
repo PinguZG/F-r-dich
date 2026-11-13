@@ -391,3 +391,8 @@
 :host([data-th="pastell"]) #zh.zt .ba,:host([data-th="pastell"]) #zh.zt .bb{filter:none}
 :host([data-th="pastell"]) #zh.zt .x-fring svg .rfg{stroke:#ff6fae}
 :host([data-th="pastell"]) #zh.zt .x-think{box-shadow:0 8px 22px rgba(255,90,160,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* ---------- Verlauf (zuhause-verlauf.js): weisse Glas-Liste, Initialen in Rosa/Flieder bzw. Pfirsich ---------- */
+:host([data-th="pastell"]) #zh .zv-list{background:var(--p-tile);box-shadow:var(--p-shadow)}
+:host([data-th="pastell"]) #zh .zv-av{background:var(--p-grad)}
+:host([data-th="pastell"]) #zh .zv-av.b{background:linear-gradient(135deg,#ffb27a,#ff86b9)}

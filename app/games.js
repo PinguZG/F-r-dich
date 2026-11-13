@@ -8,6 +8,16 @@
   const $ = id => document.getElementById(id);
   const myId = () => (pb.authStore.record || pb.authStore.model)?.id;
   let started = false;
+  // Versteckte Spiele (nur ausgeblendet – Code, Hooks, Daten, Coins bleiben). Zurückholen: Liste leeren → [].
+  // Schlüssel = data-game der Karten in s-games (chess, ttt, mono, trail, pokerduo, pokerai).
+  const HIDDEN_GAMES = ['chess', 'ttt', 'mono', 'trail', 'pokerduo', 'pokerai'];
+  const isHidden = k => HIDDEN_GAMES.includes(k === 'poker' ? 'pokerduo' : k);
+  document.querySelectorAll('#s-games [data-game]').forEach(c => { c.hidden = HIDDEN_GAMES.includes(c.dataset.game); });
+  document.querySelectorAll('#s-games .g-grid').forEach(g => {
+    const empty = ![...g.children].some(c => !c.hidden);
+    g.hidden = empty;
+    if (g.previousElementSibling?.classList.contains('g-group')) g.previousElementSibling.hidden = empty;
+  });
   let users = [];
   const userById = id => users.find(u => u.id === id);
   const partner = () => users.find(u => u.id !== myId());
@@ -1078,6 +1088,7 @@
 
   function setTurn(k, on, waiting) {
     const was = turns[k];
+    if (isHidden(k)) { on = false; waiting = false; } // versteckte Spiele erzeugen keine Hinweise
     turns[k] = !!on;
     waitsOn[k] = !!waiting;
     // neu dran, während die App offen ist, aber woanders -> kurz einblenden

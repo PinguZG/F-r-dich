@@ -1,5 +1,7 @@
-// Stimmung + Mentaler Support (Start-Karte). Stimmung: runder Drehregler 0–100 %, Farbe/Emoji folgen dem Wert, Verlauf der
-// letzten 14 Tage als Kurve (beide). Unter 50 % meldet der Server einmal an die andere Person (pb_hooks/chat_lib.js).
+// Stimmung + Mentaler Support. Stimmung in Prozent (0–100): Balken „Ida: 80 %“ auf Start und in Wir zwei, eigener Regler in Wir zwei
+// (speichert beim Loslassen einen moods-Eintrag), „Wie geht es dir?“ bittet die andere Person per POST /api/mood/ask um ihren Wert:
+// bei ihr erscheint beim Öffnen/Sichtbarwerden ein Pop-up mit Regler, solange die Aufforderung offen ist (support_requests kind='mood').
+// Drehregler-Sheet mit Verlauf der letzten 14 Tage: Antippen des Balkens der anderen Person in Wir zwei. Unter 50 % meldet der Server einmal (chat_lib.js).
 // Support: „Ich brauche dich“ mit Art + kurzer Nachricht -> Push; Antwort („Bin da 💗“ …) kommt zurück und wird angezeigt.
 (() => {
   const pb = window.WIR_PB;
@@ -44,23 +46,58 @@
     renderMoodCard();
   }
 
+  let sliding = false;
+  const setBar = (nameId, barId, name, v) => {
+    const n = $(nameId), bar = $(barId);
+    if (n) n.textContent = `${name}: ${v == null ? '–' : v} %`;
+    if (bar) bar.style.width = (v == null ? 0 : v) + '%';
+  };
   function renderMoodCard() {
     const p = partner(), mp = p && latest(p.id), mm = latest(myId());
-    const chip = (box, label, m, mine) => {
-      box.replaceChildren();
-      const v = m ? m.value : null;
-      const dot = el('span', 'mood-dot', v == null ? '❔' : moodEmoji(v));
-      dot.style.setProperty('--mc', v == null ? 'var(--chip)' : moodColor(v));
-      const t = el('span', 'mood-txt');
-      t.append(el('b', '', label), el('small', '', v == null ? '–' : `${v} % · ${ago(pbMs(m.created))}`));
-      box.append(dot, t);
-      box.style.setProperty('--mv', v == null ? 0 : v);
-      box.style.setProperty('--mc', v == null ? 'var(--chip)' : moodColor(v));
-    };
-    chip($('moodPartner'), p?.name || 'Schatz', mp, false);
-    document.querySelectorAll('[data-mood-partner]').forEach(b => chip(b, p?.name || 'Schatz', mp, false));
-    chip($('moodMine'), 'Du', mm, true);
+    const pn = p?.name || 'Schatz', pv = mp ? mp.value : null;
+    setBar('stMoodName', 'stMoodBar', pn, pv);
+    setBar('wzPName', 'wzPBar', pn, pv);
+    if (!sliding && $('moodRange')) {
+      $('moodRange').value = mm ? mm.value : 50;
+      $('wzMeVal').textContent = mm ? mm.value : '–';
+      paintRange($('moodRange'));
+    }
   }
+  const paintRange = r => r.style.setProperty('--rv', r.value + '%');
+
+  // eigener Regler in Wir zwei: beim Loslassen speichern
+  const range = $('moodRange');
+  range.addEventListener('pointerdown', () => { sliding = true; });
+  range.addEventListener('input', () => { sliding = true; $('wzMeVal').textContent = range.value; paintRange(range); });
+  range.addEventListener('change', async () => {
+    try {
+      await pb.collection('moods').create({ user: myId(), value: Math.round(+range.value) });
+      await loadMoods();
+    } catch (err) { toast('Ging nicht: ' + UI.errText(err)); }
+    finally { sliding = false; renderMoodCard(); }
+  });
+  range.addEventListener('blur', () => { sliding = false; });
+
+  // kleiner Hinweis-Toast
+  let toastEl = null, toastT = 0;
+  function toast(text) {
+    if (!toastEl) { toastEl = el('div', 'wir-toast glass'); toastEl.setAttribute('role', 'status'); document.body.append(toastEl); }
+    toastEl.textContent = text;
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toastEl.classList.remove('show'), 2800);
+  }
+
+  // „Wie geht es dir?“ – die andere Person fragen
+  async function askMood(btn) {
+    btn.disabled = true;
+    try {
+      await post('/api/mood/ask');
+      toast(`${pname()} wird beim nächsten Öffnen gefragt 💗`);
+    } catch (err) { toast(UI.errText(err)); }
+    finally { setTimeout(() => { btn.disabled = false; }, 1500); }
+  }
+  for (const id of ['askMood', 'askMood2']) $(id)?.addEventListener('click', e => askMood(e.currentTarget));
 
   // ======================================================================
   // Drehregler
@@ -105,9 +142,8 @@
     $('moodStatus').textContent = '';
     UI.sheet('moodSheet');
   }
-  $('moodMine').addEventListener('click', openMood);
-  $('moodPartner').addEventListener('click', openMood);
-  document.querySelectorAll('[data-mood-partner]').forEach(b => b.addEventListener('click', openMood));
+  $('wzPartnerMood').addEventListener('click', openMood);
+  $('wzPartnerMood').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMood(); } });
   $('moodSave').addEventListener('click', async () => {
     try {
       await pb.collection('moods').create({ user: myId(), value: Math.round(val) });
@@ -141,7 +177,7 @@
 
   async function loadSupport() {
     const since = new Date(Date.now() - 24 * 3600000).toISOString().replace('T', ' ');
-    support = await pb.collection('support_requests').getFullList({ filter: pb.filter("status != 'closed' && created >= {:t}", { t: since }), sort: '-created' });
+    support = await pb.collection('support_requests').getFullList({ filter: pb.filter("status != 'closed' && kind != 'mood' && created >= {:t}", { t: since }), sort: '-created' });
     renderSupport();
   }
 
@@ -207,16 +243,83 @@
   });
 
   // ======================================================================
+  // Pop-up „Wie geht es dir?“ (wenn die andere Person gefragt hat)
+  // ======================================================================
+  let askReq = null, askBox = null, askSaved = false;
+  function ensureAskSheet() {
+    if (askBox) return;
+    askBox = el('div', 'sheet-wrap');
+    askBox.id = 'moodAskSheet';
+    askBox.hidden = true;
+    askBox.innerHTML = '<div class="sheet-backdrop" data-close></div><div class="sheet mood-ask"><div class="sheet-grip"></div>'
+      + '<button class="sheet-x" data-close type="button" aria-label="Später">✕</button><h2 class="sheet-title">Wie geht es dir?</h2>'
+      + '<div class="ma-big"><span id="maN">50</span> %</div>'
+      + '<input type="range" id="maR" min="0" max="100" step="1" value="50" aria-label="Wie geht es dir – Prozent">'
+      + '<button class="mem-btn" id="maSave" type="button">Speichern</button><div class="mem-status" id="maStatus"></div></div>';
+    document.body.append(askBox);
+    const r = $('maR');
+    r.addEventListener('input', () => { $('maN').textContent = r.value; paintRange(r); });
+    // schließen ohne Speichern = „später“: Aufforderung schließen, damit das Pop-up nicht bei jedem Öffnen kommt
+    askBox.addEventListener('click', e => {
+      if (!e.target.closest('[data-close]') || !askReq || askSaved) return;
+      const id = askReq.id; askReq = null;
+      post(`/api/support/${id}/close`).catch(() => {});
+    });
+    $('maSave').addEventListener('click', async () => {
+      try {
+        $('maSave').disabled = true;
+        askSaved = true;
+        await pb.collection('moods').create({ user: myId(), value: Math.round(+r.value) });   // der Server beantwortet die Aufforderung
+        askReq = null;
+        $('maStatus').textContent = 'Gespeichert ✓';
+        loadMoods().catch(console.error);
+        setTimeout(() => UI.sheet('moodAskSheet', false), 700);
+      } catch (err) { askSaved = false; $('maStatus').textContent = 'Ging nicht: ' + UI.errText(err); }
+      finally { $('maSave').disabled = false; }
+    });
+  }
+  let checking = false;
+  async function checkAsk() {
+    if (!started || checking || askReq || document.hidden || !pb.authStore.isValid) return;
+    if (document.querySelector('#s-gift.active, #s-lock.active') || document.querySelector('.sheet-wrap.open')) return;
+    checking = true;
+    try {
+      const since = new Date(Date.now() - 24 * 3600000).toISOString().replace('T', ' ');
+      const res = await pb.collection('support_requests').getList(1, 1, {
+        filter: pb.filter("to = {:me} && kind = 'mood' && status = 'open' && created >= {:t}", { me: myId(), t: since }), sort: '-created' });
+      const r = res.items[0];
+      if (!r) return;
+      ensureAskSheet();
+      askReq = r; askSaved = false;
+      const m = latest(myId());
+      $('maR').value = m ? m.value : 50;
+      $('maN').textContent = $('maR').value;
+      paintRange($('maR'));
+      $('maStatus').textContent = '';
+      UI.sheet('moodAskSheet');
+    } catch (err) { console.error('moodask', err); }
+    finally { checking = false; }
+  }
+
+  // ======================================================================
   // Start
   // ======================================================================
-  document.addEventListener('wir:show', e => { if (started && (e.detail === 's-home' || e.detail === 's-wir')) { loadMoods().catch(console.error); loadSupport().catch(console.error); } });
+  document.addEventListener('wir:show', e => { if (started && (e.detail === 's-home' || e.detail === 's-wir')) { loadMoods().catch(console.error); loadSupport().catch(console.error); } if (started) checkAsk(); });
   document.addEventListener('wir:users', () => { if (started) renderMoodCard(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && started) { loadMoods().catch(console.error); loadSupport().catch(console.error); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && started) { loadMoods().catch(console.error); loadSupport().catch(console.error); checkAsk(); } });
   document.addEventListener('wir:started', () => {
     started = true;
-    loadMoods().catch(console.error); loadSupport().catch(console.error);
+    loadMoods().catch(console.error); loadSupport().catch(console.error); setTimeout(checkAsk, 600);
     pb.collection('moods').subscribe('*', () => loadMoods().catch(console.error)).catch(console.error);
-    pb.collection('support_requests').subscribe('*', () => loadSupport().catch(console.error)).catch(console.error);
+    pb.collection('support_requests').subscribe('*', e => {
+      loadSupport().catch(console.error);
+      const r = e.record;
+      if (r?.kind === 'mood' && r.to === myId()) {
+        if (e.action === 'create') checkAsk();
+        // woanders beantwortet (z. B. mit dem Regler in Wir zwei): Pop-up zu
+        else if (askReq && askReq.id === r.id && r.status !== 'open') { askReq = null; UI.sheet('moodAskSheet', false); }
+      }
+    }).catch(console.error);
     setInterval(() => { if (!document.hidden) renderMoodCard(); }, 60000);
   });
 })();

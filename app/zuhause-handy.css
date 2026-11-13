@@ -444,3 +444,84 @@ img.shot{display:block;width:100%;border-radius:16px;margin-top:6px;box-shadow:0
 .xpage{min-width:0}
 .mt .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .pav.on{box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--ok,#5fd39a)}
+
+/* ===== Redesign 13.11.2026: Reiter oben, Start nach Mockup ===== */
+.nav,.fab{display:none!important}
+.zbar{position:absolute;left:0;right:0;top:0;z-index:30;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 10px) max(12px,env(safe-area-inset-right)) 10px max(12px,env(safe-area-inset-left));background:linear-gradient(180deg,var(--bg) 55%,transparent)}
+.phone.notabs .zbar{display:none}
+.phone:not(.notabs) .scr{padding-top:calc(env(safe-area-inset-top) + 72px)!important}
+.scr{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important}
+.zback{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--vioL)}
+.ztabs{flex:1;min-width:0;display:flex;gap:2px;padding:4px;border-radius:18px;overflow-x:auto;scrollbar-width:none;background:rgba(255,255,255,.04);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.ztabs::-webkit-scrollbar{display:none}
+.ztabs button{flex:none;display:flex;align-items:center;gap:6px;height:36px;padding:0 11px;border-radius:14px;font-size:12px;color:#bdb8c9;white-space:nowrap;transition:.2s}
+.ztabs button .i{width:17px;height:17px}
+.ztabs button.on{background:rgba(124,92,240,.32);color:#fff;box-shadow:inset 0 0 0 1px rgba(160,130,255,.45),0 0 14px rgba(124,92,240,.3)}
+.ztabs button:not(.on) span{display:none}
+.zclock{display:flex;align-items:flex-start;gap:10px;margin:4px 2px 0}
+.zc{flex:1;min-width:0}
+.clock{font-size:76px;font-weight:300;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums;text-shadow:0 0 34px rgba(150,115,255,.35)}
+.zdate{color:var(--mut);font-size:16px;margin-top:2px}
+.zbell{position:relative;width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--line);margin-top:10px}
+.zbell b{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--warn);box-shadow:0 0 6px var(--warn)}
+.zfacts{display:grid;gap:10px;margin-top:20px}
+.zf{display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:0 2px}
+.zf b{font-size:16px;font-weight:500}
+.zf .ic{width:42px;height:42px}
+.zf .ic .i{width:21px;height:21px}
+.zh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:26px 2px 12px}
+.zh h2{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.zact{display:flex;gap:6px}
+.zact .chipb{display:flex;align-items:center;gap:6px;height:32px;padding:0 11px}
+.zact .chipb .i{width:15px;height:15px}
+.gt{position:relative;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025));border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 24px rgba(0,0,0,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.zscenes{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.zs{display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 6px;text-align:center;transition:.2s}
+.zs .em{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:radial-gradient(circle at 35% 30%,rgba(160,125,255,.4),rgba(100,70,210,.2));border:1px solid rgba(170,140,255,.3);box-shadow:0 0 18px rgba(140,100,255,.25)}
+.zs b{font-size:13px;font-weight:500}
+.zs.on{border-color:rgba(160,130,255,.6);background:linear-gradient(160deg,rgba(124,92,240,.3),rgba(255,255,255,.03));box-shadow:0 0 22px rgba(124,92,240,.3)}
+.zs:active{transform:scale(.96)}
+.zpills{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pl{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:11px;row-gap:1px;min-height:64px;padding:11px 14px;overflow:hidden;border-radius:20px;user-select:none;-webkit-user-select:none;touch-action:pan-y;cursor:pointer;transition:transform .2s,border-color .25s,box-shadow .25s}
+.pl>.i{grid-row:1/3;width:26px;height:26px;color:#cfc8de;position:relative}
+.pl span{font-size:12px;color:#cfc9da;position:relative;align-self:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl b{font-size:14px;font-weight:600;position:relative;align-self:start}
+.zfill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,color-mix(in srgb,var(--lc) 26%,transparent),color-mix(in srgb,var(--lc) 14%,transparent));pointer-events:none}
+.pl.on{border-color:color-mix(in srgb,var(--lc) 65%,#000);box-shadow:inset 0 0 22px color-mix(in srgb,var(--lc) 14%,transparent),0 0 20px color-mix(in srgb,var(--lc) 22%,transparent)}
+.pl.on>.i{color:var(--lc);filter:drop-shadow(0 0 6px var(--lc))}
+.pl.na{opacity:.55}
+.pl.press{transform:scale(.96)}
+.ztv{display:flex;align-items:center;gap:13px;flex-wrap:wrap;padding:14px 16px}
+.ztt{flex:1;min-width:120px;text-align:left}
+.ztt b{display:block;font-size:17px;font-weight:600}
+.ztt small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}
+.zvol{display:flex;align-items:center;gap:9px;width:100%}
+.zvol>button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.zvol .i{width:18px;height:18px}
+.zvol .zpw.on{background:radial-gradient(circle at 35% 30%,#a98cff,#6544dc);box-shadow:0 0 14px rgba(140,100,255,.5);color:#fff}
+.ztv.off .zvol .hb,.ztv.off .zvol>button:not(.zpw){opacity:.35;pointer-events:none}
+.zrts{display:grid;gap:10px}
+.zr{display:flex;align-items:center;gap:13px;padding:12px 14px}
+.zr>div:nth-child(2){flex:1;min-width:0}
+.zr b{display:block;font-size:14.5px;font-weight:500}
+.zr small{color:var(--mut);font-size:12px}
+.zr .ic{width:40px;height:40px}
+
+/* Pastell (hell) */
+:host([data-th="pastell"]) #zh.zp .zbar{background:linear-gradient(180deg,#fff1f6 55%,transparent)}
+:host([data-th="pastell"]) #zh.zp .zback{background:rgba(255,255,255,.75);color:#c2467f}
+:host([data-th="pastell"]) #zh.zp .ztabs,:host([data-th="pastell"]) #zh.zp .zbell{background:rgba(255,255,255,.7);box-shadow:0 4px 14px rgba(240,110,160,.14)}
+:host([data-th="pastell"]) #zh.zp .ztabs button{color:#8b5f74}
+:host([data-th="pastell"]) #zh.zp .ztabs button.on{background:linear-gradient(135deg,rgba(255,134,185,.4),rgba(195,161,255,.4));color:#4b2a3b;box-shadow:inset 0 0 0 1px rgba(226,100,160,.5),0 0 12px rgba(255,134,185,.35)}
+:host([data-th="pastell"]) #zh.zp .clock{text-shadow:0 0 30px rgba(255,134,185,.4)}
+:host([data-th="pastell"]) #zh.zp .zdate,:host([data-th="pastell"]) #zh.zp .zs b,:host([data-th="pastell"]) #zh.zp .pl span{color:#6d4558}
+:host([data-th="pastell"]) #zh.zp .gt{background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.58));box-shadow:0 6px 18px rgba(240,110,160,.12),inset 0 1px 0 #fff}
+:host([data-th="pastell"]) #zh.zp .zs .em{background:radial-gradient(circle at 35% 30%,rgba(255,134,185,.45),rgba(195,161,255,.2));border-color:rgba(255,134,185,.5);box-shadow:0 0 16px rgba(255,134,185,.3)}
+:host([data-th="pastell"]) #zh.zp .zs.on{background:linear-gradient(160deg,rgba(255,134,185,.34),rgba(255,255,255,.7));border-color:rgba(226,100,160,.55);box-shadow:0 0 20px rgba(255,134,185,.4)}
+:host([data-th="pastell"]) #zh.zp .pl>.i{color:#6d4558}
+:host([data-th="pastell"]) #zh.zp .pl.on{border-color:color-mix(in srgb,var(--lc) 70%,#fff);box-shadow:0 6px 22px color-mix(in srgb,var(--lc) 38%,transparent)}
+:host([data-th="pastell"]) #zh.zp .pl.on>.i{color:color-mix(in srgb,var(--lc) 70%,#5b2a45)}
+:host([data-th="pastell"]) #zh.zp .zfill{background:linear-gradient(90deg,color-mix(in srgb,var(--lc) 34%,#fff),color-mix(in srgb,var(--lc) 18%,#fff))}
+:host([data-th="pastell"]) #zh.zp .zvol>button{background:rgba(255,255,255,.75)}
+:host([data-th="pastell"]) #zh.zp .zvol .zpw.on{background:var(--p-grad-d);box-shadow:0 4px 14px rgba(229,80,143,.4);color:#fff}
+:host([data-th="pastell"]) #zh.zp .zact .chipb{background:rgba(255,255,255,.7)}

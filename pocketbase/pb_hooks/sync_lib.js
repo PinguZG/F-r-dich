@@ -5,7 +5,7 @@
 const wir = require(`${__hooks}/wir_lib.js`);
 
 const HOLD_STALE_MS = 3000;          // ohne Heartbeat gilt Halten nach 3 s als beendet
-const SYNC_MS = 1000;                // so lange müssen beide gleichzeitig halten
+const SYNC_MS = 5000;                // so lange müssen beide gleichzeitig halten (seit 13.11.2026 5 s: Herz halten bis es „explodiert“)
 const HOLD_PUSH_GAP = 10 * 60000;    // Push „hält den Sync-Knopf“ höchstens alle 10 Minuten pro Person
 const SHAKE_LIVE_MS = 3000;          // Schütteln wirkt beim Partner noch ~3 s nach
 const SHAKE_PUSH_GAP = 30000;        // Push „AHHHH“ höchstens alle 30 s pro Person

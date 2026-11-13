@@ -1,7 +1,8 @@
 // Sync-Knopf, Schütteln und Effekte für Wir und die Spiele-App (/shared/fx.js, Styles in /shared/fx.css).
 // - Herz-Regen per Canvas (pointer-events:none, höchstens MAX Herzen, läuft nur solange etwas zu sehen ist)
 // - Wackeln der ganzen App (Klasse auf <html>, Animation auf dem body), „You are in sync“
-// - Sync-Knopf #syncTop (oben neben dem Avatar): Halten per Heartbeat an /api/sync/hold, der Server entscheidet den Sync
+// - Sync = das Herz auf Start (#loveHeart): kurzer Tipp = Liebe (Ereignis 'wir:heart-tap'), Halten (> 350 ms) = Heartbeat an /api/sync/hold,
+//   das Herz blinkt in beiden Herzfarben; der Server entscheidet den Sync, dann „explodiert“ das Herz (Splitter) + „You are in sync“
 // - Schütteln: DeviceMotion nur bei sichtbarer App, Lebenszeichen ≤1×/s an /api/shake
 // - Realtime auf live_state (ein Datensatz pro Person): Halten/Schütteln/Sync der anderen Person
 // Braucht window.WIR_PB, window.UI und die Herzfarben aus /shared/look.js (window.WIR_HEARTS / 'wir:hearts').
@@ -124,6 +125,33 @@
   syncBox.innerHTML = '<b>You are in sync</b>';
   document.body.append(syncBox);
   let syncTimer = 0;
+  // Herz-Explosion: das Herz auf Start verschwindet, Splitter in beiden Herzfarben fliegen auseinander, dann setzt es sich wieder zusammen
+  const SHARD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>';
+  function boom() {
+    const hb = $('loveHeart');
+    if (!hb || !hb.closest('.screen.active')) return;
+    const r = hb.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const h = hearts();
+    hb.classList.remove('boom'); void hb.offsetWidth; hb.classList.add('boom');
+    setTimeout(() => hb.classList.remove('boom'), 1700);
+    if (reduced()) return;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (let i = 0; i < 30; i++) {
+      const a = Math.PI * 2 * i / 30 + Math.random() * 0.3, d = 70 + Math.random() * 150;
+      const p = document.createElement('i');
+      p.className = 'fx-shard';
+      p.innerHTML = SHARD;
+      p.style.color = i % 2 ? h.partner : h.me;
+      p.style.left = (cx - 9) + 'px';
+      p.style.top = (cy - 9) + 'px';
+      p.style.setProperty('--tx', Math.cos(a) * d + 'px');
+      p.style.setProperty('--ty', Math.sin(a) * d + 'px');
+      p.style.setProperty('--rot', (Math.random() * 240 - 120) + 'deg');
+      document.body.append(p);
+      setTimeout(() => p.remove(), 1600);
+    }
+  }
   function showSync() {
     const h = hearts();
     syncBox.style.setProperty('--fx-a', h.me);
@@ -131,6 +159,8 @@
     syncBox.classList.add('show');
     rain([h.me, h.partner], 4000, 26);
     puff(W / 2, H / 2, [h.me, h.partner], 24);
+    afterSync = true;
+    boom();
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => syncBox.classList.remove('show'), 4000);
   }
@@ -170,9 +200,9 @@
   }
 
   // ======================================================================
-  // Sync-Knopf: kleiner Herz-Knopf oben links neben dem Avatar (#syncTop)
+  // Sync-Knopf = das Liebe-Herz auf Start (#loveHeart)
   // ======================================================================
-  const btn = $('syncTop');
+  const btn = $('loveHeart');
   let holding = false, holdTimer = 0, partnerWas = false;
 
   // kurzer Hinweis beim ersten Mal
@@ -189,23 +219,37 @@
     setTimeout(off, 9000);
   }
 
+  // kurzer Tipp (< HOLD_MS) = Liebe senden (app.js hört auf 'wir:heart-tap'), länger halten = Sync-Heartbeat
+  const HOLD_MS = 350;
+  let armTimer = 0, downAt = { x: 0, y: 0 };
+  function release(cancel) {
+    if (armTimer) {
+      clearTimeout(armTimer); armTimer = 0;
+      if (!cancel) document.dispatchEvent(new CustomEvent('wir:heart-tap'));
+    } else stopHold();
+  }
   if (btn) {
     btn.addEventListener('contextmenu', e => e.preventDefault());
     btn.addEventListener('selectstart', e => e.preventDefault());
     btn.addEventListener('pointerdown', e => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
+      if (armTimer || holding) return;
       try { btn.setPointerCapture(e.pointerId); } catch (_) {}
       askShakeOnce();
-      startHold();
+      downAt = { x: e.clientX, y: e.clientY };
+      armTimer = setTimeout(() => { armTimer = 0; startHold(); }, HOLD_MS);
     });
+    // weggezogen (Wischen/Ziehen) -> weder Tipp noch Sync-Start; läuft das Halten schon, bleibt es bis zum Loslassen
+    btn.addEventListener('pointermove', e => { if (armTimer && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 12) release(true); });
     // Loslassen – auch wenn der Finger rausgezogen wurde (Pointer-Capture) oder das System abbricht
-    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) btn.addEventListener(ev, () => stopHold());
+    btn.addEventListener('pointerup', () => release(false));
+    btn.addEventListener('pointercancel', () => release(true));
+    btn.addEventListener('lostpointercapture', () => release(true));
     btn.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     // iOS: kein Lupen-/Kontextmenü und keine Textauswahl beim langen Halten (Pointer-Events kommen trotzdem)
     btn.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
-    btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startHold(); } });
-    btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') stopHold(); });
+    btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); document.dispatchEvent(new CustomEvent('wir:heart-tap')); } });
   }
 
   // kurzer Hinweis oben, wenn die andere Person anfängt zu halten (der Ring allein ist klein)
@@ -226,9 +270,24 @@
     const theirs = Date.now() < partnerHoldUntil;
     btn.classList.toggle('holding', holding);
     btn.classList.toggle('partner', theirs);
-    btn.setAttribute('aria-label', theirs ? `${partnerName} hält gerade – halt mit!` : 'Sync-Knopf – gedrückt halten');
-    if (theirs && !partnerWas && !holding) hint(`💞 ${partnerName} hält den Sync-Knopf – halt mit!`);
+    btn.setAttribute('aria-label', theirs ? `${partnerName} hält gerade – halt mit!` : 'Liebe senden – gedrückt halten für Sync');
+    if (theirs && !partnerWas && !holding) hint(`💞 ${partnerName} hält das Herz – halt mit!`);
     partnerWas = theirs;
+    // Countdown im Herz (5 → 1), sobald beide gleichzeitig halten
+    if (!holding) afterSync = false;
+    const both = holding && theirs && !afterSync;
+    if (both && !bothSince) bothSince = Date.now();
+    if (!both) bothSince = 0;
+    clearInterval(cdTimer); cdTimer = 0;
+    if (both) { cdTick(); cdTimer = setInterval(cdTick, 200); } else cdTick();
+  }
+  const SYNC_NEED = 5000;   // wie sync_lib.js (SYNC_MS): so lange müssen beide gleichzeitig halten
+  let bothSince = 0, cdTimer = 0, afterSync = false;   // afterSync: bis zum Loslassen kein neuer Countdown
+  function cdTick() {
+    const n = btn && btn.querySelector('.h-num');
+    if (!n) return;
+    if (!bothSince) { n.removeAttribute('data-cd'); return; }
+    n.setAttribute('data-cd', String(Math.max(1, Math.ceil((SYNC_NEED - (Date.now() - bothSince)) / 1000))));
   }
 
   async function beatHold(down) {
@@ -253,8 +312,8 @@
     renderSync();
     beatHold(false);
   }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stopHold(); });
-  window.addEventListener('pagehide', () => stopHold());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { release(true); stopHold(); } });
+  window.addEventListener('pagehide', () => { release(true); stopHold(); });
   document.addEventListener('wir:hearts', renderSync);
   document.addEventListener('wir:users', e => { partnerName = e.detail.partner?.name || 'Schatz'; renderSync(); });
 
@@ -389,7 +448,7 @@
   document.addEventListener('wir:started', () => { if (!started) start(); });
 
   window.WIR_FX = {
-    rain, puff, wobble, showSync,
+    rain, puff, wobble, showSync, boom,
     // nur lokal zum Testen: Schütteln simulieren (in der Live-Version nicht vorhanden)
     ...(live ? {} : { simulateShake: () => { lastShakeSent = 0; return shaking(); } }),
   };

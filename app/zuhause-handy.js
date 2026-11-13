@@ -1,9 +1,9 @@
-// Zuhause · Handy (neues Design 12.11.2026, Entwurf wir-zuhause/zuhause-handy.html): dunkles Lila-Glas, eigene untere
-// Leiste Home / Fernseher / ✦ Szenen / Kalender / Mehr; unter „Mehr“ Wecker, Partner, Abfahrten, Pakete, System, Einstellungen.
+// Zuhause · Handy (Redesign 13.11.2026, Mockup Wir-Redesign-Mockup.html): Reiter oben (Start · Fernbedienung · Kalender · Wecker · Verlauf · Mehr),
+// Start = Uhr, Fakten, Szenen, Licht-Pillen, TV-Karte, Routinen; unter „Mehr“ Partner, Abfahrten, Pakete, System, Einstellungen, weitere Seiten.
 // Stile zuhause-handy.css (im Shadow-DOM von #zh). Zeichnet nur – Zustand und Befehle aus window.ZH, Extras aus window.ZHX.
 (() => {
   const VIEWS = window.ZH_VIEWS || (window.ZH_VIEWS = {});
-  let Z, W = null, R = null, page = 'home', filt = 'alle', sheetFn = null;
+  let Z, W = null, R = null, page = 'home', sheetFn = null;
   const $ = id => R.getElementById(id);
   const $$ = (s, el = W) => [...el.querySelectorAll(s)];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -57,6 +57,7 @@
     eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
     film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>',
     camera: '<path d="M4 8h3l1.6-2.2A1.5 1.5 0 0 1 9.8 5h4.4a1.5 1.5 0 0 1 1.2.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/>',
+    hist: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', more: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
     send: '<path d="M5 12h12M12 6l6 6-6 6"/>', bs: '<path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>',
   };
   const FILLED = new Set(['spark', 'play', 'pause', 'prev', 'next']);
@@ -67,15 +68,15 @@
   const toastEl = () => $('toast');
 
   // ---------------------------------------------------------------- Grundgerüst
+  const TABS = [['home', 'home', 'Start'], ['tv', 'tv', 'Fernbedienung'], ['kal', 'cal', 'Kalender'], ['wecker', 'alarm', 'Wecker'], ['verlauf', 'hist', 'Verlauf'], ['mehr', 'more', 'Mehr']];
+  const TABPAGES = TABS.map(t => t[0]);
   const SCR = ['home', 'tv', 'kal', 'mehr', 'wecker', 'partner', 'abf', 'pak', 'sys', 'einst'];
   function build(wrap, root) {
     Z = window.ZH; W = wrap; R = root;
     kMon = new Date(new Date().getFullYear(), new Date().getMonth(), 1); kSel = day0();
     W.innerHTML = `<div class="phone" id="phone">
       ${[...SCR, ...Z.extraPages.map(p => p.key)].map(p => `<section class="scr" id="s-${p}">${Z.extraPages.some(x => x.key === p) ? extraScreen(p) : ''}</section>`).join('')}
-      <nav class="nav"><button data-go="home" data-n="home">${ico('home')}<span>Home</span></button><button data-go="tv" data-n="tv">${ico('tv')}<span>Fernseher</span></button>
-      <button class="fab" data-act="scenes" aria-label="Szenen">${ico('spark')}</button>
-      <button data-go="kal" data-n="kal">${ico('cal')}<span>Kalender</span></button><button data-go="mehr" data-n="mehr">${ico('grid')}<span>Mehr</span></button></nav>
+      <div class="zbar"><button class="zback" data-act="back" aria-label="Zurück zur Wir-App">${ico('back')}</button><nav class="ztabs" id="ztabs">${TABS.filter(t => t[0] !== 'verlauf' || Z.extraPages.some(x => x.key === 'verlauf')).map(([k, i, n]) => `<button data-go="${k}" data-n="${k}">${ico(i)}<span>${n}</span></button>`).join('')}</nav></div>
       <div class="shade" id="shade"></div><div class="sheet" id="sheet"></div><div class="toast" id="toast"></div>
       <div class="ring" id="ring"></div><div class="saver" id="saver"></div><div class="nightdim" id="nightdim"></div></div>`;
     wire();
@@ -83,7 +84,7 @@
   }
   function extraScreen(key) {
     const p = Z.extraPages.find(x => x.key === key);
-    return ph(esc(p.label), '', true) + `<div class="xpage">${p.html || ''}</div>`;
+    return ph(esc(p.label), '', key !== 'verlauf') + `<div class="xpage">${p.html || ''}</div>`;
   }
   function pageEl(key) { return W?.querySelector(`#s-${key} .xpage`) || null; }
   const ph = (t, s, back, right = '') => `<div class="ph">${back ? `<button class="back" data-go="mehr" aria-label="Zurück">${ico('back')}</button>` : ''}<div><h2>${t}</h2>${s ? `<p>${s}</p>` : ''}</div>${right ? `<div class="r">${right}</div>` : ''}</div>`;
@@ -96,8 +97,10 @@
     const changed = p !== page;
     page = p;
     $$('.scr').forEach(s => s.classList.toggle('on', s.id === 's-' + p));
-    const n = ['home', 'tv', 'kal'].includes(p) ? p : 'mehr';
-    $$('.nav [data-n]').forEach(b => b.classList.toggle('on', b.dataset.n === n));
+    const n = TABPAGES.includes(p) ? p : 'mehr';
+    $$('.ztabs [data-n]').forEach(b => b.classList.toggle('on', b.dataset.n === n));
+    $('phone').classList.toggle('notabs', !TABPAGES.includes(p));
+    const onb = W.querySelector('.ztabs .on'), nv = $('ztabs'); if (onb && nv) nv.scrollLeft = onb.offsetLeft - (nv.clientWidth - onb.offsetWidth) / 2;
     if (changed) $('s-' + p).scrollTop = 0;
     closeSheet();
     Z.go(p);
@@ -108,66 +111,34 @@
     if (!W || !Z.cfg()) return;
     const scr = $('s-' + page), ae = R.activeElement;
     const typing = ae && ae.matches('input:not([type=range])') && scr?.contains(ae);
-    if (RN[page] && (force || (!typing && !drag))) RN[page]();
+    if (RN[page] && (force || (!typing && !drag && !(hd && hd.moved)))) RN[page]();
     if (sheetFn && !(ae && $('sheet').contains(ae) && ae.matches('input:not([type=range])')) && !cpDrag) put($('sheet'), sheetFn());
   }
   function sheet(fn) { sheetFn = fn; put($('sheet'), fn()); $('sheet').scrollTop = 0; $('sheet').classList.add('on'); $('shade').classList.add('on'); }
   function closeSheet() { sheetFn = null; cpId = null; ortTarget = ''; $('sheet')?.classList.remove('on'); $('shade')?.classList.remove('on'); }
   function toast(t) { const e = toastEl(); if (!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('on'), 1900); }
 
-  // ---------------------------------------------------------------- Home
-  const CH = [['alle', 'grid', 'Alle'], ['licht', 'bulb', 'Licht'], ['klima', 'therm', 'Klima'], ['tv', 'tv', 'Fernseher'], ['zuhause', 'shield', 'Sicherheit']];
+  // ---------------------------------------------------------------- Start
+  const BER = o => new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', ...o });
   RN.home = () => {
-    const h = new Date().getHours(), gr = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
-    const w = Z.S.wetter, night = w?.now ? !w.now.day : h >= 18 || h < 7, show = k => filt === 'alle' || filt === k;
-    const L = Z.lamps(), on = L.filter(l => l.on).length, k = Z.klima(), st = Z.status(), sens = Z.sensoren(), open = sens.filter(s => s.open);
-    const me = Z.me(), X = window.ZHX;
-    const msg = st.bad ? 'Home Assistant ist gerade nicht erreichbar.' : open.length ? `Fast alles gut – ${open.map(s => s.name).join(', ')} ${open.length === 1 ? 'ist' : 'sind'} offen.` : 'Zu Hause ist alles in Ordnung.';
-    const warn = Z.notes().some(n => n.warn);
-    const wi = w?.now ? Z.wmo(w.now.code, w.now.day)[0] : night ? 'moon' : 'sun';
-    let x = `<div class="top"><button class="brandb" data-act="back" aria-label="Zurück zur Wir-App"><div class="logo">WIR ZUHAUSE</div><div class="sublogo">${ico('back', 'bk')}zurück zur Wir-App</div></button><button class="bell" data-act="bell" aria-label="Meldungen">${ico('bell')}${warn ? '<b></b>' : ''}</button><div class="ava">${esc((me?.name || '?').slice(0, 1).toUpperCase())}</div></div>
-      <div class="greet"><div><h1>${gr}${me?.name ? ', ' + esc(me.name) : ''}</h1><p>${esc(msg)}</p></div><button class="rnd" data-act="wetter" aria-label="Wetter">${ico({ sun: 'sun', moon: 'moon', cloudsun: 'sun', cloudmoon: 'moon', rain: 'rain', snow: 'cloud' }[wi] || 'cloud')}</button></div>
-      <div class="chips">${CH.map(([kk, i, n]) => `<button class="chip${filt === kk ? ' on' : ''}" data-filt="${kk}">${ico(i)}${n}</button>`).join('')}</div>`;
-    if (show('klima')) {
-      if (k.hasT) {
-        const pct = Number.isFinite(k.t) ? Math.max(0, Math.min(100, (k.t - 16) / 16 * 100)) : 0;
-        x += `<div class="card tap" data-act="klima"><div class="ch"><div class="ic">${ico('therm')}</div><div><b>Temperatur</b><small>Wohnzimmer · min ${fmt(k.tmin)}° · max ${fmt(k.tmax)}°</small></div><span class="big">${fmt(k.t)}°</span>${ico('chev', 'chev')}</div>
-          <div class="tbar"><i style="width:${pct}%"></i><span class="knob" style="left:${pct}%"></span></div>
-          <div class="ticks">${Array.from({ length: 17 }, (_, i) => `<i class="${i % 4 ? '' : 'l'}"></i>`).join('')}</div>
-          <div class="tl"><span>16°</span><span>20°</span><span>24°</span><span>28°</span><span>32°</span></div>
-          <div class="state"><i></i>${!Number.isFinite(k.t) ? 'kein Wert' : k.t < 19 ? 'Etwas kühl' : k.t > 24 ? 'Warm' : 'Angenehm'}</div></div>`;
-      }
-      if (k.hasH) {
-        const hu = k.hu;
-        x += `<div class="card tap" data-act="klima"><div class="ch"><div class="ic">${ico('drop')}</div><div><b>Luftfeuchtigkeit</b><small>${!Number.isFinite(hu) ? 'kein Wert' : hu < 40 ? 'Etwas trocken' : hu > 60 ? 'Etwas feucht' : 'Optimal'} · ideal 40–60 %</small></div><span class="big">${fmt(hu, 0)}<small>%</small></span></div>
-          <div class="hbar"><span class="zone"></span><span class="mk" style="left:${Number.isFinite(hu) ? Math.max(0, Math.min(100, hu)) : 50}%"></span></div><div class="hl"><span>trocken</span><span>optimal</span><span>feucht</span></div></div>`;
-      }
+    const now = new Date(), clock = BER({ hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now), date = BER({ weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+    const w = Z.S.wetter, L = Z.lamps(), k = Z.klima(), v = Z.tvView(), ai = Z.alarmInfo(), sc = Z.scenes();
+    const warn = Z.notes().some(n => n.warn), rts = (Z.cfg()?.routinen || []).filter(r => r.entity_id);
+    const night = w?.now ? !w.now.day : now.getHours() >= 18 || now.getHours() < 7;
+    const wi = w?.now ? Z.wmo(w.now.code, w.now.day) : null, wic = { sun: 'sun', moon: 'moon', cloudsun: 'sun', cloudmoon: 'moon', rain: 'rain', snow: 'cloud' }[wi?.[0]] || (wi ? 'cloud' : night ? 'moon' : 'sun');
+    const kl = [Number.isFinite(k.t) ? fmt(k.t) + '°' : '', Number.isFinite(k.hu) ? fmt(k.hu, 0) + ' %' : ''].filter(Boolean).join(' · ');
+    const fact = (attr, c, i, t) => `<button class="zf"${attr}><span class="ic ${c}">${ico(i)}</span><b>${esc(t)}</b></button>`;
+    let x = `<div class="zclock"><div class="zc"><div class="clock">${clock}</div><div class="zdate">${esc(date)}</div></div><button class="zbell" data-act="bell" aria-label="Meldungen">${ico('bell')}${warn ? '<b></b>' : ''}</button></div>
+      <div class="zfacts">${w?.now ? fact(' data-act="wetter"', 'gold', wic, `${w.now.t}° · ${wi[1]}`) : ''}${kl ? fact(' data-act="klima"', '', 'therm', kl) : ''}${fact(' data-go="wecker"', 'pink', 'alarm', ai.n ? 'Wecker ' + ai.n.a.zeit + (ai.when && ai.when !== 'heute' ? ' · ' + ai.when : '') : 'Kein Wecker')}</div>`;
+    if (sc.length) x += `<div class="zh"><h2>Szenen</h2></div><div class="zscenes">${sc.map(s => `<button class="gt zs${s.on ? ' on' : ''}" data-sc="${esc(s.key)}"><span class="em">${SC_EMO[Z.norm(s.name)] || '✨'}</span><b>${esc(s.name)}</b></button>`).join('')}</div>`;
+    if (L.length) x += `<div class="zh"><h2>Licht</h2><div class="zact"><button class="chipb" data-act="allOn">${ico('bulb')}Alle an</button><button class="chipb" data-act="allOff">${ico('power')}Alle aus</button></div></div>
+      <div class="zpills">${L.map(l => `<div class="gt pl${l.on ? ' on' : ''}${l.na ? ' na' : ''}" data-l="${esc(l.key)}" style="--lc:${l.c}"><i class="zfill" style="width:${l.on && l.dimm ? l.b : 0}%"></i>${ico(LICON[l.key] || 'bulb')}<span>${esc(l.name)}</span><b>${l.na ? '–' : l.on ? (l.dimm ? l.b + ' %' : 'An') : 'Aus'}</b></div>`).join('')}</div>`;
+    if (v) {
+      const pct = v.vol / v.max * 100;
+      x += `<div class="zh"><h2>Geräte</h2></div><div class="gt ztv${v.on ? '' : ' off'}"><span class="ic">${ico('tv')}</span><button class="ztt" data-go="tv"><b>${esc(v.tv.name)}</b><small>${esc(tvLine(v))}</small></button>
+        <div class="zvol"><button data-act="vminus" aria-label="Leiser">${ico('minus')}</button><div class="hb" data-hb="vol"><i style="width:${v.muted ? 0 : pct}%"></i></div><button data-act="vplus" aria-label="Lauter">${ico('plus')}</button><button class="zpw${v.on ? ' on' : ''}" data-act="tvpow" aria-label="Fernseher an/aus">${ico('power')}</button></div></div>`;
     }
-    if (show('licht') && L.length) {
-      x += `<div class="card"><div class="ch"><div class="ic gold">${ico('bulb')}</div><div><b>Beleuchtung</b><small>${on ? on + (on === 1 ? ' Licht an' : ' Lichter an') : 'Alle aus'}</small></div><button class="tgl${on ? ' on' : ''}" data-act="allL" aria-label="Alle Lichter"></button></div>
-        <div class="lt3" style="grid-template-columns:repeat(${Math.min(3, L.length)},1fr)">${L.map(l => `<div class="lt${l.on ? ' on' : ''}${l.na ? ' na' : ''}" data-l="${l.key}" style="--lc:${l.c}">${ico(LICON[l.key] || 'bulb')}${l.dimm ? `<div class="vs" data-vs="${l.key}"><i style="height:${l.on ? l.b : 0}%"></i></div>` : ''}<span>${esc(l.name)}</span><b>${l.na ? '–' : l.on ? (l.dimm ? l.b + ' %' : 'An') : 'Aus'}</b>${l.dimm ? `<em>${ico('sun')}</em>` : ''}</div>`).join('')}</div>
-        <div class="hint">Tippen schaltet · Regler ziehen dimmt · gedrückt halten für Farbe</div></div>`;
-    }
-    const v = Z.tvView();
-    if (show('tv') && v) {
-      x += `<div class="card"><div class="ch"><div class="ic">${ico('tv')}</div><div class="tap" data-go="tv"><b>${esc(v.tv.name)}</b><small>${esc(tvLine(v))}</small></div><button class="tgl vio${v.on ? ' on' : ''}" data-act="tvpow" aria-label="Fernseher"></button></div>
-        ${v.on ? `<div class="tvm"><div class="art" style="--ac:${v.app.farbe}">${Z.appMark(v.app)}</div><div class="tvt" data-go="tv"><b>${esc(v.titel || v.app.name)}</b><small>${esc([v.zeile, v.stat].filter(Boolean).join(' · '))}</small><div class="pbar"${v.prog.dur ? '' : ' style="visibility:hidden"'}><i style="width:${(v.prog.f * 100).toFixed(1)}%"></i></div></div><button class="pbtn" data-act="play" aria-label="Wiedergabe">${ico(v.playing ? 'pause' : 'play')}</button></div>` : ''}</div>`;
-    }
-    if (show('zuhause')) {
-      const ai = Z.alarmInfo();
-      x += `<div class="card"><div class="ch"><div class="ic">${ico('shield')}</div><div><b>Sicherheit</b><small>${!sens.length ? 'keine Fenster-/Türsensoren eingerichtet' : open.length ? open.map(s => s.name + ' offen').join(' · ') : 'Alles zu'}</small></div></div>
-        <div class="mini3">${sens.slice(0, 2).map(s => `<button class="mini" data-sens="${esc(s.entity_id)}">${ico(s.art === 'tuer' ? 'door' : 'win')}<div><b>${esc(s.name)}</b><small class="${s.open ? 'w' : ''}">${s.na ? '?' : s.open ? 'Offen' : 'Zu'}</small></div></button>`).join('')}<button class="mini" data-go="wecker">${ico('alarm')}<div><b>Wecker</b><small>${ai.n ? ai.n.a.zeit : 'aus'}</small></div></button></div></div>`;
-    }
-    if (filt === 'alle') {
-      const p = Z.partner(), today = Z.evOn(Z.iso(new Date())).filter(e => e.t && !e.span), nowM = new Date().getHours() * 60 + new Date().getMinutes();
-      const ev = today.find(e => Z.toMin(e.t) >= nowM - 30) || null;
-      const dep = nextDep(), pk = X?.pakOk() ? (X.D.pak?.pakete || []) : null;
-      x += `<div class="sec">Heute für euch</div><div class="card rows">
-        <button class="rw" data-go="partner"><div class="ic pink">${ico('heart')}</div><div><b>${esc(p?.name || 'Partner')}</b><small>${esc([X?.presence().online ? 'online' : '', Z.wiedersehen()].filter(Boolean).join(' · '))}</small></div>${ico('chev', 'chev')}</button>
-        ${ev ? `<button class="rw" data-go="kal"><div class="ic">${ico('cal')}</div><div><b>${esc(ev.n)}</b><small>heute ${esc(ev.t)} Uhr</small></div>${ico('chev', 'chev')}</button>` : ''}
-        ${dep ? `<button class="rw" data-go="abf"><div class="ic teal">${ico('bus')}</div><div><b>${esc(dep.linie || '–')} → ${esc(dep.ziel)}</b><small>${esc(dep.stop)}</small></div><em>${dep.m ? 'in ' + dep.m + ' Min' : 'jetzt'}</em></button>` : ''}
-        ${pk && pk.length ? `<button class="rw" data-go="pak"><div class="ic gold">${ico('box')}</div><div><b>${pkHead(pk)}</b><small>${pk.filter(q => q.status !== 'zugestellt').length} unterwegs</small></div>${ico('chev', 'chev')}</button>` : ''}</div>`;
-    }
+    if (rts.length) x += `<div class="zh"><h2>Routinen</h2></div><div class="zrts">${rts.map(r => { const an = Z.ent(r.entity_id)?.state === 'on'; return `<div class="gt zr"><span class="ic">${ico(IC[r.icon] ? r.icon : 'alarm')}</span><div><b>${esc(r.name)}</b>${r.info ? `<small>${esc(r.info)}</small>` : ''}</div><button class="tgl vio sm${an ? ' on' : ''}" data-rt="${esc(r.entity_id)}" data-on="${an ? 1 : 0}" aria-label="${esc(r.name)}"></button></div>`; }).join('')}</div>`;
     put($('s-home'), x);
   };
   const tvLine = v => (v.on ? v.app.name + ' · ' + (v.playing ? 'läuft' : 'pausiert') : v.starting ? 'Startet …' : v.bildAus ? 'Bild aus · Ton an' : v.fail ? 'Aus · Einschalten hat nicht geklappt' : 'Aus');
@@ -179,8 +150,7 @@
   }
 
   // ---------------------------------------------------------------- Blätter: Szenen, Meldungen, Wetter, Raumklima, Farbe
-  const scenesHtml = () => `<div class="grab"></div><h3>Szenen</h3><p>Ein Tipp – und das Zuhause stellt sich ein.</p>${Z.scenes().map(s => `<button class="sc${s.on ? ' on' : ''}" data-sc="${esc(s.key)}"><span class="em">${SC_EMO[Z.norm(s.name)] || '✨'}</span><div><b>${esc(s.name)}</b><small>${esc(Z.sceneInfo(s))}</small></div></button>`).join('') || '<div class="empty">Keine Szenen eingerichtet</div>'}`;
-  const bellHtml = () => `<div class="grab"></div><h3>Meldungen</h3><p>Das Wichtigste aus eurem Zuhause</p><div class="rows">${Z.notes().map(n => `<div class="rw"><div class="ic${n.warn ? ' gold' : ''}">${ico(n.ic)}</div><div><b>${esc(n.b)}</b><small>${esc(n.s)}</small></div></div>`).join('')}</div>`;
+  const bellHtml = () => `<div class="grab"></div><h3>Meldungen</h3><div class="rows">${Z.notes().map(n => `<div class="rw"><div class="ic${n.warn ? ' gold' : ''}">${ico(n.ic)}</div><div><b>${esc(n.b)}</b><small>${esc(n.s)}</small></div></div>`).join('')}</div>`;
   const wetterHtml = () => {
     const w = Z.S.wetter;
     if (!w?.now) return '<div class="grab"></div><h3>Wetter</h3><p>Noch keine Wetterdaten.</p>';
@@ -191,9 +161,9 @@
   const klimaHtml = () => {
     const k = Z.klima(), pts = k.ts.length > 1 ? k.ts : null;
     const lo = pts ? Math.floor(Math.min(...pts.map(p => p.v)) - 1) : 18, hi = pts ? Math.ceil(Math.max(...pts.map(p => p.v)) + 1) : 24;
-    return `<div class="grab"></div><h3>Raumklima · Wohnzimmer</h3><p>Nur Anzeige – die Temperatur lässt sich hier nicht verstellen.</p>
+    return `<div class="grab"></div><h3>Raumklima · Wohnzimmer</h3>
       <div class="pills"><span><b>${fmt(k.t)}°</b> jetzt</span><span><b>${fmt(k.tmin)}°</b> min</span><span><b>${fmt(k.tmax)}°</b> max</span><span><b>${fmt(k.hu, 0)} %</b> Feuchte</span></div>
-      <div class="card xc" style="color:#b39bff"><div class="cth"><b>Temperatur · 24 Std.</b><span class="cap">${pts ? 'antippen für Werte' : ''}</span></div>${pts ? area(pts, 'v', lo, hi, '°') : '<div class="empty">Der Verlauf füllt sich in den nächsten Stunden.</div>'}</div>`;
+      <div class="card xc" style="color:#b39bff"><div class="cth"><b>Temperatur · 24 Std.</b><span class="cap"></span></div>${pts ? area(pts, 'v', lo, hi, '°') : '<div class="empty">Der Verlauf füllt sich in den nächsten Stunden.</div>'}</div>`;
   };
   const PCOLS = ['#ff6a1f', '#ff7828', '#ff9646', '#ffb35c', '#ffd9a8', '#fff1dc', '#ffffff', '#7fb8ff', '#5ad07a', '#c38bff', '#ff5a7a'];
   let cpId = null, cpDrag = false;
@@ -242,12 +212,12 @@
         ${adb ? `<form class="tdadd tvtext" data-form="tvtext"><input id="tvText" maxlength="200" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="Text an den Fernseher …"><button type="button" class="ghost" data-act="tvdel" aria-label="Zeichen löschen">${ico('bs')}</button><button aria-label="Senden">${ico('send')}</button></form>` : ''}</div>
       <div class="card"><div class="ch"><div class="ic">${ico(v.muted ? 'mute' : 'vol')}</div><div><b>Lautstärke</b><small>${v.muted ? 'stumm' : v.vol + ' von ' + v.max}</small></div><button class="chipb${v.muted ? ' on' : ''}" data-act="mute">Stumm</button></div>
         <div class="vol"><button data-act="vminus" aria-label="Leiser">${ico('minus')}</button><div class="hb" data-hb="vol"><i style="width:${v.muted ? 0 : pct}%"></i></div><button data-act="vplus" aria-label="Lauter">${ico('plus')}</button></div></div>
-      ${adb ? `<div class="card"><div class="ch"><div class="ic">${ico('eye')}</div><div><b>Bild</b><small>${v.bildAus ? 'aus – der Ton läuft weiter' : 'Bildschirmfoto, Bild aus, Helligkeit'}</small></div></div>
+      ${adb ? `<div class="card"><div class="ch"><div class="ic">${ico('eye')}</div><div><b>Bild</b><small>${v.bildAus ? 'aus – der Ton läuft weiter' : ''}</small></div></div>
         <div class="seg" style="margin-top:12px"><button class="${v.bildAus ? 'on' : ''}" data-act="bild">${v.bildAus ? 'Bild an' : 'Bild aus'}</button><button data-act="shot">Bildschirmfoto</button></div>
         ${Number.isFinite(hv) ? `<div class="sec">Bildhelligkeit <b>${hv}</b></div><div class="vol"><button data-act="hminus" aria-label="Dunkler">${ico('minus')}</button><div class="hb" data-hb="hell"><i style="width:${hv}%"></i></div><button data-act="hplus" aria-label="Heller">${ico('plus')}</button></div>` : ''}</div>` : ''}`);
     if (Z.shotView().open && !sheetFn) sheet(shotHtml);
   };
-  const shotHtml = () => { const s = Z.shotView(); if (!s.open) { setTimeout(closeSheet, 0); return ''; } return `<div class="grab"></div><h3>Bildschirm</h3><p>${esc(s.msg)}</p>${s.url ? `<img class="shot" src="${s.url}" alt="Bildschirm des Fernsehers">` : '<div class="empty">…</div>'}<div class="seg" style="margin-top:14px"><button data-act="shot">Neu aufnehmen</button><button data-act="shotx">Schließen</button></div>`; };
+  const shotHtml = () => { const s = Z.shotView(); if (!s.open) { setTimeout(closeSheet, 0); return ''; } return `<div class="grab"></div><h3>Bildschirm</h3>${s.msg ? `<p>${esc(s.msg)}</p>` : ''}${s.url ? `<img class="shot" src="${s.url}" alt="Bildschirm des Fernsehers">` : '<div class="empty">…</div>'}<div class="seg" style="margin-top:14px"><button data-act="shot">Neu aufnehmen</button><button data-act="shotx">Schließen</button></div>`; };
   function progress(v) {
     if (!W || (page !== 'tv' && page !== 'home')) return;
     $$('.pbar i').forEach(i => { i.style.width = (v.prog.f * 100).toFixed(1) + '%'; });
@@ -276,40 +246,40 @@
       <div class="card"><div class="seg">${Z.LISTS.map(([k, nm]) => `<button class="${tdL === k ? 'on' : ''}" data-tdl="${k}">${nm}</button>`).join('')}</div>
       <form class="tdadd" data-form="todo"><input id="tdIn" placeholder="Neue Aufgabe …" autocomplete="off" enterkeyhint="done"><button aria-label="Hinzufügen">${ico('plus')}</button></form>
       ${list.map(t => { const c = (P[t.who] || P.g)[1]; return `<div class="td${t.done ? ' done' : ''}" data-td="${esc(t.id)}"><span class="cb">${t.done ? ico('check') : ''}</span><span>${esc(t.text)}${t.note ? `<small>${esc(t.note)}</small>` : ''}</span>${t.done ? `<i class="tdx" data-tdx aria-label="Löschen">${ico('trash')}</i>` : ''}<em data-who style="--pc:${c}">${t.who === 'd' ? 'D' : t.who === 'i' ? 'I' : 'W'}</em></div>`; }).join('') || '<div class="empty">Alles erledigt 🎉</div>'}
-      <div class="hint">synchronisiert mit der Wir-App · D = Daniel, I = Ida, W = wir · nach links wischen löscht</div></div>`);
+</div>`);
   };
 
   // ---------------------------------------------------------------- Mehr
   RN.mehr = () => {
     const X = window.ZHX, ai = Z.alarmInfo(), d = nextDep(), pk = X?.pakOk() ? (X.D.pak?.pakete || []) : null, s = X?.D.sys;
-    const M = [['wecker', 'alarm', 'Wecker', ai.n ? `${ai.when} ${ai.n.a.zeit}` : 'kein Wecker an', ''], ['partner', 'heart', 'Partner', Z.wiedersehen(), 'pink'],
+    const M = [['partner', 'heart', 'Partner', Z.wiedersehen(), 'pink'],
       ['abf', 'bus', 'Abfahrten', d ? `${d.linie || ''} in ${d.m} Min` : X?.prefs().haltestelle?.name || 'Haltestelle wählen', 'teal']];
     if (X?.pakOk()) M.push(['pak', 'box', 'Pakete', pk && pk.length ? pkHead(pk) : 'Sendungen', 'gold']);
     if (X?.sysOk()) M.push(['sys', 'pulse', 'System', s ? { g: 'Alles im grünen Bereich', y: 'Ein Auge drauf haben', r: 'Etwas braucht dich' }[s.a] || 'Status' : 'VPS, HA, Backups', '']);
-    for (const p of Z.extraPages) M.push([p.key, '', p.label, p.sub || '', '', p.icon]);
-    M.push(['einst', 'gear', 'Einstellungen', 'Anzeige & Verbindungen', '']);
-    put($('s-mehr'), ph('Mehr', 'Alles rund um euer Zuhause') + `<div class="mgrid">${M.map(([p, i, n, sub, c, raw]) => `<button class="card mt" data-go="${p}"><div class="ic ${c}">${raw || ico(i)}</div><b>${esc(n)}</b><small>${esc(sub)}</small></button>`).join('')}</div>
-      <div class="sec">Wir-App</div><button class="card rows" data-act="back"><div class="rw"><div class="ic pink">${ico('heart')}</div><div><b>Zurück zur Wir-App</b><small>Fotos, Chat, Spiele …</small></div>${ico('chev', 'chev')}</div></button>`);
+    for (const p of Z.extraPages) if (p.key !== 'verlauf') M.push([p.key, '', p.label, '', '', p.icon]);
+    M.push(['einst', 'gear', 'Einstellungen', '', '']);
+    put($('s-mehr'), ph('Mehr', '') + `<div class="mgrid">${M.map(([p, i, n, sub, c, raw]) => `<button class="card mt" data-go="${p}"><div class="ic ${c}">${raw || ico(i)}</div><b>${esc(n)}</b><small>${esc(sub)}</small></button>`).join('')}</div>
+      <div class="sec">Wir-App</div><button class="card rows" data-act="back"><div class="rw"><div class="ic pink">${ico('heart')}</div><div><b>Zurück zur Wir-App</b></div>${ico('chev', 'chev')}</div></button>`);
   };
 
   // ---------------------------------------------------------------- Wecker
   const WD7 = [['Mo', 0], ['Di', 1], ['Mi', 2], ['Do', 3], ['Fr', 4], ['Sa', 5], ['So', 6]];
   RN.wecker = () => {
     const w = Z.W(), ai = Z.alarmInfo(), ftv = Z.cfg()?.fernseher, wt = Z.wtv();
-    put($('s-wecker'), ph('Wecker', esc(ai.n ? `Nächster: ${ai.when} ${ai.n.a.zeit}` : ai.state), true)
+    put($('s-wecker'), ph('Wecker', esc(ai.n ? `Nächster: ${ai.when} ${ai.n.a.zeit}` : ai.state), false)
       + `<div class="card whero"><small>Nächster Wecker</small><b>${ai.n ? esc(ai.n.a.zeit) : '–:–'}</b><p>${ai.n ? esc(`${ai.when[0].toUpperCase() + ai.when.slice(1)} · ${ai.n.a.titel || 'Wecker'}${w.vorlauf ? ' · Licht ab ' + ai.lead : ''}`) : esc(ai.state)}</p><button class="btn" data-act="wtest">${ico('sun')}Weckvorgang testen</button></div>
       ${w.alarms.map(a => `<div class="card al${a.an ? '' : ' dim'}"><div class="ch"><label class="alt">${esc(a.zeit)}${a.bis ? `<small>–${esc(a.bis)}</small>` : ''}<input type="time" value="${esc(a.zeit.padStart(5, '0'))}" data-altime="${esc(a.id)}"></label><div><b>${esc(a.titel || 'Wecker')}</b><small>${a.bis ? 'alle ' + a.alle + ' Min bis ' + esc(a.bis) : 'einmal klingeln'}${a.ton === false ? ' · nur Licht' : ''}</small></div><button class="tgl vio${a.an ? ' on' : ''}" data-al="${esc(a.id)}" aria-label="Wecker an/aus"></button></div>
         <div class="days">${WD7.map(([d, j]) => `<button class="${a.tage.includes(j) ? 'on' : ''}" data-ald="${esc(a.id)}:${j}">${d}</button>`).join('')}<button class="del" data-aldel="${esc(a.id)}" aria-label="Löschen">${ico('trash')}</button></div></div>`).join('')}
       <button class="card addal" data-act="aladd">${ico('plus')}Wecker hinzufügen</button>
-      <div class="card"><div class="ch"><div class="ic gold">${ico('sun')}</div><div><b>Sonnenaufgang vorher</b><small>Bett-Licht dimmt von Glut-Orange auf Weiß</small></div><span class="big" style="font-size:22px"><span id="srv">${w.vorlauf}</span><small>Min</small></span></div>
+      <div class="card"><div class="ch"><div class="ic gold">${ico('sun')}</div><div><b>Sonnenaufgang vorher</b></div><span class="big" style="font-size:22px"><span id="srv">${w.vorlauf}</span><small>Min</small></span></div>
         <div class="sunb"></div><input type="range" class="rng" min="0" max="30" step="5" value="${w.vorlauf}" style="--p:${w.vorlauf / 30 * 100}%" data-sr></div>
-      <div class="card"><div class="ch"><div class="ic">${ico('vol')}</div><div><b>Ton</b><small>wird über 60 Sek. lauter · Schlummern 10 Min</small></div></div>
+      <div class="card"><div class="ch"><div class="ic">${ico('vol')}</div><div><b>Ton</b></div></div>
         <div class="seg" style="margin-top:14px">${['Sanft', 'Vögel', 'Klassisch'].map(t => `<button class="${w.ton === t ? 'on' : ''}" data-tone="${t}">${t}</button>`).join('')}</div></div>
-      ${ftv ? `<div class="card${wt.an ? '' : ' dimc'}"><div class="ch"><div class="ic">${ico('tv')}</div><div><b>Fernseher beim Wecken</b><small>geht zur Weckzeit an und öffnet die App</small></div><button class="tgl vio sm${wt.an ? ' on' : ''}" data-act="wtv" aria-label="Fernseher beim Wecken"></button></div>
+      ${ftv ? `<div class="card${wt.an ? '' : ' dimc'}"><div class="ch"><div class="ic">${ico('tv')}</div><div><b>Fernseher beim Wecken</b></div><button class="tgl vio sm${wt.an ? ' on' : ''}" data-act="wtv" aria-label="Fernseher beim Wecken"></button></div>
         <div class="seg wrap" style="margin-top:14px">${ftv.apps.map(x => `<button class="${x.name === wt.app ? 'on' : ''}" data-wapp="${esc(x.name)}">${esc(x.name.replace(' Mediathek', ''))}</button>`).join('')}</div>
         <div class="sec">Lautstärke <b id="wtvv">${wt.lautstaerke}</b></div><input type="range" class="rng" min="0" max="40" value="${wt.lautstaerke}" style="--p:${wt.lautstaerke / 40 * 100}%" data-wtvvol></div>` : ''}
       <div class="card"><div class="ch"><div class="ic">${ico('moon')}</div><div><b>Morgen aussetzen</b><small>${ai.skip ? 'Morgen bleibt es ruhig' : 'Einmalig, rückgängig möglich'}</small></div><button class="tgl vio sm${ai.skip ? ' on' : ''}" data-act="skip" aria-label="Morgen aussetzen"></button></div></div>
-      <div class="hint">Tipp: Stell zur Sicherheit einen Ersatzwecker auf dem Handy.</div>`);
+`);
   };
   let ringAt = null, snoozes = 0;
   function openRing() {
@@ -333,7 +303,7 @@
       + `<div class="card"><div class="pph"><div class="pav${pr.online ? ' on' : ''}">${esc((p?.name || 'I').slice(0, 1).toUpperCase())}</div><div><b>${p ? nm : 'Noch kein Partner-Konto'}</b><small>${esc(pr.txt || ' ')}</small><span class="cd">${esc(Z.wiedersehen())}</span></div></div></div>
       <div class="facts"><div class="card fact"><b>${esc(tog || '–')}</b><span>Tage zusammen</span></div><div class="card fact fring"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" class="rbg"/><circle cx="28" cy="28" r="${r}" class="rfg" stroke-dasharray="${(c * f).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 28 28)"/></svg><div><b>${n == null ? '–' : n <= 0 ? 'heute' : n}</b><span>${n == null ? 'kein Treffen geplant' : n <= 0 ? 'seht ihr euch' : n === 1 ? 'Tag bis zum Wiedersehen' : 'Tage bis zum Wiedersehen'}</span></div></div></div>
       <button class="think" id="think" data-act="think">${ico('heart')}<span>Ich denk an dich</span></button>
-      <div class="card xc"><div class="cth"><b>Aneinander gedacht<small>letzte 14 Tage</small></b><span class="cap">${X.D.pings ? 'antippen für Werte' : 'lädt …'}</span></div><div class="lg"><i class="la"></i>du ${sa}<i class="lb"></i>${nm} ${sb}</div>
+      <div class="card xc"><div class="cth"><b>Aneinander gedacht<small>letzte 14 Tage</small></b><span class="cap">${X.D.pings ? '' : 'lädt …'}</span></div><div class="lg"><i class="la"></i>du ${sa}<i class="lb"></i>${nm} ${sb}</div>
       <svg viewBox="0 0 ${Wd} ${H}" class="xs"><line x1="0" x2="${Wd}" y1="${base}" y2="${base}" class="xbase"/>${bars}</svg></div>
       <div class="hint">${g ? `Letzter Ping: ${g.from === X.myId() ? 'du → ' + nm : nm + ' → dich'} · ${esc(X.ago(X.pbMs(g.created)))}` : ''}</div>`);
   };
@@ -350,7 +320,7 @@
     put($('s-abf'), head(esc((a.haltestelle || a.name || p.haltestelle.name) + ' · Stand ' + hm(a.stale ? a.at : now)))
       + (nx ? `<div class="card nxt" style="--lc:${esc(nx.farbe || '#5a6a7a')}"><span class="ln">${esc(nx.linie || '–')}</span><div><small>Nächste Abfahrt</small><b>${esc(nx.ziel)}</b></div><strong>${mt(nx.echt) <= 0 ? 'jetzt' : mt(nx.echt) + '<small>Min</small>'}</strong></div>` : '')
       + `<div class="pills"><span><b>${Ls.length}</b> Abfahrten</span><span class="${late ? 'warn' : ''}"><b>${late}</b> verspätet</span><span class="${gone ? 'bad' : ''}"><b>${gone}</b> fallen aus</span></div>
-      <div class="card"><div class="cth"><b>Abfahrtstafel</b><span class="cap">aktualisiert jede Minute</span></div>${Ls.map(x => { const m = mt(x.echt), plan = x.delay > 0 ? Date.parse(x.echt) - x.delay * MIN : Date.parse(x.echt); return `<div class="dep${x.ausfall ? ' x' : ''}${m <= 2 && !x.ausfall ? ' now' : ''}"><span class="ln" style="--lc:${esc(x.farbe || '#5a6a7a')}">${esc(x.linie || '–')}</span><span class="dir">${esc(x.ziel)}<small>${x.art === 'bus' ? 'Bus · ' : x.art === 'bahn' ? 'Zug · ' : ''}plan ${hm(plan)}</small></span>${tagD(x.delay, x.ausfall)}<span class="min">${x.ausfall ? '–' : m <= 0 ? 'jetzt' : m < 60 ? m + ' Min' : hm(x.echt)}</span></div>`; }).join('') || '<div class="empty">Gerade keine Abfahrten</div>'}</div>`
+      <div class="card"><div class="cth"><b>Abfahrtstafel</b><span class="cap"></span></div>${Ls.map(x => { const m = mt(x.echt), plan = x.delay > 0 ? Date.parse(x.echt) - x.delay * MIN : Date.parse(x.echt); return `<div class="dep${x.ausfall ? ' x' : ''}${m <= 2 && !x.ausfall ? ' now' : ''}"><span class="ln" style="--lc:${esc(x.farbe || '#5a6a7a')}">${esc(x.linie || '–')}</span><span class="dir">${esc(x.ziel)}<small>${x.art === 'bus' ? 'Bus · ' : x.art === 'bahn' ? 'Zug · ' : ''}plan ${hm(plan)}</small></span>${tagD(x.delay, x.ausfall)}<span class="min">${x.ausfall ? '–' : m <= 0 ? 'jetzt' : m < 60 ? m + ' Min' : hm(x.echt)}</span></div>`; }).join('') || '<div class="empty">Gerade keine Abfahrten</div>'}</div>`
       + (a.fahrt?.verbindungen ? `<div class="card"><div class="ch" style="margin-bottom:8px"><div class="ic pink">${ico('route')}</div><div><b>Fahrt zu ${esc(Z.partner()?.name || 'Ida')}</b><small>${esc(a.fahrt_von || '')} → ${esc(a.fahrt_nach || '')}</small></div></div>
         ${a.fahrt.verbindungen.map(v => { const dA = Math.max(0, Math.round((Date.parse(v.ab) - Date.parse(v.abPlan)) / MIN)); return `<div class="con${v.ausfall ? ' x' : ''}"><div><b>${hm(v.abPlan)}</b>${dA ? ` <em class="tag ${dA >= 5 ? 'bad' : 'warn'}">+${dA}</em>` : ''} → <b>${hm(v.anPlan)}</b><small>${Math.floor(v.dauer / 60)}:${p2(v.dauer % 60)} h · ${v.umstiege ? v.umstiege + (v.umstiege === 1 ? ' Umstieg' : ' Umstiege') : 'direkt'}${v.ausfall ? ' · Ausfall' : ''}</small></div><div class="lin">${v.linien.map(l => `<span class="${l.ausfall ? 'strike' : ''}">${esc(l.linie || (l.art === 'bus' ? 'Bus' : 'Zug'))}</span>`).join('<i>›</i>')}</div></div>`; }).join('') || '<div class="empty">Keine Verbindung gefunden</div>'}</div>` : ''));
   };
@@ -370,7 +340,7 @@
         return `<div class="card pc${x.status === 'zugestellt' ? ' done' : ''}${open ? ' open' : ''}" data-pk="${esc(k)}"><div class="pct"><b>${esc(x.name)}</b><span class="st ${cls}">${lbl}</span></div><small class="from">${esc(x.ort || '')}</small>
           <div class="steps ${cls}" style="--p:${stp / 3}">${STEPS.map((s, j) => `<i class="${j <= stp ? 'on' : ''}${bad && j === stp ? ' bs' : ''}"><small>${x.status === 'abholbereit' && j === 3 ? 'abholen' : s}</small></i>`).join('')}</div><small class="pinfo">${esc(x.text || '')}${x.zeit ? ' · ' + esc(X.dateTxt(x.zeit)) : ''}</small>
           ${open ? `<div class="ver"><div class="cur"><i></i><span>${esc(x.text || lbl)}</span><em>${esc(X.dateTxt(x.zeit))}</em></div>${x.ort ? `<div><i></i><span>${esc(x.ort)}</span><em>Ort</em></div>` : ''}</div>` : ''}</div>`;
-      }).join('') || `<div class="card empty">${Pk.fehlt ? '17TRACK ist in Home Assistant nicht eingerichtet' : 'Keine Pakete unterwegs'}</div>`) + '<div class="hint">Sendungen kommen über 17TRACK in Home Assistant</div>');
+      }).join('') || `<div class="card empty">${Pk.fehlt ? '17TRACK ist in Home Assistant nicht eingerichtet' : 'Keine Pakete unterwegs'}</div>`));
   };
 
   // ---------------------------------------------------------------- System
@@ -387,7 +357,7 @@
       <div class="tiles">${s.gruppen.map(x => { const b = x.items.filter(i => !i.ohne_ampel && (i.a === 'y' || i.a === 'r')).length; return `<button class="card tile${sysOpen === x.k ? ' on' : ''}" data-g="${esc(x.k)}"><i class="dot ${(AT[x.a] || AT.n)[0]}"></i><b>${esc(x.name)}</b><small>${(AT[x.a] || AT.n)[1]}${b ? ' · ' + b + (b === 1 ? ' Punkt' : ' Punkte') : ''}${x.updates?.length ? ' · ' + x.updates.length + ' Updates' : ''}</small></button>`; }).join('')}</div>
       ${g ? `<div class="card"><div class="cth"><b>${esc(g.name)}</b></div>${g.items.map(i => `<div class="li"><i class="dot ${i.ohne_ampel ? '' : (AT[i.a] || AT.n)[0]}"></i><span>${esc(i.name)}</span><em>${esc(itemTxt(i))}</em></div>`).join('')}${g.updates?.length ? `<div class="up"><b>Updates verfügbar</b>${g.updates.map(u => `<div><span>${esc(u.name)}</span><em>${esc(u.von)} → ${esc(u.nach)}</em></div>`).join('')}</div>` : ''}</div>` : ''}
       <div class="sec">Letzte 24 Stunden</div>
-      ${[['last', 'Last', 'Prozessor, alle Kerne', '#f5b45a'], ['ram', 'Arbeitsspeicher', 'belegt', '#b48cff'], ['disk', 'Festplatte', 'belegt', '#5fd3c6']].map(([k, n, sub, col]) => { const v = K.map(p => p[k]).filter(Number.isFinite); return `<div class="card xc kv" style="color:${col}"><div class="cth"><b>${n}<small>${sub}</small></b><span class="xbig">${v.length ? Math.round(v[v.length - 1]) : '–'}<small> %</small></span></div><span class="cap">${v.length ? `min ${Math.round(Math.min(...v))} · max ${Math.round(Math.max(...v))} % · antippen` : ''}</span>${area(K, k, 0, 100, '%', 340, 100)}</div>`; }).join('')}`);
+      ${[['last', 'Last', 'Prozessor, alle Kerne', '#f5b45a'], ['ram', 'Arbeitsspeicher', 'belegt', '#b48cff'], ['disk', 'Festplatte', 'belegt', '#5fd3c6']].map(([k, n, sub, col]) => { const v = K.map(p => p[k]).filter(Number.isFinite); return `<div class="card xc kv" style="color:${col}"><div class="cth"><b>${n}<small>${sub}</small></b><span class="xbig">${v.length ? Math.round(v[v.length - 1]) : '–'}<small> %</small></span></div><span class="cap">${v.length ? `min ${Math.round(Math.min(...v))} · max ${Math.round(Math.max(...v))} %` : ''}</span>${area(K, k, 0, 100, '%', 340, 100)}</div>`; }).join('')}`);
   };
 
   // ---------------------------------------------------------------- Einstellungen
@@ -396,18 +366,18 @@
     const row = (i, b, s, ctl, id = '') => `<div class="set"${id ? ` id="${id}"` : ''}><div class="ic">${ico(i)}</div><div><b>${b}</b><small>${s}</small></div>${ctl}</div>`;
     const tg = (k, val) => `<button class="tgl vio sm${val ? ' on' : ''}" data-set="${k}" aria-label="${k}"></button>`;
     const li = (cls, a, b) => `<div class="li"><i class="dot ${cls}"></i><span>${a}</span><em>${b}</em></div>`;
-    put($('s-einst'), ph('Einstellungen', 'Handy, Anzeige und Verbindungen', true)
+    put($('s-einst'), ph('Einstellungen', '', true)
       + `<div class="sec">Anzeige</div><div class="card" style="padding:4px 16px">
-        ${row('eye', 'Leistungsmodus', 'Ruhiger, ohne Weichzeichner', tg('perf', Z.perfOn()))}
-        ${row('moon', 'Nachtdimmung', '22–6 Uhr gedimmt', tg('night', L.night))}
-        ${row('tab', 'Bildschirmschoner', 'Antippen weckt nur auf', `<div class="seg">${[1, 5, 10].map(m => `<button class="${L.saverMin === m ? 'on' : ''}" data-m="${m}">${m}</button>`).join('')}</div>`)}
-        ${row('sun', 'Bildschirmschoner testen', 'Uhr und nächster Wecker', '<button class="chipb" data-act="saver">Jetzt</button>')}
-        ${row('bell', 'Hinweise', 'Kurze Meldungen oben', tg('toasts', L.toasts))}</div>
+        ${row('eye', 'Leistungsmodus', '', tg('perf', Z.perfOn()))}
+        ${row('moon', 'Nachtdimmung', '', tg('night', L.night))}
+        ${row('tab', 'Bildschirmschoner', '', `<div class="seg">${[1, 5, 10].map(m => `<button class="${L.saverMin === m ? 'on' : ''}" data-m="${m}">${m}</button>`).join('')}</div>`)}
+        ${row('sun', 'Bildschirmschoner testen', '', '<button class="chipb" data-act="saver">Jetzt</button>')}
+        ${row('bell', 'Hinweise', '', tg('toasts', L.toasts))}</div>
       <div class="sec">Unterwegs</div><div class="card" style="padding:4px 16px">
         ${row('bus', 'Haltestelle', esc(p.haltestelle?.name || 'keine – Abfahrten ausgeblendet'), '<button class="chipb" data-act="stop">Wählen</button>')}
-        ${p.haltestelle ? row('route', 'Verkehrsmittel', 'was bei den Abfahrten erscheint', `<div class="seg">${['bus', 'bahn'].map(k => `<button class="${p.arten[k] ? 'on' : ''}" data-art="${k}">${k === 'bus' ? 'Bus' : 'Bahn'}</button>`).join('')}</div>`) : ''}
-        ${row('heart', 'Fahrt zu ' + esc(Z.partner()?.name || 'Ida'), esc(p.fahrt?.von || p.fahrt?.nach ? `${p.fahrt.von?.name || '?'} → ${p.fahrt.nach?.name || '?'}` : 'Start und Ziel, wenn ihr euch in 24 h seht'), '<div class="two"><button class="chipb" data-ort="von">Start</button><button class="chipb" data-ort="nach">Ziel</button></div>')}</div>
-      ${tv?.titel && !st.test ? `<div class="sec">Fernseher</div><div class="card" style="padding:4px 16px">${row('film', 'Kino-Licht', 'Licht dimmt, solange etwas läuft', `<button class="tgl vio sm${Z.S.settings.fernseher?.kinolicht ? ' on' : ''}" data-act="kino" aria-label="Kino-Licht"></button>`)}</div>` : ''}
+        ${p.haltestelle ? row('route', 'Verkehrsmittel', '', `<div class="seg">${['bus', 'bahn'].map(k => `<button class="${p.arten[k] ? 'on' : ''}" data-art="${k}">${k === 'bus' ? 'Bus' : 'Bahn'}</button>`).join('')}</div>`) : ''}
+        ${row('heart', 'Fahrt zu ' + esc(Z.partner()?.name || 'Ida'), esc(p.fahrt?.von || p.fahrt?.nach ? `${p.fahrt.von?.name || '?'} → ${p.fahrt.nach?.name || '?'}` : ''), '<div class="two"><button class="chipb" data-ort="von">Start</button><button class="chipb" data-ort="nach">Ziel</button></div>')}</div>
+      ${tv?.titel && !st.test ? `<div class="sec">Fernseher</div><div class="card" style="padding:4px 16px">${row('film', 'Kino-Licht', '', `<button class="tgl vio sm${Z.S.settings.fernseher?.kinolicht ? ' on' : ''}" data-act="kino" aria-label="Kino-Licht"></button>`)}</div>` : ''}
       <div class="sec">Verbindungen</div><div class="card" style="padding:4px 16px">
         ${li(st.bad ? 'bad' : 'ok', 'Home Assistant', st.stale ? 'Dienst nicht erreichbar' : st.test ? 'bereit (Test)' : st.connected ? 'verbunden' : 'getrennt' + (st.error ? ': ' + esc(st.error) : ''))}
         ${li('ok', 'Wir-App', 'verbunden · ' + esc(Z.me()?.name || '…'))}
@@ -424,7 +394,7 @@
   function openOrt(target) {
     ortTarget = target; ortRes = []; ortMsg = 'Mindestens 3 Buchstaben';
     const label = target === 'haltestelle' ? 'Haltestelle für die Abfahrten' : target === 'von' ? 'Start der Fahrt' : 'Ziel der Fahrt';
-    sheet(() => `<div class="grab"></div><h3>${label}</h3><p>Nur für dich gespeichert · Fahrplan: Transitous (ohne Gewähr)</p>
+    sheet(() => `<div class="grab"></div><h3>${label}</h3>
       <form class="tdadd" data-form="ort"><input id="ortQ" type="search" placeholder="Haltestelle suchen …" autocomplete="off" spellcheck="false" enterkeyhint="search"></form>
       <div class="rows">${ortRes.map((o, i) => `<button class="rw" data-oi="${i}"><div class="ic teal">${ico('bus')}</div><div><b>${esc(o.name)}</b><small>${esc(o.sub)}</small></div></button>`).join('') || `<div class="empty">${esc(ortMsg)}</div>`}</div>
       <button class="chipb" data-act="ortdel" style="margin-top:12px">Entfernen</button>`);
@@ -432,7 +402,12 @@
   }
 
   // ---------------------------------------------------------------- Ereignisse
-  let lpT = 0, lpFired = false, lpXY = null, drag = null, hbDrag = null;
+  let lpT = 0, lpFired = false, lpXY = null, drag = null, hbDrag = null, hd = null;
+  function hdSet(e, final) {
+    const r = hd.el.getBoundingClientRect(), v = Math.max(1, Math.min(100, Math.round((e.clientX - r.left) / r.width * 100)));
+    hd.el.classList.add('on'); hd.el.querySelector('.zfill').style.width = v + '%'; hd.el.querySelector('b').textContent = v + ' %';
+    Z.lampSet(hd.key, { brightness_pct: v }, final);
+  }
   function dragSet(e, final) {
     const r = drag.getBoundingClientRect(), key = drag.dataset.vs, v = Math.max(1, Math.min(100, Math.round((r.bottom - e.clientY) / r.height * 100)));
     drag.firstChild.style.height = v + '%';
@@ -445,7 +420,8 @@
     if (hbDrag.dataset.hb === 'vol') { const v = Z.tvView(); if (v) Z.tvVol(f * v.max, final); } else Z.tvHell(f * 100);
   }
   const ACT = {
-    back: () => Z.back(), bell: () => sheet(bellHtml), wetter: () => sheet(wetterHtml), klima: () => sheet(klimaHtml), scenes: () => sheet(scenesHtml),
+    back: () => Z.back(), bell: () => sheet(bellHtml), wetter: () => sheet(wetterHtml), klima: () => sheet(klimaHtml),
+    allOn: () => { Z.lampsAll(true); Z.toast('Alle Lichter an'); }, allOff: () => { Z.lampsAll(false); Z.toast('Alle Lichter aus'); },
     allL: () => { const a = Z.lamps().some(l => l.on); Z.lampsAll(!a); Z.toast(a ? 'Alle Lichter aus' : 'Alle Lichter an'); },
     tvpow: () => Z.tvPower(), tvon: () => { const v = Z.tvView(); if (v?.bildAus) Z.tvBild(); else Z.tvPower(true); },
     play: () => Z.tvPlay(), prev: () => Z.tvTrack(-1), next: () => Z.tvTrack(1),
@@ -477,6 +453,7 @@
       const t = e.target.closest('[data-l]'); if (t) {
         lpFired = false; lpXY = [e.clientX, e.clientY]; t.classList.add('press'); clearTimeout(lpT);
         lpT = setTimeout(() => { lpFired = true; t.classList.remove('press'); openColor(t.dataset.l); }, 480);
+        if (t.classList.contains('pl') && Z.lampBy(t.dataset.l)?.dimm) hd = { el: t, key: t.dataset.l, x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
       }
       // To-dos nach links wischen = löschen
       const td = e.target.closest('[data-td]'); if (td && !e.target.closest('[data-who],[data-tdx]')) sw = { t: td, x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId };
@@ -486,6 +463,10 @@
     R.addEventListener('pointermove', e => {
       if (drag) return dragSet(e);
       if (hbDrag) return hbSet(e);
+      if (hd && e.pointerId === hd.id) {
+        if (!hd.moved && Math.abs(e.clientX - hd.x) > 10 && Math.abs(e.clientX - hd.x) > Math.abs(e.clientY - hd.y)) { hd.moved = true; lpStop(); lpXY = null; Z.drag(Z.lampBy(hd.key)?.id); try { hd.el.setPointerCapture(e.pointerId); } catch (_) {} }
+        if (hd.moved) return hdSet(e);
+      }
       if (lpXY && Math.hypot(e.clientX - lpXY[0], e.clientY - lpXY[1]) > 8) lpStop();
       if (sw && e.pointerId === sw.id) {
         sw.dx = Math.min(0, e.clientX - sw.x);
@@ -495,6 +476,7 @@
     const up = e => {
       if (drag) { dragSet(e, true); drag = null; Z.drag(null); upd(); }
       if (hbDrag) { hbSet(e, true); hbDrag = null; Z.drag(null); upd(); }
+      if (hd) { const h = hd; hd = null; if (h.moved) { hd = h; hdSet(e, true); hd = null; swiped = true; setTimeout(() => { swiped = false; }, 60); Z.drag(null); upd(); } }
       lpStop(); lpXY = null; if (lpFired) setTimeout(() => { lpFired = false; }, 350);
       if (sw && e.pointerId === sw.id) {
         const s = sw; sw = null;
@@ -502,7 +484,7 @@
       }
     };
     R.addEventListener('pointerup', up);
-    R.addEventListener('pointercancel', () => { drag = null; hbDrag = null; Z.drag(null); lpStop(); if (sw) { sw.t.style.transform = ''; sw.t.style.opacity = ''; sw = null; } });
+    R.addEventListener('pointercancel', () => { drag = null; hbDrag = null; if (hd?.moved) upd(); hd = null; Z.drag(null); lpStop(); if (sw) { sw.t.style.transform = ''; sw.t.style.opacity = ''; sw = null; } });
     R.addEventListener('contextmenu', e => { if (e.target.closest('[data-l]')) e.preventDefault(); });
     R.addEventListener('click', e => {
       const T = s => e.target.closest(s);
@@ -513,7 +495,7 @@
       if (T('#shade')) { if (Z.shotView().open) Z.shotClose(); return closeSheet(); }
       if ((t = T('[data-act]'))) return ACT[t.dataset.act]?.();
       if ((t = T('[data-go]'))) return go(t.dataset.go);
-      if ((t = T('[data-filt]'))) { filt = t.dataset.filt; return RN.home(); }
+      if ((t = T('[data-rt]'))) { Z.call({ entity_id: t.dataset.rt, service: t.dataset.on === '1' ? 'turn_off' : 'turn_on' }); t.classList.toggle('on'); t.dataset.on = t.dataset.on === '1' ? '0' : '1'; return; }
       if ((t = T('[data-l]'))) { const l = Z.lampBy(t.dataset.l); if (l) { const o = Z.lampToggle(l.key); Z.toast(`${l.name} ${o ? 'an' : 'aus'}`); } return; }
       if ((t = T('[data-sc]'))) { Z.scene(t.dataset.sc); setTimeout(closeSheet, 350); return; }
       if ((t = T('[data-cpc]'))) { if (cpId) Z.lampColor(cpId, t.dataset.cpc); return; }

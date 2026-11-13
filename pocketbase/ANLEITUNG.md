@@ -1871,3 +1871,16 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Datenbank:** keine Änderung, kein Backup nötig.
 - **Sicherung:** Git-Tag `vor-pastell-redesign`.
 - **Rücksetz-Weg:** `git checkout vor-pastell-redesign -- app/a1.js app/index.html app/sw.js app/zuhause.js shared/base.css shared/look.js && git rm -q app/zuhause-pastell.css && git commit -m "Zurück vor Pastell" && git push`. Wer Pastell gewählt hatte, fällt automatisch auf Rosé zurück.
+
+## Mockup live: Start, Wir zwei, Zuhause-Handy, Verlauf 13.11.2026 (Wir `wir-v66`)
+
+- **Start:** große Uhr + Datum, „N Tage zusammen“, „Wiedersehen in N Tagen“, Stimmungsbalken mit Knopf „Wie geht es dir?“. Das Herz ist der Sync: kurz tippen = Liebe senden, gedrückt halten = blinkt in beiden Farben, halten beide, „explodiert“ es nach 5 s („You are in sync“). Keine Begrüßung und keine Kommentartexte mehr.
+- **„Wie geht es dir?“:** neuer Endpunkt `POST /api/mood/ask` (Rate-Limit 1 pro 5 Min.). Die Aufforderung liegt in `support_requests` mit `kind='mood'` (keine neue Migration). Bei der anderen Person öffnet sich beim Öffnen der App ein Pop-up mit Prozentzahl und Regler; Speichern legt einen `moods`-Eintrag an und schließt die Aufforderung (Hook `moodSaved` in `chat_lib.js`).
+- **Zuhause Handy:** Reiter oben Start · Fernbedienung · Kalender · Wecker · Verlauf · Mehr statt Lila-Glas-Leiste; Start mit Uhr, Fakten, Szenen, Licht-Pillen, TV-Karte, Routinen. `app/zuhause-handy.js/.css`.
+- **Zuhause-Verlauf:** neuer Reiter (`app/zuhause-verlauf.js`), zeigt wer wann was geändert hat; Wecker-Änderungen werden serverseitig ins Aktivitäts-Log geschrieben (`wir_zuhause.pb.js`).
+- **Spiele:** Schach, Tic Tac Toe, Herzstadt, Herzspur, Poker nur ausgeblendet (`HIDDEN_GAMES` in `app/games.js`, Zurückholen: Liste auf `[]`). Solitär zeigt „Lösbar/Nicht mehr lösbar“ und kann zum letzten lösbaren Stand zurück.
+- **Konsole:** neu `/zuhause [name]`, `/spiele [name]`; unbekannte Befehle antworten „unbekannt“. Server-Filter `GET /api/console/log?kind=` (home, game, fx, seen, view).
+- **Pastell:** Farbverlauf unten, Regler im Pastell-Look.
+- **Datenbank:** keine Änderung, kein Schema-Update. Backup: nicht nötig (nur Hooks + App-Dateien).
+- **Sicherung:** Git-Tag `vor-mockup-live`.
+- **Rücksetz-Weg:** `git checkout vor-mockup-live -- app shared pocketbase/pb_hooks && git rm -q --cached app/zuhause-verlauf.js; git commit -m "Zurück vor Mockup-Live" && git push` (kein reset/force); sw-Version hochzählen.

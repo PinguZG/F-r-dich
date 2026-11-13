@@ -868,6 +868,7 @@
     </g>
     <rect x="0" y="0" width="100" height="92" fill="url(#hs-love)"/>
   </g>
+  <path class="h-sync" d="${HEART}"/>
   <path class="h-rim" d="${HEART}"/>
   <path class="h-shine" d="M21 18 C14 22 11 29 12 37"/>
   <circle class="h-shine2" cx="25" cy="45" r="2.4"/>
@@ -958,8 +959,6 @@
     $('loveNumMe').textContent = love.mine;
     $('loveNumPartner').textContent = love.theirs;
     $('loveHeart').classList.toggle('full', total > 0);
-    const pn = partner?.name || 'Schatz';
-    $('wirToday').textContent = love.theirs || love.mine ? `Heute: 💗 ${love.theirs}× von ${pn} · ${love.mine}× von dir` : '';
   }
 
   function pulse(box) {
@@ -1036,6 +1035,8 @@
     }
   }
   $('loveBtn').addEventListener('click', () => sendLove($('loveBtn')));
+  // kurzer Tipp aufs Herz = Liebe senden (Halten = Sync, siehe shared/fx.js)
+  document.addEventListener('wir:heart-tap', () => sendLove($('loveHeart')));
 
   // ---------- aus einer Benachrichtigung heraus öffnen ----------
   async function goTo(target) {

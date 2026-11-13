@@ -5,6 +5,8 @@ const nameOf = (app, id) => { try { return app.findRecordById('users', id).getSt
 // ---------- Stimmung: unter 50 % einmal melden, erneut erst nach einem Wert ≥ 50 ----------
 function moodSaved(app, rec) {
   const uid = rec.getString('user'), v = rec.getInt('value');
+  // offene „Wie geht es dir?“-Aufforderungen an diese Person sind damit beantwortet
+  try { for (const o of app.findRecordsByFilter('support_requests', "to = {:u} && kind = 'mood' && status = 'open'", '', 20, 0, { u: uid })) { o.set('status', 'closed'); app.save(o); } } catch (_) { /* keine */ }
   let f;
   try { f = app.findFirstRecordByFilter('mood_flags', 'user = {:u}', { u: uid }); }
   catch (_) { f = new Record(app.findCollectionByNameOrId('mood_flags')); f.set('user', uid); f.set('low', false); }
@@ -28,13 +30,32 @@ function supportNew(app, uid, body) {
   const msg = Array.from(String(body.message || '')).filter(ch => ch.codePointAt(0) >= 32).join('').trim().slice(0, 200);
   const to = wir.partnerOf(app, uid).id;
   // ältere offene Anfrage schließen
-  for (const o of app.findRecordsByFilter('support_requests', "from = {:u} && status = 'open'", '', 20, 0, { u: uid })) { o.set('status', 'closed'); app.save(o); }
+  for (const o of app.findRecordsByFilter('support_requests', "from = {:u} && status = 'open' && kind != 'mood'", '', 20, 0, { u: uid })) { o.set('status', 'closed'); app.save(o); }
   const r = new Record(app.findCollectionByNameOrId('support_requests'));
   r.set('from', uid); r.set('to', to); r.set('kind', kind); r.set('message', msg); r.set('status', 'open');
   app.save(r);
   wir.enqueue(app, { user: to, kind: 'supportreq', title: `🫂 ${nameOf(app, uid)} braucht dich – ${KINDS[kind]}`, body: msg || 'Tippe, um zu antworten 💗', url: '/' });
   require(`${__hooks}/activity_lib.js`).log(app, uid, 'fx', 'support', `Support angefragt (${KINDS[kind]})`);
   return r;
+}
+
+// ---------- „Wie geht es dir?“: Aufforderung an die andere Person (kein neues Schema: support_requests mit kind = 'mood') ----------
+// Die andere App zeigt beim Öffnen/Sichtbarwerden das Pop-up, solange die Aufforderung offen ist. Ein neuer Stimmungseintrag
+// der Person beantwortet sie (moodSaved), „Später“ schließt sie (supportClose). Höchstens 1 Aufforderung / 5 Minuten.
+const MOOD_ASK_GAP = 5 * 60000;
+function moodAsk(app, uid) {
+  const to = wir.partnerOf(app, uid).id;
+  const since = new Date(Date.now() - MOOD_ASK_GAP).toISOString().replace('T', ' ');
+  let recent = [];
+  try { recent = app.findRecordsByFilter('support_requests', "from = {:u} && kind = 'mood' && created >= {:t}", '', 1, 0, { u: uid, t: since }); } catch (_) { /* keine */ }
+  if (recent.length) throw new ApiError(429, 'Du hast gerade erst gefragt – gib der anderen Person einen Moment 💗');
+  for (const o of app.findRecordsByFilter('support_requests', "from = {:u} && kind = 'mood' && status = 'open'", '', 20, 0, { u: uid })) { o.set('status', 'closed'); app.save(o); }
+  const r = new Record(app.findCollectionByNameOrId('support_requests'));
+  r.set('from', uid); r.set('to', to); r.set('kind', 'mood'); r.set('message', ''); r.set('status', 'open');
+  app.save(r);
+  wir.enqueue(app, { user: to, kind: 'mood', title: `💗 ${nameOf(app, uid)} fragt: Wie geht es dir?`, body: 'Tippe, um deine Stimmung einzutragen', url: '/' });
+  require(`${__hooks}/activity_lib.js`).log(app, uid, 'fx', 'mood', 'hat „Wie geht es dir?“ gefragt');
+  return { id: r.id };
 }
 
 function supportAnswer(app, uid, id, body) {
@@ -103,4 +124,4 @@ function chatReact(app, uid, id, body) {
   return r;
 }
 
-module.exports = { moodSaved, supportNew, supportAnswer, supportClose, chatCreated, chatRead, chatReact, KINDS, ANSWERS };
+module.exports = { moodSaved, moodAsk, supportNew, supportAnswer, supportClose, chatCreated, chatRead, chatReact, KINDS, ANSWERS };

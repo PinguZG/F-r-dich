@@ -217,7 +217,7 @@
     }
   }
 
-  const CMDS = { '/online': cmdOnline, '/log': cmdLog, '/heute': cmdToday };
+  const CMDS = { '/online': cmdOnline, '/log': a => cmdLog(a), '/heute': cmdToday, '/zuhause': a => cmdLog(a, 'home'), '/spiele': a => cmdLog(a, 'game') };
 
   $('termForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -230,7 +230,7 @@
     const cmd = c.toLowerCase();
     if (cmd === '/clear') { out.replaceChildren(); return; }
     const fn = CMDS[cmd];
-    if (!fn) { line('Unbekannter Befehl'); scrollDown(); return; }
+    if (!fn) { line('unbekannt', 'dim'); scrollDown(); return; }
     try { await fn(args); } catch (err) { line('Fehler: ' + (err?.response?.message || err?.message || err), 'err'); }
     scrollDown();
   });

@@ -41,3 +41,35 @@
     document.querySelector(`.tab-btn[data-go="${ORDER[i]}"]`)?.click();
   }, { passive: true });
 })();
+
+// Start (13.11.2026): große Uhr + Datum (Berliner Zeit) und „Wiedersehen in N Tagen“ aus dem nächsten Date (extra.js: WIR_COUNTDOWN)
+(() => {
+  const $ = id => document.getElementById(id);
+  const tf = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hour12: false });
+  const df = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' });
+  const set = (id, t) => { const e = $(id); if (e && e.textContent !== t) e.textContent = t; };
+  function tick() {
+    const d = new Date();
+    set('stClock', tf.format(d));
+    set('stDate', df.format(d));
+  }
+  function meet() {
+    const ms = window.WIR_COUNTDOWN?.next?.();
+    const btn = $('stMeet');
+    if (!btn) return;
+    if (!ms) { set('stMeetText', 'Date planen'); btn.dataset.plan = '1'; return; }
+    delete btn.dataset.plan;
+    const n = Math.round((UI.berlinMidnight(ms) - UI.berlinMidnight()) / UI.DAY);
+    set('stMeetText', n <= 0 ? 'Heute Wiedersehen' : n === 1 ? 'Wiedersehen morgen' : `Wiedersehen in ${n} Tagen`);
+  }
+  $('stMeet')?.addEventListener('click', e => { if (e.currentTarget.dataset.plan) { e.stopPropagation(); window.WIR_DATES?.openForm?.(); } }, true);
+  const all = () => { tick(); meet(); };
+  all();
+  setInterval(() => { if (!document.hidden) all(); }, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) all(); });
+  document.addEventListener('wir:show', all);
+  document.addEventListener('wir:started', () => { all(); setTimeout(all, 1500); });
+  // extra.js füllt #homeMeet, sobald die Dates geladen sind
+  const hm = $('homeMeet');
+  if (hm) new MutationObserver(meet).observe(hm, { subtree: true, childList: true, characterData: true, attributes: true });
+})();
