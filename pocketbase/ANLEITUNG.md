@@ -1895,3 +1895,34 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - Neu: `shared/changelog.js` – nach einem Update zeigt ein Fenster „Was ist neu?“ (Neue Funktionen / Kleine Features / Hotfix). Einträge oben in `ENTRIES`, Nummer = `wir-vNN`. Knopf „Was ist neu?“ in den Einstellungen.
 - Datenbank: keine Änderung, kein Backup nötig. Gemerkt wird die Version nur im Browser (`localStorage`).
 - Rücksetz-Weg: `git checkout vor-update-log -- app/index.html app/sw.js`, Datei `shared/changelog.js` löschen, Version hochzählen, committen (kein reset/force).
+
+## Draw Pro, Zusammen spielen, Tablet (2026-11-13, sw wir-v71/v72)
+Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub). Kein DB-Backup gemacht (nur additive Schema-Änderungen; der VPS sichert per Cron, siehe `1794700000_wir_backup_cron.js`).
+
+### Tablet (nur `app/tablet.css`, lädt nach `match.css`)
+- Alles nach Fensterbreite (Handy < 768, Tablet 768–1180, groß > 1180), nicht nach Gerät – schmale Split-View-Fenster bekommen das Handy-Layout. Größere Touch-Ziele, Fokus-Rahmen (Tastatur), Hover (Maus/Trackpad), breitere Raster. Seitenleiste, Start-Spalten und Zuhause-Tablet gab es schon (`layout.css`, `a1.css`).
+- Zurücksetzen: Zeile `tablet.css` aus `index.html`/`sw.js` nehmen.
+
+### Draw Pro (Zeichnen)
+- Neu: `app/brushes.js` (Pinselbibliothek: 33 Pinsel, Stempel-Engine), `app/drawpro.js` + `drawpro.css` (Oberfläche: Bibliothek mit Vorschau, Pinsel-Einstellungen, „Stift & Eingabe“, Auswahl, Symmetrie). `draw.js` bindet sie ein (Mischmodi, Auswahl-Replay, Verlauf/Rechteck/Text, lokaler Modus).
+- Ein Strich speichert nur Pinsel-ID `t` + optional Parameter `bp` (Abstand, Streuung, Fluss, Härte, Druck→Größe/Deckkraft, Körnung, Drehung), Druckkurven `cs`/`co`, Neigung `tl`, Symmetrie `mir`. Neue Strich-Arten: `g` Verlauf, `r` Rechteck, `tx` Text, `x` Auswahl verschieben/kopieren (auch Ebene duplizieren/zusammenführen). Alte Striche sehen unverändert aus.
+- Ebenen: Mischmodus (Normal, Multiplizieren, Bildschirm, Überlagern, Addieren, Farbe), Sperre, Alpha-Sperre, Schnittmaske. Server (`zeichnen_lib.js`) prüft alles (Pinsel-ID nur `[a-z0-9_]`, Parameter-Grenzen, Quell-Ebene, gesperrte Ebene = 423).
+- „Allein zeichnen“: `drawings.solo` (Migration `1795000000_wir_draw_pro.js`); solo-Bilder sieht nur der Autor, bis er sie per „An Schatz schicken“ freigibt. Lese-Regeln von `drawings`/`drawing_strokes` wurden dafür enger.
+- Eingabe: Pointer Events (Stift/Finger/Maus), Stift-Druck + Neigung, Geschwindigkeit als Ersatz-Druck für Finger/Maus, „Nur Stift zeichnet“ (Finger schieben/zoomen), Handballen-Schutz 1,5 s, Zeitraffer, Export PNG/PNG transparent/JPEG.
+- Nicht dabei: Zauberstab nur als Außenkontur ohne Löcher, kein Wischfinger (Smudge), keine echte Farbmischung bei Öl, Leinwand fest 1200×1600, eigene Pinsel nur lokal pro Gerät (`localStorage`).
+- Zurücksetzen: `git checkout vor-draw-pro -- app/draw.js app/index.html app/sw.js pocketbase/pb_hooks/zeichnen_lib.js pocketbase/pb_hooks/wir_zeichnen.pb.js`, `brushes.js`/`drawpro.*` löschen, sw-Version hochzählen. Die Spalte `solo` bleibt (schadet nicht); Regeln bei Bedarf zurück auf `@request.auth.id != ""`.
+
+### Zusammen spielen (Spiele → „Zusammen spielen“)
+- Dateien: `app/party.js` + `party.css`, `pocketbase/pb_hooks/wir_party.pb.js` + `party_lib.js`, Migration `1795100000_wir_party.js` (Collections `party_games`, `party_steps`; Lesen nur Beteiligte, Schreiben nur über Routen).
+- Modi (Annahmen, mit Daniel zu bestätigen): Normal (Text → Zeichnung → Text …), Complement (Thema → linke Hälfte → rechte Hälfte ergänzen), Story (wie Normal, mit allen bisherigen Panels sichtbar, Comic-Streifen), Animation (Bilder mit Onion-Skin, Wiedergabe + APNG), Knock Off (Original kurz sehen, aus dem Gedächtnis nachzeichnen).
+- Ablauf: beide ziehen gleichzeitig an je einer Kette; Kette c wird in Runde r von Person (c + r) % 2 bearbeitet. Server prüft Mitspielende, Reihenfolge, ein Zug pro Runde, Zugart (Text/Bild, ≤ 1 MB), Zeitlimit (+30 s), Pause. Cron `wir_party_tick` (jede Minute) füllt abgelaufene Züge mit „übersprungen“, `wir_party_cleanup` löscht nach 30/21 Tagen.
+- Coins: 15 pro fertiger Partie und Person, höchstens 3 pro Tag (`reason 'party'`). Push „Du bist dran“ (Art `party`, Ziel `s-party`, Dienst `push/index.js`).
+- Bilder liegen als geschützte Dateien (≈ 600×800 WebP/PNG). Lokaler Zeichenmodus: `WIR_DRAW.openLocal(...)`.
+- Zurücksetzen: `git checkout vor-zusammen-spielen -- app/draw.js app/index.html app/sw.js push/index.js`, die neuen Dateien löschen. Collections bleiben leer liegen.
+
+## Draw Pro, Zusammen spielen, Puzzle (2026-11-13, sw wir-v73)
+- **Draw Pro:** `app/brushes.js` (33 Pinsel als Datensätze), `app/drawpro.js/.css` (Bibliothek, Einstellungen, Auswahl), Änderungen in `draw.js`. Server: `zeichnen_lib.js` (neue Stricharten g/r/tx/x, Pinsel-Parameter bp, Druckkurven cs/co, Spiegelung mir, Ebenen-Optionen). Migration `1795000000_wir_draw_pro.js`: `drawings.solo` („Allein zeichnen“, nur Autor sieht es, Lese-Regeln enger).
+- **Zusammen spielen:** Migration `1795100000_wir_party.js` (party_games, party_steps), Hooks `wir_party.pb.js` + `party_lib.js` (Routen /api/party/new|step|fav|pause|delete, Cron Tick/Cleanup), UI `party.js/.css`. Coins 15 pro Partie, max. 3/Tag. Push-Art `party` → `push/index.js`.
+- **Puzzle:** Migration `1795200000_wir_puzzle.js` (puzzles), Hooks `wir_puzzle.pb.js` + `puzzle_lib.js` (new|move|hint|delete), UI `puzzle.js/.css`. Server prüft Einrasten, Teil-Besitz (Aufgeteilt), Zeit; Tipp −5 Coins.
+- **Rücksetz-Weg:** Tags `vor-draw-pro`, `vor-zusammen-spielen`: `git checkout <tag> -- app pocketbase/pb_hooks shared push`, neue Dateien (brushes/drawpro/party/puzzle, drei Migrationen) entfernen, sw hochzählen. Migrationen sind additiv; neue Collections/Feld können bleiben.
+- **Offen/ungeprüft:** Apple Pencil/iPad nicht getestet; Zauberstab nur grob, kein Wischfinger, Leinwand fest 1200×1600; Puzzle: kein Live-Halten in Partnerfarbe, kein „Parallel“, Teileanzahl nur über Stufen; Oberfläche von Zusammen spielen/Puzzle nicht im Browser durchgeklickt (nur Server per API getestet).

@@ -54,3 +54,10 @@
 .dw-lflag.on{background:var(--accent);color:var(--accent-ink)}
 .dw-ltools{flex-wrap:wrap;width:68px;justify-content:flex-end}
 #dwExportKind{margin:2px 0}
+
+/* Lokaler Zeichenmodus (Zusammen spielen) */
+.dw-timer{flex:none;padding:4px 10px;border-radius:14px;background:var(--chip);font-weight:800;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.dw-timer.low{background:#e0457b;color:#fff}
+.dw-done{background:var(--a1-grad);color:var(--accent-ink);margin-left:2px}
+.draw-page.local #dwMore,.draw-page.local #dwTitle{pointer-events:none}
+.draw-page.local #dwMore{opacity:.25}

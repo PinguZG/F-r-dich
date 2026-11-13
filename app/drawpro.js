@@ -56,7 +56,7 @@
     toolBody.className = 'dp-tools';
     const cur = pref.tool;
     const spec = el('div', 'dp-spec');
-    SPECIAL_ORDER.forEach(([k, name]) => {
+    SPECIAL_ORDER.filter(([k]) => X.allow?.(k) !== false).forEach(([k, name]) => {
       const b = el('button', 'dp-sp' + (cur === k ? ' on' : '')); b.type = 'button'; b.dataset.dwtool = k;
       b.append(el('span', '', X.SPECIAL[k].ico), el('small', '', name));
       b.addEventListener('click', () => pick(k));
@@ -78,7 +78,7 @@
       });
       if (!(pref.custom || []).length) grid.append(el('small', 'dp-empty', 'Noch keine eigenen Pinsel – in den Pinsel-Einstellungen speichern.'));
     } else {
-      BR.byCat(cat).forEach(b0 => {
+      BR.byCat(cat).filter(b0 => X.allow?.(b0.id) !== false).forEach(b0 => {
         const b = el('button', 'dp-br' + (cur === b0.id ? ' on' : '')); b.type = 'button'; b.dataset.dwtool = b0.id;
         b.append(preview(b0.id, 150, 46, pref.bp[b0.id]), el('small', '', b0.name));
         b.addEventListener('click', () => pick(b0.id));

@@ -1,0 +1,50 @@
+/* Zusammen spielen (party.js) */
+.py-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.py-mode{min-height:112px;align-items:flex-start;justify-content:space-between}
+.py-ico .ico-line,.py-ic .ico-line{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.py-ic{display:flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:12px;background:var(--chip)}
+.py-ic .ico-line{width:22px;height:22px}
+.py-list{display:flex;flex-direction:column;gap:8px}
+.py-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:2px 12px;padding:10px 12px;border-radius:20px;border:1px solid var(--glass-border);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.py-row b{font-size:15px}.py-row small{grid-column:2;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.py-row .py-ic{grid-row:1 / span 2}
+.py-turn{position:static;grid-column:3;grid-row:1 / span 2}
+.py-hist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.py-hc{display:flex;flex-direction:column;gap:3px;padding:8px;border-radius:18px;border:1px solid var(--glass-border);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.py-hc b{font-size:13px}.py-hc small{font-size:11px;font-weight:700;color:var(--ink-soft)}
+.py-hthumb{aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#fff}
+.py-hthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.py-sheet{display:flex;flex-direction:column;gap:12px}
+.py-set{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px;color:var(--ink-soft)}
+.py-chips{display:flex;gap:6px;flex-wrap:wrap}
+.py-go{padding:14px;border:none;border-radius:18px;background:var(--a1-grad);color:var(--accent-ink);font:inherit;font-weight:800;font-size:15px;cursor:pointer;width:100%}
+.py-go:disabled{opacity:.5}
+.py-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.py-head h2{margin:0;font-size:20px}
+.py-tools{display:flex;gap:6px}
+.py-ib{padding:8px 12px;border:none;border-radius:14px;background:var(--chip);font:inherit;font-weight:700;font-size:13px;color:var(--ink);cursor:pointer}
+.py-body{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.py-sub{margin:0;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.py-clock{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.py-clock:empty{display:none}.py-clock.low{color:#e0457b}
+.py-wait,.py-empty{margin:20px 0;text-align:center;font-weight:700;color:var(--ink-soft)}
+.py-prompt{margin:0;padding:14px 16px;border-radius:18px;background:var(--glass-strong);border:1px solid var(--glass-border);font-size:17px;font-weight:700;color:var(--ink);word-break:break-word}
+.py-text{resize:none;min-height:90px}
+.py-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.py-actions .py-go{flex:1}
+.py-step img,.py-canvas{display:block;width:100%;max-width:420px;height:auto;aspect-ratio:3/4;border-radius:14px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.07);margin:0 auto}
+.py-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.py-strip .py-step{flex:none;width:130px}.py-strip .py-prompt{font-size:13px;padding:10px}
+.py-reveal{display:flex;flex-direction:column;gap:12px}
+.py-chain,.py-comic{display:flex;flex-direction:column;gap:12px}
+.py-comic{align-items:center}
+.py-rcard{position:relative;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:20px;border:1px solid var(--glass-border)}
+.py-rcard small{font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.py-heart{position:absolute;right:10px;top:8px;width:36px;height:36px;border:none;border-radius:50%;background:var(--chip);font-size:18px;color:var(--ink-faint);cursor:pointer}
+.py-heart.on{color:#e0457b;background:#ffe1ee}
+.py-knock{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.py-look{position:fixed;inset:0;z-index:400;background:rgba(15,8,18,.9);display:flex;align-items:center;justify-content:center;padding:20px}
+.py-look img{max-width:min(420px,100%);max-height:88vh;border-radius:14px;background:#fff}
+.py-looktime{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:20px;font-size:44px;font-weight:800;color:#fff}
+@media (min-width:768px){.py-modes{grid-template-columns:repeat(3,minmax(0,1fr))}.py-hist{grid-template-columns:repeat(4,minmax(0,1fr))}.py-knock{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#s-party > *,#s-partygame > *{max-width:min(760px,100%)}

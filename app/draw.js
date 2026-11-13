@@ -11,7 +11,7 @@
   const myId = () => (pb.authStore.record || pb.authStore.model)?.id;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const pbMs = s => s ? Date.parse(String(s).replace(' ', 'T')) : 0;
-  const post = (path, body) => pb.send(path, { method: 'POST', body, requestKey: null });
+  const post = (path, body) => (drawing && drawing.local) ? Promise.resolve({}) : pb.send(path, { method: 'POST', body, requestKey: null });
   const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} } };
   const W = 1200, H = 1600;
   const mkCanvas = (w = W, h = H, opts) => { const c = document.createElement('canvas'); c.width = w; c.height = h; c._ctx = c.getContext('2d', opts); return c; };
@@ -175,6 +175,7 @@
     else if (d.k === 'tx') { drawText(sc, d); }
     else paint(sc, d, {}, true);
     lc.save();
+    if (local?.clip) { const c = local.clip; lc.beginPath(); lc.rect(c[0], c[1], c[2] - c[0], c[3] - c[1]); lc.clip(); }
     lc.globalAlpha = strokeAlpha(d);
     lc.globalCompositeOperation = brushErase(d) ? 'destination-out' : lay.alock ? 'source-atop' : (window.WIR_BRUSHES?.comp(d) || 'source-over');
     lc.drawImage(scratch, 0, 0);
@@ -332,8 +333,18 @@
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
     ctx.shadowColor = 'transparent';
     ctx.imageSmoothingQuality = 'high';
+    if (local) for (const r of local.refs) { ctx.globalAlpha = r.alpha ?? 0.3; ctx.drawImage(r.img, 0, 0, W, H); }
+    ctx.globalAlpha = 1;
     drawStack(ctx, true);
     ctx.globalAlpha = 1;
+    if (local?.clip) {
+      const c = local.clip;
+      ctx.fillStyle = 'rgba(30,20,40,.10)';
+      if (c[0] > 0) ctx.fillRect(0, 0, c[0], H);
+      if (c[2] < W) ctx.fillRect(c[2], 0, W - c[2], H);
+      ctx.save(); ctx.strokeStyle = 'rgba(224,69,123,.9)'; ctx.lineWidth = 3 / Math.max(0.05, view.s); ctx.setLineDash([14, 10]);
+      ctx.beginPath(); if (c[0] > 0) { ctx.moveTo(c[0], 0); ctx.lineTo(c[0], H); } if (c[2] < W) { ctx.moveTo(c[2], 0); ctx.lineTo(c[2], H); } ctx.stroke(); ctx.restore();
+    }
     window.WIR_DRAWX?.overlay?.(ctx);
     placeCursor();
   }
@@ -367,6 +378,7 @@
   const mirMode = () => ({ off: 0, v: 'v', h: 'h', q: 'q' }[pref.sym] || 0);
 
   function startStroke(e) {
+    if (window.WIR_DRAWX?.allow && window.WIR_DRAWX.allow(pref.tool) === false) { pref.tool = 'pen'; renderTools(); }
     const tool = pref.tool;
     const [x, y] = toDoc(ox(e), oy(e));
     lastSpeed = { x, y, t: performance.now(), p: 0.5 };
@@ -484,6 +496,12 @@
 
   // Strich sofort lokal zeigen, dann speichern
   async function commit(data, layer, sid = cid()) {
+    if (drawing?.local) {
+      for (const o of strokes) if (o.undone) o.dead = true;
+      const t = { id: 'loc-' + sid, cid: sid, seq: ++localSeq, author: myId(), layer, data, undone: false };
+      strokes.push(t); apply(t); appliedSeq = t.seq; requestDraw();
+      return;
+    }
     const tmp = { id: 'tmp-' + sid, cid: sid, seq: appliedSeq + 0.5, author: myId(), layer, data, undone: false, pending: true };
     strokes.push(tmp);
     apply(tmp);
@@ -726,6 +744,7 @@
   // ======================================================================
   async function undo() {
     if (!canDraw()) return;
+    if (drawing.local) { for (let i = strokes.length - 1; i >= 0; i--) if (!strokes[i].undone && !strokes[i].dead) { strokes[i].undone = true; strokes[i].undone_at = Date.now(); break; } rerender(); return; }
     try {
       const r = await post(`/api/draw/${drawing.id}/undo`, {});
       if (!r.stroke) { toast('Nichts zum Rückgängigmachen'); return; }
@@ -736,6 +755,7 @@
   }
   async function redo() {
     if (!canDraw()) return;
+    if (drawing.local) { let b = null; for (const x of strokes) if (x.undone && !x.dead && (!b || x.undone_at > b.undone_at)) b = x; if (b) { b.undone = false; rerender(); } return; }
     try {
       const r = await post(`/api/draw/${drawing.id}/redo`, {});
       if (!r.stroke) { toast('Nichts zum Wiederholen'); return; }
@@ -748,9 +768,9 @@
   // ======================================================================
   // Vorschaubild (Galerie) – gebündelt, nach kurzer Ruhe
   // ======================================================================
-  function markDirty() { dirtyThumb = true; clearTimeout(thumbTimer); thumbTimer = setTimeout(saveThumb, 5000); }
+  function markDirty() { if (drawing?.local) return; dirtyThumb = true; clearTimeout(thumbTimer); thumbTimer = setTimeout(saveThumb, 5000); }
   async function saveThumb() {
-    if (!dirtyThumb || !drawing) return;
+    if (!dirtyThumb || !drawing || drawing.local) return;
     if (live) { thumbTimer = setTimeout(saveThumb, 3000); return; }
     dirtyThumb = false;
     const t = mkCanvas(450, 600);
@@ -788,6 +808,58 @@
   }
 
   // ======================================================================
+  // Lokaler Zeichenmodus (Zusammen spielen): ohne Server-Striche, Ergebnis = ein Bild (Blob)
+  // openLocal({ title, refs:[{img, alpha}], clip:[x0,y0,x1,y1], brush:'free'|'pen', seconds | until(ms), back }) -> Promise<Blob|null>
+  // ======================================================================
+  let local = null, localSeq = 0, localTimer = 0;
+  const PEN_ONLY = ['pen', 'liner', 'brushpen', 'marker', 'hilite', 'eraser', 'erhard', 'fill', 'line', 'rect', 'ell'];
+  function openLocal(o) {
+    return new Promise(res => {
+      closeCanvas();
+      local = Object.assign({ clip: null, refs: [], brush: 'free', seconds: 0, title: 'Zeichnen', bg: '#fff' }, o);
+      local.res = res;
+      drawing = { id: 'local', local: true, title: local.title, layers: [{ id: 'l1', name: 'Ebene 1', visible: true, opacity: 1 }], locked: false };
+      strokes = []; localSeq = 0; appliedSeq = 0; layerCv = new Map(); curLayer = 'l1'; viewLocked = false;
+      window.WIR_DRAWX.allow = local.brush === 'pen' ? (t => PEN_ONLY.includes(t)) : null;
+      if (local.brush === 'pen' && !PEN_ONLY.includes(pref.tool)) pref.tool = 'pen';
+      UI.show('s-canvas');
+      $('s-canvas').classList.add('local');
+      resize(); fit(); rerender(); renderTop(); renderTools();
+      $('dwTitle').textContent = local.title;
+      $('dwDone').hidden = false;
+      const until = local.until || (local.seconds ? Date.now() + local.seconds * 1000 : 0);
+      clearInterval(localTimer);
+      const tm = $('dwTimer');
+      tm.hidden = !until;
+      if (until) {
+        const tick = () => {
+          const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+          tm.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+          tm.classList.toggle('low', left <= 10);
+          if (left <= 0) localDone();
+        };
+        tick(); localTimer = setInterval(tick, 250);
+      }
+    });
+  }
+  async function localDone() {
+    if (!local) return;
+    if (live) endStroke();
+    const l = local;
+    const full = mkCanvas();
+    composite(full._ctx, false, l.bg || '#fff');
+    const sc = mkCanvas(600, 800);
+    sc._ctx.imageSmoothingQuality = 'high'; sc._ctx.drawImage(full, 0, 0, 600, 800);
+    const blob = await new Promise(r => sc.toBlob(r, 'image/webp', 0.86));
+    local = null; clearInterval(localTimer);
+    closeCanvas();
+    window.WIR_DRAWX.allow = null;
+    $('s-canvas').classList.remove('local'); $('dwTimer').hidden = true; $('dwDone').hidden = true;
+    UI.show(l.back || 's-party');
+    l.res(blob);
+  }
+
+  // ======================================================================
   // Öffnen / Schließen
   // ======================================================================
   function ensureLayer() {
@@ -816,6 +888,7 @@
     unsubs.push(await pb.collection('drawings').subscribe(id, onDrawingChange).catch(() => null));
   }
   function closeCanvas() {
+    if (local) { const l = local; local = null; clearInterval(localTimer); window.WIR_DRAWX.allow = null; $('s-canvas').classList.remove('local'); $('dwTimer').hidden = true; $('dwDone').hidden = true; l.res(null); }
     if (drawing) {
       if (dirtyThumb) saveThumb();
       post(`/api/draw/${drawing.id}/live`, { t: 'bye' }).catch(() => {});
@@ -954,6 +1027,7 @@
 
   // ---------- Ebenen ----------
   async function saveLayers(list) {
+    if (drawing?.local) { drawing = { ...drawing, layers: list }; ensureLayer(); rerender(); renderLayers(); return; }
     try { drawing = await post(`/api/draw/${drawing.id}/meta`, { layers: list }); ensureLayer(); rerender(); renderLayers(); }
     catch (err) { toast(err?.status === 423 ? '🔒 Das Bild ist gesperrt' : UI.errText(err)); }
   }
@@ -1023,7 +1097,11 @@
 
   // ---------- Kopfleiste + Sheets verdrahten ----------
   function bindUi() {
-    $('dwBack').addEventListener('click', () => { closeCanvas(); UI.show('s-draw'); loadGallery(); });
+    $('dwBack').addEventListener('click', () => {
+      if (drawing?.local) { if (confirm('Zug verwerfen und zurück?')) { const l = local; closeCanvas(); UI.show(l?.back || 's-party'); } return; }
+      closeCanvas(); UI.show('s-draw'); loadGallery();
+    });
+    $('dwDone')?.addEventListener('click', () => localDone());
     $('dwUndo').addEventListener('click', undo);
     $('dwRedo').addEventListener('click', redo);
     $('dwToolBtn').addEventListener('click', () => UI.sheet('dwToolSheet'));
@@ -1149,8 +1227,8 @@
     if (e.detail === 's-canvas') setTimeout(resize, 30);
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && drawing) { if (live) endStroke(); saveThumb(); post(`/api/draw/${drawing.id}/live`, { t: 'bye' }).catch(() => {}); }
-    else if (!document.hidden && drawing) { pb.collection('drawing_strokes').getFullList({ filter: pb.filter('drawing = {:d}', { d: drawing.id }), sort: 'seq', batch: 500 }).then(s => { strokes = s; rerender(); }).catch(() => {}); }
+    if (document.hidden && drawing && !drawing.local) { if (live) endStroke(); saveThumb(); post(`/api/draw/${drawing.id}/live`, { t: 'bye' }).catch(() => {}); }
+    else if (!document.hidden && drawing && !drawing.local) { pb.collection('drawing_strokes').getFullList({ filter: pb.filter('drawing = {:d}', { d: drawing.id }), sort: 'seq', batch: 500 }).then(s => { strokes = s; rerender(); }).catch(() => {}); }
   });
   document.addEventListener('wir:started', () => {
     started = true;
@@ -1164,7 +1242,7 @@
     stageRect: () => stageRect, ox, oy, fit, exportKind: 'png', saveLayers,
   });
   window.WIR_DRAW = {
-    open: openDrawing, gallery: loadGallery,
+    open: openDrawing, openLocal, localDone, gallery: loadGallery,
     state: () => ({ id: drawing?.id, n: strokes.filter(s => !s.undone).length, layers: layers().length, locked: !!drawing?.locked, partnerLive: !!partnerLive, cursor: !!partnerCur }),
   };
 })();

@@ -5,6 +5,20 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 73, date: '2026-11-13',
+      features: [
+        'Puzzle: zusammen oder allein, vier Stufen (Leicht, Mittel, Schwer, Profi), dazu Aufgeteilt und Blind.',
+        'Zusammen spielen: Zeichenspiele mit den Modi Normal, Complement, Story, Animation und Knock Off.',
+        'Draw Pro: über 30 Pinsel mit einstellbaren Parametern, Druck- und Neigungskurven, Auswahl-Werkzeuge, Ebenen mit Mischmodi, Symmetrie, Zeitraffer.',
+        'Allein zeichnen: private Skizzen, die du später an deinen Schatz schicken kannst.',
+      ],
+      small: [
+        'Stift-Erkennung (Apple Pencil) mit Handballen-Schutz und „Nur Stift zeichnet“.',
+        'Tablet: größere Touch-Ziele, Tastatur-Fokus und breitere Raster.',
+        'Benachrichtigung „Du bist dran“ bei Zeichenspielen.',
+        'Export als PNG, transparentes PNG oder JPEG.',
+      ],
+      hotfix: [] },
     { v: 70, date: '2026-11-13',
       features: ['Update-Log: Nach einem Update erscheint ein Fenster mit den Neuerungen.'],
       small: [],

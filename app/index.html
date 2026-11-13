@@ -31,6 +31,8 @@
 <link rel="stylesheet" href="/a1.css">
 <link rel="stylesheet" href="/draw.css">
 <link rel="stylesheet" href="/drawpro.css">
+<link rel="stylesheet" href="/party.css">
+<link rel="stylesheet" href="/puzzle.css">
 <link rel="stylesheet" href="/match.css">
 <link rel="stylesheet" href="/tablet.css">
 </head>
@@ -326,6 +328,7 @@
 <section class="screen page" id="s-games" data-title="Spiele" data-area="games">
   <h3 class="g-group">Zu zweit</h3>
   <div class="g-grid">
+    <button class="g-card glass" data-go="s-party" data-game="party" type="button"><span class="gc-ico gc-emoji">🎨</span><b>Zusammen spielen</b><small id="gcPartyStatus"></small><i class="g-badge" id="gbParty" hidden></i></button>
     <button class="g-card glass" data-go="s-chess" data-game="chess" type="button"><span class="gc-ico" data-icon="chess"></span><b>Schach</b><small id="gcChessStatus"></small><i class="g-badge" id="gbChess"></i></button>
     <button class="g-card glass" data-go="s-ttt" data-game="ttt" type="button"><span class="gc-ico" data-icon="ttt"></span><b>Tic Tac Toe</b><small id="gcTttStatus"></small><i class="g-badge" id="gbTtt"></i></button>
     <button class="g-card glass" data-go="s-mono" data-game="mono" type="button"><span class="gc-ico" data-icon="mono"></span><b>Herzstadt</b><small id="gcMonoStatus"></small><i class="g-badge" id="gbMono"></i></button>
@@ -334,6 +337,7 @@
   </div>
   <h3 class="g-group">Denkspiele</h3>
   <div class="g-grid">
+    <button class="g-card glass" data-go="s-puzzle" data-game="puzzle" type="button"><span class="gc-ico gc-emoji">🧩</span><b>Puzzle</b><small id="gcPuzzleStatus"></small><i class="g-badge" id="gbPuzzle"></i></button>
     <button class="g-card glass" data-go="s-sudoku" data-game="sudoku" type="button"><span class="gc-ico" data-icon="sudoku"></span><b>Sudoku</b><small id="gcSudokuStatus"></small><i class="g-badge" id="gbSudoku"></i></button>
     <button class="g-card glass" data-go="s-solitaire" data-game="solitaire" type="button"><span class="gc-ico" data-icon="cards"></span><b>Solitär</b><small id="gcSolitaireStatus"></small><i class="g-badge" id="gbSolitaire"></i></button>
     <button class="g-card glass" data-go="s-chessai" data-game="chessai" type="button"><span class="gc-ico" data-icon="chessai"></span><b>Schach gegen KI</b><small id="gcChessaiStatus"></small><i class="g-badge" id="gbChessai"></i></button>
@@ -675,12 +679,32 @@
   <div class="dw-gallery" id="dwGallery"></div>
 </section>
 
+<section class="screen page sub" id="s-party" data-tab="s-games" data-title="Zusammen spielen" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Zusammen spielen</h2></div>
+  <div id="pyHome"></div>
+</section>
+<section class="screen page sub" id="s-partygame" data-tab="s-games" data-title="Partie" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-party" aria-label="Zurück">←</button><h2>Partie</h2></div>
+  <div id="pyGame"></div>
+</section>
+
+<section class="screen page sub" id="s-puzzle" data-tab="s-games" data-title="Puzzle" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-games" aria-label="Zurück">←</button><h2>Puzzle</h2></div>
+  <div id="pzHome"></div>
+</section>
+<section class="screen page sub pz-page" id="s-puzzleplay" data-tab="s-games" data-title="Puzzle" data-area="games">
+  <div class="sub-head g-head"><button class="back-btn" data-go="s-puzzle" aria-label="Zurück">←</button><h2>Puzzle</h2></div>
+  <div id="pzPlay"></div>
+</section>
+
 <section class="screen page sub draw-page" id="s-canvas" data-tab="s-wir" data-title="Zeichnen">
   <div class="dw-stage" id="dwStage"><canvas id="dwCanvas"></canvas><div class="dw-cursor" id="dwCursor" hidden></div></div>
   <div class="dw-top glass">
     <button class="dw-btn" id="dwBack" type="button" aria-label="Galerie">‹</button>
     <button class="dw-title" id="dwTitle" type="button">Unser Bild</button>
     <span class="dw-vl" id="dwViewLockIco" hidden aria-label="Ansicht gesperrt">📌</span>
+    <span class="dw-timer" id="dwTimer" hidden></span>
+    <button class="dw-btn dw-done" id="dwDone" type="button" hidden aria-label="Abgeben">✓</button>
     <button class="dw-btn" id="dwUndo" type="button" aria-label="Rückgängig">↶</button>
     <button class="dw-btn" id="dwRedo" type="button" aria-label="Wiederholen">↷</button>
     <button class="dw-btn dw-pen" id="dwPenInd" type="button" hidden aria-label="Stift erkannt – Einstellungen" title="Stift erkannt"><svg class="ico-line" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19z"/><path d="M14.5 6.5l3 3"/></svg></button>
@@ -1403,6 +1427,8 @@
 <script src="/brushes.js"></script>
 <script src="/draw.js"></script>
 <script src="/drawpro.js"></script>
+<script src="/party.js"></script>
+<script src="/puzzle.js"></script>
 <script src="/zuhause-data.js"></script>
 <script src="/zuhause.js"></script>
 <script src="/zuhause-tab-markup.js"></script>

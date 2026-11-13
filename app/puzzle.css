@@ -1,0 +1,16 @@
+/* Puzzle (puzzle.js) */
+.pz-new{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.pz-newbtn{min-height:90px;justify-content:space-between}.pz-plus{font-size:30px;font-weight:700}
+.pz-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:34vh;overflow:auto}
+.pz-pi{padding:0;border:none;border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer}.pz-pi img{width:100%;height:100%;object-fit:cover;display:block}
+.pz-up{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pz-page.page{padding-bottom:12px}
+.pz-top{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:20px;margin-bottom:8px}
+.pz-timer{font-variant-numeric:tabular-nums}.pz-prog{flex:1;font-weight:700;color:var(--ink-soft)}
+.pz-stage{position:relative;height:calc(100vh - 230px);min-height:320px;overflow:hidden;border-radius:22px;background:var(--glass-strong);border:1px solid var(--glass-border);touch-action:none;user-select:none;-webkit-user-select:none}
+.pz-board{position:absolute;left:0;top:0;transform-origin:0 0}
+.pz-ghost{position:absolute;left:0;top:0;background-size:100% 100%;opacity:0;transition:opacity .3s;border:2px dashed rgba(224,69,123,.5);box-sizing:border-box;pointer-events:none}
+.pz-piece{position:absolute;left:0;top:0;cursor:grab;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));touch-action:none}
+.pz-piece.placed{filter:none;pointer-events:none}.pz-piece.lock{opacity:.35;pointer-events:none}
+.pz-done{position:absolute;inset:auto 16px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;border-radius:22px;z-index:20}
+.pz-done b{font-size:20px}.pz-hearts{font-size:28px}
