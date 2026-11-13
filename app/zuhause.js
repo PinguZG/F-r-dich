@@ -582,6 +582,11 @@
   const extraPages = [];
   function registerPage(p) { if (extraPages.some(x => x.key === p.key)) return; extraPages.push(p); if (wrap) build(true); }
 
+  // Farbwelt an den Shadow-Host melden (zuhause-pastell.css greift per :host([data-th="pastell"]))
+  const syncTheme = () => { host.dataset.th = document.documentElement.dataset.theme || ""; };
+  syncTheme();
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
   // ---------------------------------------------------------------- Aufbau der Ansicht im Shadow-DOM
   function build(force) {
     const want = mqTab.matches ? 'tab' : 'phone';
@@ -591,10 +596,10 @@
     mode = want;
     if (!root) root = host.attachShadow({ mode: 'open' });
     const css = want === 'tab' ? 'zuhause-tab.css' : 'zuhause-handy.css';
-    root.innerHTML = `<link rel="stylesheet" href="/${css}"><link rel="stylesheet" href="/zuhause-claude.css"><div id="zh" class="${want === 'tab' ? 'zt z-tablet' : 'zp z-phone'}" style="visibility:hidden"></div>`;
+    root.innerHTML = `<link rel="stylesheet" href="/${css}"><link rel="stylesheet" href="/zuhause-claude.css"><link rel="stylesheet" href="/zuhause-pastell.css"><div id="zh" class="${want === 'tab' ? 'zt z-tablet' : 'zp z-phone'}" style="visibility:hidden"></div>`;
     const w = wrap = root.getElementById('zh');
     // erst zeigen, wenn die Stile da sind (kein Aufblitzen ohne Gestaltung)
-    let n = 0; const show = () => { if (++n >= 2) w.style.visibility = ''; };
+    let n = 0; const show = () => { if (++n >= 3) w.style.visibility = ''; };
     root.querySelectorAll('link').forEach(l => { l.addEventListener('load', show); l.addEventListener('error', show); });
     setTimeout(() => { w.style.visibility = ''; }, 1500);
     V = VIEWS[want];

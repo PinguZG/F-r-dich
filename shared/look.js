@@ -12,6 +12,7 @@
   // Farbwelt
   // ======================================================================
   const THEMES = {
+    pastell:     '#fff1f6',
     rose:        '#fdeef5',
     gluehwein:   '#3e0d1e',
     mondnacht:   '#210635',

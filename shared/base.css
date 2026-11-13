@@ -157,6 +157,27 @@ html[data-theme="rosenacht"]{
   --swatch:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df);
 }
 
+/* Pastell (13.11.2026): helle Version des Zuhause-Looks – Rosa, Flieder, Pfirsich, weiße Glas-Kacheln mit weichem Glow */
+html[data-theme="pastell"]{
+  color-scheme: light;
+  --bg1:#fff1f6; --bg2:#fbe4ef; --bg3:#efe4ff;
+  --ink:#4b2a3b; --ink-soft:#6d4558; --ink-faint:#a67c90;
+  --accent:#ff86b9; --accent2:#c3a1ff; --accent-ink:#fff;
+  --accent3:#ffb59c; --accent4:#ff86b9;
+  --glass:rgba(255,255,255,.62); --glass-strong:rgba(255,255,255,.9); --glass-border:rgba(236,130,172,.24);
+  --shadow:240,110,160;
+  --input-bg:rgba(255,255,255,.8); --input-ink:#4b2a3b; --placeholder:#b890a3;
+  --liquid1:#ff86b9; --liquid2:#c3a1ff;
+  --glow:#ff86b9; --glow2:#c3a1ff;
+  --paper:#ffffff; --paper-line:#f3d6e4; --paper-ink:#6d4558; --paper-margin:#ffb3d1;
+  --chip:rgba(255,255,255,.7);
+  --card:rgba(255,255,255,.62); --card-line:rgba(236,130,172,.24);
+  --ok:#2fa89a; --warn:#f59a4a;
+  --cloud1:rgba(255,134,185,.32); --cloud2:rgba(195,161,255,.30); --cloud3:rgba(255,181,156,.30); --cloud4:rgba(195,161,255,.18);
+  --sc-ink:#fff; --sc-mix:85%; --orb-off:rgba(255,255,255,.7);
+  --switch-on:linear-gradient(135deg,#ff86b9,#c3a1ff); --clock-to:#c3a1ff;
+  --swatch:linear-gradient(135deg,#ffd9e8,#e9dcff 60%,#ffe2d6);
+}
 /* Aurora (04.11.2026): fast schwarzer Grund, Polarlicht Türkis/Violett/Pink, dunkle Karten mit feinen Rändern (Vorlage Zuhause) */
 html[data-theme="aurora"]{
   color-scheme: dark;
@@ -405,6 +426,7 @@ textarea.mem-input{resize:none;line-height:1.45}
 .swatch[data-theme="pfirsich"] i{background:linear-gradient(135deg,#fff0e7,#f7a072,#f26d5b)}
 .swatch[data-theme="lavendel"] i{background:linear-gradient(135deg,#efe4ff,#b46bff,#ff7ab8)}
 .swatch[data-theme="glut"] i{background:linear-gradient(135deg,#090d1c,#1b2350,#9b6bff,#ff8f3a,#ffc27a)}
+.swatch[data-theme="pastell"] i{background:linear-gradient(135deg,#ffd9e8,#e9dcff 60%,#ffe2d6)}
 .swatch[data-theme="aurora"] i{background:linear-gradient(135deg,#06070b 10%,#2fd4c4,#7b5cff,#ff6fb5)}
 .swatch[data-theme="rosenacht"] i{background:linear-gradient(135deg,#140a16,#3a1838,#b45cff,#ff6fb5,#ffc2df)}
 .swatch.on{color:var(--ink)}

@@ -1862,3 +1862,12 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Offen aus der Prüfung:** `wir_header.pb.js` (CSP/HSTS) ist noch nicht committet; PocketBase-Admin `/_/` ist über Funnel erreichbar.
 - **Sicherung:** Tag `vor-spiele-shop2`, Backup `/home/pingu/backups/vor-spiele-shop2-2026-11-13/` (integrity ok).
 - **Rücksetz-Weg:** `git checkout vor-spiele-shop2 -- app/games.js app/shop.js app/games.css app/index.html app/sw.js pocketbase/pb_hooks/shop_lib.js pocketbase/pb_hooks/spiele_lib.js pocketbase/pb_hooks/wir_spiele.pb.js`, sw-Version hochzählen, committen, pushen (kein reset/force). Das Feld `started` darf bleiben (stört nicht).
+
+## Pastell-Farbwelt + Wischen 13.11.2026 (Wir `wir-v65`)
+
+- **Neue Farbwelt „Pastell“** (hell: Rosa, Flieder, Pfirsich, weiße Glas-Kacheln mit weichem Glow). Variablen `html[data-theme="pastell"]` in `shared/base.css`, Eintrag in `shared/look.js` (`THEMES`) und Auswahl-Kachel in `app/index.html`. `users.theme` ist Text, kein Schemawechsel. Die alten Farbwelten bleiben unverändert.
+- **Zuhause hell:** `app/zuhause-pastell.css` (neu) überschreibt die dunklen Zuhause-Farben nur bei Pastell (Handy und Tablet). Zuhause läuft im Shadow-DOM, deshalb setzt `zuhause.js` die aktuelle Farbwelt als Attribut `data-th` am Host (MutationObserver). Aurora und die anderen Farbwelten sehen aus wie vorher. Bewusst dunkel: Claude-Cockpit (Rahmen pastell), Raumansicht im Tablet, Wecker-Klingeln, Bildschirmschoner. Pakete/System/Claude-Seite lokal ohne Daten, optisch ungeprüft.
+- **Wischen:** `app/a1.js` – links/rechts wischen wechselt zwischen Start · Erinnerungen · Zuhause · Spiele · Wir zwei (klickt den Leistenknopf). Nicht in Zuhause, auf Unterseiten, in Eingaben, Zeichenfläche, waagerechten Scrollern oder bei offenem Sheet.
+- **Datenbank:** keine Änderung, kein Backup nötig.
+- **Sicherung:** Git-Tag `vor-pastell-redesign`.
+- **Rücksetz-Weg:** `git checkout vor-pastell-redesign -- app/a1.js app/index.html app/sw.js app/zuhause.js shared/base.css shared/look.js && git rm -q app/zuhause-pastell.css && git commit -m "Zurück vor Pastell" && git push`. Wer Pastell gewählt hatte, fällt automatisch auf Rosé zurück.
