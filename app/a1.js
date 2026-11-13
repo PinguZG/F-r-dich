@@ -29,8 +29,11 @@
     sw = null;
     if (e.touches.length !== 1 || blocked(e.target) || hScroll(e.target)) return;
     const cur = ORDER.find(id => $(id)?.classList.contains('active'));
-    if (!cur || cur === 's-zuhause' || document.querySelector('.sheet-wrap.open')) return;
-    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, cur, t: Date.now() };
+    if (!cur || document.querySelector('.sheet-wrap.open')) return;
+    // Zuhause hat eigene Wisch-Elemente (Licht, Szenen): dort nur vom Bildschirmrand aus wischen, um die Seite zu verlassen
+    const x0 = e.touches[0].clientX;
+    if (cur === 's-zuhause' && x0 > 40 && x0 < innerWidth - 40) return;
+    sw = { x: x0, y: e.touches[0].clientY, cur, t: Date.now() };
   }, { passive: true });
   document.addEventListener('touchend', e => {
     if (!sw) return;
