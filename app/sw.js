@@ -1,4 +1,4 @@
-const CACHE = 'wir-v73'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v74'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/match.css', '/tablet.css', '/draw.js', '/brushes.js', '/drawpro.js', '/drawpro.css', '/party.js', '/party.css', '/puzzle.js', '/puzzle.css', '/poker.js', '/herzspur.js', '/zuhause.js', '/zuhause-verlauf.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-tab.js', '/zuhause-tab-markup.js', '/zuhause-tab.css', '/zuhause-handy.js', '/zuhause-handy.css', '/zuhause-claude.js', '/zuhause-claude.css', '/zuhause-pastell.css', '/zuhause-claude-svg.js', '/zuhause-claude-verlauf.js', '/zuhause-claude-luma.js',
