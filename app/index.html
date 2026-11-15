@@ -1359,12 +1359,12 @@
     $('tapText').textContent = 'Wird ausgepackt …';
     $('gift').classList.add('wiggle');
     $('barFill').style.width = '100%';
-    await wait(1850);
+    await wait(555);
     const r = $('gift').getBoundingClientRect();
     $('gift').classList.remove('wiggle');
     $('gift').classList.add('boom');
     UI.burst(r.left + r.width / 2, r.top + r.height / 2, 26);
-    await wait(650);
+    await wait(195);
     UI.show('s-home');
     $('s-home').scrollTop = 0;
   });

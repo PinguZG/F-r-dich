@@ -16,10 +16,10 @@
 @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .gift.wiggle{animation:wiggle .35s ease-in-out infinite}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
-.gift.boom{animation:boom .5s forwards}
+.gift.boom{animation:boom .15s forwards}
 @keyframes boom{to{transform:scale(1.6);opacity:0}}
 .bar{width:190px;height:6px;border-radius:3px;background:var(--glass-strong);margin-top:28px;overflow:hidden}
-.bar div{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 1.8s linear}
+.bar div{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .54s linear}
 .tap{margin-top:16px;font-size:15px;font-weight:700;color:var(--ink-soft)}
 
 /* ---------- Start: Zusammen-Timer ---------- */
