@@ -1932,3 +1932,9 @@ Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub
 - **Fix:** `zuhause-tab.css` (Ende): `z-index:6` für `.nav` und Kopf-Elemente. `zuhause-tab.js`: Deko-Pflanze schon ab 8 Reitern ausgeblendet (verdeckte „Verlauf/Einstellungen“).
 - Keine Datenbank-Änderung, keine Sicherung nötig.
 - **Rücksetz-Weg:** `git checkout vor-tablet-reiter -- app/zuhause-tab.css app/zuhause-tab.js app/sw.js`
+
+## Foto-Swipen in Erinnerungen (16.11.2026, wir-v76)
+**Neu:** In Erinnerungen oben Umschalter „Galerie | 💗 Swipen“. Zufällige Fotos, rechts wischen (oder ♥) = Like, links (oder ✕) = weiter. Wenn alle durch sind, wird neu gemischt. Zwei Herzen in den Herzfarben zeigen, wie oft jede Person das Foto geliked hat.
+**Datenbank:** neue Collection `photo_likes` (photo, user, count; Migration `1795300000_wir_swipe.js`, nur additiv). Schreiben nur über `POST /api/wir/photo-like` (`wir_swipe.pb.js`, zählt serverseitig +1).
+**Sicherung:** laut Workflow vor dem Deploy (Tag `vor-swipe` ist gesetzt).
+**Rücksetz-Weg:** `git checkout vor-swipe -- app pocketbase/pb_hooks pocketbase/pb_migrations`, dann committen (kein reset/force). Collection `photo_likes` bleibt harmlos liegen.

@@ -1,0 +1,24 @@
+/* Foto-Swipen in Erinnerungen (swipe.js) */
+.sw-seg{display:flex;gap:6px;padding:4px;margin:0 0 12px;border-radius:999px;background:var(--card);border:1px solid var(--card-line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sw-seg button{flex:1;border:none;background:none;font:inherit;font-weight:700;color:var(--ink-soft);padding:9px 12px;border-radius:999px;cursor:pointer}
+.sw-seg button.on{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--accent-ink)}
+#s-memories.sw-mode #folderBar,#s-memories.sw-mode #folderTools,#s-memories.sw-mode #memStatus,#s-memories.sw-mode #photos,#s-memories.sw-mode #memFab{display:none!important}
+#swipeBox{display:none}
+#s-memories.sw-mode #swipeBox{display:flex;flex-direction:column;align-items:center;gap:12px}
+.sw-stage{position:relative;width:100%;max-width:420px;height:calc(100vh - 330px);min-height:300px;touch-action:none}
+.sw-card{position:absolute;inset:0;border-radius:26px;overflow:hidden;background:var(--card);border:1px solid var(--card-line);box-shadow:0 10px 30px rgba(0,0,0,.25);will-change:transform;user-select:none;-webkit-user-select:none;cursor:grab}
+.sw-card img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.sw-card.back{transform:scale(.95) translateY(10px);opacity:.7;pointer-events:none}
+.sw-cap{position:absolute;left:0;right:0;bottom:0;padding:28px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;font-family:Caveat,cursive;font-size:24px}
+.sw-tag{position:absolute;top:22px;padding:4px 14px;border:3px solid;border-radius:12px;font-weight:800;font-size:24px;opacity:0;transform:rotate(-12deg)}
+.sw-tag.like{left:18px;color:#4cd98a;border-color:#4cd98a}
+.sw-tag.nope{right:18px;color:#ff6b6b;border-color:#ff6b6b;transform:rotate(12deg)}
+.sw-empty{display:flex;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center;color:var(--ink-soft)}
+.sw-hearts{display:flex;gap:22px;align-items:center;justify-content:center;padding:8px 18px;border-radius:999px;background:var(--card);border:1px solid var(--card-line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sw-h{display:flex;align-items:center;gap:6px;font-weight:800;font-variant-numeric:tabular-nums}
+.sw-h svg{width:22px;height:22px;fill:var(--c)}
+.sw-h.pop svg{animation:swpop .35s}
+@keyframes swpop{50%{transform:scale(1.5)}}
+.sw-btns{display:flex;gap:26px}
+.sw-btns button{width:62px;height:62px;border-radius:50%;border:1px solid var(--card-line);background:var(--card);font-size:28px;cursor:pointer;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.sw-btns .yes{color:#ff5fa2}.sw-btns .no{color:var(--ink-soft)}
