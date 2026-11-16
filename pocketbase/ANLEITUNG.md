@@ -1926,3 +1926,9 @@ Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub
 - **Puzzle:** Migration `1795200000_wir_puzzle.js` (puzzles), Hooks `wir_puzzle.pb.js` + `puzzle_lib.js` (new|move|hint|delete), UI `puzzle.js/.css`. Server prüft Einrasten, Teil-Besitz (Aufgeteilt), Zeit; Tipp −5 Coins.
 - **Rücksetz-Weg:** Tags `vor-draw-pro`, `vor-zusammen-spielen`: `git checkout <tag> -- app pocketbase/pb_hooks shared push`, neue Dateien (brushes/drawpro/party/puzzle, drei Migrationen) entfernen, sw hochzählen. Migrationen sind additiv; neue Collections/Feld können bleiben.
 - **Offen/ungeprüft:** Apple Pencil/iPad nicht getestet; Zauberstab nur grob, kein Wischfinger, Leinwand fest 1200×1600; Puzzle: kein Live-Halten in Partnerfarbe, kein „Parallel“, Teileanzahl nur über Stufen; Oberfläche von Zusammen spielen/Puzzle nicht im Browser durchgeklickt (nur Server per API getestet).
+
+## Zuhause Tablet: Reiter klickbar (2026-11-16, sw wir-v75)
+- **Fehler:** Im Tablet-Layout (`zuhause-tab`) war die Home-Seite 800×600 groß und lag über Kopf und Reiter-Leiste. Klicks auf Reiter, Suche, Glocke, Avatar kamen nie an, nur Lampen/Raum (innerhalb der Seite) gingen.
+- **Fix:** `zuhause-tab.css` (Ende): `z-index:6` für `.nav` und Kopf-Elemente. `zuhause-tab.js`: Deko-Pflanze schon ab 8 Reitern ausgeblendet (verdeckte „Verlauf/Einstellungen“).
+- Keine Datenbank-Änderung, keine Sicherung nötig.
+- **Rücksetz-Weg:** `git checkout vor-tablet-reiter -- app/zuhause-tab.css app/zuhause-tab.js app/sw.js`

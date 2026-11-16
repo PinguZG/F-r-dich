@@ -115,7 +115,7 @@
     const step = Math.min(54, 490 / list.length), h = Math.min(57, step + 2);
     $$('#nav .nav').forEach(b => { b.hidden = !list.some(x => x[0] === b.dataset.p); });
     // Deko-Pflanze unten links nur, wenn die Reiter ihr nicht im Weg sind
-    const vib = $$('.vibes')[0]; if (vib) vib.hidden = list.length > 9;
+    const vib = $$('.vibes')[0]; if (vib) vib.hidden = list.length > 7;
     list.forEach(([p], i) => { const b = $('nav').querySelector(`[data-p="${p}"]`); if (b) { b.style.top = (72 + i * step) + 'px'; b.style.height = h + 'px'; } });
     if (!list.some(x => x[0] === page)) go('home');
   }
