@@ -1938,3 +1938,6 @@ Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub
 **Datenbank:** neue Collection `photo_likes` (photo, user, count; Migration `1795300000_wir_swipe.js`, nur additiv). Schreiben nur über `POST /api/wir/photo-like` (`wir_swipe.pb.js`, zählt serverseitig +1).
 **Sicherung:** laut Workflow vor dem Deploy (Tag `vor-swipe` ist gesetzt).
 **Rücksetz-Weg:** `git checkout vor-swipe -- app pocketbase/pb_hooks pocketbase/pb_migrations`, dann committen (kein reset/force). Collection `photo_likes` bleibt harmlos liegen.
+
+## Wisch-Reiterwechsel entfernt (16.11.2026, wir-v77)
+Das Wischen links/rechts zwischen den Hauptreitern (a1.js) ist raus, weil es das Foto-Swipen störte. Rücksetz-Weg: `git checkout vor-swipe -- app/a1.js`.
