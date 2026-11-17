@@ -7,7 +7,7 @@
     text: 'Hey du, das hier ist nur ein Testtext, der Buchstabe für Buchstabe erscheint. Wenn du das liest, funktioniert die Schreibmaschine. Schön, dass es dich gibt, und jetzt pack mich ein.'
   };
   const SPEED = 42; // ms pro Zeichen (~200 Zeichen in ca. 8 s)
-  const me = () => (window.pb && (pb.authStore.record || pb.authStore.model)) || null;
+  const me = () => (window.WIR_PB && (WIR_PB.authStore.record || WIR_PB.authStore.model)) || null;
   const key = () => 'wir-brief-' + BRIEF.id + '-' + (me() ? me().id : '');
   const get = () => { try { return localStorage.getItem(key()); } catch (e) { return null; } };
   const set = () => { try { localStorage.setItem(key(), '1'); } catch (e) {} };
