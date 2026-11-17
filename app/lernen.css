@@ -139,3 +139,25 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .ln-fi img{width:100%;height:100%;object-fit:cover}
 .ln-doc{padding:16px 18px}
 .st-tile[hidden]{display:none}
+
+/* Profilwahl */
+.ln-whos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ln-who{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 12px;border-radius:var(--r-card,28px);border:1px solid var(--glass-border);color:var(--ink);min-height:190px;justify-content:center}
+.ln-who b{font-size:20px}.ln-who small{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center}
+.ln-av{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-size:30px;font-weight:700;background:var(--a1-grad);color:var(--accent-ink);box-shadow:0 10px 24px rgba(var(--shadow),.28)}
+
+/* Handy: Tabellen als Karten (Tablet ab 700px behält die scrollbare Tabelle) */
+@media (max-width:700px){
+  .ln-html table,.ln-html tbody,.ln-html thead{display:block;overflow:visible;border:0}
+  .ln-html tr{display:block;margin:8px 0;padding:6px 14px;border-radius:16px;background:var(--glass-strong);border:1px solid var(--card-line)}
+  .ln-html tr.hdr{display:none}
+  .ln-html th,.ln-html td{display:block;border:0;border-bottom:1px dashed var(--card-line);padding:6px 0;background:none}
+  .ln-html td:last-child,.ln-html th:last-child{border-bottom:0}
+  .ln-html td::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+  .ln-html td:first-child,.ln-html th{font-weight:700}
+  .ln-html .f{font-size:13px}
+  .ln-sec .bd{padding:2px 14px 14px}
+  .ln-count b{font-size:56px}
+  .ln-fc .in{min-height:260px}.ln-fc .q{font-size:18px}
+  .ln-rings .ln-badge{font-size:9px}
+}

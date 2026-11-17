@@ -1,0 +1,48 @@
+/* Flow (17.11.2026): fließendere, organischere Bewegungen für die ganze App + kräftigerer Blur der unteren Leiste.
+   Nur Variablen der Farbwelt. Aus bei „Bewegung reduzieren“. */
+.tabbar{
+  background:color-mix(in srgb,var(--bg2) 84%,transparent)!important;
+  -webkit-backdrop-filter:blur(30px) saturate(190%)!important;backdrop-filter:blur(30px) saturate(190%)!important;
+  border:1px solid var(--glass-border)!important;
+}
+:root{--spring:cubic-bezier(.34,1.56,.64,1);--glide:cubic-bezier(.2,.8,.2,1)}
+/* Seitenwechsel: sanftes Aufschweben statt hartem Einblenden */
+.screen.page.active{animation:flowIn .5s var(--glide) both}
+@keyframes flowIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+/* Karten und Kacheln erscheinen nacheinander */
+.screen.page.active .st-tile,.screen.page.active .set-card,.screen.page.active #lnBody>*,.screen.page.active .st-left>*,.screen.page.active .st-right>.card{animation:flowPop .55s var(--spring) both}
+.screen.page.active .st-tile:nth-child(1),#lnBody>:nth-child(1){animation-delay:.03s}
+.screen.page.active .st-tile:nth-child(2),#lnBody>:nth-child(2){animation-delay:.07s}
+.screen.page.active .st-tile:nth-child(3),#lnBody>:nth-child(3){animation-delay:.11s}
+.screen.page.active .st-tile:nth-child(4),#lnBody>:nth-child(4){animation-delay:.15s}
+.screen.page.active .st-tile:nth-child(5),#lnBody>:nth-child(5){animation-delay:.19s}
+.screen.page.active .st-tile:nth-child(6),#lnBody>:nth-child(6){animation-delay:.23s}
+.screen.page.active .st-tile:nth-child(n+7),#lnBody>:nth-child(n+7){animation-delay:.27s}
+@keyframes flowPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+/* Federnder Druck */
+.st-tile,.pack-btn,.ln-btn,.ln-go,.ln-who,.ln-nav button,.back-btn,.ln-seg button,.ln-chk,.ln-ring{transition:transform .38s var(--spring),box-shadow .25s,background .25s,opacity .25s}
+.st-tile:active,.pack-btn:active,.ln-btn:active,.ln-go:active,.ln-who:active,.ln-nav button:active,.back-btn:active,.ln-seg button:active{transform:scale(.94)}
+@media (hover:hover){.st-tile:hover,.ln-who:hover{transform:translateY(-3px)}.ln-btn:hover{box-shadow:0 12px 26px rgba(var(--shadow),.32)}}
+/* Reiter: gewählter Reiter federt hoch, Symbol kippt kurz */
+.tab-btn.on .tab-ico{animation:tabPop .55s var(--spring)}
+@keyframes tabPop{0%{transform:translateY(4px) scale(.8)}60%{transform:translateY(-6px) scale(1.12) rotate(-6deg)}100%{transform:translateY(-3px) scale(1.06)}}
+/* Tipp-Welle: weicher Ring an der Tippstelle */
+.flow-rip{position:fixed;z-index:9999;pointer-events:none;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent2) 55%,transparent),transparent 70%);border:2px solid color-mix(in srgb,var(--accent) 55%,transparent);
+  animation:flowRip .62s var(--glide) forwards}
+@keyframes flowRip{from{opacity:.9;transform:scale(.6)}to{opacity:0;transform:scale(5.5)}}
+/* Lernen: Haken federt, Ringe füllen sich, Karten schweben */
+.ln-todo.done .ln-chk{animation:chkPop .5s var(--spring)}
+@keyframes chkPop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.ln-ring .fg{animation:ringIn 1.1s var(--glide) both}
+@keyframes ringIn{from{stroke-dashoffset:201.1}}
+.ln-prog i{animation:barIn .9s var(--glide) both;transform-origin:left}
+@keyframes barIn{from{transform:scaleX(0)}}
+.ln-fc .in{transition:transform .65s var(--spring),opacity .25s}
+.ln-fc:not(.fly){animation:cardIn .5s var(--spring) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.94) rotate(-1.5deg)}to{opacity:1;transform:none}}
+.ln-res{animation:flowPop .45s var(--spring) both}
+.ln-sec .bd{animation:none}.ln-sec.open .bd{animation:flowPop .4s var(--glide) both}
+@media (prefers-reduced-motion:reduce){
+  .screen.page.active,.screen.page.active .st-tile,.screen.page.active .set-card,#lnBody>*,.flow-rip,.ln-ring .fg,.ln-prog i,.ln-fc,.ln-res,.tab-btn.on .tab-ico{animation:none!important}
+}

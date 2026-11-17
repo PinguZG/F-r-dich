@@ -1960,3 +1960,9 @@ Das Wischen links/rechts zwischen den Hauptreitern (a1.js) ist raus, weil es das
 **Ausblenden:** Einstellungen → „Lernen anzeigen“ (nur für Daniel sichtbar, gilt pro Gerät).
 **Sicherung:** `/home/pingu/backups/vor-lernen-<Datum>/` (Tag `vor-lernen`).
 **Rücksetz-Weg:** `git checkout vor-lernen -- app pocketbase/pb_migrations` (+ `git rm -r app/lernen app/lernen.js app/lernen.css`), committen, pushen (kein reset/force). Collections entfernen: im Admin (/_/) die sechs `lern_*` löschen, oder DB-Stand aus dem Backup zurückspielen (Dienst `pocketbase` stoppen, `data.db` kopieren, starten).
+
+### Lernen v87 (17.11.2026): Profilwahl, Handy-Tabellen, Flow
+- Kachel „Lernen“ sehen jetzt beide; Tipp öffnet „Wer lernt?“ (Daniel / Ida). Ida: Platzhalter „kommt bald“; Daniels Bereich ist für sie gesperrt (UI und API-Regeln). Wenn Ida Inhalte bekommt: in `lernen.js` `pickWho('ida')` ausbauen, Collections/Regeln erweitern.
+- Stoff-Tabellen werden unter 700 px Breite als Karten dargestellt (Spaltenname als Beschriftung), ab Tablet bleibt die scrollbare Tabelle.
+- Neu `app/flow.css` + `app/flow.js`: stärkerer Blur/Deckkraft der unteren Leiste, weiche Seitenübergänge, versetztes Einblenden, federnder Druck, Tipp-Welle (aus bei „Bewegung reduzieren“).
+- Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout ab53ad4 -- app/index.html app/sw.js app/lernen.js app/lernen.css` und `git rm app/flow.css app/flow.js`.

@@ -46,6 +46,11 @@
       }
     };
     walk(src, root);
+    root.querySelectorAll('table').forEach(t => {
+      const rows = [...t.querySelectorAll('tr')], hr = rows.find(r => r.querySelector('th')); if (!hr) return;
+      const labels = [...hr.children].map(c => c.textContent.trim()); hr.classList.add('hdr');
+      rows.forEach(r => { if (r !== hr) [...r.children].forEach((c, i) => { if (c.tagName === 'TD' && labels[i]) c.dataset.label = labels[i]; }); });
+    });
     memo.set(html, root.innerHTML);
     return root.innerHTML;
   }
@@ -159,7 +164,7 @@
   const V = {                       // Zustand je Ansicht
     st: { area: 'elek', q: '', focus: null, open: new Set() },
     kf: { area: 'alle', sec: 'all', secs: null, mode: 'due', must: false },
-    ses: null,                      // laufende Kartenrunde
+    who: null, ses: null,                      // laufende Kartenrunde
     r: { area: 'elek', sel: 'mix', ids: null, cur: null, done: false },
     pf: { area: 'alle', cards: 15, calc: 5, min: 40, must: false },
     P: null, ptimer: null,
@@ -171,7 +176,7 @@
   function banner() { const b = $('lnSync'); if (!b) return; const n = Object.keys(ST.q).length; b.hidden = !(n || !navigator.onLine); b.textContent = navigator.onLine ? `${n} Änderung${n === 1 ? '' : 'en'} warten auf Synchronisation` : 'Offline – dein Stand wird später gespeichert'; }
 
   function render() {
-    if (!ready) return;
+    if (!ready || V.who !== 'daniel') return;
     const openTodos = ST.T.filter(t => !t.done && t.date === dstr()).length;
     $('lnNav').innerHTML = VIEWS.map(([k, n]) => `<button type="button" data-v="${k}" class="${k === view ? 'on' : ''}">${n}${k === 'todos' && openTodos ? `<i>${openTodos}</i>` : ''}</button>`).join('');
     const fn = { heute: vHeute, todos: vTodos, stoff: vStoff, karten: vKarten, rechnen: vRechnen, probe: vProbe, dateien: vDateien }[view];
@@ -450,6 +455,8 @@
     const d = b.dataset, act = d.act;
     const todo = () => ST.T.find(t => t.key === d.k);
     switch (act) {
+      case 'who': pickWho(d.w); break;
+      case 'whoback': showWho(); break;
       case 'startdue': V.kf = { area: 'alle', sec: 'all', secs: null, mode: 'due', must: false }; V.ses = null; view = 'karten'; startSession(); break;
       case 'ring': V.kf = { area: d.a, sec: 'all', secs: null, mode: 'due', must: false }; V.ses = null; go('karten'); break;
       case 'chk': { const t = todo(); if (!t) break; t.done = !t.done; t.doneAt = t.done ? new Date().toISOString() : ''; persist(); enqueue('lern_todos', t.custom ? null : 'planId', t.key, todoData(t)); render(); break; }
@@ -504,21 +511,31 @@
 
   // ---------- Start ----------
   function updateEntry() {
-    const show = !!uid() && isDaniel() && !off();
+    const show = !!uid() && !off();
     const tile = $('lnTile'); if (tile) tile.hidden = !show;
-    const card = $('lnSetCard'); if (card) { card.hidden = !(uid() && isDaniel()); const sw = $('lnSwitch'); if (sw) sw.checked = !off(); }
+    const card = $('lnSetCard'); if (card) { card.hidden = !uid(); const sw = $('lnSwitch'); if (sw) sw.checked = !off(); }
     return show;
   }
-  async function open() {
-    if (!isDaniel() || off()) { UI.show('s-home'); return; }
-    const root = $('lnBody');
-    if (!ready) {
-      root.innerHTML = '<div class="ln-empty">Lade …</div>';
-      try { await init(); } catch (e) { root.innerHTML = '<div class="ln-empty">Konnte nicht geladen werden. Bitte einmal mit Netz öffnen.</div>'; return; }
-      render();
-      sync(true);
-    } else { render(); sync(true); }
+  // Profilwahl: „Wer lernt?“ – Daniel hat die Lernmappen, Ida bekommt ihren Bereich später
+  function showWho() {
+    V.who = null; clearInterval(V.ptimer);
+    $('lnNav').innerHTML = ''; $('lnSync').hidden = true; const wb = $('lnWhoBtn'); if (wb) wb.hidden = true;
+    const card = (w, n, sub) => `<button class="ln-who glass" type="button" data-act="who" data-w="${w}"><span class="ln-av">${n[0]}</span><b>${n}</b><small>${sub}</small></button>`;
+    body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Dein Bereich') + '</div>';
   }
+  async function pickWho(w) {
+    const wb = $('lnWhoBtn'); if (wb) wb.hidden = false;
+    $('lnNav').innerHTML = '';
+    if (w === 'ida') { V.who = 'ida'; body().innerHTML = '<div class="ln-card glass ln-count"><b style="font-size:40px">Ida</b><span>Hier ist noch nichts zum Lernen.</span><small>Dein Bereich kommt bald.</small></div>'; return; }
+    if (!isDaniel()) { V.who = 'x'; body().innerHTML = '<div class="ln-card glass ln-count"><b style="font-size:40px">Daniel</b><span>Das ist Daniels Lernbereich.</span><small>Er ist privat.</small></div>'; return; }
+    V.who = 'daniel';
+    if (!ready) {
+      body().innerHTML = '<div class="ln-empty">Lade …</div>';
+      try { await init(); } catch (e) { body().innerHTML = '<div class="ln-empty">Konnte nicht geladen werden. Bitte einmal mit Netz öffnen.</div>'; return; }
+    }
+    render(); sync(true);
+  }
+  function open() { if (off()) { UI.show('s-home'); return; } showWho(); }
 
   document.addEventListener('click', e => { if (e.target.closest('#s-lernen')) onClick(e); });
   document.addEventListener('change', e => {
@@ -526,7 +543,7 @@
     if (e.target.id === 'tdTitle' || e.target.id === 'tdDate' || e.target.id === 'tdArea') V.add = { title: $('tdTitle').value, date: $('tdDate').value, area: $('tdArea').value };
   });
   document.addEventListener('wir:show', e => { if (e.detail === 's-lernen') open(); else if (e.detail === 's-home' || e.detail === 's-settings') updateEntry(); });
-  document.addEventListener('wir:started', () => { updateEntry(); if (isDaniel() && !off()) flush(); });
+  document.addEventListener('wir:started', () => { updateEntry(); if (isDaniel()) flush(); });
   document.addEventListener('wir:users', updateEntry);
   window.addEventListener('online', () => { if (ready) { flush().then(() => ready && view !== 'karten' && render()); } banner(); });
   window.addEventListener('offline', banner);
