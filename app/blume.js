@@ -46,6 +46,17 @@
     }
     return s + '</g></g>';
   }
+  function butter() {
+    const wing = (up, lo) => `<path d="M0 -1C4 -15 19 -16 16 -3C15 2 6 3 0 0Z" fill="url(#${up})" stroke="rgba(255,255,255,.45)" stroke-width=".5"/><path d="M0 0C9 2 15 7 11 13C7 16 1 10 0 3Z" fill="url(#${lo})" stroke="rgba(255,255,255,.4)" stroke-width=".5"/><circle cx="10" cy="-8" r="1.8" fill="rgba(255,255,255,.55)"/>`;
+    const bf = (cls, x, y, up, lo, tilt) => `<g transform="translate(${x} ${y}) scale(1.9)"><g class="bf ${cls}"><g class="bt" style="--tilt:${tilt}deg"><g class="wl"><g transform="scale(-1 1)">${wing(up, lo)}</g></g><g class="wr">${wing(up, lo)}</g><ellipse cx="0" cy="0" rx="1.4" ry="7.5" fill="#2a1a3a"/><path d="M-.8 -7Q-3 -12 -5 -13M.8 -7Q3 -12 5 -13" stroke="#2a1a3a" stroke-width=".6" fill="none"/></g></g></g>`;
+    return `<defs><linearGradient id="blB1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#b78bff"/></linearGradient>
+      <linearGradient id="blB2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc27a"/><stop offset="1" stop-color="#ff6fae"/></linearGradient>
+      <linearGradient id="blB3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9f1d6"/><stop offset="1" stop-color="#6fc7ff"/></linearGradient>
+      <linearGradient id="blB4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd9a0"/><stop offset="1" stop-color="#ff9d6f"/></linearGradient></defs>
+      ${bf('bf1', 149, 68, 'blB1', 'blB2', 52)}${bf('bf2', 171, 68, 'blB3', 'blB4', -52)}
+      <g class="bl-usg"><path d="M160 33c-3-5-10-2-6 3c1.5 2 4 4 6 5.5c2-1.5 4.5-3.5 6-5.5c4-5-3-8-6-3z" fill="#ff6fae"/>
+      <text x="160" y="14" text-anchor="middle" font-family="Caveat,cursive" font-size="17" font-weight="700" fill="#fff" stroke="#1a0a24" stroke-width="3" paint-order="stroke">us</text></g>`;
+  }
   function strauss() {
     const F = [[160, 108, 64, 0], [78, 170, 54, -34], [242, 166, 54, 34], [112, 246, 46, -18], [208, 250, 46, 18], [160, 196, 42, 2]];
     let st = '', fl = '', lf = '', gr = '';
@@ -74,9 +85,11 @@
       <g fill="none" stroke-linecap="round">${st}</g>
       ${lf}
       <g class="bl-schleife"><path d="M160 384C124 346 100 384 128 404C142 410 154 396 160 388ZM160 384C196 346 220 384 192 404C178 410 166 396 160 388Z" fill="url(#blR)"/><path d="M158 390L140 436L154 426L160 438ZM162 390L180 436L166 426L160 438Z" fill="url(#blR)" opacity=".92"/><circle cx="160" cy="388" r="8" fill="#e0559b"/><path d="M132 392Q140 384 152 386" stroke="rgba(255,255,255,.55)" stroke-width="1.4" fill="none"/></g>
-      ${fl}</svg>`;
+      ${fl}${butter()}</svg>`;
   }
   const ICO_X = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICO_DOWN = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const ICO_ENV = '<svg viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><rect x="8" y="22" width="48" height="34" rx="5" fill="#b83a78"/><rect class="bl-pap" x="15" y="20" width="34" height="26" rx="2" fill="#fff"/><path d="M10 55L32 36L54 55Z" fill="#e0559b"/><path class="bl-flap" d="M8 22L32 41L56 22Z" fill="#ff8ec8"/></svg>';
   const ICO_MAIL = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>';
 
   /* ---------- Terminal-Hintergrund (läuft wie ein echter Mac-Terminal-Lauf) ---------- */
@@ -94,7 +107,7 @@
     for (let i = 0; i < 6; i++) { a.push(o(T() + `stem[${i}]  ██████████ 100%`, 's' + i)); a.push(o(T() + `lily[${i}]  bloom ✿            ✔`, 'f' + i)); }
     a.push(o(T() + '✔ tying ribbon .............. ok', 'bow'));
     a.push(o(T() + '✦ launching fireworks ....... ok', 'fw'));
-    a.push(o(T() + '✉ opening letter ............ ok', 'letter'));
+    a.push(o(T() + '✦ releasing butterflies ..... ok', 'butter'));
     a.push(o(`${P} for-you % `, '', 1200));
     return a;
   })();
@@ -110,12 +123,12 @@
   function engine(ov) {
     const cv = ov.querySelector('.bl-fw'), c = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
     let W = 0, H = 0, parts = [], rockets = [], run = true, auto = null;
-    const amb = Array.from({ length: 30 }, () => ({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * .0004, vy: -.0002 - Math.random() * .0006, ph: Math.random() * 6.28, h: Math.random() < .55 ? 170 : 330 }));
+    const amb = Array.from({ length: 12 }, () => ({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * .0004, vy: -.0002 - Math.random() * .0006, ph: Math.random() * 6.28, h: Math.random() < .55 ? 170 : 330 }));
     function size() { W = ov.clientWidth; H = ov.clientHeight; cv.width = W * dpr; cv.height = H * dpr; c.setTransform(dpr, 0, 0, dpr, 0, 0); }
     size(); window.addEventListener('resize', size);
     const hue = () => [330, 345, 285, 310, 20, 45][Math.floor(Math.random() * 6)] + Math.random() * 16 - 8;
     function explode(x, y) {
-      const h = hue(), heart = Math.random() < .4, n = heart ? 64 : 80;
+      const h = hue(), heart = Math.random() < .4, n = heart ? 56 : 60;
       for (let i = 0; i < n; i++) {
         let vx, vy;
         if (heart) { const t = i / n * 6.283; vx = .2 * 16 * Math.pow(Math.sin(t), 3); vy = -.2 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); }
@@ -134,7 +147,7 @@
         c.fillStyle = 'rgba(255,230,200,.9)'; c.beginPath(); c.arc(r.x, r.y, 2.2, 0, 6.283); c.fill();
         if (r.y <= r.ty || r.vy > -2.2) { explode(r.x, r.y); return false; } return true;
       });
-      amb.forEach(q => { q.x += q.vx; q.y += q.vy; q.ph += .03; if (q.y < -.02) { q.y = 1.02; q.x = Math.random(); } const al = .3 + .3 * Math.sin(q.ph); c.fillStyle = `hsla(${q.h},90%,72%,${al})`; c.beginPath(); c.arc(q.x * W, q.y * H, 1.7, 0, 6.283); c.fill(); c.fillStyle = `hsla(${q.h},90%,72%,${al * .14})`; c.beginPath(); c.arc(q.x * W, q.y * H, 6, 0, 6.283); c.fill(); });
+      amb.forEach(q => { q.x += q.vx; q.y += q.vy; q.ph += .03; if (q.y < -.02) { q.y = 1.02; q.x = Math.random(); } const al = .3 + .3 * Math.sin(q.ph); c.fillStyle = `hsla(${q.h},90%,72%,${al})`; c.beginPath(); c.arc(q.x * W, q.y * H, 1.7, 0, 6.283); c.fill(); });
       parts = parts.filter(p => p.l > 0);
       parts.forEach(p => {
         p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .985; p.l -= p.d;
@@ -144,7 +157,8 @@
     }
     requestAnimationFrame(frame);
     return {
-      fire() { launch(); setTimeout(launch, 200); auto = setInterval(() => { launch(); if (Math.random() < .5) setTimeout(launch, 160); }, 750); },
+      fire() { launch(); auto = setInterval(launch, 1700); },
+      calm() { clearInterval(auto); },
       sparkle(x, y) { for (let i = 0; i < 22; i++) { const a = Math.random() * 6.283, v = .6 + Math.random() * 2.2; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - .6, l: 1, d: .03, h: Math.random() < .5 ? 330 : 48, g: -.005, s: 1.6, tw: 1 }); } },
       stop() { run = false; clearInterval(auto); window.removeEventListener('resize', size); }
     };
@@ -155,34 +169,39 @@
     if (document.getElementById('bl-ov') || !me()) return;
     const ov = document.createElement('div');
     ov.id = 'bl-ov'; ov.className = 's1';
-    let bk = '';
-    for (let i = 0; i < 12; i++) bk += `<i class="bl-bk" style="left:${Math.random() * 100}%;width:${30 + Math.random() * 80}px;height:${30 + Math.random() * 80}px;animation-delay:${-Math.random() * 14}s;animation-duration:${10 + Math.random() * 10}s;--h:${[320, 175, 340, 190][i % 4]}"></i>`;
-    ov.innerHTML = `<div class="bl-glow"></div>${bk}
-      <div class="bl-term" aria-hidden="true"><div class="bl-bar"><span></span><span></span><span></span><em>daniel — zsh — 80×24</em></div><div class="bl-cb"><div class="bl-body"></div></div></div>
+    ov.innerHTML = `<div class="bl-term" aria-hidden="true"><div class="bl-bar"><span></span><span></span><span></span><em>daniel — zsh — 80×24</em></div><div class="bl-cb"><div class="bl-body"></div></div></div>
       <canvas class="bl-fw"></canvas>
       <button class="bl-x" type="button" aria-label="Schließen">${ICO_X}</button>
       <div class="bl-intro"><p class="bl-hint">For you my love 💗<small>Drück auf die Blume</small></p>
         <button class="bl-pick" type="button" aria-label="Blume drücken">${FIGUR}</button></div>
       <div class="bl-bq">${strauss()}</div>
-      <div class="bl-letter"><p class="bl-t"></p></div>
-      <button class="bl-env" type="button" aria-label="Brief einpacken">${ICO_MAIL}</button>`;
+      <button class="bl-env" type="button" aria-label="Brief öffnen">${ICO_ENV}</button>
+      <div class="bl-panel"><button class="bl-fold" type="button" aria-label="Brief einklappen">${ICO_DOWN}</button>
+        <div class="bl-pin"><h3 class="bl-h">Für dich 💗</h3><p class="bl-t"></p></div></div>`;
     document.body.appendChild(ov);
     mark();
-    let fx = null, timers = [], tw = null, run = true;
+    let fx = null, timers = [], tw = null, run = true, typed = false;
     const later = (f, ms) => timers.push(setTimeout(f, ms));
     const end = () => { run = false; timers.forEach(clearTimeout); clearInterval(tw); if (fx) fx.stop(); ov.remove(); };
     ov.querySelector('.bl-x').addEventListener('click', () => { ov.classList.add('pack'); later(end, 500); });
-    ov.querySelector('.bl-env').addEventListener('click', () => { ov.classList.add('pack'); later(end, 800); });
     ov.querySelector('.bl-pick').addEventListener('click', () => {
       if (!ov.classList.contains('s1')) return;
       ov.className = 's2'; fx = engine(ov); later(runCode, 900);
     }, { once: true });
+    ov.querySelector('.bl-env').addEventListener('click', () => { ov.classList.add('open'); if (!typed) { typed = true; typeLetter(); } });
+    ov.querySelector('.bl-fold').addEventListener('click', () => ov.classList.remove('open'));
 
     const EV = {
       papier() { ov.classList.add('e-papier'); },
       bow() { ov.classList.add('e-bow'); },
       fw() { fx.fire(); },
-      letter() { later(() => { ov.classList.add('s3'); typeLetter(); }, 500); }
+      butter() {
+        ov.classList.add('bf-go');
+        later(() => { ov.classList.add('bf-land'); fx.calm(); }, 3300);
+        later(() => ov.classList.add('bf-kiss'), 3900);
+        later(() => ov.classList.add('bf-us'), 4500);
+        later(() => ov.classList.add('env'), 6900); // fertig + 1 s -> Brief-Symbol klappt auf
+      }
     };
     function bloomAt(i) {
       const f = ov.querySelector(`.bl-fl[data-i="${i}"]`); if (!f) return;
@@ -191,21 +210,21 @@
     function runCode() {
       const body = ov.querySelector('.bl-body'), wrap = ov.querySelector('.bl-cb');
       let li = 0, ci = 0, acc = 0, wait = 0, last = performance.now(), cur = null;
-      function newLine() { const d = document.createElement('div'); d.className = 'bl-ln'; d.innerHTML = `<i>${li + 1}</i><span></span>`; body.appendChild(d); cur = d.lastChild; const over = body.scrollHeight - wrap.clientHeight + 16; body.style.transform = `translateY(${-Math.max(0, over)}px)`; }
+      function newLine() { const d = document.createElement('div'); d.className = 'bl-ln'; d.innerHTML = `<span></span>`; body.appendChild(d); cur = d.lastChild; const over = body.scrollHeight - wrap.clientHeight + 8; body.style.transform = `translateY(${-Math.max(0, over)}px)`; }
       function tick(t) {
         if (!run) return; requestAnimationFrame(tick);
         const dt = Math.min(t - last, 60); last = t;
         if (li >= CODE.length) { cur.innerHTML = hl(CODE[CODE.length - 1].t) + '<u></u>'; return; }
         if (!cur) newLine();
         if (wait > 0) { wait -= dt; return; }
-        const L = CODE[li]; acc += dt * (L.cps || (L.cmd ? 55 : 300)) / 1000;
+        const L = CODE[li]; acc += dt * (L.cps || (L.cmd ? 45 : 190)) / 1000;
         while (acc >= 1 && ci < L.t.length) { ci++; acc--; }
         cur.innerHTML = hl(L.t.slice(0, ci)) + '<u></u>';
         if (ci >= L.t.length) {
           cur.innerHTML = hl(L.t);
           const e = L.ev;
           if (e) { if (EV[e]) EV[e](); else if (e[0] === 's') ov.querySelector(`.bl-st[data-i="${e[1]}"]`).classList.add('on'); else if (e[0] === 'f') bloomAt(+e[1]); }
-          li++; ci = 0; acc = 0; wait = L.cmd ? 300 : 60; cur = null;
+          li++; ci = 0; acc = 0; wait = L.cmd ? 320 : 110; cur = null;
           if (li >= CODE.length) { li = CODE.length; cur = body.lastChild.lastChild; }
         }
       }
@@ -221,8 +240,8 @@
           if (i >= ch.length) return fin();
           if (/[.,!?]/.test(ch[i - 1])) { clearInterval(tw); later(() => { tw = setInterval(tick, SPEED); }, 280); }
         }, SPEED);
-      }, 1100);
-      ov.querySelector('.bl-letter').addEventListener('click', fin);
+      }, 500);
+      ov.querySelector('.bl-pin').addEventListener('click', fin);
     }
   }
 
