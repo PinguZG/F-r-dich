@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="/frames.css">
 <link rel="stylesheet" href="/layout.css">
 <link rel="stylesheet" href="/a1.css">
+<link rel="stylesheet" href="/lernen.css">
 <link rel="stylesheet" href="/draw.css">
 <link rel="stylesheet" href="/drawpro.css">
 <link rel="stylesheet" href="/party.css">
@@ -117,6 +118,7 @@
     </div>
 
     <div class="st-tiles">
+      <button class="st-tile st-wide" id="lnTile" data-go="s-lernen" type="button" hidden style="--c:var(--accent3)"><span class="st-di"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.8v4.2c0 1.2 2.5 2.5 5.5 2.5s5.5-1.3 5.5-2.5v-4.2M21.5 9.5v5"/></svg></span><b>Lernen</b></button>
       <button class="st-tile st-wide" data-go="s-plans" type="button" style="--c:var(--accent2)"><span class="st-di"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><b>Dates</b></button>
       <button class="st-tile" data-go="s-wir" data-scroll="owSection" type="button" style="--c:var(--accent)"><span class="st-di"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></span><b>Öffne wenn</b></button>
       <button class="st-tile" data-go="s-grocery" type="button" style="--c:var(--accent3)"><span class="st-di"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.5l2.2 10.5h9.6L19.5 7H7"/><circle cx="9.5" cy="19" r="1.2"/><circle cx="16.5" cy="19" r="1.2"/></svg></span><b>Einkauf</b><small id="homeGroceryInfo"></small></button>
@@ -741,6 +743,14 @@
 </section>
 
 <!-- Einkaufsliste (grocery.js) -->
+<!-- ============ Lernen (lernen.js, nur Daniel) ============ -->
+<section class="screen page sub" id="s-lernen" data-tab="s-home" data-title="Lernen">
+  <div class="sub-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Lernen</h2></div>
+  <div class="ln-offline" id="lnSync" hidden></div>
+  <div class="ln-nav" id="lnNav"></div>
+  <div id="lnBody"></div>
+</section>
+
 <section class="screen page sub" id="s-grocery" data-tab="s-home" data-title="Einkaufsliste">
   <div class="sub-head g-head"><button class="back-btn" data-go="s-home" aria-label="Zurück">←</button><h2>Einkaufsliste</h2><span class="gr-count" id="grOpenCount"></span></div>
   <div class="gr-cols"><div class="gr-col">
@@ -834,6 +844,10 @@
   <div class="card glass set-card">
     <h3>⚡ Leistungsmodus</h3>
     <label class="check"><input type="checkbox" class="switch" id="perfSwitch"><span>Weniger Unschärfe und Leuchten (nur auf diesem Gerät)</span></label>
+  </div>
+
+  <div class="card glass set-card" id="lnSetCard" hidden>
+    <label class="check"><input type="checkbox" class="switch" id="lnSwitch" checked><span>Lernen anzeigen (Prüfung 25.11.)</span></label>
   </div>
 
   <div class="card glass set-card app-card">
@@ -1452,5 +1466,6 @@
 <script src="/shared/update.js"></script>
 <script src="/shared/changelog.js"></script>
 <script src="/blume.js"></script>
+<script src="/lernen.js"></script>
 </body>
 </html>

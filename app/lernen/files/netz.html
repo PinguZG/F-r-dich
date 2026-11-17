@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netzwerktechnik – AP2 Lernmappe</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a64;--line:#e2e0d8;--acc:#1f5fbf;--accbg:#eef3fb;--ok:#1f8a4c;--bad:#c0392b;--box:#fff7d6;--boxl:#e9b800;--ex:#e8f1fb;--exl:#2b6cb0;--warn:#fdeaea;--warnl:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--ink:#ecebe6;--mut:#a5a39a;--line:#37362f;--accbg:#2a2a28;--box:#3a3418;--ex:#1b2a3a;--warn:#3a1f1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--acc);color:#fff;padding:22px 18px 14px}
+header h1{margin:0;font-size:1.5rem}
+header p{margin:4px 0 0;opacity:.9;font-size:.95rem}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px 60px}
+.tabs{display:flex;gap:6px;margin:10px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tabs button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:.92rem;cursor:pointer;font-weight:600}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chips a{font-size:.82rem;padding:5px 10px;border-radius:99px;background:var(--accbg);color:var(--ink);border:1px solid var(--line);cursor:pointer}
+.pri{display:inline-block;font-size:.68rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;color:#fff}
+.pM{background:var(--bad)}.pS{background:#d68a00}.pK{background:var(--mut)}
+section.s{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 18px 14px;margin-bottom:16px}
+section.s h2{font-size:1.2rem;margin:14px 0 6px;color:var(--acc);border-bottom:2px solid var(--acc);padding-bottom:4px}
+section.s h3{font-size:1rem;margin:16px 0 4px}
+.box,.ex,.warn{border-left:5px solid;border-radius:8px;padding:8px 12px;margin:10px 0}
+.box{background:var(--box);border-color:var(--boxl)}.ex{background:var(--ex);border-color:var(--exl)}.warn{background:var(--warn);border-color:var(--warnl)}
+.box b.t,.ex b.t,.warn b.t{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.f{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--accbg);border:1px solid var(--line);border-radius:8px;padding:7px 11px;margin:8px 0;display:block;overflow-x:auto;font-size:.93rem}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}th{background:var(--accbg)}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:2px 0}
+.hide{display:none}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bar select,.bar button,.bar label{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.9rem;cursor:pointer}
+.bar label{display:flex;gap:6px;align-items:center}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 4px}
+.prog i{display:block;height:100%;background:var(--ok);width:0}
+.stat{font-size:.85rem;color:var(--mut);margin-bottom:10px}
+.fc{perspective:1000px;margin:8px 0}
+.fc .in{position:relative;min-height:270px;transition:transform .45s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.face.back{transform:rotateY(180deg);border-color:var(--acc);justify-content:flex-start}
+.tag{font-size:.75rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.q{font-size:1.15rem;font-weight:600}.a{font-size:1rem}
+.hint{text-align:center;color:var(--mut);font-size:.8rem;margin-top:6px}
+.act{display:flex;gap:10px;margin-top:12px}
+.act button,.btn{padding:13px;border-radius:12px;border:0;font-size:1rem;font-weight:700;color:#fff;cursor:pointer;background:var(--acc)}
+.act button{flex:1}
+.act .k{background:var(--ok)}.act .n{background:var(--bad)}.act .p{background:var(--mut);flex:.5}
+.done{text-align:center;padding:40px 10px;color:var(--mut)}
+.cq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.cq .q{font-size:1.05rem;font-weight:500}
+.cq input{width:130px;padding:10px;font-size:1.05rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin:10px 8px 0 0}
+.res{margin-top:12px;padding:10px 12px;border-radius:10px}
+.res.ok{background:#e3f4e9;color:#12512c}.res.bad{background:var(--warn);color:var(--ink)}
+@media(prefers-color-scheme:dark){.res.ok{background:#173323;color:#bfe8cd}}
+.timer{font-size:1.3rem;font-weight:800;color:var(--acc);margin:6px 0}
+.sm{font-size:.8rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<header><h1>Netzwerktechnik – AP2 Lernmappe</h1><p>IT-Systemelektroniker · Installation und Service an IT-Geräten, IT-Systemen und IT-Infrastruktur</p></header>
+<div class="wrap">
+<div class="tabs"><button id="t1" class="on">📓 Stoff</button><button id="t2">🃏 Karten</button><button id="t3">🧮 Rechnen</button><button id="t4">📝 Probe</button></div>
+<div id="v1"><div class="sm" style="margin-bottom:8px"><span class="pri pM">MUSS</span> prüfungsnah, zuerst · <span class="pri pS">SOLL</span> wichtig · <span class="pri pK">KANN</span> nur bei Zeit</div><div class="chips" id="chips"></div><div id="secs"></div></div>
+<div id="v2" class="hide">
+ <div class="bar">
+  <select id="fs"></select>
+  <select id="fm"><option value="due">Heute fällig + neu</option><option value="b1">Box 1 (Fehlerliste)</option><option value="all">Alle</option></select>
+  <label><input type="checkbox" id="fmu"> nur MUSS</label>
+  <button id="sh">🔀 Mischen</button><button id="rs">Zurücksetzen</button>
+ </div>
+ <div class="prog"><i id="pb"></i></div><div class="stat" id="st"></div>
+ <div id="deck"></div>
+ <div class="sm" style="margin-top:14px">Leitner: richtig → nächste Box (Box 2 wieder nach 1 Tag, Box 3 nach 3 Tagen). Falsch → zurück in Box 1 und noch mal in dieser Runde. Ziel: alles in Box 3.</div>
+</div>
+<div id="v3" class="hide">
+ <div class="bar"><select id="gs"></select><button id="gn">Neue Aufgabe</button></div>
+ <div id="gq"></div>
+ <div class="sm" id="gstat" style="margin-top:14px"></div>
+</div>
+<div id="v4" class="hide"><div id="pv"></div></div>
+</div>
+<script>
+const DATA={key:"netz",
+sections:[
+{id:"calc",p:"M",title:"1 · Berechnungen",html:`
+<h3>Speicherbedarf Videoüberwachung</h3>
+<span class="f">Bitrate (Mbit/s) ÷ 8 = MByte/s → × Sekunden → Speicher</span>
+<div class="ex"><b class="t">Beispiel</b>8 Kameras, je 4 Mbit/s, 24 h, 30 Tage:<br>4 ÷ 8 = 0,5 MB/s · 86 400 s = 43,2 GB pro Kamera/Tag · × 30 = 1,296 TB · × 8 = <b>≈ 10,4 TB</b> (dann RAID-Aufschlag beachten)</div>
+<h3>Übertragungs- / Backupdauer</h3>
+<span class="f">t = Datenmenge (Bit) ÷ Datenrate (Bit/s)</span>
+<div class="ex"><b class="t">Beispiel</b>500 GB über 1 Gbit/s: 500 · 8 = 4 000 Gbit ÷ 1 = 4 000 s ≈ <b>67 min</b> (theoretisch, real mit Overhead/Auslastung länger)</div>
+<div class="warn"><b class="t">Falle</b>Byte ↔ Bit (× 8), GB vs. GiB, Mbit/s vs. MB/s. Einheiten immer mitschreiben.</div>
+<h3>Verfügbarkeit / maximale Ausfallzeit</h3>
+<span class="f">Ausfallzeit = (1 − Verfügbarkeit) × Zeitraum</span>
+<div class="ex"><b class="t">Beispiel</b>99,5 % pro Jahr: Jahr = 365 · 24 · 60 = 525 600 min · 0,005 = <b>2 628 min ≈ 43,8 h</b><br>99,9 % → 525,6 min ≈ 8,8 h · 99,99 % → ≈ 52 min</div>
+<h3>RAID-Plattenanzahl</h3>
+<p>Nettokapazität nutzbar ÷ Plattengröße, aufrunden, dazu Redundanz (siehe RAID-Tabelle in Kapitel 8).</p>
+<h3>Kabellänge</h3>
+<p>Aus Zeichnung/Maßstab: waagerechte Strecke + senkrechte Strecke (Decke → Dose) + Reserve (ca. 10 %), Kabelweg ≠ Luftlinie. Permanent Link max. 90 m, Channel 100 m.</p>
+<h3>PoE-Leistung</h3>
+<p>Siehe Kapitel 4.</p>`},
+
+{id:"verk",p:"M",title:"2 · Strukturierte Verkabelung",html:`
+<h3>Drei Bereiche (Primär/Sekundär/Tertiär)</h3>
+<table><tr><th>Bereich</th><th>Wo</th><th>Medium</th></tr>
+<tr><td><b>Primär</b> (Gelände)</td><td>zwischen Gebäuden (Standortverteiler → Gebäudeverteiler)</td><td>LWL (Potentialtrennung, große Distanz)</td></tr>
+<tr><td><b>Sekundär</b> (Steigbereich)</td><td>im Gebäude, Gebäudeverteiler → Etagenverteiler</td><td>LWL oder Kupfer</td></tr>
+<tr><td><b>Tertiär</b> (Etage)</td><td>Etagenverteiler → Teilnehmeranschlussdose (TA)</td><td>Kupfer (Twisted Pair), max. 90 m + 10 m Patch</td></tr></table>
+<h3>Kategorien</h3>
+<table><tr><th>Cat</th><th>Frequenz</th><th>Typisch</th></tr>
+<tr><td>5e</td><td>100 MHz</td><td>1 Gbit/s</td></tr><tr><td>6</td><td>250 MHz</td><td>1 Gbit/s, 10G nur ≈ 55 m</td></tr>
+<tr><td><b>6A</b></td><td>500 MHz</td><td><b>10 Gbit/s bis 100 m</b> (Mindestanforderung)</td></tr>
+<tr><td>7 / 7A</td><td>600 / 1000 MHz</td><td>10G, voll geschirmt, GG45/TERA</td></tr><tr><td>8</td><td>2000 MHz</td><td>25/40G, nur ≈ 30 m (Rechenzentrum)</td></tr></table>
+<div class="box"><b class="t">Merksatz</b>Kategorie = Bauteil (Kabel, Dose), Klasse (E, EA, F) = installierte Strecke. 10 Gbit/s Patchleitung → mindestens Cat 6A.</div>
+<h3>Bezeichnung S/FTP</h3>
+<span class="f">XX / YZZ → S / F TP</span>
+<ul><li><b>S</b> vor dem „/“ = Gesamtschirm als Geflecht (Braid)</li><li><b>F</b> = Paarschirm aus Folie</li><li><b>TP</b> = Twisted Pair (Aderpaare verdrillt)</li><li>U = ungeschirmt, SF = Geflecht + Folie als Gesamtschirm</li></ul>
+<h3>Wirkung von Verdrillung und Schirmung</h3>
+<ul><li><b>Verdrillung:</b> Störungen koppeln in beide Adern gleich ein und heben sich bei differentieller Übertragung auf; weniger Nebensprechen. Unterschiedliche Schlaglängen je Paar.</li>
+<li><b>Folienschirm:</b> lückenlos, schützt gegen hochfrequente Störungen (kapazitiv), dünn, empfindlich beim Biegen.</li>
+<li><b>Geflechtschirm:</b> niedriger Schirmwiderstand, gut für niederfrequente Störungen, mechanisch robust, leitet Störströme zur Erde.</li></ul>
+<h3>NEXT / FEXT und Messprotokoll</h3>
+<ul><li><b>NEXT</b> = Near-End Crosstalk: Nahnebensprechen, Störung eines Paares auf ein anderes am <i>selben Ende</i> wie der Sender (kritischer, da starkes Signal).</li><li><b>FEXT</b> = Far-End Crosstalk: am <i>entfernten Ende</i>. Bezogen auf die Dämpfung: ACR.</li></ul>
+<p><b>Gründe für FAIL:</b> Wire-Map-Fehler (Unterbrechung, Kurzschluss, vertauschte/gesplittete Paare), Länge &gt; Grenzwert, zu hohe Dämpfung, NEXT/Return Loss zu schlecht (Paare beim Auflegen zu weit aufgedreht, Knick, schlechter Stecker), Schirmunterbrechung/Schirm nicht aufgelegt, Kabel ≠ Kategorie.</p>
+<p>Messprotokoll: Kategorie/Klasse ergibt sich aus der Grenzwertkurve, die der Tester prüft (z. B. „Cat 6A Class EA PL“). Aufgabe: Grenzwerte ablesen und mit Messwert vergleichen: Länge, Dämpfung ≥ Grenze = fail, NEXT-Reserve (Margin) muss positiv sein.</p>
+<h3>Kupfer vs. LWL</h3>
+<table><tr><th></th><th>Kupfer (TP)</th><th>LWL</th></tr><tr><td>Reichweite</td><td>100 m</td><td>bis km</td></tr><tr><td>EMV</td><td>anfällig (Schirmung)</td><td>unempfindlich, Potentialtrennung</td></tr><tr><td>Kosten</td><td>günstig, einfach zu konfektionieren</td><td>Technik/Messung teurer</td></tr><tr><td>PoE</td><td>ja</td><td>nein (nur Licht)</td></tr></table>
+<h3>Auflegearten / Anschluss</h3>
+<ul><li><b>LSA-Plus:</b> Leiter wird mit Auflegewerkzeug in Schneidklemme gedrückt (Lötfrei, Schraubenlos, Abisolierfrei) – schnell, gasdicht, reproduzierbar; Werkzeug nötig, begrenzte Wiederholungen.</li><li><b>Schraub-/Klemmanschluss:</b> ohne Spezialwerkzeug, aber langsamer, Lockerungsgefahr.</li>
+<li><b>Keystone-Modul:</b> einzeln einrastbar in Patchpanel, flexibel (Kupfer/LWL/Mix), teurer. <b>Fest verbautes Patchpanel:</b> kompakt, günstiger, weniger flexibel.</li></ul>
+<h3>Ports / Switche ermitteln</h3>
+<div class="ex"><b class="t">Vorgehen</b>Dosen aus Zeichnung zählen (Arbeitsplätze × Anschlüsse) + Geräte (APs, Drucker, Kameras) + ca. 20–30 % Reserve → Ports gesamt ÷ Ports je Switch (24/48), aufrunden; plus Uplink-Ports. APs: je AP 1 Port (PoE), Anbindung zum Switch im Tertiärbereich.</div>
+<h3>Erweiterung durch Access Points skizzieren</h3>
+<p>Switch (PoE) → Kabel → AP (Decke) ⇢ Clients; mehrere APs an Controller; SSID einheitlich; Management-VLAN.</p>`},
+
+{id:"lwl",p:"M",title:"3 · LWL",html:`
+<h3>Typen</h3>
+<table><tr><th></th><th>Multimode</th><th>Singlemode</th></tr><tr><td>Kern</td><td>50 µm (62,5 µm)</td><td>9 µm</td></tr><tr><td>Wellenlänge</td><td>850 / 1300 nm</td><td>1310 / 1550 nm</td></tr><tr><td>Reichweite</td><td>bis ≈ 550 m (1G), 300–400 m (10G)</td><td>10 km und mehr</td></tr><tr><td>Mantelfarbe</td><td>OM1/OM2 orange, OM3/OM4 aqua</td><td>OS2 gelb</td></tr></table>
+<div class="box"><b class="t">Modendispersion</b>Beim Multimode laufen viele Lichtwege (Moden) mit unterschiedlicher Laufzeit durch den Kern → Impulse werden verbreitert und überlappen → begrenzt Bandbreite × Länge. Singlemode: nur ein Mode, keine Modendispersion.</div>
+<h3>Anschluss am Switch: SFP</h3>
+<ul><li>SFP (1G), SFP+ (10G): Steckplatz für austauschbaren Transceiver; Faser per LC-Duplex</li><li>Modul muss zur Faser passen: <b>SX</b> = Multimode 850 nm, <b>LX</b> = Singlemode 1310 nm; passende Geschwindigkeit/Herstellerkompatibilität</li><li>Alternativen: BiDi-Modul (1 Faser), Kupfer-SFP (RJ45), DAC-Kabel (kurze Strecke im Rack)</li></ul>
+<h3>FTTx</h3>
+<table><tr><th>Kürzel</th><th>Glasfaser bis…</th><th>Rest</th></tr><tr><td>FTTC</td><td>Kabelverzweiger (Straße)</td><td>Kupfer (VDSL)</td></tr><tr><td>FTTB</td><td>Gebäude (Keller)</td><td>Kupfer im Haus</td></tr><tr><td>FTTH</td><td>Wohnung/Teilnehmer</td><td>komplett Glas</td></tr></table>
+<p><b>Empfehlung</b> mit Begründung: FTTH (höchste Bandbreite, zukunftssicher, symmetrisch); FTTC/FTTB, wenn Kosten/Bauaufwand begrenzt sind.</p>
+<h3>Dämpfung</h3>
+<span class="f">Gesamt = Länge · dB/km + Steckverbinder (≈0,5 dB) + Spleiße (≈0,1 dB)</span>
+<div class="ex"><b class="t">Beispiel</b>SM 2 km @1310 nm: 2 · 0,35 = 0,7 + 2 Steckerpaare 1,0 + 3 Spleiße 0,3 = <b>2,0 dB</b></div>
+<p>Messen: OTDR (Fehlerort/Dämpfungsverlauf), Lichtquelle + Powermeter (Gesamtdämpfung). Laserschutz: nie in die Faser blicken, Stecker reinigen.</p>`},
+
+{id:"poe",p:"M",title:"4 · PoE",html:`
+<table><tr><th>Standard</th><th>Name</th><th>Leistung am Port (PSE)</th><th>am Gerät (PD)</th></tr>
+<tr><td>802.3af</td><td>PoE</td><td>15,4 W</td><td>12,95 W</td></tr><tr><td>802.3at</td><td>PoE+</td><td>30 W</td><td>25,5 W</td></tr><tr><td>802.3bt</td><td>PoE++</td><td>60 W / 90 W</td><td>51 W / 71,3 W</td></tr></table>
+<div class="box"><b class="t">Aushandlung</b>1. <b>Detection</b> (Switch prüft kleine Spannung, erkennt PoE-fähiges Gerät am Signaturwiderstand ≈ 25 kΩ) → 2. <b>Classification</b> (Gerät meldet Leistungsklasse) → 3. <b>Power-up</b> (≈ 44–57 V DC). Nicht-PoE-Geräte bekommen so keine Spannung und werden nicht beschädigt.</div>
+<h3>Switch auswählen (rechnerisch)</h3>
+<span class="f">PoE-Budget ≥ Σ Portleistung aller Geräte (+ ca. 20 % Reserve)</span>
+<div class="ex"><b class="t">Beispiel</b>12 Kameras à 6 W + 4 APs à 15 W = 72 + 60 = 132 W · 1,2 = <b>158 W</b> → Switch ≥ 160 W Budget, mindestens 16 PoE-Ports; jeder Port muss die Klasse des Geräts liefern (AP 15 W → af reicht knapp, besser at).</div>
+<h3>Switch vs. Injektor</h3>
+<ul><li><b>PoE-Switch:</b> integriert, zentral verwaltbar, über USV absicherbar, weniger Netzteile</li><li><b>Injektor (Midspan):</b> für Einzelgeräte oder Nachrüstung bei Nicht-PoE-Switch; zusätzliches Gerät + Steckdose, keine zentrale Überwachung</li></ul>
+<p>Max. 100 m Kabel. Nur Kupfer, nicht LWL.</p>`},
+
+{id:"wlan",p:"M",title:"5 · WLAN",html:`
+<h3>Sicherheit</h3>
+<table><tr><th></th><th>WPA2-Personal</th><th>WPA2-Enterprise</th></tr><tr><td>Schlüssel</td><td>gemeinsames Passwort (PSK)</td><td>je Benutzer über 802.1X / RADIUS</td></tr><tr><td>Verschlüsselung</td><td>AES-CCMP</td><td>AES-CCMP</td></tr><tr><td>Einsatz</td><td>Privat, kleines Büro</td><td>Firma (einzelner Zugang sperrbar, Zertifikat/Login)</td></tr></table>
+<p>Firma → Enterprise (WPA3 wenn möglich). <b>Maßnahmen gegen unberechtigten Zugriff:</b> starke Verschlüsselung, Standardpasswörter ändern, 802.1X, Firmware-Updates, Admin-Zugang absichern/Fernzugriff aus, Sendeleistung anpassen. SSID verstecken und MAC-Filter helfen kaum (umgehbar).</p>
+<h3>Gäste-WLAN absichern (2 Möglichkeiten)</h3>
+<ul><li>Eigenes <b>VLAN/Gastnetz</b>, kein Zugriff aufs interne Netz (Firewall)</li><li><b>Captive Portal / Voucher</b> mit Zeitbegrenzung, Bandbreitenbegrenzung, Client-Isolation</li></ul>
+<h3>WLAN-Controller – Vorteile</h3>
+<ul><li>zentrale Konfiguration/Verwaltung aller APs (einheitlich)</li><li>automatische Kanal-/Leistungsanpassung, Lastverteilung</li><li>Roaming, Monitoring, Erkennung fremder APs (Rogue AP)</li></ul>
+<div class="box"><b class="t">Roaming</b>Client wechselt beim Bewegen unterbrechungsfrei von AP zu AP (gleiche SSID). Vorteil: durchgehende Verbindung, z. B. bei Telefonie/Videocall.</div>
+<h3>Anzahl der APs bestimmen (2 Faktoren)</h3>
+<p>Fläche/Gebäudestruktur (Wände, Dämpfung) · Anzahl gleichzeitiger Nutzer/Clients · benötigte Bandbreite · Frequenzband.</p>
+<h3>Frequenzbänder</h3>
+<table><tr><th></th><th>2,4 GHz</th><th>5 GHz</th></tr><tr><td>Reichweite</td><td>größer, bessere Durchdringung</td><td>kleiner</td></tr><tr><td>Datenrate</td><td>niedriger</td><td>höher</td></tr><tr><td>Störungen</td><td>viele (Bluetooth, Mikrowelle), nur 3 überlappungsfreie Kanäle</td><td>weniger, mehr Kanäle</td></tr></table>
+<h3>Begriffe</h3>
+<ul><li><b>Infrastruktur-Modus:</b> Clients verbinden sich über einen Access Point (zentral), nicht direkt untereinander (Gegensatz: Ad-hoc)</li><li><b>MIMO:</b> mehrere Sende- und Empfangsantennen, räumliches Multiplexing → mehr Durchsatz/Stabilität</li><li><b>APs aufstellen (Veranstaltungshalle):</b> nicht frei zugänglich montieren (Manipulation), Abstrahlung nach außen begrenzen. Genaue BSI-Kriterien nicht auswendig sicher – im Zweifel: Standardpasswörter ändern, aktuelle Firmware, sichere Verschlüsselung.</li></ul>`},
+
+{id:"ip",p:"M",title:"6 · IP, VLAN, DHCP, DMZ",html:`
+<h3>Subnetting IPv4</h3>
+<span class="f">nutzbare Hosts = 2^h − 2 ≥ benötigt → Präfix = 32 − h</span>
+<div class="ex"><b class="t">Beispiel</b>50 Hosts: h = 6 (62) → <b>/26</b> = 255.255.255.192. Netz 192.168.10.0/26: Broadcast .63, <b>letzte nutzbare Adresse .62</b>, erste .1</div>
+<table><tr><th>Präfix</th><th>Maske (letztes Byte)</th><th>Hosts</th></tr><tr><td>/24</td><td>.0</td><td>254</td></tr><tr><td>/25</td><td>.128</td><td>126</td></tr><tr><td>/26</td><td>.192</td><td>62</td></tr><tr><td>/27</td><td>.224</td><td>30</td></tr><tr><td>/28</td><td>.240</td><td>14</td></tr><tr><td>/29</td><td>.248</td><td>6</td></tr><tr><td>/30</td><td>.252</td><td>2</td></tr></table>
+<h3>IPv6</h3>
+<ul><li>128 Bit, 8 Blöcke à 16 Bit (hex). Kürzen: führende Nullen weg, <b>einmal</b> „::“ für Nullblöcke.</li><li><b>2000::/3 (2001:…)</b> Global Unicast (öffentlich) · <b>fe80::/10</b> Link-Local (nur im Segment) · <b>fc00::/7 (fd…)</b> Unique Local (privat) · <b>ff00::/8</b> Multicast · ::1 Loopback</li><li><b>Portweiterleitung unnötig:</b> jedes Gerät hat eine globale Adresse, kein NAT nötig; Schutz übernimmt die Firewall.</li></ul>
+<h3>APIPA (169.254.x.x)</h3>
+<p>Client bekommt sie, wenn kein DHCP antwortet. <b>Ursachen (nur dieser Client):</b> Kabel/Port defekt oder falsches VLAN, DHCP-Pool/Reservierung/MAC-Sperre betrifft nur ihn, Netzwerkadapter/DHCP-Client-Dienst defekt. (Wenn alle betroffen: DHCP-Server aus.)</p>
+<h3>DHCP: statische IP vs. Reservierung</h3>
+<ul><li><b>Statische IP:</b> am Gerät fest eingetragen, manuell, Konfliktgefahr, Änderungen aufwändig</li><li><b>DHCP-Reservierung:</b> Server vergibt anhand der MAC immer dieselbe IP; zentral verwaltbar, Client bleibt DHCP-Client</li></ul>
+<h3>VLAN</h3>
+<ul><li><b>Gründe gegenüber physischer Trennung:</b> weniger Hardware/Kabel (Kosten), flexibel per Konfiguration, kleinere Broadcast-Domänen, trennt Bereiche (Sicherheit), einfaches Management</li><li><b>Statisch:</b> Port fest einem VLAN zugeordnet · <b>Dynamisch:</b> Zuordnung nach MAC oder 802.1X-Login, folgt dem Gerät/Benutzer</li><li>802.1Q-Tag, Trunk-Port; Verkehr zwischen VLANs nur über Router/Layer-3-Switch</li></ul>
+<h3>DMZ</h3>
+<p>Pufferzone zwischen Internet und LAN (Firewall(s) davor und dahinter). Dienste: Webserver, Mail-Relay, Reverse Proxy, DNS, FTP.</p>
+<div class="box"><b class="t">Vorteil gegenüber Portweiterleitung</b>Portweiterleitung führt Verkehr direkt ins LAN, ein gehackter Server ist Einfallstor. DMZ isoliert: Zugriff DMZ→LAN ist gesperrt, Dienste stehen getrennt, Regeln pro Zone.</div>
+<h3>Layer-2- vs. Layer-3-Switch</h3>
+<p>L2: leitet nach MAC-Adresse. L3: kann zusätzlich routen (VLAN-Routing), IP-Filter/ACLs.</p>`},
+
+{id:"sec",p:"M",title:"7 · Datenschutz & Sicherheit",html:`
+<h3>Schutzziele</h3>
+<ul><li><b>Vertraulichkeit:</b> nur Berechtigte lesen · <b>Integrität:</b> Daten unverändert/korrekt · <b>Authentizität:</b> Echtheit des Absenders/Quelle · (Verfügbarkeit: Zugriff möglich)</li></ul>
+<h3>Angriffe</h3>
+<table><tr><th>Angriff</th><th>Kurz</th></tr><tr><td>Sniffing</td><td>Datenverkehr mitlesen</td></tr><tr><td>Spoofing</td><td>falsche Identität (IP, MAC, Mail, DNS)</td></tr><tr><td>Man-in-the-Middle</td><td>Angreifer sitzt zwischen zwei Partnern, liest/ändert</td></tr><tr><td>Replay</td><td>aufgezeichnete gültige Daten erneut senden</td></tr><tr><td>Relay</td><td>Signal (z. B. Karte ↔ Leser) wird weitergeleitet, Reichweite verlängert</td></tr><tr><td>Cloning</td><td>RFID-Karte kopieren</td></tr><tr><td>RFID-Malware</td><td>Schadcode auf dem Tag</td></tr><tr><td>Tracking</td><td>Nutzerverhalten verfolgen</td></tr></table>
+<h3>HTTPS, Zertifikat, Verschlüsselung</h3>
+<ul><li><b>Zertifikat:</b> bestätigt die Identität des Servers (von einer CA signiert), enthält den öffentlichen Schlüssel → Authentizität + Basis für verschlüsselte Verbindung.</li><li><b>Asymmetrisch:</b> öffentlicher Schlüssel (verschlüsselt / prüft Signatur) + privater Schlüssel (entschlüsselt / signiert), bleibt geheim.</li><li><b>TLS:</b> asymmetrisch für Authentifizierung und Schlüsselaustausch, danach <b>symmetrischer Sitzungsschlüssel</b> für die Daten (schnell), Hash/MAC für Integrität.</li></ul>
+<h3>IP-Filterung</h3>
+<p>Firewall-Regeln nach Quelle/Ziel-IP, Port, Protokoll; auf dem Layer-3-Switch als ACL umsetzbar.</p>
+<h3>DSGVO – Fotos</h3>
+<p>Grundsatz: Einwilligung der erkennbaren Personen. Ausnahmen (Faustregel, KUG): Personen der Zeitgeschichte/ Amtsträger in ihrer Funktion, Menschen nur als Beiwerk im Hintergrund, Versammlungen.</p>
+<ul><li>Bürgermeister (Grußwort): in Amtsfunktion ohne Einwilligung vertretbar</li><li>Offizielles Foto Bierkönigin: öffentliche Repräsentantin, vertretbar</li><li>Schnappschuss Veranstaltungsraum mit Personen im Hintergrund: Beiwerk, vertretbar</li><li>Gruppenporträt der Brauerei: <b>Einwilligung nötig</b> (Personen im Mittelpunkt)</li></ul>
+<div class="warn"><b class="t">Unsicher</b>Die Einordnung der Einzelfälle ist meine Einschätzung. Prüfungslogik: steht die Person im Mittelpunkt → Einwilligung; nur Beiwerk/öffentliche Rolle → keine.</div>
+<h3>Tracking & Reichweitenanalyse</h3>
+<p>Ziel: Nutzerverhalten erfassen (Seitenaufrufe, Herkunft, Verweildauer) für Werbung/Optimierung. Betreiber muss bei personenbezogenen Daten <b>informieren (Datenschutzerklärung) und vorher einwilligen lassen (Cookie-Banner, Opt-in)</b>.</p>`},
+
+{id:"server",p:"M",title:"8 · Server, Storage, Cloud",html:`
+<h3>RAID</h3>
+<table><tr><th>Level</th><th>Min. Platten</th><th>Nutzbar</th><th>Ausfall</th></tr><tr><td>0</td><td>2</td><td>n · C</td><td>keine Redundanz</td></tr><tr><td>1</td><td>2</td><td>C</td><td>n−1 (Spiegel)</td></tr><tr><td>5</td><td><b>3</b></td><td>(n−1) · C</td><td>1 Platte</td></tr><tr><td>6</td><td>4</td><td>(n−2) · C</td><td>2 Platten</td></tr><tr><td>10</td><td>4</td><td>n/2 · C</td><td>1 je Spiegelpaar</td></tr></table>
+<div class="box"><b class="t">RAID 5 mind. 3 Platten</b>Daten verteilt + Parität; bei 2 Platten wäre es nur ein Spiegel. Vergleich R1 vs. R6: R1 teuer (50 % nutzbar), toleriert 1 Ausfall; R6 braucht ≥4 Platten, toleriert 2 gleichzeitige Ausfälle.</div>
+<ul><li><b>Vorteile:</b> Ausfallsicherheit (R1/5/6/10) und/oder Geschwindigkeit; ersetzt kein Backup!</li><li><b>Hardware-RAID:</b> eigener Controller (Cache, Akku), unabhängig vom OS, schnell, teurer · <b>Software-RAID:</b> OS übernimmt, günstig, belastet die CPU</li></ul>
+<h3>Backup</h3>
+<table><tr><th>Art</th><th>sichert</th><th>Restore</th></tr><tr><td>Voll</td><td>alles</td><td>1 Satz, am schnellsten</td></tr><tr><td>Differentiell</td><td>Änderungen seit letztem <b>Voll</b></td><td>Voll + letztes Diff</td></tr><tr><td>Inkrementell</td><td>Änderungen seit letztem Backup (egal welcher Art)</td><td>Voll + <b>alle</b> Inkremente</td></tr></table>
+<ul><li><b>Cloud-Gefahren:</b> Datenschutz/Standort, Abhängigkeit von Internet/Anbieter, Ransomware verschlüsselt synchronisierte Daten, Zugriff Dritter</li><li><b>On-Premises:</b> volle Kontrolle, schnelle Wiederherstellung, unabhängig vom Internet</li><li>3-2-1: 3 Kopien, 2 Medien, 1 extern. Dauer: Datenmenge ÷ Rate (Kap. 1)</li></ul>
+<h3>USV (Kurzfassung, Details in Elektrotechnik)</h3>
+<p>Offline (VFD), Line-Interactive (VI), Online/Doppelwandler (VFI). <b>Wartungs-Bypass</b>: manuelle Umgehung, damit die USV ohne Abschalten der Last gewartet/getauscht werden kann.</p>
+<h3>Virtualisierung / VDI / Cloud</h3>
+<ul><li><b>Lizenzierung:</b> pro Socket (CPU) oder pro Core (Windows Server: mind. 8 Kerne je CPU, mind. 16 je Server). Entscheidung hängt von Kerne-Anzahl je CPU ab: wenige Kerne ⇒ pro Core günstiger/gleich, viele Kerne ⇒ pro Socket.</li><li><b>VDI:</b> Desktop läuft als VM im Rechenzentrum, Zugriff per Thin Client. + zentrale Verwaltung/Sicherheit, günstige Clients · − Server/Netz muss laufen.</li><li><b>IaaS</b> (Infrastructure: VM/Storage mieten) · <b>PaaS</b> (Platform: Laufzeit/DB) · <b>SaaS</b> (Software fertig, z. B. M365). Vorteile: skalierbar, keine eigene Hardware; Nachteile: Abhängigkeit, Datenschutz, laufende Kosten.</li></ul>
+<h3>Hardware</h3>
+<ul><li><b>Hot Swap:</b> Tausch im laufenden Betrieb ohne Abschaltung → Verfügbarkeit</li><li><b>TPM</b> (Trusted Platform Module): Chip auf dem Mainboard, schützt vor nicht authentifizierter Firmware, speichert Schlüssel (BitLocker)</li><li><b>Storage-Compression:</b> spart Platz bei komprimierbaren Daten (Text, DB, Logs); bringt nichts bei Video/JPG/ZIP und kostet CPU/Latenz</li><li><b>Umwelteinflüsse:</b> Temperatur, Staub, Luftfeuchte, Vibration, Spannungsschwankung, ESD</li></ul>`},
+
+{id:"db",p:"S",title:"9 · Datenbanken & Diagramme",html:`
+<h3>Relationales Modell</h3>
+<p>Tabellen (Relationen) mit Zeilen (Datensätzen), <b>Primärschlüssel</b> (eindeutig), <b>Fremdschlüssel</b> (Verweis auf andere Tabelle), Beziehungen 1:1, 1:n, n:m (n:m → Zwischentabelle). Gegenstück: NoSQL (Dokumente, Key-Value, Graph).</p>
+<h3>SQL</h3>
+<span class="f">SELECT name, ort FROM kunde WHERE ort = 'Kiel' ORDER BY name;</span>
+<span class="f">SELECT k.name, b.datum FROM kunde k JOIN bestellung b ON k.id = b.kunde_id;</span>
+<span class="f">INSERT INTO kunde (name, ort) VALUES ('Meier','Kiel');</span>
+<span class="f">UPDATE kunde SET ort = 'Fürth' WHERE id = 5;  ·  DELETE FROM kunde WHERE id = 5;</span>
+<span class="f">SELECT ort, COUNT(*) FROM kunde GROUP BY ort;</span>
+<div class="warn"><b class="t">Falle</b>UPDATE/DELETE ohne WHERE trifft alle Zeilen.</div>
+<h3>ACID</h3>
+<table><tr><th></th><th>Englisch</th><th>Bedeutung</th></tr><tr><td>A</td><td>Atomicity</td><td>Transaktion ganz oder gar nicht</td></tr><tr><td>C</td><td>Consistency</td><td>DB bleibt konsistent (Regeln erfüllt)</td></tr><tr><td>I</td><td>Isolation</td><td>parallele Transaktionen stören sich nicht</td></tr><tr><td>D</td><td>Durability</td><td>Ergebnis bleibt dauerhaft gespeichert</td></tr></table>
+<h3>Diagramme</h3>
+<ul><li><b>ERD</b> (Entity-Relationship): Entitäten, Attribute, Beziehungen + Kardinalitäten (Datenbankentwurf)</li><li><b>PAP</b> (Programmablaufplan): Ablauf; Oval = Start/Ende, Rechteck = Anweisung, Raute = Verzweigung, Pfeile = Ablauf</li></ul>`},
+
+{id:"tools",p:"S",title:"10 · Befehle & Monitoring",html:`
+<ul><li><b>Windows:</b> <code>tracert &lt;Ziel&gt;</code> zeigt jeden Hop (Netzwerkkomponente) bis zum Server; <code>ping</code> prüft Erreichbarkeit; <code>ipconfig /all</code>, <code>nslookup</code></li><li><b>Linux:</b> <code>traceroute</code> / <code>ping</code>; <code>sudo</code> = Befehl mit Root-Rechten (superuser do) ausführen</li><li><b>TTL</b> (Time To Live): maximale Hops; jeder Router zieht 1 ab, bei 0 wird das Paket verworfen (Schleifenschutz). Antwort „ttl=64“ ≈ Linux/Router-Startwert 64 minus Hops (Windows startet bei 128).</li><li><b>SNMP:</b> Überwachung von Switch, Router, Server, Drucker, USV, AP; Transport per <b>UDP</b> (Port 161, Traps 162)</li><li><b>S.M.A.R.T.:</b> Selbstüberwachung von Festplatten/SSDs (Fehlerzähler, Temperatur) zur Früherkennung</li><li><b>ITSM / Helpdesk:</b> Kunde meldet · Helpdesk (1st Level) nimmt Ticket auf/löst Standardfälle · IT-Spezialist (2nd/3rd Level) analysiert schwierige Fälle · Administrator betreibt/konfiguriert Systeme</li><li><b>SaaS-Ticketsystem:</b> kein eigener Serverbetrieb, Updates durch Anbieter, von überall. <b>On-Premises:</b> Software auf eigener Hardware → volle Datenhoheit</li><li><b>Kundenkommunikation:</b> Paraphrasieren (Gesagtes mit eigenen Worten wiedergeben), Verbalisieren (Gefühle benennen), Nachfragen, Zusammenfassen, Unklares klären</li></ul>`},
+
+{id:"begr",p:"K",title:"11 · Begriffe",html:`
+<table><tr><th>Begriff</th><th>Bedeutung</th></tr>
+<tr><td>MTBF</td><td>Mean Time Between Failures – mittlere Zeit zwischen Ausfällen</td></tr>
+<tr><td>TLC</td><td>Triple-Level Cell – 3 Bit pro Flash-Zelle</td></tr>
+<tr><td>DWPD / TBW</td><td>Drive Writes Per Day / Terabytes Written – Schreib-Lebensdauer von SSDs</td></tr>
+<tr><td>IOPS</td><td>Input/Output Operations Per Second</td></tr>
+<tr><td>ESD</td><td>Electrostatic Discharge = elektrostatische Entladung; Schutz: ESD-Armband, -Matte, antistatische Verpackung</td></tr>
+<tr><td>Galvanische Trennung</td><td>keine leitende Verbindung, Übertragung über Trafo/Optokoppler/LWL → schützt vor Potentialunterschieden</td></tr>
+<tr><td>Case sensitive</td><td>Groß-/Kleinschreibung wird unterschieden</td></tr>
+<tr><td>ASCII vs. UTF-16</td><td>ASCII 1 Byte/Zeichen, UTF-16 mind. 2 Byte → Speicherbedarf ≈ doppelt</td></tr>
+<tr><td>HTML / CSS</td><td>Struktur/Inhalt einer Webseite / Gestaltung</td></tr>
+<tr><td>Open Source</td><td>Quellcode offen, einsehbar und änderbar (unter Lizenz)</td></tr>
+<tr><td>Style Guide / CD</td><td>Vorgaben für einheitliches Erscheinungsbild (Corporate Design)</td></tr>
+<tr><td>Wiki / Blog / Podcast</td><td>gemeinsam bearbeitete Wissensseiten / Online-Tagebuch/Artikel / Audio-Beiträge</td></tr>
+<tr><td>BYOD</td><td>Bring Your Own Device – private Geräte im Firmennetz</td></tr>
+<tr><td>QoS</td><td>Quality of Service – Priorisierung von Verkehr (z. B. VoIP vor Download)</td></tr>
+<tr><td>TAE / APL</td><td>Telekommunikations-Anschluss-Einheit / Abschlusspunkt Linientechnik</td></tr>
+<tr><td>LSA</td><td>Lötfrei, Schraubenlos, Abisolierfrei</td></tr>
+<tr><td>Sensor – Controller – Aktor</td><td>Sensor erfasst Größe → Controller (eingebettete Software) wertet aus → Aktor setzt um (Motor, Ventil, Relais)</td></tr></table>`}
+],
+cards:[
+["calc","Formel Speicherbedarf Videoüberwachung?","Bitrate (Mbit/s) ÷ 8 = MB/s · × Sekunden = MB · umrechnen. Beispiel 4 Mbit/s, 24 h: 43,2 GB pro Tag."],
+["calc","500 GB über 1 Gbit/s – wie lange?","500·8 = 4000 Gbit ÷ 1 Gbit/s = 4000 s ≈ 67 min (theoretisch)."],
+["calc","Maximale Ausfallzeit bei 99,5 % Verfügbarkeit pro Jahr?","0,005 · 525 600 min = 2 628 min ≈ 43,8 h."],
+["calc","Maximale Länge Permanent Link / Channel Kupfer?","Permanent Link 90 m, Channel 100 m (inkl. 2 × Patchkabel)."],
+["verk","Drei Verkabelungsbereiche mit Medium?","Primär (Gelände, zwischen Gebäuden, LWL) · Sekundär (Steigbereich, LWL/Kupfer) · Tertiär (Etage bis TA, Kupfer)."],
+["verk","Mindestkategorie für 10 Gbit/s auf 100 m?","Cat 6A (500 MHz)."],
+["verk","Was bedeutet S/FTP?","S = Gesamtschirm aus Geflecht, F = Paarschirme aus Folie, TP = Twisted Pair (verdrillt)."],
+["verk","Wirkung der Verdrillung?","Störungen koppeln in beide Adern gleich ein und heben sich bei differentieller Übertragung auf; weniger Nebensprechen."],
+["verk","Folienschirm vs. Geflechtschirm?","Folie: lückenlos, gut gegen hochfrequente Störungen. Geflecht: niedriger Schirmwiderstand, gut für niederfrequente Störungen, robust."],
+["verk","NEXT vs. FEXT?","NEXT = Nahnebensprechen am selben Ende wie der Sender; FEXT = Fernnebensprechen am anderen Ende."],
+["verk","Nenne 4 Gründe für ein FAIL beim Messen.","Wire-Map-Fehler (Unterbrechung/Kurzschluss/vertauscht), zu lang, zu hohe Dämpfung, NEXT/Return Loss schlecht (Paare aufgedreht/Knick), Schirm nicht aufgelegt."],
+["verk","Kupfer vs. LWL – wann was?","Kupfer: Etage, ≤100 m, günstig, PoE. LWL: Primär/Steigleitung, große Distanz, EMV-frei, Potentialtrennung."],
+["verk","LSA-Plus – was ist das und Vor-/Nachteil?","Schneidklemm-Auflegetechnik (Lötfrei, Schraubenlos, Abisolierfrei). Schnell, gasdicht · Auflegewerkzeug nötig, begrenzte Wiederholungen."],
+["verk","Keystone-Modul vs. fest verbautes Patchpanel?","Keystone: einzeln einrastbar, flexibel/mischbar, teurer. Fest: kompakt, günstiger, unflexibel."],
+["lwl","Multimode vs. Singlemode – Kern und Reichweite?","MM 50 µm, bis ≈ 550 m (1G), 300–400 m (10G). SM 9 µm, 10 km und mehr."],
+["lwl","Was ist Modendispersion?","Moden laufen mit unterschiedlicher Laufzeit → Impulsverbreiterung → begrenzt Bandbreite × Länge. Nur bei Multimode."],
+["lwl","Welches SFP für MM bzw. SM?","SX = Multimode 850 nm, LX = Singlemode 1310 nm (LC-Duplex). Auf Geschwindigkeit (SFP/SFP+) achten."],
+["lwl","FTTC / FTTB / FTTH?","Glasfaser bis Kabelverzweiger (Straße) / bis Gebäude / bis Wohnung."],
+["lwl","Dämpfungsbudget berechnen?","Länge · dB/km + Steckverbinder (≈0,5 dB) + Spleiße (≈0,1 dB)."],
+["poe","PoE-Standards mit Leistung?","af 15,4 W (PD 12,95) · at/PoE+ 30 W (25,5) · bt/PoE++ 60/90 W (51/71,3)."],
+["poe","Wie handelt ein Switch PoE aus?","Detection (PoE-Gerät erkennen) → Classification (Leistungsklasse) → Power-up. Nicht-PoE-Geräte bleiben spannungsfrei."],
+["poe","PoE-Switch vs. Injektor?","Switch: zentral, USV-fähig, weniger Netzteile. Injektor: Einzelgeräte/Nachrüstung, zusätzliches Gerät, nicht zentral verwaltbar."],
+["poe","Wie rechnest du den passenden PoE-Switch?","Σ Portleistung aller Geräte + ≈ 20 % Reserve ≤ PoE-Budget; Portanzahl und Klasse pro Port prüfen."],
+["wlan","WPA2-Personal vs. -Enterprise?","Personal: gemeinsames Passwort (PSK). Enterprise: 802.1X/RADIUS, Zugang pro Benutzer. Firma → Enterprise."],
+["wlan","Gäste-WLAN absichern – 2 Möglichkeiten?","Eigenes VLAN/Gastnetz ohne Zugriff aufs LAN; Captive Portal/Voucher mit Zeit- und Bandbreitenbegrenzung."],
+["wlan","2 Vorteile WLAN-Controller?","Zentrale einheitliche Konfiguration; Roaming, automatische Kanal-/Leistungsanpassung, Rogue-AP-Erkennung."],
+["wlan","Was ist Roaming?","Unterbrechungsfreier Wechsel des Clients zwischen APs (gleiche SSID). Vorteil: durchgehende Verbindung."],
+["wlan","2,4 GHz vs. 5 GHz?","2,4: größere Reichweite, mehr Störungen, 3 freie Kanäle, langsamer. 5: schneller, mehr Kanäle, weniger Reichweite."],
+["wlan","Was ist MIMO?","Mehrere Sende-/Empfangsantennen, räumliches Multiplexing → mehr Durchsatz und Stabilität."],
+["ip","50 Hosts – Subnetzmaske und letzte Host-Adresse in 192.168.10.0?","2^6−2 = 62 ≥ 50 → /26 (255.255.255.192). Broadcast .63, letzte nutzbare .62."],
+["ip","Hosts pro Subnetz Formel?","2^h − 2 (Netz- und Broadcast-Adresse abziehen)."],
+["ip","IPv6 kürzen – Regeln?","Führende Nullen weglassen, einmal :: für aufeinanderfolgende Nullblöcke."],
+["ip","2001: / fe80: / fd00: ?","Global Unicast (öffentlich) / Link-Local (nur Segment) / Unique Local (privat)."],
+["ip","Warum braucht IPv6 keine Portweiterleitung?","Jedes Gerät hat eine globale Adresse, kein NAT; Schutz durch Firewall."],
+["ip","3 Ursachen für APIPA-Adresse (nur ein Client)?","Kabel/Port defekt oder falsches VLAN; DHCP-Client/Adapter defekt; MAC gesperrt/Reservierung fehlerhaft."],
+["ip","Statische IP vs. DHCP-Reservierung?","Statisch: am Gerät manuell. Reservierung: Server gibt per MAC immer dieselbe IP, zentral verwaltet."],
+["ip","Drei Vorteile VLAN gegenüber physischer Trennung?","Weniger Hardware/Kosten, flexibel per Konfiguration, kleinere Broadcast-Domänen/mehr Sicherheit."],
+["ip","Statisches vs. dynamisches VLAN?","Statisch: Port fest zugeordnet. Dynamisch: nach MAC oder 802.1X-Login, folgt dem Gerät."],
+["ip","DMZ – Zweck, Dienste, Vorteil gegenüber Portweiterleitung?","Pufferzone zwischen Internet und LAN für Web/Mail/DNS/Proxy. Gehackter Server hat keinen Zugriff aufs LAN, Zonenregeln."],
+["ip","Layer-2- vs. Layer-3-Switch?","L2: MAC-basiert. L3: routet zusätzlich (VLAN-Routing, ACL/IP-Filter)."],
+["sec","Schutzziele?","Vertraulichkeit, Integrität, Authentizität (+ Verfügbarkeit)."],
+["sec","Replay vs. Relay vs. Man-in-the-Middle?","Replay: aufgezeichnete Daten erneut senden. Relay: Signal weiterleiten, Reichweite verlängern. MitM: Angreifer zwischen zwei Partnern."],
+["sec","Spoofing vs. Sniffing vs. Cloning?","Spoofing: falsche Identität. Sniffing: Verkehr mitlesen. Cloning: RFID-Karte kopieren."],
+["sec","Hauptaufgabe HTTPS-Zertifikat?","Beweist die Identität des Servers (Authentizität) und enthält den öffentlichen Schlüssel für die verschlüsselte Verbindung."],
+["sec","Öffentlicher und privater Schlüssel?","Öffentlich: verschlüsseln/Signatur prüfen, frei verteilbar. Privat: entschlüsseln/signieren, geheim."],
+["sec","Wie nutzt TLS die Schlüsselarten?","Asymmetrisch zur Authentifizierung/Schlüsselaustausch, symmetrischer Sitzungsschlüssel für die Daten, Hash/MAC für Integrität."],
+["sec","Welche Pflicht hat ein Betreiber bei Tracking?","Über Datenverarbeitung informieren (Datenschutzerklärung) und vorher Einwilligung einholen (Opt-in, Cookie-Banner)."],
+["server","RAID 5 – Mindestplatten und warum?","3: Daten + verteilte Parität; mit 2 Platten wäre es nur ein Spiegel."],
+["server","RAID 1 vs. RAID 6?","R1: 2 Platten, 50 % nutzbar, 1 Ausfall. R6: ≥4 Platten, (n−2)·C nutzbar, 2 Ausfälle."],
+["server","Hardware- vs. Software-RAID?","Hardware: eigener Controller/Cache, schnell, teurer. Software: vom OS, günstig, belastet CPU."],
+["server","Differentielles vs. inkrementelles Backup?","Differentiell: seit letztem Voll-Backup. Inkrementell: seit letztem Backup beliebiger Art. Restore inkrementell: Voll + alle Inkremente."],
+["server","Gefahren Cloud-Backup / Vorteil On-Premises?","Datenschutz, Internetabhängigkeit, Ransomware-Sync. On-Premises: Kontrolle, schnelle Wiederherstellung."],
+["server","Wozu Maintenance-Bypass bei der USV?","Last wird am Wechselrichter vorbei direkt ans Netz gelegt: USV kann gewartet/getauscht werden ohne Abschaltung."],
+["server","IaaS / PaaS / SaaS?","Infrastructure (VM/Storage), Platform (Laufzeit/DB), Software (fertige Anwendung)."],
+["server","VDI?","Desktop läuft als VM im Rechenzentrum, Zugriff per Thin Client. Vorteil: zentrale Verwaltung/Sicherheit."],
+["server","Lizenzierung Socket vs. Core?","Pro CPU-Sockel oder pro Kern (Windows Server min. 8 Kerne/CPU, 16/Server); je nach Kernanzahl günstiger."],
+["server","Hot Swap – warum?","Tausch im Betrieb ohne Abschalten → höhere Verfügbarkeit."],
+["server","Welcher Chip schützt vor nicht authentifizierter Firmware?","TPM (Trusted Platform Module)."],
+["server","Compression im Storage – Vorteil/Nachteil?","Spart Platz bei komprimierbaren Daten (Text, DB). Wenig Nutzen bei Video/JPG/ZIP, kostet CPU."],
+["db","ACID ausgeschrieben?","Atomicity, Consistency, Isolation, Durability."],
+["db","Primär- vs. Fremdschlüssel?","Primär: eindeutiger Bezeichner der Zeile. Fremd: Verweis auf Primärschlüssel einer anderen Tabelle."],
+["db","SQL: Alle Kunden aus Kiel sortiert.","SELECT * FROM kunde WHERE ort='Kiel' ORDER BY name;"],
+["db","ERD vs. PAP?","ERD: Datenmodell (Entitäten, Beziehungen). PAP: Programmablauf (Start, Anweisung, Verzweigung)."],
+["tools","Befehl um alle Hops bis zum Server zu prüfen?","Windows tracert, Linux traceroute (ping prüft nur Erreichbarkeit)."],
+["tools","Was macht sudo?","Führt einen Befehl mit Root-Rechten aus (superuser do)."],
+["tools","Was bedeutet TTL=64?","Time To Live: Hop-Limit, jeder Router zieht 1 ab, bei 0 verworfen. 64 = typischer Linux-Startwert (Windows 128)."],
+["tools","SNMP – Geräte, Transport?","Switch, Router, Server, Drucker, USV, AP; UDP (Port 161, Traps 162)."],
+["tools","S.M.A.R.T.?","Selbstüberwachung von Festplatten/SSDs, Früherkennung von Ausfällen."],
+["tools","Rollen im ITSM?","Kunde meldet, Helpdesk nimmt auf/löst einfache Fälle, IT-Spezialist analysiert schwierige Fälle, Administrator betreibt/konfiguriert."],
+["tools","Paraphrasieren vs. Verbalisieren?","Paraphrasieren: Inhalt mit eigenen Worten wiedergeben. Verbalisieren: Gefühle des Kunden benennen."],
+["begr","MTBF / TLC / DWPD / TBW / IOPS?","Mean Time Between Failures · Triple-Level Cell · Drive Writes Per Day · Terabytes Written · Input/Output Operations Per Second."],
+["begr","ESD – Bedeutung und Schutz?","Elektrostatische Entladung. ESD-Armband, -Matte, antistatische Verpackung."],
+["begr","Galvanische Trennung?","Keine leitende Verbindung (Trafo, Optokoppler, LWL) → schützt vor Potentialunterschieden/Störungen."],
+["begr","Speicherbedarf ASCII → UTF-16?","ASCII 1 Byte, UTF-16 mind. 2 Byte → etwa doppelt."],
+["begr","BYOD / QoS / LSA / TAE / APL?","Bring Your Own Device · Quality of Service · Lötfrei, Schraubenlos, Abisolierfrei · Telekommunikations-Anschluss-Einheit · Abschlusspunkt Linientechnik."],
+["begr","Sensor / Controller / Aktor?","Sensor erfasst Größe → Controller wertet aus → Aktor setzt um."],
+["begr","Case sensitive?","Groß-/Kleinschreibung wird unterschieden."]
+],
+gens:[
+{id:"speicher",title:"Videospeicher",gen:()=>{const k=ri(4,16),br=pick([2,4,6,8]),t=pick([7,14,30]);const mbd=br/8*86400;const tb=mbd*t*k/1e6;return{q:k+" Kameras, je "+br+" Mbit/s, 24 h Aufzeichnung, "+t+" Tage Aufbewahrung. Benötigter Speicher? (1 TB = 1 000 000 MB)",ans:tb,unit:"TB",sol:br+" ÷ 8 = "+fmt(br/8,2)+" MB/s · 86 400 s = "+fmt(mbd/1000,1)+" GB pro Kamera/Tag · × "+t+" Tage × "+k+" Kameras = "+fmt(tb,2)+" TB"}}},
+{id:"dauer",title:"Übertragungs-/Backupdauer",gen:()=>{const gb=pick([100,200,500,800,1000,2000]),r=pick([1,10]);const min=gb*8/r/60;return{q:"Backup von "+gb+" GB über "+r+" Gbit/s (theoretisch, ohne Overhead). Dauer in Minuten?",ans:min,unit:"min",dec:1,sol:gb+" GB · 8 = "+(gb*8)+" Gbit ÷ "+r+" Gbit/s = "+fmt(gb*8/r,0)+" s ÷ 60 = "+fmt(min,1)+" min"}}},
+{id:"ausfall",title:"Verfügbarkeit / Ausfallzeit",gen:()=>{const v=pick([99,99.5,99.9,99.95,99.99]);const m=(1-v/100)*525600;return{q:"Verfügbarkeit "+fmt(v,2)+" % pro Jahr (365 Tage). Wie viele Minuten Ausfall sind höchstens erlaubt?",ans:m,unit:"min",dec:1,sol:"1 Jahr = 525 600 min · "+fmt(100-v,2)+" % = "+fmt(m,1)+" min (≈ "+fmt(m/60,1)+" h)"}}},
+{id:"praefix",title:"Subnetting: Präfix",gen:()=>{const h=pick([10,25,50,100,200,500,1000]);let b=1;while(Math.pow(2,b)-2<h)b++;const p=32-b;return{q:"Subnetz für mindestens "+h+" Hosts. Welche Präfixlänge /n? (nur die Zahl n eingeben)",ans:p,unit:"= n",dec:0,tol:0.001,sol:"2^"+b+" − 2 = "+(Math.pow(2,b)-2)+" ≥ "+h+" → "+b+" Hostbits → 32 − "+b+" = /"+p}}},
+{id:"lastip",title:"Subnetting: letzte Host-IP",gen:()=>{const p=pick([25,26,27,28,29]);const size=Math.pow(2,32-p);const net=size*ri(0,256/size-1);const last=net+size-2;return{q:"Netz 192.168.10."+net+"/"+p+". Letztes Oktett der letzten nutzbaren Host-Adresse?",ans:last,unit:"",dec:0,tol:0.001,sol:"Blockgröße 2^"+(32-p)+" = "+size+" → Broadcast ."+(net+size-1)+" → letzte nutzbare ."+last}}},
+{id:"raid",title:"RAID-Kapazität",gen:()=>{const lv=pick([5,6,10,1]),c=pick([1,2,4,8,12]);let n,ans,f;if(lv==5){n=ri(3,8);ans=(n-1)*c;f="(n−1)·C"}else if(lv==6){n=ri(4,8);ans=(n-2)*c;f="(n−2)·C"}else if(lv==10){n=pick([4,6,8]);ans=n/2*c;f="n/2·C"}else{n=2;ans=c;f="C"}return{q:"RAID "+lv+" aus "+n+" Platten à "+c+" TB. Nutzbare Kapazität?",ans:ans,unit:"TB",dec:0,tol:0.001,sol:"RAID "+lv+": "+f+" = "+ans+" TB"}}},
+{id:"raidn",title:"RAID 5: Plattenanzahl",gen:()=>{const net=pick([8,12,16,24,32]),c=pick([2,4,8]);const d=Math.ceil(net/c);const n=Math.max(3,d+1);return{q:"Du brauchst "+net+" TB nutzbar mit RAID 5, Platten à "+c+" TB. Wie viele Platten mindestens?",ans:n,unit:"Platten",dec:0,tol:0.001,sol:net+" ÷ "+c+" = "+fmt(net/c,1)+" → "+d+" Datenplatten + 1 für Parität = "+(d+1)+(n>d+1?" (RAID 5 braucht mind. 3)":"")}}},
+{id:"poe",title:"PoE-Budget",gen:()=>{const a=ri(4,16),w1=pick([4,6,8,12]),b=ri(2,6),w2=pick([13,15,25]);const s=a*w1+b*w2;return{q:a+" Kameras à "+w1+" W und "+b+" Access Points à "+w2+" W (alles PoE). Mindest-PoE-Budget des Switches mit 20 % Reserve?",ans:s*1.2,unit:"W",dec:1,sol:a+"·"+w1+" + "+b+"·"+w2+" = "+s+" W · 1,2 = "+fmt(s*1.2,1)+" W"}}},
+{id:"lwl",title:"LWL-Dämpfung",gen:()=>{const L=pick([0.5,1,2,5,10]),att=pick([0.35,0.25]),wl=att==0.35?1310:1550,s=ri(1,3),p=ri(0,6);const a=L*att+s*0.5+p*0.1;return{q:"Singlemode "+fmt(L,1)+" km bei "+wl+" nm ("+fmt(att,2)+" dB/km), "+s+" Steckverbindungen à 0,5 dB, "+p+" Spleiße à 0,1 dB. Gesamtdämpfung?",ans:a,unit:"dB",dec:2,sol:fmt(L,1)+"·"+fmt(att,2)+" = "+fmt(L*att,2)+" + "+s+"·0,5 = "+fmt(s*0.5,2)+" + "+p+"·0,1 = "+fmt(p*0.1,2)+" → "+fmt(a,2)+" dB"}}}
+]};
+
+const $=id=>document.getElementById(id);
+const KEY="ap2v2-"+DATA.key;
+let store={};try{store=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+store.c=store.c||{};store.g=store.g||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function dstr(add){const d=new Date();d.setDate(d.getDate()+(add||0));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+const INT={1:0,2:1,3:3};
+function hid(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return "c"+h}
+const SEC={};DATA.sections.forEach(s=>SEC[s.id]=s);
+DATA.cards.forEach(c=>{c.id=hid(c[1])});
+const PL={M:"MUSS",S:"SOLL",K:"KANN"};
+// helpers für Generatoren
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=(x,d)=>(+x).toFixed(d==null?2:d).replace(".",",");
+// Stoff
+$("secs").innerHTML=DATA.sections.map(s=>'<section class="s" id="s-'+s.id+'"><h2>'+s.title+'<span class="pri p'+s.p+'">'+PL[s.p]+'</span></h2>'+s.html+'</section>').join("");
+$("chips").innerHTML=DATA.sections.map(s=>'<a data-id="'+s.id+'">'+s.title+'<span class="pri p'+s.p+'">'+s.p+'</span></a>').join("");
+$("chips").onclick=e=>{const a=e.target.closest("a");if(a)$("s-"+a.dataset.id).scrollIntoView({behavior:"smooth"})};
+// Tabs
+function tab(n){for(let i=1;i<=4;i++){$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)}window.scrollTo(0,0);if(n==2)build();if(n==3&&!gcur)newQ();if(n==4)probeHome()}
+for(let i=1;i<=4;i++)$("t"+i).onclick=()=>tab(i);
+// ---------- Karten (Leitner) ----------
+$("fs").innerHTML='<option value="all">Alle Themen</option>'+DATA.sections.filter(s=>DATA.cards.some(c=>c[0]==s.id)).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join("");
+let queue=[],pos=0,shuffled=false;
+const isDue=c=>{const s=store.c[c.id];return !s||s.d<=dstr()};
+function build(){
+ const fs=$("fs").value,fm=$("fm").value,mu=$("fmu").checked;
+ queue=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M")&&(fm=="all"||(fm=="b1"?(store.c[c.id]&&store.c[c.id].b==1):isDue(c))));
+ if(shuffled)queue.sort(()=>Math.random()-.5);
+ pos=0;render();
+}
+function stats(){
+ const fs=$("fs").value,mu=$("fmu").checked,pool=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M"));
+ let n=0,b1=0,b2=0,b3=0,due=0;
+ pool.forEach(c=>{const s=store.c[c.id];if(!s)n++;else if(s.b==1)b1++;else if(s.b==2)b2++;else b3++;if(isDue(c))due++});
+ $("pb").style.width=(pool.length?b3/pool.length*100:0)+"%";
+ $("st").textContent="Neu "+n+" · Box 1: "+b1+" · Box 2: "+b2+" · Box 3 (sitzt): "+b3+" — heute fällig: "+due+" von "+pool.length;
+}
+function render(){
+ stats();
+ if(!queue.length||pos>=queue.length){$("deck").innerHTML='<div class="done">'+(queue.length?'Runde geschafft 🎉 Pause machen, später „Heute fällig" erneut öffnen.':'Nichts fällig in dieser Auswahl. 👍')+'</div>';return}
+ const c=queue[pos],sec=SEC[c[0]],s=store.c[c.id];
+ $("deck").innerHTML='<div class="fc" id="fc"><div class="in"><div class="face"><div class="tag">'+sec.title+' · '+PL[sec.p]+' · '+(s?'Box '+s.b:'neu')+' · noch '+(queue.length-pos)+'</div><div class="q">'+c[1]+'</div></div><div class="face back"><div class="tag">Antwort</div><div class="a">'+c[2]+'</div></div></div></div><div class="hint">Erst selbst antworten, dann umdrehen</div><div class="act"><button class="n" id="bn">✗ Falsch</button><button class="p" id="bp">Weiter</button><button class="k" id="bk">✓ Gewusst</button></div>';
+ $("fc").onclick=()=>$("fc").classList.toggle("flip");
+ $("bk").onclick=()=>mark(true);$("bn").onclick=()=>mark(false);$("bp").onclick=()=>{pos++;render()};
+}
+function setBox(c,ok){const s=store.c[c.id];const b=ok?Math.min(3,(s?s.b:1)+1):1;store.c[c.id]={b:b,d:dstr(INT[b])}}
+function mark(ok){const c=queue[pos];setBox(c,ok);save();if(!ok){const at=Math.min(queue.length,pos+5);queue.splice(at,0,c)}pos++;render()}
+$("fs").onchange=$("fm").onchange=$("fmu").onchange=build;
+$("sh").onclick=()=>{shuffled=true;build()};
+$("rs").onclick=()=>{if($("rs").dataset.sure){store.c={};save();delete $("rs").dataset.sure;$("rs").textContent="Zurücksetzen";build()}else{$("rs").dataset.sure=1;$("rs").textContent="Sicher? Nochmal tippen"}};
+document.addEventListener("keydown",e=>{const f=$("fc");if(!f||$("v2").classList.contains("hide"))return;if(e.key==" "){e.preventDefault();f.classList.toggle("flip")}if(e.key=="ArrowRight")mark(true);if(e.key=="ArrowLeft")mark(false)});
+// ---------- Rechnen ----------
+$("gs").innerHTML='<option value="mix">🔀 Mix (alle Typen gemischt)</option>'+DATA.gens.map(g=>'<option value="'+g.id+'">'+g.title+'</option>').join("");
+let gcur=null;
+function genQ(g){const q=g.gen();q.g=g;return q}
+function parseNum(v){return parseFloat(String(v).trim().replace(/\s/g,"").replace(",","."))}
+function check(q,v){const x=parseNum(v);if(isNaN(x))return false;const tol=q.tol||0.02;return Math.abs(x-q.ans)<=Math.max(Math.abs(q.ans)*tol,q.abs||0.0005)}
+function qHtml(q,idp){return '<div class="cq"><div class="tag">'+q.g.title+'</div><div class="q">'+q.q+'</div><input id="'+idp+'in" inputmode="decimal" autocomplete="off"> <b>'+(q.unit||"")+'</b><br><button class="btn" id="'+idp+'ok" style="margin-top:10px">Prüfen</button><div id="'+idp+'res"></div></div>'}
+function showRes(q,idp,ok){$(idp+"res").innerHTML='<div class="res '+(ok?'ok':'bad')+'"><b>'+(ok?'✓ Richtig':'✗ Nicht ganz')+'</b> – Ergebnis: <b>'+fmt(q.ans,q.dec==null?2:q.dec)+' '+(q.unit||"")+'</b><div style="margin-top:6px">'+q.sol+'</div></div>'}
+function newQ(){
+ const sel=$("gs").value;
+ const g=sel=="mix"?pick(DATA.gens):DATA.gens.find(x=>x.id==sel);
+ gcur=genQ(g);
+ $("gq").innerHTML=qHtml(gcur,"g");
+ const go=()=>{const ok=check(gcur,$("gin").value);const st=store.g[g.id]=store.g[g.id]||{r:0,n:0};st.n++;if(ok)st.r++;save();showRes(gcur,"g",ok);$("gok").textContent="Nächste Aufgabe";$("gok").onclick=newQ;gstat()};
+ $("gok").onclick=go;$("gin").onkeydown=e=>{if(e.key=="Enter")go()};
+ gstat();
+}
+function gstat(){$("gstat").innerHTML="Trefferquote: "+DATA.gens.map(g=>{const s=store.g[g.id];return g.title+" "+(s?s.r+"/"+s.n:"–")}).join(" · ")}
+$("gs").onchange=newQ;$("gn").onclick=newQ;
+// ---------- Probe ----------
+let P=null,ptimer=null;
+function probeHome(){
+ if(P&&!P.done){probeRender();return}
+ const nm=DATA.cards.length;
+ $("pv").innerHTML='<div class="cq"><div class="q">Probeklausur</div><p>Gemischte Fragen aus allen Themen (MUSS-Themen häufiger), dazu Rechenaufgaben, mit Zeitdruck wie in der Prüfung. Karten bewertest du ehrlich selbst. Falsche Karten landen automatisch in Box 1.</p><div class="bar"><label>Karten <select id="pn"><option>10</option><option selected>15</option><option>25</option></select></label><label>Rechnen <select id="pr"><option>3</option><option selected>5</option><option>8</option></select></label><label>Minuten <select id="pm"><option>20</option><option selected>40</option><option>60</option></select></label></div><button class="btn" id="pstart">Start</button></div><div id="plast"></div>';
+ $("pstart").onclick=probeStart;
+ if(store.last)$("plast").innerHTML='<div class="sm" style="margin-top:12px">Letzte Probe: '+store.last.s+' von '+store.last.t+' Punkten ('+store.last.d+')</div>';
+}
+function probeStart(){
+ const nc=+$("pn").value,nr=+$("pr").value,min=+$("pm").value;
+ const w=c=>SEC[c[0]].p=="M"?3:SEC[c[0]].p=="S"?2:1;
+ let pool=[];DATA.cards.forEach(c=>{for(let i=0;i<w(c);i++)pool.push(c)});
+ pool.sort(()=>Math.random()-.5);
+ const cards=[];for(const c of pool){if(!cards.includes(c))cards.push(c);if(cards.length>=nc)break}
+ const items=cards.map(c=>({t:"c",c:c}));
+ for(let i=0;i<nr;i++){const g=DATA.gens[i%DATA.gens.length];items.push({t:"g",q:genQ(DATA.gens.length>nr?pick(DATA.gens):g)})}
+ items.sort(()=>Math.random()-.5);
+ P={items:items,i:0,score:0,fails:[],end:Date.now()+min*60000,done:false,rev:false};
+ clearInterval(ptimer);ptimer=setInterval(tick,500);
+ probeRender();
+}
+function tick(){if(!P||P.done){clearInterval(ptimer);return}const left=P.end-Date.now();const el=$("ptm");if(el){const m=Math.max(0,Math.floor(left/60000)),s=Math.max(0,Math.floor(left/1000)%60);el.textContent=m+":"+String(s).padStart(2,"0")}if(left<=0)probeFinish()}
+function probeRender(){
+ if(P.i>=P.items.length){probeFinish();return}
+ const it=P.items[P.i];
+ let h='<div class="timer">⏱ <span id="ptm"></span> · Frage '+(P.i+1)+'/'+P.items.length+'</div>';
+ if(it.t=="c"){
+  h+='<div class="cq"><div class="tag">'+SEC[it.c[0]].title+'</div><div class="q">'+it.c[1]+'</div><div id="pa"></div><button class="btn" id="prev" style="margin-top:10px">Antwort zeigen</button></div>';
+  $("pv").innerHTML=h;
+  $("prev").onclick=()=>{$("pa").innerHTML='<div class="res bad" style="background:var(--box);color:var(--ink)">'+it.c[2]+'</div>';$("prev").outerHTML='<div class="act"><button class="n" id="pn1">✗ Falsch</button><button class="k" id="pk1">✓ Richtig</button></div>';
+   $("pk1").onclick=()=>{P.score++;P.i++;probeRender()};$("pn1").onclick=()=>{P.fails.push(it);P.i++;probeRender()}};
+ }else{
+  h+=qHtml(it.q,"p");$("pv").innerHTML=h;
+  const go=()=>{const ok=check(it.q,$("pin").value);if(ok)P.score++;else P.fails.push(it);showRes(it.q,"p",ok);$("pok").textContent="Weiter";$("pok").onclick=()=>{P.i++;probeRender()}};
+  $("pok").onclick=go;$("pin").onkeydown=e=>{if(e.key=="Enter")go()};
+ }
+ tick();
+}
+function probeFinish(){
+ P.done=true;clearInterval(ptimer);
+ const total=P.items.length;
+ P.fails.forEach(f=>{if(f.t=="c")setBox(f.c,false)});
+ store.last={s:P.score,t:total,d:dstr()};save();
+ const pct=Math.round(P.score/total*100);
+ let h='<div class="cq"><div class="q">Ergebnis: '+P.score+' / '+total+' ('+pct+' %)</div><p>'+(pct>=75?'Stark, das sitzt.':pct>=50?'Bestehensgrenze ist 50 %: jetzt gezielt die Fehler schließen.':'Unter 50 %: Fehlerkarten (Box 1) heute noch durchgehen und danach nochmal Probe.')+'</p>';
+ const fc=P.fails.filter(f=>f.t=="c");
+ if(fc.length)h+='<h3>Falsche Karten (jetzt in Box 1)</h3>'+fc.map(f=>'<div style="margin:8px 0"><b>'+f.c[1]+'</b><br>'+f.c[2]+'</div>').join("");
+ const fg=P.fails.filter(f=>f.t=="g");
+ if(fg.length)h+='<h3>Falsche Rechnungen</h3>'+fg.map(f=>'<div style="margin:8px 0"><b>'+f.q.g.title+'</b>: '+f.q.q+'<br>→ '+fmt(f.q.ans,f.q.dec==null?2:f.q.dec)+' '+(f.q.unit||"")+'<div class="sm">'+f.q.sol+'</div></div>').join("");
+ h+='<button class="btn" id="pagain" style="margin-top:10px">Neue Probe</button></div>';
+ $("pv").innerHTML=h;$("pagain").onclick=()=>{P=null;probeHome()};
+}
+</script>
+</body>
+</html>

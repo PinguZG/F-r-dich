@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elektrotechnik – AP2 Lernmappe</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a64;--line:#e2e0d8;--acc:#c25b00;--accbg:#fdf1e6;--ok:#1f8a4c;--bad:#c0392b;--box:#fff7d6;--boxl:#e9b800;--ex:#e8f1fb;--exl:#2b6cb0;--warn:#fdeaea;--warnl:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--ink:#ecebe6;--mut:#a5a39a;--line:#37362f;--accbg:#2a2a28;--box:#3a3418;--ex:#1b2a3a;--warn:#3a1f1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--acc);color:#fff;padding:22px 18px 14px}
+header h1{margin:0;font-size:1.5rem}
+header p{margin:4px 0 0;opacity:.9;font-size:.95rem}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px 60px}
+.tabs{display:flex;gap:6px;margin:10px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tabs button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:.92rem;cursor:pointer;font-weight:600}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chips a{font-size:.82rem;padding:5px 10px;border-radius:99px;background:var(--accbg);color:var(--ink);border:1px solid var(--line);cursor:pointer}
+.pri{display:inline-block;font-size:.68rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;color:#fff}
+.pM{background:var(--bad)}.pS{background:#d68a00}.pK{background:var(--mut)}
+section.s{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 18px 14px;margin-bottom:16px}
+section.s h2{font-size:1.2rem;margin:14px 0 6px;color:var(--acc);border-bottom:2px solid var(--acc);padding-bottom:4px}
+section.s h3{font-size:1rem;margin:16px 0 4px}
+.box,.ex,.warn{border-left:5px solid;border-radius:8px;padding:8px 12px;margin:10px 0}
+.box{background:var(--box);border-color:var(--boxl)}.ex{background:var(--ex);border-color:var(--exl)}.warn{background:var(--warn);border-color:var(--warnl)}
+.box b.t,.ex b.t,.warn b.t{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.f{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--accbg);border:1px solid var(--line);border-radius:8px;padding:7px 11px;margin:8px 0;display:block;overflow-x:auto;font-size:.93rem}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}th{background:var(--accbg)}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:2px 0}
+.hide{display:none}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bar select,.bar button,.bar label{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.9rem;cursor:pointer}
+.bar label{display:flex;gap:6px;align-items:center}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 4px}
+.prog i{display:block;height:100%;background:var(--ok);width:0}
+.stat{font-size:.85rem;color:var(--mut);margin-bottom:10px}
+.fc{perspective:1000px;margin:8px 0}
+.fc .in{position:relative;min-height:270px;transition:transform .45s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.face.back{transform:rotateY(180deg);border-color:var(--acc);justify-content:flex-start}
+.tag{font-size:.75rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.q{font-size:1.15rem;font-weight:600}.a{font-size:1rem}
+.hint{text-align:center;color:var(--mut);font-size:.8rem;margin-top:6px}
+.act{display:flex;gap:10px;margin-top:12px}
+.act button,.btn{padding:13px;border-radius:12px;border:0;font-size:1rem;font-weight:700;color:#fff;cursor:pointer;background:var(--acc)}
+.act button{flex:1}
+.act .k{background:var(--ok)}.act .n{background:var(--bad)}.act .p{background:var(--mut);flex:.5}
+.done{text-align:center;padding:40px 10px;color:var(--mut)}
+.cq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.cq .q{font-size:1.05rem;font-weight:500}
+.cq input{width:130px;padding:10px;font-size:1.05rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin:10px 8px 0 0}
+.res{margin-top:12px;padding:10px 12px;border-radius:10px}
+.res.ok{background:#e3f4e9;color:#12512c}.res.bad{background:var(--warn);color:var(--ink)}
+@media(prefers-color-scheme:dark){.res.ok{background:#173323;color:#bfe8cd}}
+.timer{font-size:1.3rem;font-weight:800;color:var(--acc);margin:6px 0}
+.sm{font-size:.8rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<header><h1>Elektrotechnik – AP2 Lernmappe</h1><p>IT-Systemelektroniker · Anbindung von Geräten, Systemen und Betriebsmitteln an die Stromversorgung · Pflichtbereich: mind. „ausreichend“</p></header>
+<div class="wrap">
+<div class="tabs"><button id="t1" class="on">📓 Stoff</button><button id="t2">🃏 Karten</button><button id="t3">🧮 Rechnen</button><button id="t4">📝 Probe</button></div>
+<div id="v1"><div class="sm" style="margin-bottom:8px"><span class="pri pM">MUSS</span> prüfungsnah, zuerst · <span class="pri pS">SOLL</span> wichtig · <span class="pri pK">KANN</span> nur bei Zeit</div><div class="chips" id="chips"></div><div id="secs"></div></div>
+<div id="v2" class="hide">
+ <div class="bar">
+  <select id="fs"></select>
+  <select id="fm"><option value="due">Heute fällig + neu</option><option value="b1">Box 1 (Fehlerliste)</option><option value="all">Alle</option></select>
+  <label><input type="checkbox" id="fmu"> nur MUSS</label>
+  <button id="sh">🔀 Mischen</button><button id="rs">Zurücksetzen</button>
+ </div>
+ <div class="prog"><i id="pb"></i></div><div class="stat" id="st"></div>
+ <div id="deck"></div>
+ <div class="sm" style="margin-top:14px">Leitner: richtig → nächste Box (Box 2 wieder nach 1 Tag, Box 3 nach 3 Tagen). Falsch → zurück in Box 1 und noch mal in dieser Runde. Ziel: alles in Box 3.</div>
+</div>
+<div id="v3" class="hide">
+ <div class="bar"><select id="gs"></select><button id="gn">Neue Aufgabe</button></div>
+ <div id="gq"></div>
+ <div class="sm" id="gstat" style="margin-top:14px"></div>
+</div>
+<div id="v4" class="hide"><div id="pv"></div></div>
+</div>
+<script>
+const DATA={key:"elek",
+sections:[
+{id:"netz",p:"M",title:"1 · Netzsysteme",html:`
+<div class="box"><b class="t">Kennbuchstaben</b>1. Buchstabe = Erdung der <b>Quelle</b>: T (direkt geerdet), I (isoliert/hochohmig). 2. Buchstabe = Erdung der <b>Körper</b> (Gehäuse): T (eigener Erder), N (über Neutralleiter/PE zur Quelle). C = kombiniert (PEN), S = getrennt (N und PE).</div>
+<table><tr><th>System</th><th>Aufbau</th><th>Merkmal</th></tr>
+<tr><td>TN-C</td><td>PEN (Schutz- + Neutralleiter in einem)</td><td>spart eine Ader; Gebäudeinstallation nur im Hausanschluss</td></tr>
+<tr><td>TN-S</td><td>N und PE getrennt (5-Leiter L1 L2 L3 N PE)</td><td>EMV-günstig, Standard in der IT/Neuinstallation</td></tr>
+<tr><td>TN-C-S</td><td>erst PEN, ab Hausanschluss getrennt</td><td>häufigstes Netz in Wohngebäuden</td></tr>
+<tr><td>TT</td><td>Körper mit eigenem Erder</td><td>RCD zwingend (Erdungswiderstand zu groß für LS)</td></tr>
+<tr><td>IT</td><td>Quelle isoliert/hochohmig geerdet</td><td>1. Fehler: nur Meldung (Isolationsüberwachung), Anlage läuft weiter (Krankenhaus, Prozessanlagen)</td></tr></table>`},
+
+{id:"schutz",p:"M",title:"2 · Schutzeinrichtungen & Schlüsse",html:`
+<h3>Leitungsschutzeinrichtungen</h3>
+<ul><li><b>LS-Schalter:</b> Überlast (thermisch, Bimetall) + Kurzschluss (magnetisch). Charakteristik: <b>B</b> 3–5·In (Leitungsschutz Haus), <b>C</b> 5–10·In (Motoren, Netzteile), <b>D</b> 10–20·In (Trafos)</li><li><b>Schmelzsicherung</b> (Diazed, NH): Überlast + Kurzschluss, muss nach Auslösen getauscht werden</li><li><b>RCD (FI):</b> Fehlerstrom; 30 mA Personenschutz, 300 mA Brandschutz. Schützt nicht vor Überlast/Kurzschluss. Typ A, F, B (B bei Gleichstrom-Fehlerstrom, z. B. Wallbox/Frequenzumrichter).</li><li><b>Überspannungsschutz (SPD)</b> Typ 1/2/3 · <b>AFDD</b> Lichtbogenerkennung</li></ul>
+<div class="box"><b class="t">Bedingung Leitungsschutz</b><b>I<sub>B</sub> ≤ I<sub>n</sub> ≤ I<sub>z</sub></b> (Betriebsstrom ≤ Nennstrom Schutzorgan ≤ Strombelastbarkeit der Leitung)</div>
+<h3>Schlüsse</h3>
+<table><tr><th>Begriff</th><th>Bedeutung</th></tr><tr><td>Kurzschluss</td><td>direkte Verbindung zwischen Leitern ohne Widerstand (L–N, L–L), sehr hoher Strom</td></tr><tr><td>Körperschluss</td><td>aktiver Leiter berührt leitfähiges Gehäuse (Körper) → Gehäuse unter Spannung, Gefahr! (RCD/Schutzleiter)</td></tr><tr><td>Erdschluss</td><td>Außenleiter hat Verbindung zur Erde</td></tr><tr><td>Leiterschluss</td><td>Verbindung zwischen Außenleitern (mit Widerstand)</td></tr><tr><td>Windungsschluss</td><td>Schluss zwischen Windungen einer Spule/Wicklung</td></tr></table>`},
+
+{id:"rechnen",p:"M",title:"3 · Stromaufnahme, Querschnitt, Spannungsfall",html:`
+<h3>Stromaufnahme</h3>
+<span class="f">1-phasig: I = P ÷ (U · cos φ)    3-phasig: I = P ÷ (√3 · U · cos φ)</span>
+<div class="ex"><b class="t">Beispiel</b>Drehstrommotor 11 kW, 400 V, cos φ = 0,85: I = 11 000 ÷ (1,732 · 400 · 0,85) = <b>18,7 A</b></div>
+<p>Leistungen: P Wirkleistung (W), S Scheinleistung (VA) = U·I, Q Blindleistung (var), P = S · cos φ.</p>
+<h3>Leiterquerschnitt aus Spannungsfall</h3>
+<span class="f">1-phasig: A = (2 · l · I · cos φ) ÷ (κ · ΔU)    3-phasig: A = (√3 · l · I · cos φ) ÷ (κ · ΔU)</span>
+<p>κ Kupfer = 56 m/(Ω·mm²) · l einfache Länge in m · ΔU zulässiger Spannungsfall in V (3 % von 230 V = 6,9 V)</p>
+<div class="ex"><b class="t">Beispiel</b>230 V, l = 30 m, I = 16 A, ΔU = 3 %: A = 2·30·16 ÷ (56·6,9) = 960 ÷ 386,4 = 2,48 mm² → <b>2,5 mm²</b></div>
+<p>Dann zusätzlich Strombelastbarkeit I<sub>z</sub> aus Tabelle (DIN VDE 0298-4) für die Verlegeart prüfen. Faustwerte: 1,5 mm² ↔ 16 A, 2,5 mm² ↔ 16/20 A, 4 mm² ↔ 25 A, 6 mm² ↔ 32 A. Es gilt der <b>größere</b> der beiden erforderlichen Querschnitte (Spannungsfall vs. Strombelastbarkeit), dann auf die nächste Normgröße aufrunden (1,5 / 2,5 / 4 / 6 / 10 / 16).</p>
+<h3>Spannungsfall</h3>
+<span class="f">ΔU = (2 · l · I · cos φ) ÷ (κ · A)     Δu % = ΔU ÷ U · 100</span>
+<div class="ex"><b class="t">Beispiel</b>l = 30 m, I = 16 A, A = 2,5 mm²: ΔU = 960 ÷ (56·2,5) = 6,86 V → 6,86 ÷ 230 = <b>2,98 %</b> ≤ 3 % ✓</div>
+<div class="box"><b class="t">DIN 18015-1</b>Spannungsfall zwischen Zähler und Verbrauchsgerät maximal <b>3 %</b>.</div>`},
+
+{id:"leitung",p:"M",title:"4 · Leitungen & Verlegung",html:`
+<h3>Leitungsbezeichnung</h3>
+<table><tr><th>Bezeichnung</th><th>Bedeutung</th></tr><tr><td><b>NYM-J 3×1,5</b></td><td>N = nach VDE-Norm · Y = PVC-Isolierung · M = Mantelleitung · J = mit grün-gelbem Schutzleiter (O = ohne) · 3 Adern · 1,5 mm²</td></tr><tr><td><b>H07V-K</b></td><td>H = harmonisiert · 07 = 450/750 V · V = PVC · K = feindrähtig (flexibel); -U eindrähtig, -R mehrdrähtig</td></tr><tr><td><b>H05VV-F</b></td><td>300/500 V · PVC-Isolierung + PVC-Mantel · F = feindrähtig (flexible Anschlussleitung)</td></tr><tr><td>NYY-J</td><td>Erdkabel/Außen: PVC-Isolierung, PVC-Mantel</td></tr></table>
+<h3>Verlegearten (DIN VDE 0298-4)</h3>
+<ul><li><b>A1/A2:</b> Rohr/Mantelleitung in wärmegedämmter Wand</li><li><b>B1/B2:</b> Rohr/Kanal auf oder in der Wand</li><li><b>C:</b> direkt auf/in der Wand (Mantelleitung)</li><li><b>E/F:</b> in Luft, z. B. perforierte Kabelrinne / Kabelleiter, beste Wärmeabfuhr → höhere Strombelastbarkeit</li><li><b>D:</b> im Erdreich</li></ul>
+<p>Je schlechter die Wärmeabfuhr (gedämmte Wand, Häufung), desto geringer die Strombelastbarkeit.</p>
+<h3>EMV-konforme Verlegung Energie- und Datenleitungen</h3>
+<ul><li>Energie und Daten <b>getrennt führen</b>: Abstand nach EN 50174-2 <b>oder</b> metallischer Trennsteg in der Kabelrinne (geerdet, mit der Rinne verbunden)</li><li>Kreuzungen <b>rechtwinklig</b>, nicht parallel über lange Strecken</li><li>geschirmte Datenleitung, Schirm beidseitig und großflächig auflegen, Metallrinne durchgehend geerdet</li><li>Starke Störquellen meiden (Frequenzumrichter, Leuchtstoffleuchten, Motoren)</li></ul>
+<h3>Halogenfreie Leitungen</h3>
+<p>Im Brandfall entstehen keine korrosiven/giftigen Gase (Halogenwasserstoffe, Salzsäure), geringe Rauchdichte → Personen und Geräte werden geschützt, bessere Fluchtbedingungen. Pflicht in Fluchtwegen/öffentlichen Gebäuden.</p>
+<h3>Koax vs. symmetrisches Kupfer (Twisted Pair)</h3>
+<table><tr><th></th><th>Koax</th><th>Twisted Pair</th></tr><tr><td>Vorteile</td><td>sehr gute Schirmung, hohe Frequenzen (Antenne, Breitband), Störfestigkeit</td><td>günstig, flexibel, dünn, strukturierte Verkabelung, einfach zu konfektionieren</td></tr><tr><td>Nachteile</td><td>dick, steif, teuer, aufwändige Stecker, nicht für strukturierte Verkabelung</td><td>weniger Schirmung, 100 m Reichweite</td></tr></table>`},
+
+{id:"pruef",p:"M",title:"5 · Sicherheit & Prüfung",html:`
+<h3>5 Sicherheitsregeln (in dieser Reihenfolge)</h3>
+<ol><li><b>Freischalten</b></li><li>Gegen <b>Wiedereinschalten sichern</b></li><li><b>Spannungsfreiheit allpolig feststellen</b></li><li><b>Erden und Kurzschließen</b></li><li>Benachbarte unter Spannung stehende Teile <b>abdecken oder abschranken</b></li></ol>
+<div class="box"><b class="t">Regel 3: Messgerät</b>Zweipoliger Spannungsprüfer (nach DIN EN 61243-3), <b>kein</b> einpoliger Phasenprüfer/Lichtbogen-Schraubendreher und kein Multimeter. Vor und nach der Messung an einer bekannten Spannungsquelle <b>Funktionsprobe</b>. Allpolig: L–N, L–PE, N–PE.</div>
+<h3>Spannungen an der Steckdose</h3>
+<p>L–N <b>230 V</b>, L–PE ≈ 230 V, N–PE ≈ 0 V · zwischen zwei Außenleitern (Drehstrom): <b>400 V</b></p>
+<h3>Anlagenprüfung (DIN VDE 0100-600)</h3>
+<p>Reihenfolge: <b>Besichtigen → Erproben → Messen</b>, Ergebnisse im <b>Prüfprotokoll</b>.</p>
+<table><tr><th>Spannungsfrei</th><th>Unter Spannung</th></tr><tr><td>Durchgängigkeit Schutzleiter und Potentialausgleich</td><td>Schleifenimpedanz / Abschaltbedingung</td></tr><tr><td>Isolationswiderstand (500 V DC, ≥ 1 MΩ)</td><td>RCD-Prüfung (Auslösestrom/-zeit)</td></tr><tr><td>Polarität</td><td>Drehfeld, Spannungspolarität, Erdungswiderstand</td></tr></table>
+<h3>Kurzschlussstrom und Abschaltstrom</h3>
+<span class="f">I<sub>k</sub> = U<sub>0</sub> ÷ Z<sub>s</sub> (Schleifenimpedanz)</span>
+<div class="ex"><b class="t">Beispiel</b>Z<sub>s</sub> = 0,46 Ω → I<sub>k</sub> = 230 ÷ 0,46 = <b>500 A</b></div>
+<span class="f">Abschaltbedingung: Z<sub>s</sub> · I<sub>a</sub> ≤ U<sub>0</sub> → Z<sub>s</sub> ≤ U<sub>0</sub> ÷ I<sub>a</sub></span>
+<div class="ex"><b class="t">Beispiel</b>B16: I<sub>a</sub> = 5 · 16 = 80 A → Z<sub>s</sub> ≤ 230 ÷ 80 = <b>2,88 Ω</b> · C16: I<sub>a</sub> = 160 A → Z<sub>s</sub> ≤ 1,44 Ω</div>
+<p>Abschaltzeit TN-System: ≤ <b>0,4 s</b> (Endstromkreise ≤ 32 A, 230 V), ≤ 5 s Verteilerstromkreise.</p>`},
+
+{id:"usv",p:"M",title:"6 · USV",html:`
+<table><tr><th>Art</th><th>Prinzip</th><th>Umschaltzeit</th></tr>
+<tr><td><b>Offline / Standby (VFD)</b></td><td>Last direkt am Netz, bei Ausfall Umschaltung auf Wechselrichter</td><td>wenige ms</td></tr>
+<tr><td><b>Line-Interactive (VI)</b></td><td>wie Offline + Spannungsregelung (AVR)</td><td>wenige ms</td></tr>
+<tr><td><b>Online / Doppelwandler (VFI)</b></td><td>Netz → Gleichrichter → Wechselrichter → Last, Akku am Zwischenkreis</td><td><b>0 ms</b>, höchste Qualität</td></tr></table>
+<div class="box"><b class="t">Netzbetrieb / Netzausfall (Online-USV)</b>Netzbetrieb: Gleichrichter speist Wechselrichter und lädt den Akku, Last ist ständig vom Wechselrichter versorgt. Netzausfall: Akku übernimmt <i>ohne Unterbrechung</i> die Versorgung des Wechselrichters bis Akku leer oder Generator startet.</div>
+<h3>Scheinleistung berechnen</h3>
+<span class="f">S (VA) = P (W) ÷ cos φ   (+ Reserve 20–30 %)</span>
+<div class="ex"><b class="t">Beispiel</b>Verbraucher 1 800 W, cos φ 0,9: S = 2 000 VA, mit 25 % Reserve = <b>2 500 VA</b></div>
+<h3>Anschlussvarianten ans Netz</h3>
+<ul><li><b>1-phasig:</b> 230 V (L, N, PE) · <b>3-phasig:</b> 400 V (L1, L2, L3, N, PE), Drehstrom für große USV</li></ul>
+<h3>Weitere Fragen</h3>
+<ul><li><b>Absichern:</b> Server, Storage/NAS, Core-Switch, Firewall/Router, Telefonanlage, Zutrittskontrolle, Videoüberwachung</li><li><b>Zwei Einspeisungen (Hauptverteilungen):</b> Redundanz – fällt eine Einspeisung aus, versorgt die andere weiter (kein Single Point of Failure).</li><li><b>Wartungs-Bypass:</b> Last wird um die USV herum direkt ans Netz gelegt → Wartung ohne Abschaltung der Verbraucher.</li><li>Spannungsfall in V und % wie in Kapitel 3 berechnen.</li></ul>`},
+
+{id:"selv",p:"M",title:"7 · SELV/PELV, IP-Schutzarten",html:`
+<table><tr><th></th><th>Spannung</th><th>Merkmal</th></tr><tr><td><b>SELV</b></td><td>≤ 50 V AC / 120 V DC</td><td>sicher getrennt (Sicherheitstransformator), <b>nicht geerdet</b>, keine Verbindung zu PE</td></tr><tr><td><b>PELV</b></td><td>≤ 50 V AC / 120 V DC</td><td>sicher getrennt wie SELV, aber <b>geerdet</b> (mit Schutzleiter verbunden)</td></tr><tr><td>FELV</td><td>≤ 50 V</td><td>nicht sicher getrennt, Schutzmaßnahmen nötig</td></tr></table>
+<h3>IP-Schutzart (IP + 2 Ziffern)</h3>
+<table><tr><th>1. Ziffer (Fremdkörper/Berührung)</th><th>2. Ziffer (Wasser)</th></tr><tr><td>0 kein Schutz · 2 Finger · 4 Draht &gt; 1 mm · 5 staubgeschützt · <b>6 staubdicht</b></td><td>0 kein Schutz · 4 Spritzwasser · 5 Strahlwasser · 6 starkes Strahlwasser · <b>7 zeitweises Untertauchen (1 m, 30 min)</b> · 8 dauerndes Untertauchen</td></tr></table>
+<div class="ex"><b class="t">IP67</b>staubdicht + zeitweises Untertauchen. Eignung begründen: Büro → IP20 reicht; Außen/Werkhalle/Waschplatz → IP65/IP67 nötig.</div>`},
+
+{id:"sensor",p:"S",title:"8 · Sensoren, Protokoll, Übertragung",html:`
+<ul><li><b>Sensor</b> erfasst eine physikalische Größe und wandelt sie in ein elektrisches Signal (z. B. 0–10 V oder 4–20 mA). <b>Controller</b> (eingebettete Software) wertet aus, <b>Aktor</b> setzt um (Motor, Ventil, Relais).</li><li><b>Aktiv:</b> liefert selbst ein elektrisches Signal (z. B. Thermoelement, Piezo, Fotodiode). <b>Passiv:</b> ändert nur Widerstand/Kapazität/Induktivität (z. B. PT100, NTC) und braucht Hilfsspannung/Auswerteschaltung. <i>Achtung: manche Lehrbücher definieren es umgekehrt, die Definition aus der Aufgabe/Aufgabenstellung nehmen.</i></li><li>4–20 mA: 4 mA = Messbereichsanfang, 0 mA = Drahtbruch erkennbar</li><li><b>Übertragungsprotokoll:</b> Merkmale benennen: Adressierung, Fehlererkennung, Verbindungsorientierung (TCP) vs. verbindungslos (UDP), Datenrate, Topologie. (Welches Protokoll gefragt wurde, steht nicht in deiner Liste.)</li></ul>`},
+
+{id:"poe",p:"S",title:"9 · PoE-Berechnung",html:`
+<span class="f">PoE-Budget ≥ Σ Portleistung aller PDs (+ ca. 20 % Reserve)</span>
+<table><tr><th>Standard</th><th>PSE</th><th>PD</th></tr><tr><td>802.3af</td><td>15,4 W</td><td>12,95 W</td></tr><tr><td>802.3at</td><td>30 W</td><td>25,5 W</td></tr><tr><td>802.3bt</td><td>60 / 90 W</td><td>51 / 71,3 W</td></tr></table>
+<div class="ex"><b class="t">Beispiel</b>12 Kameras à 6 W + 4 APs à 15 W = 132 W · 1,2 = 158 W → Switch mit ≥ 160 W und ≥ 16 PoE-Ports.</div>`},
+
+{id:"zutritt",p:"S",title:"10 · Serverraum & Zutritt",html:`
+<h3>Risiken Serverraum</h3>
+<p>Brand, Wasser, Überhitzung/Klima-Ausfall, Stromausfall/Überspannung, Einbruch/Diebstahl/Sabotage, Staub. <b>Maßnahmen:</b> Brandmeldeanlage + Gaslöschung, Klimatisierung + Temperaturüberwachung, USV, Zutrittskontrolle, Videoüberwachung, Wassersensoren/erhöhter Boden.</p>
+<table><tr><th>Begriff</th><th>Bedeutung</th><th>Maßnahmen</th></tr><tr><td><b>Zutrittskontrolle</b></td><td>wer darf <i>physisch</i> in Raum/Gebäude</td><td>Schloss, Badge/RFID, Pförtner, Vereinzelung</td></tr><tr><td><b>Zugangskontrolle</b></td><td>wer darf <i>sich am System anmelden</i></td><td>Passwort, MFA, Chipkarte</td></tr><tr><td>Zugriffskontrolle</td><td>wer darf welche <i>Daten</i> sehen/ändern</td><td>Berechtigungen/Rollen</td></tr></table>
+<h3>Elektromechanischer Türöffner + RFID</h3>
+<ul><li>RFID-Leser/Controller steuert den Türöffner über ein <b>Relais</b> (12/24 V). Geeignet, wenn Spannung/Strom passen und der Leser einen Relaisausgang hat.</li><li><b>Arbeitsstrom-Öffner:</b> entriegelt bei Spannung, ohne Strom bleibt zu (sicher gegen Einbruch, bei Fluchtweg problematisch). <b>Ruhestrom-Öffner:</b> ohne Strom offen (für Fluchttüren).</li></ul>
+<h3>Messungen nach DIN VDE 0100-600 – Liste</h3>
+<p>Spannungsfrei: Schutzleiterdurchgängigkeit, Isolationswiderstand, Polarität. Unter Spannung: Schleifenimpedanz, RCD-Auslösung, Drehfeld, Erdungswiderstand.</p>`}
+],
+cards:[
+["netz","TN-C-S – was bedeutet jeder Buchstabe?","T: Quelle direkt geerdet · N: Körper über Neutralleiter/PE mit Quelle verbunden · C: PEN kombiniert · S: N und PE getrennt."],
+["netz","Unterschied TN-S und TN-C?","TN-S: N und PE getrennt (5 Leiter). TN-C: PEN kombiniert (4 Leiter)."],
+["netz","TT-Netz: Besonderheit?","Körper hat eigenen Erder → RCD zwingend."],
+["netz","IT-Netz: Besonderheit?","Quelle isoliert; erster Fehler führt nur zur Meldung (Isolationsüberwachung), Anlage läuft weiter."],
+["schutz","LS-Schalter B, C, D – Auslösebereich?","B: 3–5·In · C: 5–10·In · D: 10–20·In."],
+["schutz","Welche zwei Auslöser hat ein LS-Schalter?","Thermisch (Bimetall) gegen Überlast, magnetisch gegen Kurzschluss."],
+["schutz","Auslösestrom RCD Personenschutz / Brandschutz?","30 mA / 300 mA."],
+["schutz","Bedingung für Leitungsschutz?","I_B ≤ I_n ≤ I_z"],
+["schutz","Kurzschluss vs. Körperschluss vs. Erdschluss?","Kurzschluss: Leiter–Leiter. Körperschluss: Leiter–leitfähiges Gehäuse. Erdschluss: Leiter–Erde."],
+["rechnen","Formel Stromaufnahme 1-phasig und 3-phasig?","I = P/(U·cosφ) · I = P/(√3·U·cosφ)."],
+["rechnen","Motor 11 kW, 400 V, cosφ 0,85 – Strom?","11000 ÷ (1,732·400·0,85) ≈ 18,7 A."],
+["rechnen","Formel Leiterquerschnitt (1-phasig)?","A = 2·l·I·cosφ ÷ (κ·ΔU), κ Kupfer = 56."],
+["rechnen","Formel Spannungsfall und Grenzwert nach DIN 18015?","ΔU = 2·l·I·cosφ ÷ (κ·A); Δu % = ΔU/U·100; max. 3 %."],
+["rechnen","30 m, 16 A, 2,5 mm² Kupfer – Spannungsfall?","960 ÷ 140 = 6,86 V = 2,98 % → eingehalten."],
+["rechnen","Welcher Querschnitt gilt, wenn Spannungsfall und Strombelastbarkeit verschieden fordern?","Der größere erforderliche Querschnitt, dann auf Normgröße aufrunden."],
+["leitung","NYM-J 3×1,5 – Bedeutung?","N nach Norm, Y PVC, M Mantelleitung, J mit Schutzleiter, 3 Adern, 1,5 mm²."],
+["leitung","H07V-K?","Harmonisiert, 450/750 V, PVC-Isolierung, K = feindrähtig/flexibel."],
+["leitung","Verlegeart E/F vs. B2?","E/F: frei in Luft (Kabelrinne) – beste Wärmeabfuhr, höhere Belastbarkeit. B2: Rohr/Kanal auf der Wand – schlechtere."],
+["leitung","EMV-Regeln Energie und Daten auf Kabelrinne?","Abstand nach EN 50174-2 oder metallischer geerdeter Trennsteg, rechtwinklig kreuzen, Schirm beidseitig, Rinne geerdet."],
+["leitung","Vorteil halogenfreier Leitungen?","Im Brandfall keine korrosiven/giftigen Gase, wenig Rauch → Personen- und Geräteschutz."],
+["leitung","Koax vs. Twisted Pair?","Koax: sehr gute Schirmung/Hochfrequenz, aber dick, teuer. TP: günstig, flexibel, strukturierte Verkabelung."],
+["pruef","Die 5 Sicherheitsregeln?","1 Freischalten · 2 gegen Wiedereinschalten sichern · 3 Spannungsfreiheit allpolig feststellen · 4 Erden und Kurzschließen · 5 Nachbarteile abdecken/abschranken."],
+["pruef","Was ist bei Regel 3 für das Messgerät wichtig?","Zweipoliger Spannungsprüfer (kein Phasenprüfer), Funktionsprobe vor und nach der Messung."],
+["pruef","Spannung an der Steckdose zwischen den Leitern?","L–N 230 V, L–PE ≈ 230 V, N–PE ≈ 0 V; zwischen Außenleitern 400 V."],
+["pruef","Reihenfolge der Anlagenprüfung?","Besichtigen → Erproben → Messen, dokumentieren im Prüfprotokoll."],
+["pruef","Messungen spannungsfrei bzw. unter Spannung?","Frei: Schutzleiter-Durchgängigkeit, Isolationswiderstand, Polarität. Unter Spannung: Schleifenimpedanz, RCD, Drehfeld, Erdungswiderstand."],
+["pruef","Kurzschlussstrom bei Zs = 0,46 Ω?","I_k = 230 ÷ 0,46 = 500 A."],
+["pruef","Maximale Schleifenimpedanz für B16?","Ia = 80 A → Zs ≤ 230/80 = 2,88 Ω (C16: 1,44 Ω)."],
+["pruef","Maximale Abschaltzeit TN, Endstromkreis ≤ 32 A?","0,4 s."],
+["usv","Drei USV-Arten?","Offline/Standby (VFD), Line-Interactive (VI), Online/Doppelwandler (VFI) – nur Online ohne Umschaltzeit."],
+["usv","Funktion Online-USV Netz / Netzausfall?","Netz: Gleichrichter → Wechselrichter → Last, Akku wird geladen. Ausfall: Akku speist den Wechselrichter, Last unterbrechungsfrei."],
+["usv","USV-Scheinleistung bei 1800 W, cosφ 0,9?","S = 2000 VA, plus Reserve 25 % → 2500 VA."],
+["usv","Zwei Anschlussvarianten ans Netz?","1-phasig 230 V (L, N, PE) · 3-phasig 400 V (L1-L3, N, PE)."],
+["usv","Vorteil zwei USV an getrennten Hauptverteilungen?","Redundanz: Ausfall einer Einspeisung bringt die Last nicht zum Erliegen."],
+["usv","Wartungs-Bypass – Zweck?","Last um die USV herum direkt ans Netz; Wartung/Tausch ohne Abschaltung."],
+["selv","SELV vs. PELV?","Beide ≤ 50 V AC / 120 V DC, sicher getrennt. SELV ungeerdet, PELV geerdet."],
+["selv","Was bedeutet IP67?","6 = staubdicht, 7 = zeitweises Untertauchen (1 m, 30 min)."],
+["sensor","Sensor – Controller – Aktor?","Sensor erfasst, Controller wertet aus, Aktor setzt um."],
+["sensor","Aktiver vs. passiver Sensor?","Aktiv: erzeugt selbst Signal (Thermoelement). Passiv: ändert R/C/L, braucht Hilfsspannung (PT100). Definition der Aufgabe beachten."],
+["poe","PoE-Budget Formel?","Σ Portleistungen aller Geräte + ca. 20 % Reserve ≤ Switch-Budget."],
+["zutritt","Zutrittskontrolle vs. Zugangskontrolle?","Zutritt: physisch in Raum/Gebäude. Zugang: Anmeldung am System. (Zugriff: auf Daten.)"],
+["zutritt","Arbeitsstrom- vs. Ruhestrom-Türöffner?","Arbeitsstrom: entriegelt mit Spannung (ohne Strom zu). Ruhestrom: ohne Strom offen (Fluchtweg)."],
+["zutritt","4 Risiken Serverraum?","Brand, Wasser, Überhitzung, Stromausfall, Einbruch/Sabotage (Staub)."]
+],
+gens:[
+{id:"strom3",title:"Stromaufnahme 3-phasig",gen:()=>{const P=pick([5.5,7.5,11,15,22]),c=pick([0.8,0.85,0.9]);const I=P*1000/(Math.sqrt(3)*400*c);return{q:"Drehstrommotor "+fmt(P,1)+" kW, 400 V, cos φ = "+fmt(c,2)+". Leiterstrom I?",ans:I,unit:"A",dec:1,sol:"I = P ÷ (√3·U·cos φ) = "+(P*1000)+" ÷ (1,732·400·"+fmt(c,2)+") = "+fmt(I,1)+" A"}}},
+{id:"strom1",title:"Stromaufnahme 1-phasig",gen:()=>{const P=pick([1000,1500,2000,2300,3000]),c=pick([1,0.9,0.8]);const I=P/(230*c);return{q:"Verbraucher "+P+" W an 230 V, cos φ = "+fmt(c,1)+". Strom I?",ans:I,unit:"A",dec:1,sol:"I = P ÷ (U·cos φ) = "+P+" ÷ (230·"+fmt(c,1)+") = "+fmt(I,1)+" A"}}},
+{id:"querschnitt",title:"Leiterquerschnitt",gen:()=>{const l=pick([10,15,20,25,30,40,50,60]),I=pick([10,13,16,20,25]);const A=2*l*I/(56*6.9);const norm=[1.5,2.5,4,6,10,16,25,35].find(x=>x>=A);return{q:"Einphasige Kupferleitung (κ = 56), "+l+" m einfache Länge, "+I+" A, cos φ = 1, zulässiger Spannungsfall 3 % von 230 V. Mindestquerschnitt rechnerisch?",ans:A,unit:"mm²",dec:2,sol:"ΔU = 0,03·230 = 6,9 V · A = 2·l·I ÷ (κ·ΔU) = 2·"+l+"·"+I+" ÷ (56·6,9) = "+fmt(A,2)+" mm² → Normgröße "+fmt(norm,1)+" mm² (Strombelastbarkeit zusätzlich prüfen)"}}},
+{id:"dup",title:"Spannungsfall in %",gen:()=>{const l=pick([15,20,30,40,50]),I=pick([10,16,20]),A=pick([1.5,2.5,4,6]);const dU=2*l*I/(56*A);const pc=dU/230*100;return{q:"Einphasig 230 V, Kupfer (κ = 56), "+l+" m, "+I+" A, "+fmt(A,1)+" mm², cos φ = 1. Spannungsfall in Prozent?",ans:pc,unit:"%",dec:2,sol:"ΔU = 2·"+l+"·"+I+" ÷ (56·"+fmt(A,1)+") = "+fmt(dU,2)+" V → ÷ 230 V = "+fmt(pc,2)+" % ("+(pc<=3?"≤ 3 %: ok":"über 3 %: zu viel nach DIN 18015")+")"}}},
+{id:"ik",title:"Kurzschlussstrom",gen:()=>{const Z=pick([0.2,0.25,0.4,0.46,0.5,0.8,1.0]);const I=230/Z;return{q:"Schleifenimpedanz Zs = "+fmt(Z,2)+" Ω an 230 V. Kurzschlussstrom Ik?",ans:I,unit:"A",dec:0,sol:"Ik = U0 ÷ Zs = 230 ÷ "+fmt(Z,2)+" = "+fmt(I,0)+" A"}}},
+{id:"zsmax",title:"Max. Schleifenimpedanz",gen:()=>{const ch=pick(["B","C"]),In=pick([10,13,16,20,25]),k=ch=="B"?5:10;const Ia=k*In;const Z=230/Ia;return{q:"Leitungsschutzschalter "+ch+In+" (230 V, TN-System). Maximale Schleifenimpedanz Zs für die Abschaltbedingung?",ans:Z,unit:"Ω",dec:2,sol:"Ia = "+k+"·"+In+" = "+Ia+" A → Zs ≤ U0 ÷ Ia = 230 ÷ "+Ia+" = "+fmt(Z,2)+" Ω"}}},
+{id:"usv",title:"USV-Scheinleistung",gen:()=>{const P=pick([600,900,1200,1800,2400]),c=pick([0.7,0.8,0.9]),r=pick([20,25,30]);const S=P/c*(1+r/100);return{q:"Verbraucher "+P+" W, cos φ = "+fmt(c,1)+", Reserve "+r+" %. Mindest-Scheinleistung der USV?",ans:S,unit:"VA",dec:0,sol:"S = P ÷ cos φ = "+P+" ÷ "+fmt(c,1)+" = "+fmt(P/c,0)+" VA · "+fmt(1+r/100,2)+" = "+fmt(S,0)+" VA"}}},
+{id:"s3",title:"Scheinleistung 3-phasig",gen:()=>{const I=pick([10,16,20,25,32,40]);const S=Math.sqrt(3)*400*I/1000;return{q:"Dreiphasiger USV-Ausgang 400 V, "+I+" A je Leiter. Scheinleistung S?",ans:S,unit:"kVA",dec:1,sol:"S = √3 · U · I = 1,732 · 400 · "+I+" = "+fmt(S*1000,0)+" VA = "+fmt(S,1)+" kVA"}}},
+{id:"poe",title:"PoE-Budget",gen:()=>{const a=ri(4,16),w1=pick([4,6,8,12]),b=ri(2,6),w2=pick([13,15,25]);const s=a*w1+b*w2;return{q:a+" Kameras à "+w1+" W und "+b+" Access Points à "+w2+" W (alles PoE). Mindest-PoE-Budget mit 20 % Reserve?",ans:s*1.2,unit:"W",dec:1,sol:a+"·"+w1+" + "+b+"·"+w2+" = "+s+" W · 1,2 = "+fmt(s*1.2,1)+" W"}}}
+]};
+
+const $=id=>document.getElementById(id);
+const KEY="ap2v2-"+DATA.key;
+let store={};try{store=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+store.c=store.c||{};store.g=store.g||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function dstr(add){const d=new Date();d.setDate(d.getDate()+(add||0));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+const INT={1:0,2:1,3:3};
+function hid(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return "c"+h}
+const SEC={};DATA.sections.forEach(s=>SEC[s.id]=s);
+DATA.cards.forEach(c=>{c.id=hid(c[1])});
+const PL={M:"MUSS",S:"SOLL",K:"KANN"};
+// helpers für Generatoren
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=(x,d)=>(+x).toFixed(d==null?2:d).replace(".",",");
+// Stoff
+$("secs").innerHTML=DATA.sections.map(s=>'<section class="s" id="s-'+s.id+'"><h2>'+s.title+'<span class="pri p'+s.p+'">'+PL[s.p]+'</span></h2>'+s.html+'</section>').join("");
+$("chips").innerHTML=DATA.sections.map(s=>'<a data-id="'+s.id+'">'+s.title+'<span class="pri p'+s.p+'">'+s.p+'</span></a>').join("");
+$("chips").onclick=e=>{const a=e.target.closest("a");if(a)$("s-"+a.dataset.id).scrollIntoView({behavior:"smooth"})};
+// Tabs
+function tab(n){for(let i=1;i<=4;i++){$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)}window.scrollTo(0,0);if(n==2)build();if(n==3&&!gcur)newQ();if(n==4)probeHome()}
+for(let i=1;i<=4;i++)$("t"+i).onclick=()=>tab(i);
+// ---------- Karten (Leitner) ----------
+$("fs").innerHTML='<option value="all">Alle Themen</option>'+DATA.sections.filter(s=>DATA.cards.some(c=>c[0]==s.id)).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join("");
+let queue=[],pos=0,shuffled=false;
+const isDue=c=>{const s=store.c[c.id];return !s||s.d<=dstr()};
+function build(){
+ const fs=$("fs").value,fm=$("fm").value,mu=$("fmu").checked;
+ queue=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M")&&(fm=="all"||(fm=="b1"?(store.c[c.id]&&store.c[c.id].b==1):isDue(c))));
+ if(shuffled)queue.sort(()=>Math.random()-.5);
+ pos=0;render();
+}
+function stats(){
+ const fs=$("fs").value,mu=$("fmu").checked,pool=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M"));
+ let n=0,b1=0,b2=0,b3=0,due=0;
+ pool.forEach(c=>{const s=store.c[c.id];if(!s)n++;else if(s.b==1)b1++;else if(s.b==2)b2++;else b3++;if(isDue(c))due++});
+ $("pb").style.width=(pool.length?b3/pool.length*100:0)+"%";
+ $("st").textContent="Neu "+n+" · Box 1: "+b1+" · Box 2: "+b2+" · Box 3 (sitzt): "+b3+" — heute fällig: "+due+" von "+pool.length;
+}
+function render(){
+ stats();
+ if(!queue.length||pos>=queue.length){$("deck").innerHTML='<div class="done">'+(queue.length?'Runde geschafft 🎉 Pause machen, später „Heute fällig" erneut öffnen.':'Nichts fällig in dieser Auswahl. 👍')+'</div>';return}
+ const c=queue[pos],sec=SEC[c[0]],s=store.c[c.id];
+ $("deck").innerHTML='<div class="fc" id="fc"><div class="in"><div class="face"><div class="tag">'+sec.title+' · '+PL[sec.p]+' · '+(s?'Box '+s.b:'neu')+' · noch '+(queue.length-pos)+'</div><div class="q">'+c[1]+'</div></div><div class="face back"><div class="tag">Antwort</div><div class="a">'+c[2]+'</div></div></div></div><div class="hint">Erst selbst antworten, dann umdrehen</div><div class="act"><button class="n" id="bn">✗ Falsch</button><button class="p" id="bp">Weiter</button><button class="k" id="bk">✓ Gewusst</button></div>';
+ $("fc").onclick=()=>$("fc").classList.toggle("flip");
+ $("bk").onclick=()=>mark(true);$("bn").onclick=()=>mark(false);$("bp").onclick=()=>{pos++;render()};
+}
+function setBox(c,ok){const s=store.c[c.id];const b=ok?Math.min(3,(s?s.b:1)+1):1;store.c[c.id]={b:b,d:dstr(INT[b])}}
+function mark(ok){const c=queue[pos];setBox(c,ok);save();if(!ok){const at=Math.min(queue.length,pos+5);queue.splice(at,0,c)}pos++;render()}
+$("fs").onchange=$("fm").onchange=$("fmu").onchange=build;
+$("sh").onclick=()=>{shuffled=true;build()};
+$("rs").onclick=()=>{if($("rs").dataset.sure){store.c={};save();delete $("rs").dataset.sure;$("rs").textContent="Zurücksetzen";build()}else{$("rs").dataset.sure=1;$("rs").textContent="Sicher? Nochmal tippen"}};
+document.addEventListener("keydown",e=>{const f=$("fc");if(!f||$("v2").classList.contains("hide"))return;if(e.key==" "){e.preventDefault();f.classList.toggle("flip")}if(e.key=="ArrowRight")mark(true);if(e.key=="ArrowLeft")mark(false)});
+// ---------- Rechnen ----------
+$("gs").innerHTML='<option value="mix">🔀 Mix (alle Typen gemischt)</option>'+DATA.gens.map(g=>'<option value="'+g.id+'">'+g.title+'</option>').join("");
+let gcur=null;
+function genQ(g){const q=g.gen();q.g=g;return q}
+function parseNum(v){return parseFloat(String(v).trim().replace(/\s/g,"").replace(",","."))}
+function check(q,v){const x=parseNum(v);if(isNaN(x))return false;const tol=q.tol||0.02;return Math.abs(x-q.ans)<=Math.max(Math.abs(q.ans)*tol,q.abs||0.0005)}
+function qHtml(q,idp){return '<div class="cq"><div class="tag">'+q.g.title+'</div><div class="q">'+q.q+'</div><input id="'+idp+'in" inputmode="decimal" autocomplete="off"> <b>'+(q.unit||"")+'</b><br><button class="btn" id="'+idp+'ok" style="margin-top:10px">Prüfen</button><div id="'+idp+'res"></div></div>'}
+function showRes(q,idp,ok){$(idp+"res").innerHTML='<div class="res '+(ok?'ok':'bad')+'"><b>'+(ok?'✓ Richtig':'✗ Nicht ganz')+'</b> – Ergebnis: <b>'+fmt(q.ans,q.dec==null?2:q.dec)+' '+(q.unit||"")+'</b><div style="margin-top:6px">'+q.sol+'</div></div>'}
+function newQ(){
+ const sel=$("gs").value;
+ const g=sel=="mix"?pick(DATA.gens):DATA.gens.find(x=>x.id==sel);
+ gcur=genQ(g);
+ $("gq").innerHTML=qHtml(gcur,"g");
+ const go=()=>{const ok=check(gcur,$("gin").value);const st=store.g[g.id]=store.g[g.id]||{r:0,n:0};st.n++;if(ok)st.r++;save();showRes(gcur,"g",ok);$("gok").textContent="Nächste Aufgabe";$("gok").onclick=newQ;gstat()};
+ $("gok").onclick=go;$("gin").onkeydown=e=>{if(e.key=="Enter")go()};
+ gstat();
+}
+function gstat(){$("gstat").innerHTML="Trefferquote: "+DATA.gens.map(g=>{const s=store.g[g.id];return g.title+" "+(s?s.r+"/"+s.n:"–")}).join(" · ")}
+$("gs").onchange=newQ;$("gn").onclick=newQ;
+// ---------- Probe ----------
+let P=null,ptimer=null;
+function probeHome(){
+ if(P&&!P.done){probeRender();return}
+ const nm=DATA.cards.length;
+ $("pv").innerHTML='<div class="cq"><div class="q">Probeklausur</div><p>Gemischte Fragen aus allen Themen (MUSS-Themen häufiger), dazu Rechenaufgaben, mit Zeitdruck wie in der Prüfung. Karten bewertest du ehrlich selbst. Falsche Karten landen automatisch in Box 1.</p><div class="bar"><label>Karten <select id="pn"><option>10</option><option selected>15</option><option>25</option></select></label><label>Rechnen <select id="pr"><option>3</option><option selected>5</option><option>8</option></select></label><label>Minuten <select id="pm"><option>20</option><option selected>40</option><option>60</option></select></label></div><button class="btn" id="pstart">Start</button></div><div id="plast"></div>';
+ $("pstart").onclick=probeStart;
+ if(store.last)$("plast").innerHTML='<div class="sm" style="margin-top:12px">Letzte Probe: '+store.last.s+' von '+store.last.t+' Punkten ('+store.last.d+')</div>';
+}
+function probeStart(){
+ const nc=+$("pn").value,nr=+$("pr").value,min=+$("pm").value;
+ const w=c=>SEC[c[0]].p=="M"?3:SEC[c[0]].p=="S"?2:1;
+ let pool=[];DATA.cards.forEach(c=>{for(let i=0;i<w(c);i++)pool.push(c)});
+ pool.sort(()=>Math.random()-.5);
+ const cards=[];for(const c of pool){if(!cards.includes(c))cards.push(c);if(cards.length>=nc)break}
+ const items=cards.map(c=>({t:"c",c:c}));
+ for(let i=0;i<nr;i++){const g=DATA.gens[i%DATA.gens.length];items.push({t:"g",q:genQ(DATA.gens.length>nr?pick(DATA.gens):g)})}
+ items.sort(()=>Math.random()-.5);
+ P={items:items,i:0,score:0,fails:[],end:Date.now()+min*60000,done:false,rev:false};
+ clearInterval(ptimer);ptimer=setInterval(tick,500);
+ probeRender();
+}
+function tick(){if(!P||P.done){clearInterval(ptimer);return}const left=P.end-Date.now();const el=$("ptm");if(el){const m=Math.max(0,Math.floor(left/60000)),s=Math.max(0,Math.floor(left/1000)%60);el.textContent=m+":"+String(s).padStart(2,"0")}if(left<=0)probeFinish()}
+function probeRender(){
+ if(P.i>=P.items.length){probeFinish();return}
+ const it=P.items[P.i];
+ let h='<div class="timer">⏱ <span id="ptm"></span> · Frage '+(P.i+1)+'/'+P.items.length+'</div>';
+ if(it.t=="c"){
+  h+='<div class="cq"><div class="tag">'+SEC[it.c[0]].title+'</div><div class="q">'+it.c[1]+'</div><div id="pa"></div><button class="btn" id="prev" style="margin-top:10px">Antwort zeigen</button></div>';
+  $("pv").innerHTML=h;
+  $("prev").onclick=()=>{$("pa").innerHTML='<div class="res bad" style="background:var(--box);color:var(--ink)">'+it.c[2]+'</div>';$("prev").outerHTML='<div class="act"><button class="n" id="pn1">✗ Falsch</button><button class="k" id="pk1">✓ Richtig</button></div>';
+   $("pk1").onclick=()=>{P.score++;P.i++;probeRender()};$("pn1").onclick=()=>{P.fails.push(it);P.i++;probeRender()}};
+ }else{
+  h+=qHtml(it.q,"p");$("pv").innerHTML=h;
+  const go=()=>{const ok=check(it.q,$("pin").value);if(ok)P.score++;else P.fails.push(it);showRes(it.q,"p",ok);$("pok").textContent="Weiter";$("pok").onclick=()=>{P.i++;probeRender()}};
+  $("pok").onclick=go;$("pin").onkeydown=e=>{if(e.key=="Enter")go()};
+ }
+ tick();
+}
+function probeFinish(){
+ P.done=true;clearInterval(ptimer);
+ const total=P.items.length;
+ P.fails.forEach(f=>{if(f.t=="c")setBox(f.c,false)});
+ store.last={s:P.score,t:total,d:dstr()};save();
+ const pct=Math.round(P.score/total*100);
+ let h='<div class="cq"><div class="q">Ergebnis: '+P.score+' / '+total+' ('+pct+' %)</div><p>'+(pct>=75?'Stark, das sitzt.':pct>=50?'Bestehensgrenze ist 50 %: jetzt gezielt die Fehler schließen.':'Unter 50 %: Fehlerkarten (Box 1) heute noch durchgehen und danach nochmal Probe.')+'</p>';
+ const fc=P.fails.filter(f=>f.t=="c");
+ if(fc.length)h+='<h3>Falsche Karten (jetzt in Box 1)</h3>'+fc.map(f=>'<div style="margin:8px 0"><b>'+f.c[1]+'</b><br>'+f.c[2]+'</div>').join("");
+ const fg=P.fails.filter(f=>f.t=="g");
+ if(fg.length)h+='<h3>Falsche Rechnungen</h3>'+fg.map(f=>'<div style="margin:8px 0"><b>'+f.q.g.title+'</b>: '+f.q.q+'<br>→ '+fmt(f.q.ans,f.q.dec==null?2:f.q.dec)+' '+(f.q.unit||"")+'<div class="sm">'+f.q.sol+'</div></div>').join("");
+ h+='<button class="btn" id="pagain" style="margin-top:10px">Neue Probe</button></div>';
+ $("pv").innerHTML=h;$("pagain").onclick=()=>{P=null;probeHome()};
+}
+</script>
+</body>
+</html>

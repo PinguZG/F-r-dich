@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiSO – AP2 Lernmappe</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a64;--line:#e2e0d8;--acc:#2f7d4f;--accbg:#eaf5ee;--ok:#1f8a4c;--bad:#c0392b;--box:#fff7d6;--boxl:#e9b800;--ex:#e8f1fb;--exl:#2b6cb0;--warn:#fdeaea;--warnl:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#161615;--card:#212120;--ink:#ecebe6;--mut:#a5a39a;--line:#37362f;--accbg:#2a2a28;--box:#3a3418;--ex:#1b2a3a;--warn:#3a1f1f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--acc);color:#fff;padding:22px 18px 14px}
+header h1{margin:0;font-size:1.5rem}
+header p{margin:4px 0 0;opacity:.9;font-size:.95rem}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px 60px}
+.tabs{display:flex;gap:6px;margin:10px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tabs button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:.92rem;cursor:pointer;font-weight:600}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chips a{font-size:.82rem;padding:5px 10px;border-radius:99px;background:var(--accbg);color:var(--ink);border:1px solid var(--line);cursor:pointer}
+.pri{display:inline-block;font-size:.68rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;color:#fff}
+.pM{background:var(--bad)}.pS{background:#d68a00}.pK{background:var(--mut)}
+section.s{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 18px 14px;margin-bottom:16px}
+section.s h2{font-size:1.2rem;margin:14px 0 6px;color:var(--acc);border-bottom:2px solid var(--acc);padding-bottom:4px}
+section.s h3{font-size:1rem;margin:16px 0 4px}
+.box,.ex,.warn{border-left:5px solid;border-radius:8px;padding:8px 12px;margin:10px 0}
+.box{background:var(--box);border-color:var(--boxl)}.ex{background:var(--ex);border-color:var(--exl)}.warn{background:var(--warn);border-color:var(--warnl)}
+.box b.t,.ex b.t,.warn b.t{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.f{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--accbg);border:1px solid var(--line);border-radius:8px;padding:7px 11px;margin:8px 0;display:block;overflow-x:auto;font-size:.93rem}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}th{background:var(--accbg)}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:2px 0}
+.hide{display:none}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bar select,.bar button,.bar label{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.9rem;cursor:pointer}
+.bar label{display:flex;gap:6px;align-items:center}
+.prog{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin:6px 0 4px}
+.prog i{display:block;height:100%;background:var(--ok);width:0}
+.stat{font-size:.85rem;color:var(--mut);margin-bottom:10px}
+.fc{perspective:1000px;margin:8px 0}
+.fc .in{position:relative;min-height:270px;transition:transform .45s;transform-style:preserve-3d;cursor:pointer}
+.fc.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.face.back{transform:rotateY(180deg);border-color:var(--acc);justify-content:flex-start}
+.tag{font-size:.75rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.q{font-size:1.15rem;font-weight:600}.a{font-size:1rem}
+.hint{text-align:center;color:var(--mut);font-size:.8rem;margin-top:6px}
+.act{display:flex;gap:10px;margin-top:12px}
+.act button,.btn{padding:13px;border-radius:12px;border:0;font-size:1rem;font-weight:700;color:#fff;cursor:pointer;background:var(--acc)}
+.act button{flex:1}
+.act .k{background:var(--ok)}.act .n{background:var(--bad)}.act .p{background:var(--mut);flex:.5}
+.done{text-align:center;padding:40px 10px;color:var(--mut)}
+.cq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.cq .q{font-size:1.05rem;font-weight:500}
+.cq input{width:130px;padding:10px;font-size:1.05rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin:10px 8px 0 0}
+.res{margin-top:12px;padding:10px 12px;border-radius:10px}
+.res.ok{background:#e3f4e9;color:#12512c}.res.bad{background:var(--warn);color:var(--ink)}
+@media(prefers-color-scheme:dark){.res.ok{background:#173323;color:#bfe8cd}}
+.timer{font-size:1.3rem;font-weight:800;color:var(--acc);margin:6px 0}
+.sm{font-size:.8rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<header><h1>WiSO – AP2 Lernmappe</h1><p>Wirtschafts- und Sozialkunde · Ausbildung, Arbeitsrecht, Sozialversicherung, Vertragsrecht, Wirtschaft</p></header>
+<div class="wrap">
+<div class="tabs"><button id="t1" class="on">📓 Stoff</button><button id="t2">🃏 Karten</button><button id="t3">🧮 Rechnen</button><button id="t4">📝 Probe</button></div>
+<div id="v1"><div class="sm" style="margin-bottom:8px"><span class="pri pM">MUSS</span> prüfungsnah, zuerst · <span class="pri pS">SOLL</span> wichtig · <span class="pri pK">KANN</span> nur bei Zeit</div><div class="chips" id="chips"></div><div id="secs"></div></div>
+<div id="v2" class="hide">
+ <div class="bar">
+  <select id="fs"></select>
+  <select id="fm"><option value="due">Heute fällig + neu</option><option value="b1">Box 1 (Fehlerliste)</option><option value="all">Alle</option></select>
+  <label><input type="checkbox" id="fmu"> nur MUSS</label>
+  <button id="sh">🔀 Mischen</button><button id="rs">Zurücksetzen</button>
+ </div>
+ <div class="prog"><i id="pb"></i></div><div class="stat" id="st"></div>
+ <div id="deck"></div>
+ <div class="sm" style="margin-top:14px">Leitner: richtig → nächste Box (Box 2 wieder nach 1 Tag, Box 3 nach 3 Tagen). Falsch → zurück in Box 1 und noch mal in dieser Runde. Ziel: alles in Box 3.</div>
+</div>
+<div id="v3" class="hide">
+ <div class="bar"><select id="gs"></select><button id="gn">Neue Aufgabe</button></div>
+ <div id="gq"></div>
+ <div class="sm" id="gstat" style="margin-top:14px"></div>
+</div>
+<div id="v4" class="hide"><div id="pv"></div></div>
+</div>
+<script>
+const DATA={key:"wiso",
+sections:[
+{id:"bbig",p:"M",title:"1 · Ausbildung (BBiG)",html:`
+<h3>Pflichten</h3>
+<table><tr><th>Auszubildender</th><th>Ausbildender (Betrieb)</th></tr><tr><td>Lernpflicht, Weisungen befolgen</td><td>Ausbildung nach Ausbildungsplan, geeigneter Ausbilder</td></tr><tr><td>Berichtsheft führen</td><td>Berichtsheft während der Arbeitszeit prüfen/abzeichnen</td></tr><tr><td>Berufsschule und Prüfungen besuchen</td><td>Freistellung für Berufsschule/Prüfung</td></tr><tr><td>Schweigepflicht (Betriebsgeheimnisse), Sorgfalt mit Arbeitsmitteln</td><td>Ausbildungsmittel kostenlos, angemessene Vergütung, Zeugnis</td></tr></table>
+<div class="box"><b class="t">Ausbildungsvertrag</b>Muss <b>schriftlich</b> vor Beginn vorliegen (Mindestinhalt: Ziel, Beginn/Dauer, Probezeit, Vergütung, Urlaub, Arbeitszeit, Kündigung). Wird bei der <b>IHK</b> ins Verzeichnis eingetragen.</div>
+<h3>Probezeit & Kündigung</h3>
+<ul><li>Probezeit: <b>1–4 Monate</b>. Kündigung jederzeit, <b>ohne Frist und ohne Grund</b> (schriftlich).</li><li>Danach: Azubi kann mit <b>4 Wochen Frist</b> kündigen, wenn er die Ausbildung aufgibt oder den Beruf wechselt. Betrieb nur <b>fristlos aus wichtigem Grund</b> (§ 22 BBiG), innerhalb von 2 Wochen ab Kenntnis.</li><li>Ausbildung endet mit bestandener Prüfung, spätestens mit Ablauf der Ausbildungszeit. Nicht bestanden: Verlängerung auf Verlangen bis zur Wiederholung (max. 1 Jahr).</li><li><b>Zeugnis:</b> einfach (Art/Dauer/Fertigkeiten) oder qualifiziert (zusätzlich Führung/Leistung); Azubi hat Anspruch.</li></ul>
+<h3>Arbeitszeit</h3>
+<ul><li><b>Erwachsene (ArbZG):</b> 8 h täglich, bis 10 h wenn im Durchschnitt 8 h; Ruhepause 30 min bei 6–9 h, 45 min bei &gt; 9 h; Ruhezeit mind. <b>11 h</b> zwischen den Arbeitstagen</li><li><b>Jugendliche (JArbSchG, unter 18):</b> 8 h täglich, 40 h pro Woche, 5-Tage-Woche</li></ul>`},
+
+{id:"arbeit",p:"M",title:"2 · Arbeitsrecht & Mitbestimmung",html:`
+<h3>Kündigung</h3>
+<table><tr><th>Art</th><th>Merkmal</th></tr><tr><td><b>Ordentlich</b></td><td>mit Frist (§ 622 BGB: Grundfrist 4 Wochen zum 15. oder Monatsende; verlängert sich mit Betriebszugehörigkeit)</td></tr><tr><td><b>Außerordentlich/fristlos</b></td><td>wichtiger Grund (§ 626 BGB), innerhalb <b>2 Wochen</b> ab Kenntnis</td></tr><tr><td>Änderungskündigung</td><td>Kündigung + Angebot neuer Bedingungen</td></tr></table>
+<ul><li><b>Kündigungsschutzgesetz</b> gilt ab 6 Monaten Betriebszugehörigkeit und &gt; 10 Beschäftigten: Kündigung nur <b>sozial gerechtfertigt</b>: personenbedingt (z. B. Krankheit), verhaltensbedingt (meist <b>erst nach Abmahnung</b>), betriebsbedingt (Sozialauswahl: Alter, Betriebszugehörigkeit, Unterhaltspflichten, Schwerbehinderung)</li><li>Kündigung schriftlich; Betriebsrat vorher anhören; Kündigungsschutzklage binnen <b>3 Wochen</b></li><li>Besonderer Kündigungsschutz: Schwangere, Elternzeit, Schwerbehinderte, Betriebsrat, Azubis</li></ul>
+<h3>Tarifvertrag & Betriebsrat</h3>
+<ul><li><b>Tarifautonomie:</b> Gewerkschaft und Arbeitgeberverband handeln Tarifverträge aus (Entgelt, Arbeitszeit, Urlaub). <b>Günstigkeitsprinzip:</b> abweichende Regelung nur, wenn sie für den AN günstiger ist. <b>Friedenspflicht</b> während der Laufzeit, Streik danach nach gescheiterten Verhandlungen (Urabstimmung).</li><li><b>Betriebsvereinbarung:</b> zwischen Betriebsrat und Arbeitgeber (Betrieb); Betriebsrat ab <b>5 ständigen Wahlberechtigten</b> wählbar, Mitbestimmung z. B. bei Arbeitszeit, Einstellung/Kündigung, Überwachung.</li><li><b>JAV</b> (Jugend- und Auszubildendenvertretung): vertritt Azubis/Jugendliche, wenn Betriebsrat existiert (ab 5 unter 18 oder Azubis unter 25).</li></ul>
+<h3>Tarifvertrag vs. Betriebsvereinbarung vs. Arbeitsvertrag</h3>
+<p>Rangfolge: Gesetz &gt; Tarifvertrag &gt; Betriebsvereinbarung &gt; Arbeitsvertrag (jeweils nur günstiger nach unten abweichend).</p>`},
+
+{id:"sv",p:"M",title:"3 · Sozialversicherung & Lohn",html:`
+<table><tr><th>Zweig</th><th>Leistung</th><th>Beitrag</th></tr>
+<tr><td>Krankenversicherung</td><td>Behandlung, Krankengeld</td><td>AN und AG je hälftig (+ Zusatzbeitrag)</td></tr>
+<tr><td>Rentenversicherung</td><td>Rente, Reha</td><td>AN und AG je hälftig</td></tr>
+<tr><td>Arbeitslosenversicherung</td><td>Arbeitslosengeld, Vermittlung</td><td>AN und AG je hälftig</td></tr>
+<tr><td>Pflegeversicherung</td><td>Pflegeleistungen</td><td>AN und AG je hälftig (Kinderlosen-Zuschlag nur AN)</td></tr>
+<tr><td><b>Unfallversicherung</b></td><td>Arbeits-/Wegeunfall, Berufskrankheit</td><td><b>nur Arbeitgeber</b> (Berufsgenossenschaft)</td></tr></table>
+<div class="box"><b class="t">Prinzipien</b>Solidarprinzip, <b>Generationenvertrag</b> (Beitragszahler finanzieren aktuelle Rentner), Beitragsbemessungsgrenze (darüber keine Beiträge). Beitragssätze werden in der Aufgabe genannt, nicht auswendig lernen.</div>
+<h3>Brutto → Netto</h3>
+<span class="f">Brutto − Lohnsteuer − Soli − Kirchensteuer − AN-Anteil Sozialversicherung = Netto</span>
+<p>Steuerklassen I–VI (I Ledige, III/V Verheiratete mit Verteilung, IV/IV, VI zweites Arbeitsverhältnis). Arbeitgeberkosten = Brutto + AG-Anteil.</p>
+<h3>Arbeits- & Wegeunfall</h3>
+<p>Meldung an die Berufsgenossenschaft (DGUV) bei &gt; 3 Tagen Arbeitsunfähigkeit; Wegeunfall = Weg zur/von der Arbeit auf direktem Weg versichert.</p>`},
+
+{id:"recht",p:"M",title:"4 · Verträge, Kauf, Verzug (BGB)",html:`
+<h3>Geschäftsfähigkeit</h3>
+<table><tr><th>Alter</th><th>Stufe</th></tr><tr><td>unter 7</td><td>geschäftsunfähig</td></tr><tr><td>7–17</td><td>beschränkt geschäftsfähig (Zustimmung der Eltern; Taschengeldparagraph § 110)</td></tr><tr><td>ab 18</td><td>voll geschäftsfähig</td></tr></table>
+<h3>Kaufvertrag</h3>
+<ul><li>Zustandekommen: <b>Antrag + Annahme</b> (übereinstimmende Willenserklärungen); Form frei (außer z. B. Grundstück: notariell)</li><li><b>Verpflichtungsgeschäft</b> (Vertrag) vs. <b>Erfüllungsgeschäft</b> (Übergabe + Übereignung / Zahlung)</li><li>Nichtigkeit (z. B. Sittenwidrigkeit, Formmangel), Anfechtung (Irrtum, arglistige Täuschung)</li><li><b>AGB:</b> vorformulierte Bedingungen, werden nur Vertragsbestandteil, wenn darauf hingewiesen wurde</li><li><b>Fernabsatz/Online:</b> <b>14 Tage Widerruf</b> ohne Grund</li></ul>
+<h3>Mangelhafte Lieferung (Gewährleistung)</h3>
+<div class="box"><b class="t">Reihenfolge</b>1. <b>Nacherfüllung</b> (Reparatur/Ersatz) · 2. wenn fehlgeschlagen: <b>Rücktritt</b>, <b>Minderung</b>, Schadensersatz. Frist: <b>2 Jahre</b> (gebraucht ggf. 1 Jahr). <b>Beweislastumkehr</b> in den ersten 12 Monaten: Händler muss beweisen, dass der Mangel nicht schon bei Übergabe da war.</div>
+<h3>Verzug</h3>
+<ul><li><b>Lieferverzug:</b> Lieferer liefert nicht rechtzeitig (meist nach <b>Mahnung</b> mit Nachfrist) → Rücktritt/Schadensersatz</li><li><b>Zahlungsverzug:</b> Käufer zahlt nicht; automatisch 30 Tage nach Rechnung, Verzugszinsen</li><li><b>Annahmeverzug:</b> Käufer nimmt Ware nicht an</li><li>Regelmäßige <b>Verjährung: 3 Jahre</b> (ab Jahresende)</li></ul>`},
+
+{id:"wirt",p:"S",title:"5 · Wirtschaft & Unternehmen",html:`
+<h3>Magisches Viereck</h3>
+<p>Preisniveaustabilität · hoher Beschäftigungsstand · außenwirtschaftliches Gleichgewicht · angemessenes, stetiges Wirtschaftswachstum</p>
+<h3>Marktpreisbildung</h3>
+<p>Angebot und Nachfrage → <b>Gleichgewichtspreis</b>. Nachfrage ↑ → Preis ↑ · Angebot ↑ → Preis ↓. Preis über Gleichgewicht = Angebotsüberhang, darunter = Nachfrageüberhang.</p>
+<h3>Rechtsformen</h3>
+<table><tr><th></th><th>Haftung</th><th>Kapital</th></tr><tr><td>Einzelunternehmen</td><td>unbeschränkt, persönlich</td><td>kein Mindestkapital</td></tr><tr><td>GbR / OHG</td><td>Gesellschafter unbeschränkt</td><td>keins</td></tr><tr><td>KG</td><td>Komplementär unbeschränkt, Kommanditist bis Einlage</td><td>—</td></tr><tr><td><b>GmbH</b></td><td>nur Gesellschaftsvermögen</td><td>Stammkapital <b>25 000 €</b></td></tr><tr><td>UG</td><td>beschränkt</td><td>ab 1 €</td></tr><tr><td>AG</td><td>beschränkt</td><td>Grundkapital 50 000 €</td></tr></table>
+<h3>Preiskalkulation (Aufbau)</h3>
+<span class="f">Listenpreis − Rabatt − Skonto + Bezugskosten = Bezugspreis → + Gemeinkosten = Selbstkosten → + Gewinn = Verkaufspreis netto → + 19 % USt = Brutto</span>
+<div class="ex"><b class="t">Beispiel</b>Netto 1 000 € → Brutto 1 000 · 1,19 = 1 190 € · Brutto → Netto: ÷ 1,19. Rabatt = Preisnachlass vom Listenpreis, Skonto = Nachlass bei schneller Zahlung.</div>
+<h3>Abschreibung linear</h3>
+<span class="f">AfA pro Jahr = (Anschaffungskosten − Restwert) ÷ Nutzungsdauer</span>
+<div class="ex"><b class="t">Beispiel</b>Server 6 000 €, 5 Jahre, Restwert 0: 1 200 € pro Jahr.</div>
+<h3>Finanzierung</h3>
+<p><b>Kauf</b> (Eigentum, Kapitalbindung) · <b>Kredit</b> (Zins, Tilgung) · <b>Leasing</b> (Nutzung, feste Raten, Liquidität geschont, kein Eigentum).</p>`},
+
+{id:"schutz",p:"S",title:"6 · Arbeits-, Brand- & Umweltschutz",html:`
+<ul><li><b>Gefährdungsbeurteilung</b> durch den Arbeitgeber; Maßnahmenrangfolge <b>TOP</b>: <b>T</b>echnisch vor <b>O</b>rganisatorisch vor <b>P</b>ersonenbezogen (PSA)</li><li><b>Fachkraft für Arbeitssicherheit</b>, <b>Betriebsarzt</b>, Sicherheitsbeauftragter; Unfallverhütungsvorschriften (DGUV) der Berufsgenossenschaft</li><li><b>Unfall:</b> Absichern, Erste Hilfe, Notruf 112, Meldung/Eintrag im Verbandbuch, Unfallanzeige</li><li><b>Brandklassen:</b> A feste Stoffe, B Flüssigkeiten, C Gase, D Metalle, F Speiseöle/-fette. Elektrobrand: erst Strom abschalten; Löscher für elektrische Anlagen (CO₂/Pulver) mit Sicherheitsabstand</li><li><b>Umwelt:</b> Altgeräte nach <b>ElektroG</b> (Rücknahme/Recycling), Kreislaufwirtschaft, RoHS (Schadstoffbeschränkung), Datenträger sicher vernichten (DSGVO), Energieeffizienz, ISO 14001</li></ul>
+<h3>Datenschutz (Kurzfassung)</h3>
+<p>Personenbezogene Daten nur mit Rechtsgrundlage (Einwilligung, Vertrag, berechtigtes Interesse); Zweckbindung, Datensparsamkeit; Betroffenenrechte (Auskunft, Löschung); Meldepflicht bei Datenpanne binnen 72 h.</p>`}
+],
+cards:[
+["bbig","2 Pflichten des Azubis, 2 des Betriebs?","Azubi: lernen, Weisungen befolgen, Berichtsheft, Schweigepflicht. Betrieb: ausbilden nach Plan, Ausbildungsmittel kostenlos, Vergütung, Freistellung Berufsschule, Zeugnis."],
+["bbig","Länge der Probezeit und Kündigung darin?","1–4 Monate. Jederzeit ohne Frist und ohne Grund, schriftlich."],
+["bbig","Kündigung nach der Probezeit durch den Azubi?","4 Wochen Frist, nur bei Aufgabe der Ausbildung oder Berufswechsel."],
+["bbig","Kündigung nach Probezeit durch den Betrieb?","Nur fristlos aus wichtigem Grund, innerhalb 2 Wochen ab Kenntnis."],
+["bbig","Was passiert bei nicht bestandener Abschlussprüfung?","Ausbildungsverhältnis verlängert sich auf Verlangen bis zur Wiederholungsprüfung, höchstens 1 Jahr."],
+["bbig","Einfaches vs. qualifiziertes Zeugnis?","Einfach: Art, Dauer, Fertigkeiten. Qualifiziert: zusätzlich Führung und Leistung."],
+["bbig","ArbZG: Pausen und Ruhezeit?","30 min bei 6–9 h, 45 min bei > 9 h; Ruhezeit mind. 11 h."],
+["arbeit","Kündigungsfrist Grundfrist § 622 BGB?","4 Wochen zum 15. oder zum Monatsende."],
+["arbeit","Wann gilt das Kündigungsschutzgesetz?","Ab 6 Monaten Betriebszugehörigkeit und mehr als 10 Beschäftigten."],
+["arbeit","3 Kündigungsgründe nach KSchG?","Personenbedingt, verhaltensbedingt (meist nach Abmahnung), betriebsbedingt (Sozialauswahl)."],
+["arbeit","Frist für fristlose Kündigung?","2 Wochen ab Kenntnis des Grundes (§ 626 BGB)."],
+["arbeit","Günstigkeitsprinzip?","Abweichung von höherrangiger Regelung nur, wenn sie für den Arbeitnehmer günstiger ist."],
+["arbeit","Tarifautonomie / Friedenspflicht?","Gewerkschaft und Arbeitgeberverband verhandeln ohne Staat. Während der Laufzeit keine Streiks."],
+["arbeit","Ab wann Betriebsrat? Was ist die JAV?","Ab 5 ständigen Wahlberechtigten. JAV vertritt Jugendliche und Azubis."],
+["sv","Fünf Zweige der Sozialversicherung?","Kranken-, Renten-, Arbeitslosen-, Pflege-, Unfallversicherung."],
+["sv","Wer zahlt die Unfallversicherung?","Nur der Arbeitgeber (Berufsgenossenschaft)."],
+["sv","Generationenvertrag?","Aktuelle Beitragszahler finanzieren die laufenden Renten, spätere Generationen finanzieren ihre."],
+["sv","Brutto zu Netto?","Brutto − Lohnsteuer, Soli, Kirchensteuer, AN-Anteile Sozialversicherung = Netto."],
+["recht","Geschäftsfähigkeit nach Alter?","Unter 7 geschäftsunfähig, 7–17 beschränkt (Zustimmung der Eltern, Taschengeld § 110), ab 18 voll."],
+["recht","Wie kommt ein Kaufvertrag zustande?","Antrag + Annahme (zwei übereinstimmende Willenserklärungen)."],
+["recht","Verpflichtungs- vs. Erfüllungsgeschäft?","Vertrag (Verpflichtung) vs. Übergabe/Übereignung und Zahlung (Erfüllung)."],
+["recht","Reihenfolge der Rechte bei Mangel?","Nacherfüllung zuerst, dann Rücktritt/Minderung/Schadensersatz."],
+["recht","Gewährleistung und Beweislastumkehr?","2 Jahre; in den ersten 12 Monaten muss der Händler beweisen, dass der Mangel nicht bereits bestand."],
+["recht","Lieferverzug – Voraussetzungen?","Fälligkeit, nicht geliefert, meist Mahnung mit Nachfrist, Verschulden."],
+["recht","Zahlungsverzug automatisch nach?","30 Tagen nach Rechnungserhalt."],
+["recht","Widerruf bei Online-Kauf?","14 Tage ohne Angabe von Gründen."],
+["recht","Regelmäßige Verjährung?","3 Jahre, beginnt am Jahresende."],
+["wirt","Magisches Viereck?","Preisniveaustabilität, hoher Beschäftigungsstand, außenwirtschaftliches Gleichgewicht, angemessenes Wachstum."],
+["wirt","Angebot steigt, Nachfrage gleich – Preis?","Preis sinkt (Angebotsüberhang)."],
+["wirt","Haftung GmbH, Stammkapital?","Beschränkt auf das Gesellschaftsvermögen; 25 000 €."],
+["wirt","Brutto/Netto bei 19 % USt?","Brutto = Netto · 1,19; Netto = Brutto ÷ 1,19."],
+["wirt","Lineare Abschreibung Formel?","(Anschaffungskosten − Restwert) ÷ Nutzungsdauer."],
+["wirt","Rabatt vs. Skonto?","Rabatt: Preisnachlass auf den Listenpreis. Skonto: Nachlass bei schneller Zahlung."],
+["wirt","Kauf vs. Leasing?","Kauf: Eigentum, Kapitalbindung. Leasing: Nutzung gegen feste Raten, Liquidität geschont, kein Eigentum."],
+["schutz","TOP-Prinzip im Arbeitsschutz?","Technische vor organisatorischen vor personenbezogenen Maßnahmen."],
+["schutz","Brandklassen A–D, F?","A feste Stoffe, B Flüssigkeiten, C Gase, D Metalle, F Speiseöle/-fette."],
+["schutz","Wer trägt die Kosten der Gefährdungsbeurteilung?","Der Arbeitgeber, er ist dafür verantwortlich."],
+["schutz","ElektroG – Zweck?","Rücknahme und fachgerechte Entsorgung/Recycling von Elektro-Altgeräten."],
+["schutz","Frist Meldung Datenpanne?","72 Stunden an die Aufsichtsbehörde."]
+],
+gens:[
+{id:"ust",title:"Netto ↔ Brutto (19 %)",gen:()=>{if(Math.random()<.5){const n=pick([250,480,800,1200,2500]);return{q:"Nettopreis "+n+" € zuzüglich 19 % USt. Bruttopreis?",ans:n*1.19,unit:"€",dec:2,sol:n+" · 1,19 = "+fmt(n*1.19,2)+" €"}}const b=pick([119,357,595,1190,2380]);return{q:"Bruttopreis "+b+" € inkl. 19 % USt. Nettopreis?",ans:b/1.19,unit:"€",dec:2,sol:b+" ÷ 1,19 = "+fmt(b/1.19,2)+" €"}}},
+{id:"bezug",title:"Bezugspreis",gen:()=>{const lp=pick([200,400,500,800,1000]),r=pick([10,15,20]),s=pick([2,3]),bk=pick([5,10,20,30]);const zp=lp*(1-r/100);const ep=zp*(1-s/100);const bp=ep+bk;return{q:"Listenpreis "+lp+" €, "+r+" % Rabatt, "+s+" % Skonto, Bezugskosten "+bk+" €. Bezugspreis?",ans:bp,unit:"€",dec:2,sol:"Listenpreis − Rabatt = "+fmt(zp,2)+" € → − Skonto = "+fmt(ep,2)+" € → + Bezugskosten = "+fmt(bp,2)+" €"}}},
+{id:"afa",title:"Lineare Abschreibung",gen:()=>{const ak=pick([3000,4800,6000,9000,12000]),nd=pick([3,4,5,6]),rw=pick([0,300,600]);const a=(ak-rw)/nd;return{q:"Anschaffungskosten "+ak+" €, Nutzungsdauer "+nd+" Jahre, Restwert "+rw+" €. Jährliche lineare Abschreibung?",ans:a,unit:"€",dec:2,sol:"("+ak+" − "+rw+") ÷ "+nd+" = "+fmt(a,2)+" € pro Jahr"}}},
+{id:"sv",title:"Sozialversicherung (Übung)",gen:()=>{const b=pick([1000,1200,1500,2000]),sr=pick([19.5,20,20.5]);const a=b*sr/100;return{q:"Bruttolohn "+b+" €. Der Arbeitnehmer-Anteil aller Sozialversicherungen beträgt in dieser Aufgabe "+fmt(sr,1)+" %. Abzug in €?",ans:a,unit:"€",dec:2,sol:b+" · "+fmt(sr,1)+" % = "+fmt(a,2)+" € (Sätze nur zur Übung, in der Prüfung stehen sie in der Aufgabe)"}}},
+{id:"azeit",title:"Arbeitszeit (ArbZG)",gen:()=>{const h=pick([6.5,7,8,9,9.5,10]);const p=h>9?45:(h>6?30:0);return{q:"Arbeitstag von "+fmt(h,1)+" Stunden reiner Arbeitszeit (Erwachsener). Wie viele Minuten Ruhepause schreibt das ArbZG mindestens vor? (bis 6 h: 0 · über 6 bis 9 h: 30 · über 9 h: 45)",ans:p,unit:"min",dec:0,tol:0.001,sol:"Über 6 h bis 9 h = 30 min, über 9 h = 45 min. Bei "+fmt(h,1)+" h: "+p+" min."}}}
+]};
+
+const $=id=>document.getElementById(id);
+const KEY="ap2v2-"+DATA.key;
+let store={};try{store=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+store.c=store.c||{};store.g=store.g||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function dstr(add){const d=new Date();d.setDate(d.getDate()+(add||0));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+const INT={1:0,2:1,3:3};
+function hid(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return "c"+h}
+const SEC={};DATA.sections.forEach(s=>SEC[s.id]=s);
+DATA.cards.forEach(c=>{c.id=hid(c[1])});
+const PL={M:"MUSS",S:"SOLL",K:"KANN"};
+// helpers für Generatoren
+const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=(x,d)=>(+x).toFixed(d==null?2:d).replace(".",",");
+// Stoff
+$("secs").innerHTML=DATA.sections.map(s=>'<section class="s" id="s-'+s.id+'"><h2>'+s.title+'<span class="pri p'+s.p+'">'+PL[s.p]+'</span></h2>'+s.html+'</section>').join("");
+$("chips").innerHTML=DATA.sections.map(s=>'<a data-id="'+s.id+'">'+s.title+'<span class="pri p'+s.p+'">'+s.p+'</span></a>').join("");
+$("chips").onclick=e=>{const a=e.target.closest("a");if(a)$("s-"+a.dataset.id).scrollIntoView({behavior:"smooth"})};
+// Tabs
+function tab(n){for(let i=1;i<=4;i++){$("v"+i).classList.toggle("hide",i!=n);$("t"+i).classList.toggle("on",i==n)}window.scrollTo(0,0);if(n==2)build();if(n==3&&!gcur)newQ();if(n==4)probeHome()}
+for(let i=1;i<=4;i++)$("t"+i).onclick=()=>tab(i);
+// ---------- Karten (Leitner) ----------
+$("fs").innerHTML='<option value="all">Alle Themen</option>'+DATA.sections.filter(s=>DATA.cards.some(c=>c[0]==s.id)).map(s=>'<option value="'+s.id+'">'+s.title+'</option>').join("");
+let queue=[],pos=0,shuffled=false;
+const isDue=c=>{const s=store.c[c.id];return !s||s.d<=dstr()};
+function build(){
+ const fs=$("fs").value,fm=$("fm").value,mu=$("fmu").checked;
+ queue=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M")&&(fm=="all"||(fm=="b1"?(store.c[c.id]&&store.c[c.id].b==1):isDue(c))));
+ if(shuffled)queue.sort(()=>Math.random()-.5);
+ pos=0;render();
+}
+function stats(){
+ const fs=$("fs").value,mu=$("fmu").checked,pool=DATA.cards.filter(c=>(fs=="all"||c[0]==fs)&&(!mu||SEC[c[0]].p=="M"));
+ let n=0,b1=0,b2=0,b3=0,due=0;
+ pool.forEach(c=>{const s=store.c[c.id];if(!s)n++;else if(s.b==1)b1++;else if(s.b==2)b2++;else b3++;if(isDue(c))due++});
+ $("pb").style.width=(pool.length?b3/pool.length*100:0)+"%";
+ $("st").textContent="Neu "+n+" · Box 1: "+b1+" · Box 2: "+b2+" · Box 3 (sitzt): "+b3+" — heute fällig: "+due+" von "+pool.length;
+}
+function render(){
+ stats();
+ if(!queue.length||pos>=queue.length){$("deck").innerHTML='<div class="done">'+(queue.length?'Runde geschafft 🎉 Pause machen, später „Heute fällig" erneut öffnen.':'Nichts fällig in dieser Auswahl. 👍')+'</div>';return}
+ const c=queue[pos],sec=SEC[c[0]],s=store.c[c.id];
+ $("deck").innerHTML='<div class="fc" id="fc"><div class="in"><div class="face"><div class="tag">'+sec.title+' · '+PL[sec.p]+' · '+(s?'Box '+s.b:'neu')+' · noch '+(queue.length-pos)+'</div><div class="q">'+c[1]+'</div></div><div class="face back"><div class="tag">Antwort</div><div class="a">'+c[2]+'</div></div></div></div><div class="hint">Erst selbst antworten, dann umdrehen</div><div class="act"><button class="n" id="bn">✗ Falsch</button><button class="p" id="bp">Weiter</button><button class="k" id="bk">✓ Gewusst</button></div>';
+ $("fc").onclick=()=>$("fc").classList.toggle("flip");
+ $("bk").onclick=()=>mark(true);$("bn").onclick=()=>mark(false);$("bp").onclick=()=>{pos++;render()};
+}
+function setBox(c,ok){const s=store.c[c.id];const b=ok?Math.min(3,(s?s.b:1)+1):1;store.c[c.id]={b:b,d:dstr(INT[b])}}
+function mark(ok){const c=queue[pos];setBox(c,ok);save();if(!ok){const at=Math.min(queue.length,pos+5);queue.splice(at,0,c)}pos++;render()}
+$("fs").onchange=$("fm").onchange=$("fmu").onchange=build;
+$("sh").onclick=()=>{shuffled=true;build()};
+$("rs").onclick=()=>{if($("rs").dataset.sure){store.c={};save();delete $("rs").dataset.sure;$("rs").textContent="Zurücksetzen";build()}else{$("rs").dataset.sure=1;$("rs").textContent="Sicher? Nochmal tippen"}};
+document.addEventListener("keydown",e=>{const f=$("fc");if(!f||$("v2").classList.contains("hide"))return;if(e.key==" "){e.preventDefault();f.classList.toggle("flip")}if(e.key=="ArrowRight")mark(true);if(e.key=="ArrowLeft")mark(false)});
+// ---------- Rechnen ----------
+$("gs").innerHTML='<option value="mix">🔀 Mix (alle Typen gemischt)</option>'+DATA.gens.map(g=>'<option value="'+g.id+'">'+g.title+'</option>').join("");
+let gcur=null;
+function genQ(g){const q=g.gen();q.g=g;return q}
+function parseNum(v){return parseFloat(String(v).trim().replace(/\s/g,"").replace(",","."))}
+function check(q,v){const x=parseNum(v);if(isNaN(x))return false;const tol=q.tol||0.02;return Math.abs(x-q.ans)<=Math.max(Math.abs(q.ans)*tol,q.abs||0.0005)}
+function qHtml(q,idp){return '<div class="cq"><div class="tag">'+q.g.title+'</div><div class="q">'+q.q+'</div><input id="'+idp+'in" inputmode="decimal" autocomplete="off"> <b>'+(q.unit||"")+'</b><br><button class="btn" id="'+idp+'ok" style="margin-top:10px">Prüfen</button><div id="'+idp+'res"></div></div>'}
+function showRes(q,idp,ok){$(idp+"res").innerHTML='<div class="res '+(ok?'ok':'bad')+'"><b>'+(ok?'✓ Richtig':'✗ Nicht ganz')+'</b> – Ergebnis: <b>'+fmt(q.ans,q.dec==null?2:q.dec)+' '+(q.unit||"")+'</b><div style="margin-top:6px">'+q.sol+'</div></div>'}
+function newQ(){
+ const sel=$("gs").value;
+ const g=sel=="mix"?pick(DATA.gens):DATA.gens.find(x=>x.id==sel);
+ gcur=genQ(g);
+ $("gq").innerHTML=qHtml(gcur,"g");
+ const go=()=>{const ok=check(gcur,$("gin").value);const st=store.g[g.id]=store.g[g.id]||{r:0,n:0};st.n++;if(ok)st.r++;save();showRes(gcur,"g",ok);$("gok").textContent="Nächste Aufgabe";$("gok").onclick=newQ;gstat()};
+ $("gok").onclick=go;$("gin").onkeydown=e=>{if(e.key=="Enter")go()};
+ gstat();
+}
+function gstat(){$("gstat").innerHTML="Trefferquote: "+DATA.gens.map(g=>{const s=store.g[g.id];return g.title+" "+(s?s.r+"/"+s.n:"–")}).join(" · ")}
+$("gs").onchange=newQ;$("gn").onclick=newQ;
+// ---------- Probe ----------
+let P=null,ptimer=null;
+function probeHome(){
+ if(P&&!P.done){probeRender();return}
+ const nm=DATA.cards.length;
+ $("pv").innerHTML='<div class="cq"><div class="q">Probeklausur</div><p>Gemischte Fragen aus allen Themen (MUSS-Themen häufiger), dazu Rechenaufgaben, mit Zeitdruck wie in der Prüfung. Karten bewertest du ehrlich selbst. Falsche Karten landen automatisch in Box 1.</p><div class="bar"><label>Karten <select id="pn"><option>10</option><option selected>15</option><option>25</option></select></label><label>Rechnen <select id="pr"><option>3</option><option selected>5</option><option>8</option></select></label><label>Minuten <select id="pm"><option>20</option><option selected>40</option><option>60</option></select></label></div><button class="btn" id="pstart">Start</button></div><div id="plast"></div>';
+ $("pstart").onclick=probeStart;
+ if(store.last)$("plast").innerHTML='<div class="sm" style="margin-top:12px">Letzte Probe: '+store.last.s+' von '+store.last.t+' Punkten ('+store.last.d+')</div>';
+}
+function probeStart(){
+ const nc=+$("pn").value,nr=+$("pr").value,min=+$("pm").value;
+ const w=c=>SEC[c[0]].p=="M"?3:SEC[c[0]].p=="S"?2:1;
+ let pool=[];DATA.cards.forEach(c=>{for(let i=0;i<w(c);i++)pool.push(c)});
+ pool.sort(()=>Math.random()-.5);
+ const cards=[];for(const c of pool){if(!cards.includes(c))cards.push(c);if(cards.length>=nc)break}
+ const items=cards.map(c=>({t:"c",c:c}));
+ for(let i=0;i<nr;i++){const g=DATA.gens[i%DATA.gens.length];items.push({t:"g",q:genQ(DATA.gens.length>nr?pick(DATA.gens):g)})}
+ items.sort(()=>Math.random()-.5);
+ P={items:items,i:0,score:0,fails:[],end:Date.now()+min*60000,done:false,rev:false};
+ clearInterval(ptimer);ptimer=setInterval(tick,500);
+ probeRender();
+}
+function tick(){if(!P||P.done){clearInterval(ptimer);return}const left=P.end-Date.now();const el=$("ptm");if(el){const m=Math.max(0,Math.floor(left/60000)),s=Math.max(0,Math.floor(left/1000)%60);el.textContent=m+":"+String(s).padStart(2,"0")}if(left<=0)probeFinish()}
+function probeRender(){
+ if(P.i>=P.items.length){probeFinish();return}
+ const it=P.items[P.i];
+ let h='<div class="timer">⏱ <span id="ptm"></span> · Frage '+(P.i+1)+'/'+P.items.length+'</div>';
+ if(it.t=="c"){
+  h+='<div class="cq"><div class="tag">'+SEC[it.c[0]].title+'</div><div class="q">'+it.c[1]+'</div><div id="pa"></div><button class="btn" id="prev" style="margin-top:10px">Antwort zeigen</button></div>';
+  $("pv").innerHTML=h;
+  $("prev").onclick=()=>{$("pa").innerHTML='<div class="res bad" style="background:var(--box);color:var(--ink)">'+it.c[2]+'</div>';$("prev").outerHTML='<div class="act"><button class="n" id="pn1">✗ Falsch</button><button class="k" id="pk1">✓ Richtig</button></div>';
+   $("pk1").onclick=()=>{P.score++;P.i++;probeRender()};$("pn1").onclick=()=>{P.fails.push(it);P.i++;probeRender()}};
+ }else{
+  h+=qHtml(it.q,"p");$("pv").innerHTML=h;
+  const go=()=>{const ok=check(it.q,$("pin").value);if(ok)P.score++;else P.fails.push(it);showRes(it.q,"p",ok);$("pok").textContent="Weiter";$("pok").onclick=()=>{P.i++;probeRender()}};
+  $("pok").onclick=go;$("pin").onkeydown=e=>{if(e.key=="Enter")go()};
+ }
+ tick();
+}
+function probeFinish(){
+ P.done=true;clearInterval(ptimer);
+ const total=P.items.length;
+ P.fails.forEach(f=>{if(f.t=="c")setBox(f.c,false)});
+ store.last={s:P.score,t:total,d:dstr()};save();
+ const pct=Math.round(P.score/total*100);
+ let h='<div class="cq"><div class="q">Ergebnis: '+P.score+' / '+total+' ('+pct+' %)</div><p>'+(pct>=75?'Stark, das sitzt.':pct>=50?'Bestehensgrenze ist 50 %: jetzt gezielt die Fehler schließen.':'Unter 50 %: Fehlerkarten (Box 1) heute noch durchgehen und danach nochmal Probe.')+'</p>';
+ const fc=P.fails.filter(f=>f.t=="c");
+ if(fc.length)h+='<h3>Falsche Karten (jetzt in Box 1)</h3>'+fc.map(f=>'<div style="margin:8px 0"><b>'+f.c[1]+'</b><br>'+f.c[2]+'</div>').join("");
+ const fg=P.fails.filter(f=>f.t=="g");
+ if(fg.length)h+='<h3>Falsche Rechnungen</h3>'+fg.map(f=>'<div style="margin:8px 0"><b>'+f.q.g.title+'</b>: '+f.q.q+'<br>→ '+fmt(f.q.ans,f.q.dec==null?2:f.q.dec)+' '+(f.q.unit||"")+'<div class="sm">'+f.q.sol+'</div></div>').join("");
+ h+='<button class="btn" id="pagain" style="margin-top:10px">Neue Probe</button></div>';
+ $("pv").innerHTML=h;$("pagain").onclick=()=>{P=null;probeHome()};
+}
+</script>
+</body>
+</html>
