@@ -1,11 +1,9 @@
 #bl-ov{position:fixed;inset:0;z-index:400;overflow:hidden;font-family:Quicksand,system-ui,sans-serif;
   background:var(--glass-strong,rgba(255,255,255,.88));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   transition:background .8s,transform .7s cubic-bezier(.6,0,.4,1),opacity .7s;animation:blIn .5s ease both}
-#bl-ov.s2,#bl-ov.s3{background:rgba(14,6,24,.62)}
+#bl-ov.s2,#bl-ov.s3{background:rgba(12,5,22,.7)}
 #bl-ov.pack{transform:translate(45vw,-48vh) scale(.04);opacity:0;pointer-events:none}
-.bl-rain,.bl-fw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1s}
-.bl-rain{filter:blur(2.5px)}
-#bl-ov.s2 .bl-rain,#bl-ov.s3 .bl-rain{opacity:.7}
+.bl-fw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1s}
 #bl-ov.s2 .bl-fw,#bl-ov.s3 .bl-fw{opacity:1}
 .bl-x,.bl-env{position:absolute;z-index:5;top:calc(env(safe-area-inset-top) + 14px);right:16px;width:48px;height:48px;border-radius:50%;
   display:grid;place-items:center;border:1px solid var(--card-line,rgba(0,0,0,.12));background:var(--card,rgba(255,255,255,.6));color:var(--accent,#d6567a);cursor:pointer}
@@ -29,15 +27,39 @@
 .bl-st{stroke-dasharray:1;stroke-dashoffset:1}
 .bl-papier,.bl-blatt,.bl-schleife{opacity:0;transform-box:fill-box;transform-origin:50% 100%}
 .bl-fl{transform:scale(0) rotate(-40deg)}
-#bl-ov.s2 .bl-st,#bl-ov.s3 .bl-st{animation:blGrow 1.1s ease-out forwards}
-#bl-ov.s2 .bl-papier,#bl-ov.s3 .bl-papier,#bl-ov.s2 .bl-blatt,#bl-ov.s3 .bl-blatt{animation:blFade .9s .8s ease-out forwards}
-#bl-ov.s2 .bl-schleife,#bl-ov.s3 .bl-schleife{animation:blFade .8s 3.4s ease-out forwards}
-#bl-ov.s2 .bl-fl,#bl-ov.s3 .bl-fl{animation:blBloom 1.1s cubic-bezier(.2,1.2,.3,1) forwards}
+.bl-st.on{animation:blGrow .9s ease-out forwards}
+.bl-fl.on{animation:blBloom 1.1s cubic-bezier(.2,1.2,.3,1) forwards}
+.e-papier .bl-papier,.e-papier .bl-blatt{animation:blFade .8s ease-out forwards}
+.e-bow .bl-schleife{animation:blFade .7s ease-out forwards}
+#bl-ov.s2 .bl-bq,#bl-ov.s3 .bl-bq{animation:blCam 16s ease-out forwards}
+.bl-bq svg{transform-origin:50% 95%;animation:blSway 6s ease-in-out 3s infinite}
+/* Code-Fenster (geblurt) */
+.bl-code{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 58px);bottom:calc(env(safe-area-inset-bottom) + 24px);width:min(94vw,720px);transform:translateX(-50%) scale(.96);
+  opacity:0;filter:blur(2.6px);border-radius:16px;overflow:hidden;background:rgba(20,10,36,.7);border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 70px rgba(0,0,0,.5);transition:opacity 1s,transform 1.4s cubic-bezier(.2,.8,.2,1)}
+#bl-ov.s2 .bl-code,#bl-ov.s3 .bl-code{opacity:.85;transform:translateX(-50%) scale(1)}
+.bl-bar{display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;background:rgba(255,255,255,.07)}
+.bl-bar span{width:11px;height:11px;border-radius:50%;background:#ff5f57}.bl-bar span:nth-child(2){background:#febc2e}.bl-bar span:nth-child(3){background:#28c840}
+.bl-bar em{margin:0 auto;font:12px ui-monospace,Menlo,monospace;color:rgba(255,255,255,.5);font-style:normal;transform:translateX(-22px)}
+.bl-cb{position:absolute;inset:34px 0 0 0;overflow:hidden;padding:12px 0}
+.bl-body{transition:transform .16s linear;font:13.5px/22px ui-monospace,Menlo,Consolas,monospace;color:#e6dcf5;white-space:pre}
+.bl-ln{display:flex;height:22px}
+.bl-ln i{flex:0 0 38px;text-align:right;padding-right:14px;color:rgba(255,255,255,.28);font-style:normal}
+.bl-body b{font-weight:400}.bl-body .c{color:#7a6f96}.bl-body .s{color:#ff9cd0}.bl-body .k{color:#c77dff}.bl-body .n{color:#f2c14e}.bl-body .f{color:#7dd3fc}
+.bl-body u{display:inline-block;width:8px;height:16px;margin-left:1px;vertical-align:-3px;background:#ff7ab8;text-decoration:none;animation:blBl 1s steps(1) infinite}
+/* Licht, Strahlen, Bokeh */
+.bl-rays{position:absolute;left:50%;bottom:-20vmax;width:140vmax;height:140vmax;margin-left:-70vmax;opacity:0;transition:opacity 2s 1.5s;pointer-events:none;
+  background:repeating-conic-gradient(rgba(255,150,210,.20) 0 5deg,transparent 5deg 20deg);
+  -webkit-mask:radial-gradient(circle,#000 0,transparent 62%);mask:radial-gradient(circle,#000 0,transparent 62%);animation:blSpin 70s linear infinite}
+#bl-ov.s2 .bl-rays,#bl-ov.s3 .bl-rays{opacity:1}
+.bl-bk{position:absolute;bottom:-120px;border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,hsla(var(--h),90%,75%,.55),hsla(var(--h),90%,65%,0) 70%);animation:blRise 14s linear infinite}
+#bl-ov.s1 .bl-bk{display:none}
 /* Brief */
 .bl-letter{position:absolute;z-index:4;left:50%;top:calc(env(safe-area-inset-top) + 74px);width:min(88vw,520px);max-height:42vh;overflow:auto;
   padding:22px 24px;border-radius:24px;background:var(--glass-strong,rgba(255,255,255,.92));border:1px solid var(--card-line,rgba(255,255,255,.6));
-  box-shadow:0 14px 50px rgba(0,0,0,.35);transform:translate(-50%,-160%);transition:transform 1.3s cubic-bezier(.2,.9,.25,1.08);cursor:pointer}
-#bl-ov.s3 .bl-letter{transform:translate(-50%,0)}
+  box-shadow:0 14px 50px rgba(0,0,0,.35);transform:translate(-50%,-160%);opacity:0;transition:transform 1.3s cubic-bezier(.2,.9,.25,1.08),opacity .4s;cursor:pointer}
+#bl-ov.s3 .bl-letter{transform:translate(-50%,0);opacity:1}
 .bl-t{margin:0;font-family:'Caveat',cursive;font-size:clamp(25px,6.2vw,34px);line-height:1.32;color:var(--ink,#333);white-space:pre-wrap;min-height:1.3em}
 #bl-ov.s3:not(.fertig) .bl-t::after{content:'';display:inline-block;width:2px;height:1em;margin-left:3px;vertical-align:-.12em;background:var(--accent,#d6567a);animation:blBl 1s steps(1) infinite}
 /* Kategorie in "Wir zwei" */
@@ -47,6 +69,10 @@
 .bl-card small{color:var(--ink-soft)}
 @keyframes blIn{from{opacity:0}to{opacity:1}}
 @keyframes blSlide{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes blSway{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg)}}
+@keyframes blCam{from{scale:1}to{scale:1.07}}
+@keyframes blSpin{to{transform:rotate(360deg)}}
+@keyframes blRise{0%{transform:translateY(0);opacity:0}15%{opacity:.8}85%{opacity:.6}100%{transform:translateY(-115vh);opacity:0}}
 @keyframes blWink{0%,100%{transform:rotate(0)}50%{transform:rotate(-5deg) scale(1.03)}}
 @keyframes blGrow{to{stroke-dashoffset:0}}
 @keyframes blFade{to{opacity:1}}

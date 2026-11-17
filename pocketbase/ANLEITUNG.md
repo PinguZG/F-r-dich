@@ -1942,8 +1942,8 @@ Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub
 ## Wisch-Reiterwechsel entfernt (16.11.2026, wir-v77)
 Das Wischen links/rechts zwischen den Hauptreitern (a1.js) ist raus, weil es das Foto-Swipen störte. Rücksetz-Weg: `git checkout vor-swipe -- app/a1.js`.
 
-## „For you my love": Blumen-Überraschung (17.11.2026, wir-v80)
-**Neu:** `app/blume.js` + `app/blume.css` (ersetzen `brief.js/css`). Beim App-Start (einmal pro Gerät) und jederzeit unter *Wir zwei → For you my love*: Strichfigur mit Rosenstrauß → Tipp auf die Blume → geblurter Code-Regen, Strauß pinker Lilien wächst, Feuerwerk dahinter → Brief fährt von oben, Text tippt sich (Schreibmaschine) → Brief-Symbol oben rechts packt ein.
+## „For you my love": Blumen-Überraschung (17.11.2026, wir-v80, Code-Fenster v81)
+**Neu:** `app/blume.js` + `app/blume.css` (ersetzen `brief.js/css`). Beim App-Start (einmal pro Gerät) und jederzeit unter *Wir zwei → For you my love*: Strichfigur mit Rosenstrauß → Tipp auf die Blume → geblurtes Code-Fenster (Code „programmiert" den Strauß live, Zeilen steuern Stängel/Blüten/Feuerwerk), Strauß pinker Lilien, Raketen- und Herz-Feuerwerk, Bokeh, Lichtstrahlen → Brief fährt von oben, Text tippt sich (Schreibmaschine) → Brief-Symbol oben rechts packt ein.
 **Test-Stand:** nur für Daniel (`FUER = /daniel/i`). Brieftext: Konstante `LETTER` in `blume.js`. Für Ida: `FUER` auf `/ida/i`, `ID` ändern, `LETTER` setzen, `wir-vNN` hochzählen.
 **Datenbank:** keine Änderung („gesehen" nur im Gerät: `localStorage` `wir-<ID>-<userId>`).
 **Rücksetz-Weg:** `git checkout vor-blume -- app/index.html app/sw.js` (blume.js/css können liegen bleiben).
