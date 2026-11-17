@@ -217,7 +217,21 @@
     }
   }
 
-  const CMDS = { '/online': cmdOnline, '/log': a => cmdLog(a), '/heute': cmdToday, '/zuhause': a => cmdLog(a, 'home'), '/spiele': a => cmdLog(a, 'game') };
+  // /b [Name] [Anzahl]: zuletzt verschickte Benachrichtigungen (ab Einführung des Logs)
+  async function cmdPush(args) {
+    let limit = 30, user = '';
+    for (const a of args) { if (/^d+$/.test(a)) limit = Math.min(200, +a); else user = a; }
+    const rows = await pb.send('/api/console/push', { query: { limit, user } });
+    if (!rows.length) { line('(noch keine Benachrichtigungen protokolliert)', 'dim'); return; }
+    let day = '';
+    for (const x of rows) {
+      const d = toDate(x.time), k = dm(d);
+      if (k !== day) { day = k; line(`── ${WD[d.getDay()]} ${k} ──`, 'dim'); }
+      line(`${hm(d)} ${x.sent ? '✓' : '✗'} ${x.to}: ${x.title}${x.body ? ' – ' + x.body : ''}${x.sent ? '' : ' (' + (x.error || 'nicht zugestellt') + ')'}`, x.sent ? '' : 'err');
+    }
+  }
+
+  const CMDS = { '/b': cmdPush, '/online': cmdOnline, '/log': a => cmdLog(a), '/heute': cmdToday, '/zuhause': a => cmdLog(a, 'home'), '/spiele': a => cmdLog(a, 'game') };
 
   $('termForm').addEventListener('submit', async e => {
     e.preventDefault();

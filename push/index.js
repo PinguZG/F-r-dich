@@ -149,12 +149,14 @@ async function deliver(to, category, payload, urgency, useTopic, app = 'wir') {
   }
   const body = JSON.stringify(payload);
   const errors = [];
+  let delivered = 0;
   for (const s of subs) {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, body, {
         TTL: 24 * 3600, urgency,
         ...(payload.tag && useTopic ? { topic: payload.tag.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 32) } : {}),
       });
+      delivered++;
       log('gesendet', category, '->', `${name(to)} [${s.app || 'wir'}]`, JSON.stringify(payload.title));
     } catch (e) {
       if (e.statusCode === 404 || e.statusCode === 410) {
@@ -167,6 +169,9 @@ async function deliver(to, category, payload, urgency, useTopic, app = 'wir') {
     }
   }
   if (!subs.length) errors.push('kein Push-Abo');
+  // Protokoll für den Konsole-Befehl /b (darf das Senden nie stören)
+  api('POST', '/api/collections/push_log/records', { user: to, category, title: String(payload.title || '').slice(0, 200), body: String(payload.body || '').slice(0, 500), sent: delivered, error: errors.join(' | ').slice(0, 300) })
+    .catch(err => log('push_log fehlgeschlagen', err.message));
   return errors;
 }
 

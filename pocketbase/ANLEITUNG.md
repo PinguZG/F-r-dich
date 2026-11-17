@@ -755,6 +755,7 @@ Getestet mit einer lokalen PocketBase 0.40.5 (Kopie der Live-DB):
 |---|---|
 | `/online` | pro Person: gerade online ja/nein, zuletzt online, die letzten 12 Sitzungen mit Start, Ende und Dauer |
 | `/log` | Aktivitäts-Log beider Personen, neueste zuerst (60 Einträge), nach Tagen gruppiert: App geöffnet/geschlossen (mit Online-Dauer), besuchte Bereiche mit Dauer (Spiele mit 🎲), 👀 Öffne-wenn-Brief geöffnet (Kategorie), Foto angesehen, Bild im Reiter angesehen, 🎲 Sudoku angefangen/gelöst. Bei Reitern (Dates/Überraschungen) steht der Reitername dabei. |
+| `/b` | zuletzt verschickte Benachrichtigungen (30), nach Tagen: Uhrzeit, ✓ zugestellt / ✗ nicht zugestellt (mit Grund, z. B. „kein Push-Abo“), Empfänger, Titel – Text. `/b ida`, `/b 100`, `/b 100 ida` wie bei `/log`. Gilt erst ab Einführung (17.11.2026, wir-v88). |
 | `/log 150` | mehr Einträge (höchstens 300) |
 | `/log ida` / `/log daniel` | nur eine Person (Namensanfang reicht). Kombinierbar: `/log 100 ida` |
 | `/heute` | Zusammenfassung von heute pro Person: wie oft geöffnet, Online-Zeit der abgeschlossenen Sitzungen, die 6 längsten Bereiche |
@@ -1966,3 +1967,7 @@ Das Wischen links/rechts zwischen den Hauptreitern (a1.js) ist raus, weil es das
 - Stoff-Tabellen werden unter 700 px Breite als Karten dargestellt (Spaltenname als Beschriftung), ab Tablet bleibt die scrollbare Tabelle.
 - Neu `app/flow.css` + `app/flow.js`: stärkerer Blur/Deckkraft der unteren Leiste, weiche Seitenübergänge, versetztes Einblenden, federnder Druck, Tipp-Welle (aus bei „Bewegung reduzieren“).
 - Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout ab53ad4 -- app/index.html app/sw.js app/lernen.js app/lernen.css` und `git rm app/flow.css app/flow.js`.
+
+### Konsole /b: Benachrichtigungs-Log (17.11.2026, wir-v88)
+Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Collection `push_log` (Migration `1795500000_wir_push_log.js`, nur additiv, API gesperrt). Lesen über `/api/console/push` (`pb_hooks/wir_pushlog.pb.js`, Cron löscht nach 90 Tagen). Befehl `/b` in der Konsole. Frühere Nachrichten sind nicht nachträglich sichtbar.
+**Sicherung:** `/home/pingu/backups/vor-lernen-<Datum>` (heute) bzw. Tag `vor-benachrichtigungslog`. **Rücksetz-Weg:** `git checkout vor-benachrichtigungslog -- push shared/activity.js app/sw.js`, `git rm pocketbase/pb_hooks/wir_pushlog.pb.js`, committen; Collection `push_log` im Admin löschen (optional).
