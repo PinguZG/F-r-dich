@@ -1,12 +1,13 @@
 /* "For you my love": Strichfigur mit Blumenstrauß -> Tipp -> Code-Regen (geblurt), pinke Lilien + Feuerwerk -> Brief fährt runter.
    Startet einmal beim App-Start (pro Gerät) und ist jederzeit unter Wir zwei > "For you my love" abspielbar. */
 (function () {
-  const FUER = /daniel/i; // TEST: nur Daniel. Für Ida später /ida/i.
+  const MIT_BRIEF = false; // Brief ist vorerst raus (Symbol + Vollbild-Text); true + LETTER setzen, um ihn wieder zu zeigen
   const ID = 'blume-1';
   const LETTER = 'Hey du, das hier ist nur ein Testtext, der Buchstabe für Buchstabe erscheint. Wenn du das liest, funktioniert die Schreibmaschine. Schön, dass es dich gibt, und jetzt pack mich ein.'; // <- hier später den echten Brief eintragen
   const SPEED = 42; // ms pro Zeichen
   const me = () => (window.WIR_PB && (WIR_PB.authStore.record || WIR_PB.authStore.model)) || null;
-  const isTarget = () => { const u = me(); return !!u && (FUER.test(u.name || '') || FUER.test(u.email || '')); };
+  const isDaniel = () => { const u = me(); return !!u && (/daniel/i.test(u.name || '') || /^daniel/i.test(u.email || '')); };
+  const isIda = () => !!me() && !isDaniel(); // Zwei Nutzer: wer nicht Daniel ist, ist Ida
   const key = () => 'wir-' + ID + '-' + (me() ? me().id : '');
   const seen = () => { try { return !!localStorage.getItem(key()); } catch (e) { return false; } };
   const mark = () => { try { localStorage.setItem(key(), '1'); } catch (e) {} };
@@ -330,7 +331,7 @@ uint32_t murmur(const uint8_t *p, size_t n) {
           ov.classList.add('bf-land');
           later(() => ov.classList.add('bf-kiss'), 150);
           later(() => ov.classList.add('bf-us'), 700);
-          later(() => ov.classList.add('env'), 2900); // Animation fertig + 1 s -> Brief-Symbol klappt auf
+          if (MIT_BRIEF) later(() => ov.classList.add('env'), 2900); // Animation fertig + 1 s -> Brief-Symbol klappt auf
         });
       }
     };
@@ -425,9 +426,9 @@ uint32_t murmur(const uint8_t *p, size_t n) {
 
   function wire() {
     const sec = document.getElementById('blSection'), btn = document.getElementById('blOpen');
-    if (sec && isTarget()) sec.hidden = false;
+    if (sec && me()) sec.hidden = false;
     if (btn && !btn.dataset.w) { btn.dataset.w = 1; btn.addEventListener('click', open); }
   }
   window.wirBlume = { open };
-  document.addEventListener('wir:started', () => { wire(); if (isTarget() && !seen()) setTimeout(open, 700); });
+  document.addEventListener('wir:started', () => { wire(); if (isIda() && !seen()) setTimeout(open, 700); });
 })();
