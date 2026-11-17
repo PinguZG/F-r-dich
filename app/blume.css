@@ -1,7 +1,7 @@
 #bl-ov{position:fixed;inset:0;z-index:400;overflow:hidden;font-family:Quicksand,system-ui,sans-serif;
   background:var(--glass-strong,rgba(255,255,255,.88));-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   transition:background .8s,transform .7s cubic-bezier(.6,0,.4,1),opacity .7s;animation:blIn .5s ease both}
-#bl-ov.s2{background:rgba(3,5,9,.93)}
+#bl-ov.s2{background:#1e1e1e}
 #bl-ov.pack{transform:translate(45vw,-48vh) scale(.04);opacity:0;pointer-events:none}
 .bl-fw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1s}
 #bl-ov.s2 .bl-fw{opacity:1}
@@ -17,17 +17,23 @@
 .bl-pick{border:0;background:none;padding:0;cursor:pointer;width:min(84vw,380px);animation:blSlide .8s .15s cubic-bezier(.2,.9,.3,1.2) both}
 .bl-pick svg{width:100%;height:auto;display:block;overflow:visible}
 .bl-strauss{transform-origin:262px 214px;animation:blWink 2.2s ease-in-out infinite}
-/* Mac-Terminal, gut lesbar */
-.bl-term{position:absolute;inset:0;opacity:0;filter:blur(.5px);transition:opacity 1s}
+/* VS-Code-Look: Blur per text-shadow (dauerhaft, kein Filter -> kein Flackern) */
+.bl-term{position:absolute;inset:0;opacity:0;transition:opacity 1s}
 #bl-ov.s2 .bl-term{opacity:1}
-.bl-bar{display:flex;align-items:center;gap:8px;height:calc(env(safe-area-inset-top) + 38px);padding:env(safe-area-inset-top) 16px 0;background:rgba(40,40,44,.5)}
+.bl-bar{display:flex;align-items:center;gap:8px;height:calc(env(safe-area-inset-top) + 38px);padding:env(safe-area-inset-top) 16px 0;background:#323233}
 .bl-bar span{width:12px;height:12px;border-radius:50%;background:#ff5f57}.bl-bar span:nth-child(2){background:#febc2e}.bl-bar span:nth-child(3){background:#28c840}
 .bl-bar em{margin:0 auto;transform:translateX(-24px);font:600 12.5px -apple-system,system-ui,sans-serif;font-style:normal;color:rgba(255,255,255,.6)}
-.bl-cb{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top) + 38px);height:31vh;overflow:hidden;padding:10px 16px}
-.bl-body{transition:transform .14s linear;font:13px/19px "SF Mono",ui-monospace,Menlo,Consolas,monospace;color:#e8e8ea;white-space:pre}
-.bl-ln{height:19px}
-.bl-body b{font-weight:400}.bl-body .c{color:#9a9aa2}.bl-body .p{color:#7ee0a0}.bl-body .d{color:#8d8d96}.bl-body .g{color:#5ee58f}.bl-body .x{color:#ff8ec8}.bl-body .f{color:#7fd6ff}
-.bl-body u{display:inline-block;width:7px;height:15px;margin-left:1px;vertical-align:-3px;background:#e8e8ea;text-decoration:none;animation:blBl 1s steps(1) infinite}
+.bl-cb{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top) + 38px);height:62vh;overflow:hidden;padding:8px 0}
+.bl-body{font:12px/18px "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre;color:transparent;text-shadow:0 0 1px #d4d4d4,0 0 1px #d4d4d4}
+.bl-ln{display:flex;height:18px;color:transparent}
+.bl-ln i{flex:0 0 34px;text-align:right;padding-right:12px;font-style:normal;text-shadow:0 0 1px #858585}
+.bl-body b{font-weight:400;color:transparent}
+.bl-body .c{text-shadow:0 0 1px #6a9955,0 0 1px #6a9955}.bl-body .s{text-shadow:0 0 1px #ce9178,0 0 1px #ce9178}
+.bl-body .q{text-shadow:0 0 1px #c586c0,0 0 1px #c586c0}.bl-body .n{text-shadow:0 0 1px #b5cea8,0 0 1px #b5cea8}
+.bl-body .k{text-shadow:0 0 1px #569cd6,0 0 1px #569cd6}.bl-body .f{text-shadow:0 0 1px #dcdcaa,0 0 1px #dcdcaa}
+.bl-body .t{text-shadow:0 0 1px #4ec9b0,0 0 1px #4ec9b0}.bl-body .v{text-shadow:0 0 1px #9cdcfe,0 0 1px #9cdcfe}
+.bl-body .z{text-shadow:0 0 1px #4fc1ff,0 0 1px #4fc1ff}
+.bl-body u{display:inline-block;width:7px;height:14px;margin-left:1px;vertical-align:-3px;background:#aeafad;text-decoration:none}
 /* Strauß (groß) */
 .bl-bq{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);width:min(98vw,48vh,500px);transform:translateX(-50%);opacity:0;pointer-events:none;filter:drop-shadow(0 4px 18px rgba(255,100,180,.35))}
 .bl-bq svg{width:100%;height:auto;display:block;overflow:visible}
@@ -42,15 +48,12 @@
 .e-papier .bl-lf{animation:blLeaf 1s var(--d) cubic-bezier(.2,1,.3,1) forwards}
 .e-papier .bl-gr{animation:blFade 1.2s forwards}
 .e-bow .bl-schleife{animation:blFade .8s ease-out forwards}
-/* Schmetterlinge + "us" */
+/* Schmetterlinge + "us" (Flug per JS) */
 .bf{opacity:0}
-.bf-go .bf1{animation:blFly1 3.3s cubic-bezier(.4,.1,.3,1) forwards}
-.bf-go .bf2{animation:blFly2 3.3s .25s cubic-bezier(.4,.1,.3,1) forwards}
+.bf-go .bf{opacity:1}
 .wl,.wr{transform-origin:0 0}
 .bf-go .wl,.bf-go .wr{animation:blFlap .13s ease-in-out infinite alternate}
 .bf-land .wl,.bf-land .wr{animation-duration:.8s}
-.bt{transform:rotate(0);transition:transform 1s ease}
-.bf-land .bt{transform:rotate(var(--tilt))}
 .bf-kiss .bf1 .bt{animation:blNuz1 .7s ease-in-out 2}
 .bf-kiss .bf2 .bt{animation:blNuz2 .7s ease-in-out 2}
 .bl-usg{opacity:0;transform-box:fill-box;transform-origin:50% 100%}
@@ -92,10 +95,8 @@
 @keyframes blPulse{50%{transform:scale(1.1);opacity:.8}}
 @keyframes blBl{50%{opacity:0}}
 @keyframes blFlap{from{transform:scaleX(1)}to{transform:scaleX(.18)}}
-@keyframes blFly1{0%{opacity:1;transform:translate(-330px,-90px) rotate(-25deg)}30%{transform:translate(-240px,50px) rotate(15deg)}55%{transform:translate(-120px,-45px) rotate(-12deg)}80%{transform:translate(-35px,18px) rotate(10deg)}100%{opacity:1;transform:translate(0,0) rotate(0)}}
-@keyframes blFly2{0%{opacity:1;transform:translate(340px,-130px) rotate(25deg)}30%{transform:translate(230px,30px) rotate(-15deg)}55%{transform:translate(110px,-55px) rotate(12deg)}80%{transform:translate(32px,16px) rotate(-10deg)}100%{opacity:1;transform:translate(0,0) rotate(0)}}
-@keyframes blNuz1{50%{transform:rotate(calc(var(--tilt) + 9deg))}}
-@keyframes blNuz2{50%{transform:rotate(calc(var(--tilt) - 9deg))}}
+@keyframes blNuz1{50%{transform:rotate(9deg)}}
+@keyframes blNuz2{50%{transform:rotate(-9deg)}}
 @keyframes blUs{0%{opacity:0;transform:translateY(8px) scale(.5)}60%{opacity:1;transform:translateY(-2px) scale(1.12)}100%{opacity:1;transform:translateY(-4px) scale(1)}}
 @keyframes blEnvIn{0%{transform:scale(0) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
 @keyframes blFlap2{to{transform:scaleY(-1)}}

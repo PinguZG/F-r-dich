@@ -47,15 +47,15 @@
     return s + '</g></g>';
   }
   function butter() {
-    const wing = (up, lo) => `<path d="M0 -1C4 -15 19 -16 16 -3C15 2 6 3 0 0Z" fill="url(#${up})" stroke="rgba(255,255,255,.45)" stroke-width=".5"/><path d="M0 0C9 2 15 7 11 13C7 16 1 10 0 3Z" fill="url(#${lo})" stroke="rgba(255,255,255,.4)" stroke-width=".5"/><circle cx="10" cy="-8" r="1.8" fill="rgba(255,255,255,.55)"/>`;
-    const bf = (cls, x, y, up, lo, tilt) => `<g transform="translate(${x} ${y}) scale(1.9)"><g class="bf ${cls}"><g class="bt" style="--tilt:${tilt}deg"><g class="wl"><g transform="scale(-1 1)">${wing(up, lo)}</g></g><g class="wr">${wing(up, lo)}</g><ellipse cx="0" cy="0" rx="1.4" ry="7.5" fill="#2a1a3a"/><path d="M-.8 -7Q-3 -12 -5 -13M.8 -7Q3 -12 5 -13" stroke="#2a1a3a" stroke-width=".6" fill="none"/></g></g></g>`;
-    return `<defs><linearGradient id="blB1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fd8ff"/><stop offset="1" stop-color="#b78bff"/></linearGradient>
-      <linearGradient id="blB2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc27a"/><stop offset="1" stop-color="#ff6fae"/></linearGradient>
-      <linearGradient id="blB3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9f1d6"/><stop offset="1" stop-color="#6fc7ff"/></linearGradient>
-      <linearGradient id="blB4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd9a0"/><stop offset="1" stop-color="#ff9d6f"/></linearGradient></defs>
-      ${bf('bf1', 149, 68, 'blB1', 'blB2', 52)}${bf('bf2', 171, 68, 'blB3', 'blB4', -52)}
-      <g class="bl-usg"><path d="M160 33c-3-5-10-2-6 3c1.5 2 4 4 6 5.5c2-1.5 4.5-3.5 6-5.5c4-5-3-8-6-3z" fill="#ff6fae"/>
-      <text x="160" y="14" text-anchor="middle" font-family="Caveat,cursive" font-size="17" font-weight="700" fill="#fff" stroke="#1a0a24" stroke-width="3" paint-order="stroke">us</text></g>`;
+    const wing = (up, lo, ed) => `<path d="M0 -1C4 -15 19 -16 16 -3C15 2 6 3 0 0Z" fill="url(#${up})" stroke="${ed}" stroke-width=".6"/><path d="M0 0C9 2 15 7 11 13C7 16 1 10 0 3Z" fill="url(#${lo})" stroke="${ed}" stroke-width=".6"/><circle cx="10" cy="-8" r="1.8" fill="rgba(255,255,255,.55)"/>`;
+    const bf = (cls, up, lo, ed) => `<g class="bfp" transform="translate(-100 -100)"><g class="bf ${cls}"><g class="bt"><g class="wl"><g transform="scale(-1 1)">${wing(up, lo, ed)}</g></g><g class="wr">${wing(up, lo, ed)}</g><ellipse cx="0" cy="0" rx="1.4" ry="7.5" fill="#2a1a3a"/><path d="M-.8 -7Q-3 -12 -5 -13M.8 -7Q3 -12 5 -13" stroke="#2a1a3a" stroke-width=".6" fill="none"/></g></g></g>`;
+    return `<defs><linearGradient id="blB1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e3d6ff"/></linearGradient>
+      <linearGradient id="blB2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffd9ec"/></linearGradient>
+      <linearGradient id="blB3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient>
+      <linearGradient id="blB4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#ff9a3c"/></linearGradient></defs>
+      ${bf('bf1', 'blB1', 'blB2', 'rgba(120,90,170,.55)')}${bf('bf2', 'blB3', 'blB4', '#5a2a05')}
+      <g class="bl-usg"><path d="M0 4c-3-5-10-2-6 3c1.5 2 4 4 6 5.5c2-1.5 4.5-3.5 6-5.5c4-5-3-8-6-3z" fill="#ff6fae" transform="translate(160 30) scale(1.6)"/>
+      <text x="160" y="22" text-anchor="middle" font-family="Caveat,cursive" font-size="36" font-weight="700" fill="#fff" stroke="#1a0a24" stroke-width="4" paint-order="stroke">us</text></g>`;
   }
   function strauss() {
     const F = [[160, 108, 64, 0], [78, 170, 54, -34], [242, 166, 54, 34], [112, 246, 46, -18], [208, 250, 46, 18], [160, 196, 42, 2]];
@@ -92,31 +92,160 @@
   const ICO_ENV = '<svg viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><rect x="8" y="22" width="48" height="34" rx="5" fill="#b83a78"/><rect class="bl-pap" x="15" y="20" width="34" height="26" rx="2" fill="#fff"/><path d="M10 55L32 36L54 55Z" fill="#e0559b"/><path class="bl-flap" d="M8 22L32 41L56 22Z" fill="#ff8ec8"/></svg>';
   const ICO_MAIL = '<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>';
 
-  /* ---------- Terminal-Hintergrund (läuft wie ein echter Mac-Terminal-Lauf) ---------- */
-  const P = 'daniel@Mac';
-  const CODE = (() => {
-    let n = .08; const T = () => { n += .13 + Math.random() * .09; return '[00:' + n.toFixed(2).padStart(5, '0') + '] '; };
-    const o = (t, ev, cps, cmd) => ({ t, ev: ev || '', cps: cps || 0, cmd: !!cmd });
-    const a = [
-      o('Last login: Tue Nov 17 20:41:07 on ttys000', '', 1200),
-      o(`${P} ~ % cd ~/for-you`, '', 0, 1),
-      o(`${P} for-you % node bloom.js --pink`, '', 0, 1),
-      o(T() + '✔ loading garden .............. ok'),
-      o(T() + '✔ wrapping bouquet ........... ok', 'papier')
-    ];
-    for (let i = 0; i < 6; i++) { a.push(o(T() + `stem[${i}]  ██████████ 100%`, 's' + i)); a.push(o(T() + `lily[${i}]  bloom ✿            ✔`, 'f' + i)); }
-    a.push(o(T() + '✔ tying ribbon .............. ok', 'bow'));
-    a.push(o(T() + '✦ launching fireworks ....... ok', 'fw'));
-    a.push(o(T() + '✦ releasing butterflies ..... ok', 'butter'));
-    a.push(o(`${P} for-you % `, '', 1200));
-    return a;
-  })();
+  /* ---------- Hintergrund: schnell durchlaufender Code in echten VS-Code-Dark+-Farben ---------- */
+  const SNIPS = [
+    ['shader.frag', `#version 460 core
+uniform vec3 uCam;
+uniform float uTime;
+out vec4 frag;
+
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
+
+vec3 march(vec3 ro, vec3 rd) {
+  float t = 0.0;
+  for (int i = 0; i < 128; i++) {
+    vec3 p = ro + rd * t;
+    float d = sdSphere(p, 1.0);
+    if (d < 0.001) break;
+    t += d * 0.9;
+  }
+  return vec3(t * 0.12);
+}`],
+    ['stream.ts', `export async function* stream<T>(
+  src: AsyncIterable<T>,
+  size = 64
+) {
+  const buf: T[] = [];
+  for await (const x of src) {
+    buf.push(x);
+    if (buf.length >= size) {
+      yield buf.splice(0, size);
+    }
+  }
+  if (buf.length) yield buf;
+}`],
+    ['packet.rs', `use std::sync::Arc;
+use tokio::sync::mpsc;
+
+#[derive(Debug, Clone)]
+pub struct Packet {
+    pub id: u64,
+    pub payload: Vec<u8>,
+}
+
+impl Packet {
+    pub fn checksum(&self) -> u32 {
+        self.payload.iter()
+            .fold(0x811c9dc5, |h, b| {
+                (h ^ *b as u32)
+                    .wrapping_mul(16777619)
+            })
+    }
+}`],
+    ['layer.py', `import numpy as np
+
+class Dense:
+    def __init__(self, n_in, n_out):
+        self.w = np.random.randn(n_in, n_out)
+        self.w *= np.sqrt(2.0 / n_in)
+        self.b = np.zeros((1, n_out))
+
+    def forward(self, x):
+        self.x = x
+        return np.maximum(0, x @ self.w + self.b)
+
+    def backward(self, g, lr=1e-3):
+        g = g * (self.x @ self.w > 0)
+        self.w -= lr * self.x.T @ g
+        return g @ self.w.T`],
+    ['worker.go', `func worker(id int, jobs <-chan Job,
+    out chan<- Result) {
+  for j := range jobs {
+    r := j.Run()
+    select {
+    case out <- r:
+    case <-time.After(2 * time.Second):
+      log.Printf("w%d timeout", id)
+    }
+  }
+}
+
+func main() {
+  jobs := make(chan Job, 256)
+  go worker(1, jobs, results)
+}`],
+    ['gl.js', `const gl = canvas.getContext("webgl2");
+const prog = link(gl, VERT, FRAG);
+const uTime = gl.getUniformLocation(prog, "t");
+gl.useProgram(prog);
+
+function frame(t) {
+  gl.clearColor(0.05, 0.02, 0.1, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform1f(uTime, t * 0.001);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);`],
+    ['spring.tsx', `export function useSpring(target: number) {
+  const [v, setV] = useState(target);
+  const vel = useRef(0);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const f = (target - v) * 0.12;
+      vel.current = vel.current * 0.8 + f;
+      setV(x => x + vel.current);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return v;
+}`],
+    ['hash.c', `#include <stdint.h>
+#include <stddef.h>
+
+static uint32_t rotl(uint32_t x, int k) {
+  return (x << k) | (x >> (32 - k));
+}
+
+uint32_t murmur(const uint8_t *p, size_t n) {
+  uint32_t h = 0x9747b28c;
+  for (size_t i = 0; i < n; i++) {
+    h ^= p[i] * 0xcc9e2d51;
+    h = rotl(h, 13) * 5 + 0xe6546b64;
+  }
+  return h ^ (h >> 16);
+}`]
+  ];
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const KW_S = new Set('const let var function class struct enum union fn pub impl trait mod use type interface namespace new static void int float double bool char long short unsigned signed auto def lambda self this extends implements typeof instanceof in of as mut async uniform out layout'.split(' '));
+  const KW_C = new Set('if else for while return break continue switch case default try catch throw await yield import export from do match go select defer finally with pass raise elif and or not'.split(' '));
+  const KW_L = new Set('true false null undefined None True False nil'.split(' '));
+  const TY = new Set('string number boolean any never u8 u16 u32 u64 i32 i64 f32 f64 usize str vec2 vec3 vec4 mat4 uint32_t size_t uint8_t'.split(' '));
   function hl(s) {
-    let o = '', i = 0, m; const re = /^(Last login:.*)$|^(\w+@\w+ [^%]*%)|(\[\d\d:\d\d\.\d\d\])|(✔|\bok\b|100%)|(✿|✦|✉|█+)|(\bstem\[\d\]|\blily\[\d\])/g;
-    const C = ['', 'c', 'p', 'd', 'g', 'x', 'f'];
-    while ((m = re.exec(s))) { o += esc(s.slice(i, m.index)); let k = 1; while (!m[k]) k++; o += `<b class="${C[k]}">${esc(m[0])}</b>`; i = re.lastIndex; }
+    let o = '', i = 0, m; const re = /(\/\/.*$)|("(?:\\.|[^"\\])*"?|'(?:\\.|[^'\\])*'?|`[^`]*`?)|(^\s*#\w+)|(\b0x[0-9a-fA-F]+\b|\b\d+(?:\.\d+)?f?\b)|([A-Za-z_]\w*)/g;
+    while ((m = re.exec(s))) {
+      o += esc(s.slice(i, m.index)); let c = '';
+      if (m[1]) c = 'c'; else if (m[2]) c = 's'; else if (m[3]) c = 'q'; else if (m[4]) c = 'n';
+      else {
+        const w = m[5], nx = s.slice(re.lastIndex).match(/^\s*\(/);
+        if (KW_C.has(w)) c = 'q'; else if (KW_S.has(w) || KW_L.has(w) || TY.has(w)) c = 'k';
+        else if (nx) c = 'f'; else if (/^[A-Z][a-z]/.test(w)) c = 't'; else if (/^[A-Z][A-Z0-9_]+$/.test(w)) c = 'z'; else c = 'v';
+      }
+      o += `<b class="${c}">${esc(m[0])}</b>`; i = re.lastIndex;
+    }
     return o + esc(s.slice(i));
+  }
+  function* codeStream() {
+    let last = -1;
+    for (;;) {
+      let k; do { k = Math.floor(Math.random() * SNIPS.length); } while (k === last); last = k;
+      yield { file: SNIPS[k][0], lines: SNIPS[k][1].split('\n') };
+    }
   }
 
   /* ---------- Feuerwerk (Raketen, Herz-Explosionen, Funkeln) ---------- */
@@ -169,7 +298,7 @@
     if (document.getElementById('bl-ov') || !me()) return;
     const ov = document.createElement('div');
     ov.id = 'bl-ov'; ov.className = 's1';
-    ov.innerHTML = `<div class="bl-term" aria-hidden="true"><div class="bl-bar"><span></span><span></span><span></span><em>daniel — zsh — 80×24</em></div><div class="bl-cb"><div class="bl-body"></div></div></div>
+    ov.innerHTML = `<div class="bl-term" aria-hidden="true"><div class="bl-bar"><span></span><span></span><span></span><em>for-you</em></div><div class="bl-cb"><div class="bl-body"></div></div></div>
       <canvas class="bl-fw"></canvas>
       <button class="bl-x" type="button" aria-label="Schließen">${ICO_X}</button>
       <div class="bl-intro"><p class="bl-hint">For you my love 💗<small>Drück auf die Blume</small></p>
@@ -186,7 +315,7 @@
     ov.querySelector('.bl-x').addEventListener('click', () => { ov.classList.add('pack'); later(end, 500); });
     ov.querySelector('.bl-pick').addEventListener('click', () => {
       if (!ov.classList.contains('s1')) return;
-      ov.className = 's2'; fx = engine(ov); later(runCode, 900);
+      ov.className = 's2'; fx = engine(ov); later(runCode, 300); schedule();
     }, { once: true });
     ov.querySelector('.bl-env').addEventListener('click', () => { ov.classList.add('open'); if (!typed) { typed = true; typeLetter(); } });
     ov.querySelector('.bl-fold').addEventListener('click', () => ov.classList.remove('open'));
@@ -196,39 +325,88 @@
       bow() { ov.classList.add('e-bow'); },
       fw() { fx.fire(); },
       butter() {
-        ov.classList.add('bf-go');
-        later(() => { ov.classList.add('bf-land'); fx.calm(); }, 3300);
-        later(() => ov.classList.add('bf-kiss'), 3900);
-        later(() => ov.classList.add('bf-us'), 4500);
-        later(() => ov.classList.add('env'), 6900); // fertig + 1 s -> Brief-Symbol klappt auf
+        ov.classList.add('bf-go'); fx.calm();
+        flyButterflies(() => {
+          ov.classList.add('bf-land');
+          later(() => ov.classList.add('bf-kiss'), 150);
+          later(() => ov.classList.add('bf-us'), 700);
+          later(() => ov.classList.add('env'), 2900); // Animation fertig + 1 s -> Brief-Symbol klappt auf
+        });
       }
     };
     function bloomAt(i) {
       const f = ov.querySelector(`.bl-fl[data-i="${i}"]`); if (!f) return;
       f.classList.add('on'); later(() => { const r = f.getBoundingClientRect(); fx.sparkle(r.left + r.width / 2, r.top + r.height / 2); }, 450);
     }
+    function schedule() {
+      later(EV.papier, 300);
+      for (let i = 0; i < 6; i++) {
+        later(() => ov.querySelector(`.bl-st[data-i="${i}"]`).classList.add('on'), 700 + i * 520);
+        later(() => bloomAt(i), 1050 + i * 520);
+      }
+      later(EV.bow, 4300); later(EV.fw, 4700); later(EV.butter, 5300);
+    }
     function runCode() {
-      const body = ov.querySelector('.bl-body'), wrap = ov.querySelector('.bl-cb');
-      let li = 0, ci = 0, acc = 0, wait = 0, last = performance.now(), cur = null;
-      function newLine() { const d = document.createElement('div'); d.className = 'bl-ln'; d.innerHTML = `<span></span>`; body.appendChild(d); cur = d.lastChild; const over = body.scrollHeight - wrap.clientHeight + 8; body.style.transform = `translateY(${-Math.max(0, over)}px)`; }
+      const body = ov.querySelector('.bl-body'), wrap = ov.querySelector('.bl-cb'), title = ov.querySelector('.bl-bar em'), gen = codeStream();
+      const CPS = 560;
+      let snip = gen.next().value, li = 0, ci = 0, acc = 0, wait = 0, num = 0, last = performance.now(), cur = null, shown = -1;
+      title.textContent = snip.file + ' — for-you';
+      function newLine() {
+        const d = document.createElement('div'); d.className = 'bl-ln'; d.innerHTML = `<i>${++num}</i><span></span>`; body.appendChild(d); cur = d.lastChild;
+        if (body.children.length > 70) body.firstChild.remove();
+        body.style.transform = `translateY(${-Math.max(0, body.scrollHeight - wrap.clientHeight + 8)}px)`;
+      }
       function tick(t) {
         if (!run) return; requestAnimationFrame(tick);
         const dt = Math.min(t - last, 60); last = t;
-        if (li >= CODE.length) { cur.innerHTML = hl(CODE[CODE.length - 1].t) + '<u></u>'; return; }
-        if (!cur) newLine();
+        if (!cur) { newLine(); shown = -1; }
         if (wait > 0) { wait -= dt; return; }
-        const L = CODE[li]; acc += dt * (L.cps || (L.cmd ? 45 : 190)) / 1000;
-        while (acc >= 1 && ci < L.t.length) { ci++; acc--; }
-        cur.innerHTML = hl(L.t.slice(0, ci)) + '<u></u>';
-        if (ci >= L.t.length) {
-          cur.innerHTML = hl(L.t);
-          const e = L.ev;
-          if (e) { if (EV[e]) EV[e](); else if (e[0] === 's') ov.querySelector(`.bl-st[data-i="${e[1]}"]`).classList.add('on'); else if (e[0] === 'f') bloomAt(+e[1]); }
-          li++; ci = 0; acc = 0; wait = L.cmd ? 320 : 110; cur = null;
-          if (li >= CODE.length) { li = CODE.length; cur = body.lastChild.lastChild; }
+        const text = snip.lines[li]; acc += dt * CPS / 1000;
+        while (acc >= 1 && ci < text.length) { ci++; acc--; }
+        if (ci !== shown) { shown = ci; cur.innerHTML = hl(text.slice(0, ci)) + (ci < text.length ? '<u></u>' : ''); }
+        if (ci >= text.length) {
+          li++; ci = 0; acc = 0; wait = 12; cur = null;
+          if (li >= snip.lines.length) { snip = gen.next().value; li = 0; title.textContent = snip.file + ' — for-you'; wait = 120; }
         }
       }
       requestAnimationFrame(tick);
+    }
+    function flyButterflies(done) {
+      const gA = ov.querySelector('.bf1').parentNode, gB = ov.querySelector('.bf2').parentNode, S = 1.9;
+      const C = { x: 160, y: 62 }, T1 = 1400, T2 = 3600, T3 = 900, R0 = 84, R1 = 20, TURNS = 3;
+      const LAND = [{ x: 146, y: 76, r: 58 }, { x: 174, y: 76, r: -58 }];
+      const ease = u => u * u * (3 - 2 * u), lerp = (a, b, u) => a + (b - a) * u;
+      const dAng = (a, b) => ((b - a + 540) % 360) - 180;
+      const st = [{ g: gA, k: 0, p: null, r: 90 }, { g: gB, k: 1, p: null, r: -90 }];
+      const t0 = performance.now();
+      function pos(k, t) {
+        const side = k ? 0 : Math.PI, sx = k ? 400 : -80, sy = k ? -10 : 30;
+        const oe = { x: C.x + Math.cos(side) * R1, y: C.y + Math.sin(side) * R1 * .6 };
+        if (t < T1) {
+          const u = ease(t / T1), ex = C.x + Math.cos(side) * R0, ey = C.y + Math.sin(side) * R0 * .6;
+          return { x: lerp(sx, ex, u) + Math.sin(u * 9) * 8 * (1 - u), y: lerp(sy, ey, u) + Math.sin(u * 7 + k) * 10 * (1 - u) };
+        }
+        if (t < T1 + T2) {
+          const u = (t - T1) / T2, th = side + TURNS * 2 * Math.PI * u, R = R0 + (R1 - R0) * Math.pow(u, 1.3);
+          return { x: C.x + Math.cos(th) * R, y: C.y + Math.sin(th) * R * .6 - Math.sin(u * Math.PI) * 6 };
+        }
+        const u = ease(Math.min(1, (t - T1 - T2) / T3)), L = LAND[k];
+        return { x: lerp(oe.x, L.x, u), y: lerp(oe.y, L.y, u) };
+      }
+      function frame(now) {
+        if (!run) return;
+        const t = now - t0, fin = t >= T1 + T2 + T3;
+        st.forEach(q => {
+          const p = pos(q.k, Math.min(t, T1 + T2 + T3));
+          if (q.p) { const dx = p.x - q.p.x, dy = p.y - q.p.y; if (dx * dx + dy * dy > .01) q.r += dAng(q.r, Math.atan2(dx, -dy) * 180 / Math.PI) * .25; }
+          let rot = q.r;
+          if (t > T1 + T2) { const u = ease(Math.min(1, (t - T1 - T2) / T3)); rot = q.r + dAng(q.r, LAND[q.k].r) * u; }
+          q.p = p; q.g.setAttribute('transform', `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${S})`);
+        });
+        if (fin) { done(); return; }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
     }
 
     function typeLetter() {
