@@ -1942,8 +1942,8 @@ Tags zum Zurücksetzen: `vor-draw-pro`, `vor-zusammen-spielen` (beide auf GitHub
 ## Wisch-Reiterwechsel entfernt (16.11.2026, wir-v77)
 Das Wischen links/rechts zwischen den Hauptreitern (a1.js) ist raus, weil es das Foto-Swipen störte. Rücksetz-Weg: `git checkout vor-swipe -- app/a1.js`.
 
-## Einmal-Brief im Schreibmaschinen-Stil (17.11.2026, wir-v78, Fix v79)
-**Neu:** `app/brief.js` + `app/brief.css`. Vollbild-Brief, Text tippt sich langsam (42 ms/Zeichen), Tipp auf Text = sofort fertig, Brief-Symbol oben rechts packt ihn ein (danach nie wieder). **Test-Stand:** nur für Daniel (`fuer: /daniel/i`), Testtext. Zum Wiederholen in der Konsole `wirBrief.test()`.
-**Datenbank:** keine Änderung. „Gesehen" liegt nur im Gerät (`localStorage` `wir-brief-<id>-<userId>`).
-**Für Ida später:** in `brief.js` `fuer` auf `/ida/i` und echten Text eintragen, `id` ändern, `wir-vNN` hochzählen.
-**Rücksetz-Weg:** `git checkout vor-brief -- app/index.html app/sw.js` (brief.js/brief.css können liegen bleiben).
+## „For you my love": Blumen-Überraschung (17.11.2026, wir-v80)
+**Neu:** `app/blume.js` + `app/blume.css` (ersetzen `brief.js/css`). Beim App-Start (einmal pro Gerät) und jederzeit unter *Wir zwei → For you my love*: Strichfigur mit Rosenstrauß → Tipp auf die Blume → geblurter Code-Regen, Strauß pinker Lilien wächst, Feuerwerk dahinter → Brief fährt von oben, Text tippt sich (Schreibmaschine) → Brief-Symbol oben rechts packt ein.
+**Test-Stand:** nur für Daniel (`FUER = /daniel/i`). Brieftext: Konstante `LETTER` in `blume.js`. Für Ida: `FUER` auf `/ida/i`, `ID` ändern, `LETTER` setzen, `wir-vNN` hochzählen.
+**Datenbank:** keine Änderung („gesehen" nur im Gerät: `localStorage` `wir-<ID>-<userId>`).
+**Rücksetz-Weg:** `git checkout vor-blume -- app/index.html app/sw.js` (blume.js/css können liegen bleiben).
