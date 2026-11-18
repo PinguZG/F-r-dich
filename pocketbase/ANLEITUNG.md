@@ -1979,3 +1979,9 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 **Sicherung:** vor dem Deploy auf dem VPS `/home/pingu/backups/vor-englisch-<Datum>/` anlegen (Tag `vor-englisch` lokal gesetzt).
 **Rücksetz-Weg:** `git checkout vor-englisch -- app/index.html app/sw.js app/lernen.js app/lernen.css`, `git rm app/englisch.js app/lernen/englisch-data.js`, committen, pushen (kein reset/force). Collection bei Bedarf im Admin löschen.
 **v90:** Lautschrift entfernt (nur noch Wörter), alle Einträge geprüft: Kürzel n/v/adj/<> ausgeschrieben, pl/AE aus den Wörtern genommen, „aufrechterhalten“ korrigiert. Rücksetz-Weg: `git checkout c060ec5 -- app/englisch.js app/lernen/englisch-data.js app/sw.js`.
+
+### v91 (18.11.2026): Lautschrift zurück, Leiste, „Ich liebe dich“-Pop-up
+- Englisch: Lautschrift wieder drin (Format `[Englisch, Lautschrift, Erklärung, Deutsch, Teil]`), Kürzel/Korrekturen aus v90 bleiben.
+- Untere Leiste: `#s-lernen` (lernen.css) und `.pz-page.page` (puzzle.css) hatten ein eigenes `padding-bottom` ohne `--nav-h` → Inhalt verschwand hinter der Leiste. Jetzt `calc(var(--nav-h) + …)` wie bei `.page`.
+- Neu `app/liebe.js`: Pop-up für Ida beim nächsten Start („Ich liebe dich s ooo… “ läuft endlos, nach 2 s der zweite Satz), einmal pro Gerät bis ✕ (`localStorage` `wir-liebe-1-<userId>`), wartet auf die Blumen-Überraschung. Nochmal zeigen: `ID` in liebe.js ändern.
+- Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout fb5e4f8 -- app/index.html app/sw.js app/lernen.css app/puzzle.css app/englisch.js app/lernen/englisch-data.js`, `git rm app/liebe.js`.
