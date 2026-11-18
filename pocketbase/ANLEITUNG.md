@@ -2016,3 +2016,8 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - **v99:** ⚙︎ → „Farben“: für Sehr gut / Okay / Schlecht je ein Farbwähler (iOS-Farbrad), wirkt sofort auf Reiter, Knöpfe, Punkte und Balken; Schrift darauf automatisch hell/dunkel. „Standardfarben“ setzt zurück. Pro Gerät (`wir-en-karten.colors`). Rücksetz-Weg: `git checkout 9499945 -- app/englisch.js app/lernen.css app/sw.js`.
 
 - **v100:** Einstellungs-Blatt deckend (Farbwelt-Hintergrund statt Glas), über allem (z-index 1000), max. 88 % Höhe und scrollbar. Rücksetz-Weg: `git checkout cf23f45 -- app/englisch.js app/lernen.css app/sw.js`.
+
+## Zuhause: Szene „Gaming“ + Routinen für Anwesenheit/TV (18.11.2026, nur Konfiguration)
+- Neu in `home/config.jsonc`: Szene **Gaming** (`script.gaming` in HA: alle Lampen, Bett-Streifen mit Farbverlauf über den Philips-Cluster 0xFC03) und drei **Routinen** (Schalter aktiv/inaktiv): `automation.anwesenheit_daniel_kommt_gemutlich`, `automation.anwesenheit_daniel_geht_alle_lichter_aus`, `automation.fernseher_selbststart_wieder_ausschalten`.
+- Skript und Automationen liegen in Home Assistant (nicht im Repo). Keine App- oder Datenbankänderung, daher kein neues `wir-vNN` und kein DB-Backup nötig; `wir-home` startet nach dem Auto-Deploy neu.
+- Rücksetzen: `git checkout vor-gaming-zuhause -- home/config.jsonc`, committen, pushen.

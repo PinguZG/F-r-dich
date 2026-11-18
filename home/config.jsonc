@@ -69,6 +69,8 @@
     { "name": "Gemütlich",  "icon": "flame", "farbe": "#ff8a3c", "entity_id": "script.wir_gemuetlich" },
     // "fernseher": wir-home schaltet dazu den Fernseher ein, öffnet die App, setzt Lautstärke und Bildhelligkeit (0–100, 50 = normal)
     { "name": "Filmabend",  "icon": "film",  "farbe": "#7b5cff", "entity_id": "script.wir_filmabend", "fernseher": { "app": "Netflix", "lautstaerke": 35, "helligkeit": 50 } },
+    // Gaming: alle Lampen, Bett-Streifen mit Farbverlauf Cyan–Blau–Lila–Magenta–Pink (HA-Skript script.gaming)
+    { "name": "Gaming",     "icon": "bolt",  "farbe": "#b04dff", "entity_id": "script.gaming" },
     { "name": "Lesen",      "icon": "book",  "farbe": "#ffc27a", "entity_id": "script.wir_lesen" },
     { "name": "Gute Nacht", "icon": "moon",  "farbe": "#5b6cff", "entity_id": "script.wir_gute_nacht", "fernseher": { "app": "Netflix", "lautstaerke": 20, "helligkeit": 0 } },
     { "name": "Alles aus",  "icon": "power", "farbe": "#6b7085", "entity_id": "script.wir_alles_aus" }
@@ -76,7 +78,11 @@
 
   // Routinen = Automationen in HA (Schalter aktiv/inaktiv) – gibt es noch keine, daher ausgeblendet. Beispiel:
   // { "name": "Abends dimmen", "entity_id": "automation.abends_dimmen", "info": "täglich · 22:00", "icon": "moon" }
-  "routinen": [],
+  "routinen": [
+    { "name": "Daniel kommt heim", "entity_id": "automation.anwesenheit_daniel_kommt_gemutlich", "info": "iPhone zuhause · Gemütlich an", "icon": "home" },
+    { "name": "Daniel geht",       "entity_id": "automation.anwesenheit_daniel_geht_alle_lichter_aus", "info": "iPhone weg · alle Lichter aus", "icon": "power" },
+    { "name": "TV-Selbststart aus", "entity_id": "automation.fernseher_selbststart_wieder_ausschalten", "info": "nach 3 Min auf Startseite", "icon": "tv" }
+  ],
 
   // Raumklima + Strom (sensor.…). Leer ("") = ausgeblendet. Thermometer: SONOFF SNZB-02D „Temp“.
   "klima": {
