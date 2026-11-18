@@ -2020,4 +2020,5 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 ## Zuhause: Szene „Gaming“ + Routinen für Anwesenheit/TV (18.11.2026, nur Konfiguration)
 - Neu in `home/config.jsonc`: Szenen **Kaminfeuer** (`script.kaminfeuer`) und **Kerze** (`script.kerze`, eingebaute Hue-Effekte auf dem Bett-Streifen), Szene **Gaming** (`script.gaming` in HA: alle Lampen, Bett-Streifen mit Farbverlauf über den Philips-Cluster 0xFC03) und drei **Routinen** (Schalter aktiv/inaktiv): `automation.anwesenheit_daniel_kommt_gemutlich`, `automation.anwesenheit_daniel_geht_alle_lichter_aus`, `automation.fernseher_selbststart_wieder_ausschalten`.
 - Skript und Automationen liegen in Home Assistant (nicht im Repo). Keine App- oder Datenbankänderung, daher kein neues `wir-vNN` und kein DB-Backup nötig; `wir-home` startet nach dem Auto-Deploy neu.
+- Gemütlich: In HA startet die Automation `automation.gemutlich_kaminfeuer_am_bett` nach `script.wir_gemuetlich` (4 s später) den Kaminfeuer-Effekt am Bett. `ha/packages/wir.yaml` bleibt dafür unverändert.
 - Rücksetzen: `git checkout e71140b -- home/config.jsonc` (Stand davor; Tag ließ sich nicht pushen), committen, pushen.
