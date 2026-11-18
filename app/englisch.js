@@ -20,7 +20,7 @@
     if (window.WIR_VOKABELN_EN) return Promise.resolve();
     return new Promise((res, rej) => { const s = document.createElement('script'); s.src = '/lernen/englisch-data.js'; s.onload = res; s.onerror = () => rej(new Error('Laden fehlgeschlagen')); document.head.append(s); });
   }
-  const prep = () => { WORDS = window.WIR_VOKABELN_EN.map((r, i) => ({ id: 'en7:' + r[0], i, en: r[0], ipa: r[1], def: r[2], de: r[3], grp: r[4] })); };
+  const prep = () => { WORDS = window.WIR_VOKABELN_EN.map((r, i) => ({ id: 'en7:' + r[0], i, en: r[0], def: r[1], de: r[2], grp: r[3] })); };
   const lvl = w => ST.w[w.id];                       // undefined = neu
 
   // ---------- Speichern / Sync ----------
@@ -84,7 +84,7 @@
     for (const w of pool) {
       if (w.grp !== last) { last = w.grp; out += `<div class="ln-grp">${esc(w.grp)}</div>`; }
       const open = E.open === w.id;
-      out += `<div class="en-row glass ${open ? 'open' : ''}"><button type="button" class="en-top" data-en="open" data-id="${esc(w.id)}">${dot(w)}<span class="en-w"><b>${esc(w.en)}</b>${w.ipa ? ` <small>${esc(w.ipa)}</small>` : ''}<span class="en-de">${esc(w.de)}</span></span></button>
+      out += `<div class="en-row glass ${open ? 'open' : ''}"><button type="button" class="en-top" data-en="open" data-id="${esc(w.id)}">${dot(w)}<span class="en-w"><b>${esc(w.en)}</b><span class="en-de">${esc(w.de)}</span></span></button>
         ${open ? `<div class="en-more"><div class="en-def">${esc(w.def)}</div><div class="en-set">${[0, 1, 2].map(l => `<button type="button" data-en="set" data-id="${esc(w.id)}" data-l="${l}" class="${lvl(w) === l ? 'on l' + l : ''}">${LV[l]}</button>`).join('')}</div></div>` : ''}</div>`;
     }
     return out;
@@ -126,8 +126,8 @@
       return;
     }
     const w = WORDS[s.deck[s.pos]], front = E.dir === 'ed';
-    const fq = front ? `<div class="q">${esc(w.en)}</div>${w.ipa ? `<div class="en-ipa">${esc(w.ipa)}</div>` : ''}` : `<div class="q">${esc(w.de)}</div>`;
-    const back = front ? `<div class="a"><b>${esc(w.de)}</b></div><div class="en-def">${esc(w.def)}</div>` : `<div class="a"><b>${esc(w.en)}</b>${w.ipa ? ` <span class="en-ipa">${esc(w.ipa)}</span>` : ''}</div><div class="en-def">${esc(w.def)}</div>`;
+    const fq = front ? `<div class="q">${esc(w.en)}</div>` : `<div class="q">${esc(w.de)}</div>`;
+    const back = front ? `<div class="a"><b>${esc(w.de)}</b></div><div class="en-def">${esc(w.def)}</div>` : `<div class="a"><b>${esc(w.en)}</b></div><div class="en-def">${esc(w.def)}</div>`;
     b.innerHTML = `<div class="ln-row"><div class="ln-sub ln-sp">Noch ${s.deck.length - s.pos} Karte${s.deck.length - s.pos === 1 ? '' : 'n'} ${dot(w)}</div><button class="ln-link" type="button" data-en="end">Beenden</button></div>
       <div class="en-card glass ${s.flip ? 'flip' : ''}" ${s.flip ? '' : 'data-en="flip" role="button" tabindex="0"'}><div class="tag">${esc(w.grp)}</div>${fq}${s.flip ? `<hr>${back}` : '<div class="ln-hint" style="margin-top:18px">Tippen zum Umdrehen</div>'}</div>
       ${s.flip ? `<div class="ln-acts en-acts"><button class="ln-btn no" type="button" data-en="rate" data-l="0">Kann ich nicht</button><button class="ln-btn soft" type="button" data-en="rate" data-l="1">Kann ich</button><button class="ln-btn ok" type="button" data-en="rate" data-l="2">Kann ich gut</button></div>` : '<button class="ln-btn big soft" type="button" data-en="flip">Antwort zeigen</button>'}`;
