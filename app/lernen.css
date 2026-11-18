@@ -183,6 +183,7 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .en-set button.on.l0{background:var(--warn)}.en-set button.on.l1{background:var(--accent2)}.en-set button.on.l2{background:var(--ok)}
 /* Karteikarten v92: Ordner-Reiter oben (Stand), Karte dreht sich beim Tippen, Zeichnung im Hintergrund */
 .kk-top{display:flex;gap:8px;align-items:center}.kk-top .ln-seg{flex:1}
+.kk-pics{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;color:var(--ink-soft)}
 .kk-gear{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);font-size:21px}
 .kk-info{text-align:center;margin:0}
 .kk{position:relative;padding-top:40px;--paper:var(--glass-strong)}

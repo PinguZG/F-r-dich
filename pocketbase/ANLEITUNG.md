@@ -1992,3 +1992,5 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - ⚙︎ öffnet Einstellungen: Schrift (Handschrift, Schulheft, Zart, Verspielt, Klar – Google Fonts bei Bedarf), Richtung, Teil. Gespeichert pro Gerät (`localStorage` `wir-en-karten`).
 - Hintergrund: 6 Zeichnungen aus Daniels Vorlagen (potrace), zufällig je Karte, 9 % Deckkraft, Farbe folgt der Farbwelt: `app/lernen/englisch-doodles.js` (nachgeladen, im SW-Cache).
 - Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout f918cc7 -- app/englisch.js app/lernen.css app/sw.js`, `git rm app/lernen/englisch-doodles.js`.
+
+- **v93:** Schieberegler „Bilder“ oben neben ⚙︎ schaltet die Zeichnungen auf den Karten an/aus (pro Gerät, `wir-en-karten.pics`). Rücksetz-Weg: `git checkout 68fe150 -- app/englisch.js app/lernen.css app/sw.js`.

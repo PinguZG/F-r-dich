@@ -103,7 +103,7 @@
     ['shadows', 'Zart', "'Shadows Into Light',cursive", 'Shadows+Into+Light'], ['gloria', 'Verspielt', "'Gloria Hallelujah',cursive", 'Gloria+Hallelujah'],
     ['klar', 'Klar', "Quicksand,sans-serif", '']];
   const PREF = 'wir-en-karten';
-  const prefs = () => { try { return Object.assign({ font: 'caveat', dir: 'ed', group: 'alle' }, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (_) { return { font: 'caveat', dir: 'ed', group: 'alle' }; } };
+  const prefs = () => { try { return Object.assign({ font: 'caveat', dir: 'ed', group: 'alle', pics: true }, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (_) { return { font: 'caveat', dir: 'ed', group: 'alle', pics: true }; } };
   let P = null;
   const savePrefs = () => { try { localStorage.setItem(PREF, JSON.stringify(P)); } catch (_) {} };
   const fontOf = k => FONTS.find(f => f[0] === k) || FONTS[0];
@@ -123,7 +123,7 @@
     if (window.WIR_EN_DOODLES || doodleLoading) return;
     doodleLoading = true;
     const s = document.createElement('script'); s.src = '/lernen/englisch-doodles.js';
-    s.onload = () => { if (el && E.tab === 'karten') { const d = doodle(); document.querySelectorAll('.kk-dd').forEach(x => x.innerHTML = d); } };
+    s.onload = () => { if (el && E.tab === 'karten' && P?.pics) { const d = doodle(); document.querySelectorAll('.kk-dd').forEach(x => x.innerHTML = d); } };
     s.onerror = () => { doodleLoading = false; };
     document.head.append(s);
   }
@@ -139,7 +139,7 @@
   }
   // eine Karte: Reiter oben (wechseln den Stand, drehen nicht), Karte selbst dreht sich beim Tippen
   function cardHtml(w, hintBack) {
-    const l = lvl(w), en = P.dir === 'ed', d = doodle();
+    const l = lvl(w), en = P.dir === 'ed', d = P.pics ? doodle() : '';
     const faceEn = `<div class="kk-big">${esc(w.en)}</div>${w.ipa ? `<div class="kk-ipa">${esc(w.ipa)}</div>` : ''}`;
     const faceDe = `<div class="kk-big">${esc(w.de)}</div>`;
     const front = en ? faceEn : faceDe, back = (en ? faceDe : faceEn) + `<div class="kk-def">${esc(w.def)}</div>`;
@@ -158,7 +158,7 @@
   function vKarten(b) {
     if (!P) P = prefs();
     loadFont(P.font); needDoodles();
-    const top = `<div class="kk-top"><div class="ln-seg"><button type="button" data-en="km" data-x="lernen" class="${E.km === 'lernen' ? 'on' : ''}">Lernen</button><button type="button" data-en="km" data-x="abfrage" class="${E.km === 'abfrage' ? 'on' : ''}">Abfrage</button></div><button type="button" class="kk-gear" data-en="gear" aria-label="Einstellungen">⚙︎</button></div>`;
+    const top = `<div class="kk-top"><div class="ln-seg"><button type="button" data-en="km" data-x="lernen" class="${E.km === 'lernen' ? 'on' : ''}">Lernen</button><button type="button" data-en="km" data-x="abfrage" class="${E.km === 'abfrage' ? 'on' : ''}">Abfrage</button></div><label class="kk-pics"><span>Bilder</span><input type="checkbox" class="switch" id="enPics" ${P.pics ? 'checked' : ''} aria-label="Zeichnungen auf den Karten"></label><button type="button" class="kk-gear" data-en="gear" aria-label="Einstellungen">⚙︎</button></div>`;
     if (E.km === 'lernen') {
       const deck = learnDeck(); if (!deck.length) { b.innerHTML = top + '<div class="ln-empty">Keine Wörter in diesem Teil.</div>'; return; }
       E.lpos = Math.min(E.lpos, deck.length - 1);
@@ -252,13 +252,14 @@
   // Einstieg aus lernen.js: zeigt den Englisch-Bereich im übergebenen Element
   async function mount(target) {
     el = target; el.onclick = onClick; el.onkeydown = onKey;
+    el.onchange = e => { if (e.target.id === 'enPics') { P.pics = e.target.checked; savePrefs(); const d = P.pics ? doodle() : ''; document.querySelectorAll('.kk-dd').forEach(x => x.innerHTML = d); } };
     el.innerHTML = '<div class="ln-empty">Lade …</div>';
     try { await loadData(); } catch (_) { el.innerHTML = '<div class="ln-empty">Konnte nicht geladen werden. Bitte einmal mit Netz öffnen.</div>'; return; }
     if (!WORDS) prep();
     load(); E.ses = null; render();
     try { if (await pull() && el === target) render(); } catch (e) { console.warn('[englisch] offline/sync', e?.message); }
   }
-  function unmount() { closeSheet(); if (el) { el.onclick = null; el.onkeydown = null; } el = null; }
+  function unmount() { closeSheet(); if (el) { el.onclick = null; el.onkeydown = null; el.onchange = null; } el = null; }
   window.addEventListener('online', flush);
   window.WIR_ENGLISCH = { mount, unmount };
 })();
