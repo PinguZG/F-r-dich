@@ -1,10 +1,10 @@
-const CACHE = 'wir-v88'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
+const CACHE = 'wir-v89'; // bei jeder neuen App-Version erhöhen -> Update-Hinweis
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/extra.js', '/home.js', '/manifest.json', '/icons/icon-192.png',
   '/games.js', '/games.css', '/lib/chess.js', '/lib/mono.js', '/mono-ui.js', '/coins.js', '/coins.css', '/casino.js', '/casino.css',
   '/dates.js', '/grocery.js', '/care.js', '/chat.js', '/shop.js', '/chessai.js', '/solitaire.js', '/snake.js', '/frames.css', '/layout.css', '/a1.css', '/a1.js', '/draw.css', '/match.css', '/tablet.css', '/draw.js', '/brushes.js', '/drawpro.js', '/drawpro.css', '/party.js', '/party.css', '/puzzle.js', '/puzzle.css', '/swipe.js', '/swipe.css', '/poker.js', '/herzspur.js', '/zuhause.js', '/zuhause-verlauf.js', '/zuhause-data.js', '/zuhause-extra.js', '/zuhause-tab.js', '/zuhause-tab-markup.js', '/zuhause-tab.css', '/zuhause-handy.js', '/zuhause-handy.css', '/zuhause-claude.js', '/zuhause-claude.css', '/zuhause-pastell.css', '/zuhause-claude-svg.js', '/zuhause-claude-verlauf.js', '/zuhause-claude-luma.js',
   '/shared/base.css', '/shared/activity.css', '/shared/ui.js', '/shared/pocketbase.umd.js', '/shared/look.js', '/shared/push.js', '/shared/activity.js', '/shared/update.js', '/shared/changelog.js',
   '/shared/fx.js', '/shared/fx.css', '/blume.js', '/blume.css',
-  '/lernen.js', '/lernen.css', '/flow.css', '/flow.js', '/lernen/lernen-data.js', '/lernen/lernen-gens.js', '/lernen/files/netz.html', '/lernen/files/elek.html', '/lernen/files/wiso.html', '/lernen/files/plan.html'];
+  '/lernen.js', '/englisch.js', '/lernen.css', '/flow.css', '/flow.js', '/lernen/lernen-data.js', '/lernen/lernen-gens.js', '/lernen/englisch-data.js', '/lernen/files/netz.html', '/lernen/files/elek.html', '/lernen/files/wiso.html', '/lernen/files/plan.html'];
 
 self.addEventListener('install', e => {
   // cache:'reload': beim Installieren nie alte Dateien aus dem Browser-Cache übernehmen

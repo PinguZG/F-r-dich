@@ -518,7 +518,7 @@
   }
   // Profilwahl: „Wer lernt?“ – Daniel hat die Lernmappen, Ida bekommt ihren Bereich später
   function showWho() {
-    V.who = null; clearInterval(V.ptimer);
+    V.who = null; clearInterval(V.ptimer); window.WIR_ENGLISCH?.unmount();
     $('lnNav').innerHTML = ''; $('lnSync').hidden = true; const wb = $('lnWhoBtn'); if (wb) wb.hidden = true;
     const card = (w, n, sub) => `<button class="ln-who glass" type="button" data-act="who" data-w="${w}"><span class="ln-av">${n[0]}</span><b>${n}</b><small>${sub}</small></button>`;
     body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Dein Bereich') + '</div>';
@@ -526,7 +526,11 @@
   async function pickWho(w) {
     const wb = $('lnWhoBtn'); if (wb) wb.hidden = false;
     $('lnNav').innerHTML = '';
-    if (w === 'ida') { V.who = 'ida'; body().innerHTML = '<div class="ln-card glass ln-count"><b style="font-size:40px">Ida</b><span>Hier ist noch nichts zum Lernen.</span><small>Dein Bereich kommt bald.</small></div>'; return; }
+    if (w === 'ida') {                                   // Idas Bereich: Reiter „Englisch“ (englisch.js, Vokabeln)
+      V.who = 'ida'; $('lnNav').innerHTML = '<button type="button" class="on">Englisch</button>';
+      if (window.WIR_ENGLISCH) window.WIR_ENGLISCH.mount(body()); else body().innerHTML = '<div class="ln-empty">Englisch konnte nicht geladen werden.</div>';
+      return;
+    }
     if (!isDaniel()) { V.who = 'x'; body().innerHTML = '<div class="ln-card glass ln-count"><b style="font-size:40px">Daniel</b><span>Das ist Daniels Lernbereich.</span><small>Er ist privat.</small></div>'; return; }
     V.who = 'daniel';
     if (!ready) {
