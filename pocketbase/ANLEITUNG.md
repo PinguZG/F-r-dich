@@ -1994,3 +1994,10 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout f918cc7 -- app/englisch.js app/lernen.css app/sw.js`, `git rm app/lernen/englisch-doodles.js`.
 
 - **v93:** Schieberegler „Bilder“ oben neben ⚙︎ schaltet die Zeichnungen auf den Karten an/aus (pro Gerät, `wir-en-karten.pics`). Rücksetz-Weg: `git checkout 68fe150 -- app/englisch.js app/lernen.css app/sw.js`.
+
+### v94 (19.11.2026): Englisch schlanker, Vokabelstände
+- Alle Wörter liegen jetzt in **„Vokabelstand 1“** statt nach Buchseiten (5. Feld in `englisch-data.js`). Neuer Stand = Zeilen mit `'Vokabelstand 2'` anhängen, erscheint automatisch (Auswahl oben).
+- Kopf neu: „Englisch / Vokabelstand 1“, schmaler Fortschritt, „x von y gekonnt“. Rechts ✓ = **abhaken** nach der Prüfung (zweiter Tipp bestätigt), erledigt → grüner Haken, Tipp öffnet wieder. Gespeichert in `lern_vokabeln` als `wordId 'stand:<Name>'`, `level 1` = erledigt (keine Schema-Änderung).
+- Karteikarten: Modus Abfrage entfernt, alle Hilfstexte raus, oben nur „Bilder“-Regler + ⚙︎ (Schrift, Vorderseite), mehr Abstand zur Umdrehen-Leiste, Kartenkopf zeigt Seite + „n / 88“.
+- Übersicht: Suche + kleine Filter-Chips, ruhigere Zeilen. Obere Reiterleiste in Lernen kleiner, bei Ida nicht mehr klebend (`.ln-nav.solo`).
+- **Rücksetz-Weg:** `git checkout b7cb3d6 -- app/englisch.js app/lernen.css app/lernen.js app/sw.js app/lernen/englisch-data.js`.

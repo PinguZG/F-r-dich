@@ -1,8 +1,9 @@
 /* Lernen (17.11.2026): AP2-Lernmappen nur für Daniel. Nur Variablen der Farbwelt (shared/base.css), Glas-Karten, Quicksand. */
 #s-lernen{padding-bottom:calc(var(--nav-h,0px) + 30px)}
-.ln-nav{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;padding:6px 2px 10px;margin:0 -2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.ln-nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .ln-nav::-webkit-scrollbar{display:none}
-.ln-nav button{flex:none;min-height:42px;padding:0 16px;border-radius:21px;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink-soft);font-weight:700;font-size:14px;
+.ln-nav.solo{position:static}
+.ln-nav button{flex:none;min-height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink-soft);font-weight:700;font-size:13px;
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s,background .2s}
 .ln-nav button:active{transform:scale(.95)}
 .ln-nav button.on{background:var(--a1-grad);color:var(--accent-ink);border-color:transparent;box-shadow:0 6px 16px rgba(var(--shadow),.22)}
@@ -163,29 +164,46 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 }
 
 /* Englisch-Vokabeln (englisch.js) */
-.en-wrap{display:flex;flex-direction:column;gap:12px}
-.en-bar{display:flex;height:8px;border-radius:6px;overflow:hidden;background:var(--chip);margin-top:12px}
+.en-wrap{display:flex;flex-direction:column;gap:14px}
+.en-hero{padding:18px 18px 16px;border-radius:26px;background:var(--glass-strong);border:1px solid var(--glass-border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.en-hero-row{display:flex;align-items:center;gap:12px}
+.en-hero-t{flex:1;min-width:0}
+.en-hero-t small{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
+.en-hero-t h2{margin:2px 0 0;font-family:Caveat,cursive;font-size:38px;line-height:1;font-weight:700;color:var(--ink)}
+.en-check{flex:none;min-width:46px;height:46px;padding:0;border-radius:23px;border:2px solid var(--glass-border);background:transparent;color:var(--ink-soft);font:700 19px Quicksand,sans-serif;transition:all .25s}
+.en-check.sure{padding:0 14px;border-color:var(--ok);color:var(--ok);font-size:13px}
+.en-hero.done .en-check{background:var(--ok);border-color:var(--ok);color:#fff}
+.en-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--chip);margin-top:14px}
 .en-bar .g{background:var(--ok)}.en-bar .m{background:var(--accent2)}.en-bar .b{background:var(--warn)}
-.en-filter button{font-size:12px}
-.en-list{display:flex;flex-direction:column;gap:8px}
-.en-row{border-radius:20px;padding:0;overflow:hidden}
-.en-top{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 14px;border:0;background:none;text-align:left;color:var(--ink);font:inherit}
-.en-w{flex:1;min-width:0;line-height:1.4}
-.en-w b{font-size:16px}.en-w small{font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.en-meta{margin-top:8px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.en-stands{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+.en-stands button{flex:none;min-width:38px;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700}
+.en-stands button.on{background:var(--chip);color:var(--ink)}.en-stands button.done{text-decoration:line-through}
+.en-body{display:flex;flex-direction:column;gap:12px}
+.en-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}
+.en-chips::-webkit-scrollbar{display:none}
+.en-chips button{flex:none;height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700;font-size:13px}
+.en-chips button.on{background:var(--chip);border-color:var(--ink-soft);color:var(--ink)}
+.en-list{display:flex;flex-direction:column;gap:6px}
+.en-row{border-radius:18px;background:var(--glass-strong);border:1px solid var(--glass-border);overflow:hidden}
+.en-top{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;background:none;text-align:left;color:var(--ink);font:inherit}
+.en-w{flex:1;min-width:0;line-height:1.35}
+.en-w b{font-size:16px}
 .en-de{display:block;font-size:14px;color:var(--ink-soft);font-weight:600}
-.en-dot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:5px;display:inline-block;background:var(--chip);border:2px solid var(--glass-border)}
+.en-dot{flex:none;width:10px;height:10px;border-radius:50%;display:inline-block;background:transparent;border:2px solid var(--glass-border)}
 .en-dot.l0{background:var(--warn);border-color:var(--warn)}.en-dot.l1{background:var(--accent2);border-color:var(--accent2)}.en-dot.l2{background:var(--ok);border-color:var(--ok)}
-.en-more{padding:0 14px 14px 38px}
-.en-def{font-size:14.5px;line-height:1.5;color:var(--ink);margin-top:6px}
+.en-more{padding:0 14px 14px 36px}
+.en-ipa{font-size:13px;color:var(--ink-soft);font-weight:600}
+.en-def{font-size:14.5px;line-height:1.5;color:var(--ink);margin-top:4px}
 .en-set{display:flex;gap:6px;margin-top:10px}
-.en-set button{flex:1;min-height:40px;border-radius:14px;border:1.5px solid var(--glass-border);background:var(--chip);color:var(--ink-soft);font-weight:700;font-size:12.5px;padding:0 4px}
+.en-set button{flex:1;min-height:38px;border-radius:14px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700;font-size:12.5px;padding:0 4px}
 .en-set button.on{color:#fff;border-color:transparent}
 .en-set button.on.l0{background:var(--warn)}.en-set button.on.l1{background:var(--accent2)}.en-set button.on.l2{background:var(--ok)}
+
 /* Karteikarten v92: Ordner-Reiter oben (Stand), Karte dreht sich beim Tippen, Zeichnung im Hintergrund */
-.kk-top{display:flex;gap:8px;align-items:center}.kk-top .ln-seg{flex:1}
-.kk-pics{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;color:var(--ink-soft)}
-.kk-gear{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);font-size:21px}
-.kk-info{text-align:center;margin:0}
+.kk-top{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-bottom:-6px}
+.kk-pics{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.kk-gear{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);font-size:21px}
 .kk{position:relative;padding-top:40px;--paper:var(--glass-strong)}
 .kk-tabs{position:absolute;top:0;left:0;right:0;height:44px;display:flex;gap:6px;padding:0 10px}
 .kk-tab{flex:1;height:36px;margin-top:8px;border:0;border-radius:14px 14px 0 0;padding:0 4px;font:700 12.5px Quicksand,sans-serif;color:var(--ink);
@@ -213,8 +231,7 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .kk-ipa{font-size:15px;font-weight:600;color:var(--ink-soft);margin-top:6px}
 .kk-def{font-size:15px;line-height:1.5;color:var(--ink);margin-top:12px;max-width:34ch}
 .kk-back .kk-mid .kk-big+.kk-ipa{margin-bottom:0}
-.kk-hint{position:relative;text-align:center;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
-.kk-nav{display:flex;gap:10px}.kk-nav .kk-grow{flex:1}.kk-nav .ln-btn{font-size:18px}
+.kk-nav{display:flex;gap:10px;margin-top:16px}.kk-nav .kk-grow{flex:1}.kk-nav .ln-btn{font-size:18px}
 .en-sheet{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.32);animation:enShIn .2s ease both}
 .en-sh{width:min(520px,100%);display:flex;flex-direction:column;gap:10px;padding:18px 16px max(22px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;animation:enShUp .3s cubic-bezier(.3,1.2,.5,1) both}
 .en-shx{width:40px;height:40px;border-radius:50%;border:0;background:var(--chip);color:var(--ink);font-size:18px}
