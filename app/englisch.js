@@ -1,5 +1,6 @@
 // Englisch-Vokabeln (Lernen → Ida). Wörter in „Vokabelständen“ (app/lernen/englisch-data.js, 5. Feld = Stand), Übersicht + Karteikarten.
-// Karteikarten: oben Ordner-Reiter Kann ich nicht / Kann ich / Kann ich gut (setzen den Stand, drehen nicht), Karte dreht sich beim Tippen.
+// Karteikarten: oben Ordner-Reiter Sehr gut / Okay / Schlecht = welche Karten drankommen (mehrfach), Karte dreht sich nur beim Tippen,
+// unten drei Knöpfe bewerten und springen zur nächsten Karte.
 // ⚙︎ = Schrift/Richtung, Schieberegler = Zeichnungen (app/lernen/englisch-doodles.js). Ein Stand lässt sich nach der Prüfung abhaken (erledigt).
 // Speicher: lokal (Offline) + Collection lern_vokabeln (nur eigene Zeilen). Wörter: wordId 'en7:<Wort>', level 0–2. Stand: wordId 'stand:<Name>', level 1 = erledigt.
 (() => {
@@ -9,10 +10,11 @@
   const meRec = () => pb.authStore.record || pb.authStore.model;
   const uid = () => meRec()?.id;
   const $ = id => document.getElementById(id);
-  const LV = { 0: 'Kann ich nicht', 1: 'Kann ich', 2: 'Kann ich gut' };
+  const LV = { 0: 'Schlecht', 1: 'Okay', 2: 'Sehr gut' };
+  const ORDER = [2, 1, 0];                            // Anzeige-Reihenfolge: Sehr gut · Okay · Schlecht
 
   let WORDS = null, STANDS = [], ST = { w: {}, done: {}, q: {}, ids: {} }, el = null, flushing = false;
-  const E = { tab: 'liste', filter: 'alle', q: '', open: null, stand: null, lpos: 0, sure: false };
+  const E = { tab: 'liste', filter: 'alle', q: '', open: null, stand: null, deck: null, dkey: '', dpos: 0, busy: false, sure: false };
   const SKEY = () => 'lernen-en-v1-' + uid();
   const load = () => { try { const j = JSON.parse(localStorage.getItem(SKEY()) || 'null'); if (j) ST = Object.assign({ w: {}, done: {}, q: {}, ids: {} }, j); } catch (_) {} };
   const persist = () => { try { localStorage.setItem(SKEY(), JSON.stringify(ST)); } catch (_) {} };
@@ -65,6 +67,7 @@
   const curStand = () => E.stand && STANDS.includes(E.stand) ? E.stand : (STANDS.find(s => !isDone(s)) || STANDS[STANDS.length - 1]);
   const wordsOf = s => WORDS.filter(w => w.grp === s);
   const counts = pool => { const c = { all: pool.length, neu: 0, 0: 0, 1: 0, 2: 0 }; pool.forEach(w => { const l = lvl(w); if (l === undefined) c.neu++; else c[l]++; }); return c; };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const dot = w => { const l = lvl(w); return `<i class="en-dot l${l === undefined ? 'n' : l}"></i>`; };
 
   function head() {
@@ -97,12 +100,12 @@
     return pool.map(w => {
       const open = E.open === w.id;
       return `<div class="en-row ${open ? 'open' : ''}"><button type="button" class="en-top" data-en="open" data-id="${esc(w.id)}">${dot(w)}<span class="en-w"><b>${esc(w.en)}</b><span class="en-de">${esc(w.de)}</span></span></button>
-        ${open ? `<div class="en-more">${w.ipa ? `<div class="en-ipa">${esc(w.ipa)}</div>` : ''}<div class="en-def">${esc(w.def)}</div><div class="en-set">${[0, 1, 2].map(l => `<button type="button" data-en="set" data-id="${esc(w.id)}" data-l="${l}" class="${lvl(w) === l ? 'on l' + l : ''}">${LV[l]}</button>`).join('')}</div></div>` : ''}</div>`;
+        ${open ? `<div class="en-more">${w.ipa ? `<div class="en-ipa">${esc(w.ipa)}</div>` : ''}<div class="en-def">${esc(w.def)}</div><div class="en-set">${ORDER.map(l => `<button type="button" data-en="set" data-id="${esc(w.id)}" data-l="${l}" class="${lvl(w) === l ? 'on l' + l : ''}">${LV[l]}</button>`).join('')}</div></div>` : ''}</div>`;
     }).join('');
   }
   function vListe(b) {
     const c = counts(wordsOf(curStand()));
-    const F = [['alle', 'Alle'], ['neu', `Neu ${c.neu}`], ['0', `Nicht ${c[0]}`], ['1', `Kann ${c[1]}`], ['2', `Gut ${c[2]}`]];
+    const F = [['alle', 'Alle'], ['neu', `Neu ${c.neu}`], ['2', `Sehr gut ${c[2]}`], ['1', `Okay ${c[1]}`], ['0', `Schlecht ${c[0]}`]];
     b.innerHTML = `<input class="ln-input en-q" id="enQ" type="search" placeholder="Suchen" value="${esc(E.q)}" autocomplete="off">
       <div class="en-chips">${F.map(([k, n]) => `<button type="button" data-en="filter" data-x="${k}" class="${E.filter === k ? 'on' : ''}">${n}</button>`).join('')}</div>
       <div id="enList" class="en-list">${listHtml()}</div>`;
@@ -113,7 +116,7 @@
   const FONTS = [['caveat', 'Handschrift', "Caveat,cursive", ''], ['patrick', 'Schulheft', "'Patrick Hand',cursive", 'Patrick+Hand'],
     ['shadows', 'Zart', "'Shadows Into Light',cursive", 'Shadows+Into+Light'], ['gloria', 'Verspielt', "'Gloria Hallelujah',cursive", 'Gloria+Hallelujah'],
     ['klar', 'Klar', "Quicksand,sans-serif", '']];
-  const PREF = 'wir-en-karten', DEF = { font: 'caveat', dir: 'ed', pics: true };
+  const PREF = 'wir-en-karten', DEF = { font: 'caveat', dir: 'ed', pics: true, sel: [0, 1, 2] };
   const prefs = () => { try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (_) { return Object.assign({}, DEF); } };
   let P = null;
   const savePrefs = () => { try { localStorage.setItem(PREF, JSON.stringify(P)); } catch (_) {} };
@@ -143,28 +146,46 @@
     const front = en ? faceEn : faceDe, back = (en ? faceDe : faceEn) + `<div class="kk-def">${esc(w.def)}</div>`;
     const face = (cls, side, body) => `<div class="kk-face ${cls}"><div class="kk-dd">${d}</div><div class="kk-head"><span>${side}</span><span>${n} / ${total}</span></div><div class="kk-mid">${body}</div></div>`;
     return `<div class="kk" id="enKK" data-l="${l === undefined ? 'n' : l}" style="--kf:${fontOf(P.font)[2]}">
-      <div class="kk-tabs">${[0, 1, 2].map(x => `<button type="button" class="kk-tab t${x} ${l === x ? 'on' : ''}" data-en="lv" data-l="${x}">${LV[x]}</button>`).join('')}</div>
+      ${tabsHtml()}
       <div class="kk-card" id="enCard" data-en="kflip" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="kk-in">
         ${face('', en ? 'Englisch' : 'Deutsch', front)}${face('kk-back', en ? 'Deutsch' : 'Englisch', back)}
       </div></div></div>`;
   }
-  function paintTabs(w) {
-    const k = $('enKK'); if (!k) return; const l = lvl(w);
-    k.dataset.l = l === undefined ? 'n' : l;
-    k.querySelectorAll('.kk-tab').forEach(t => t.classList.toggle('on', +t.dataset.l === l));
+  // Reiter oben = welche Karten drankommen (mehrfach wählbar). „Schlecht“ enthält auch noch nicht bewertete Wörter.
+  const tabsHtml = () => `<div class="kk-tabs">${ORDER.map(x => `<button type="button" class="kk-tab t${x} ${P.sel.includes(x) ? 'on' : ''}" data-en="sel" data-l="${x}" aria-pressed="${P.sel.includes(x)}">${LV[x]}</button>`).join('')}</div>`;
+  const inSel = w => { const l = lvl(w); return P.sel.includes(l === undefined ? 0 : l); };
+  function deck() {                                    // Runde: gemischt, neu gebaut wenn Auswahl/Stand wechselt
+    const key = curStand() + '|' + [...P.sel].sort().join('');
+    if (!E.deck || E.dkey !== key) { E.dkey = key; E.dpos = 0; E.deck = shuffle(wordsOf(curStand()).filter(inSel).map(w => w.i)); }
+    return E.deck;
   }
   function vKarten(b) {
     if (!P) P = prefs();
     loadFont(P.font); needDoodles();
-    const deck = wordsOf(curStand());
     const top = `<div class="kk-top"><label class="kk-pics"><span>Bilder</span><input type="checkbox" class="switch" id="enPics" ${P.pics ? 'checked' : ''} aria-label="Zeichnungen auf den Karten"></label><button type="button" class="kk-gear" data-en="gear" aria-label="Einstellungen">⚙︎</button></div>`;
-    if (!deck.length) { b.innerHTML = top + '<div class="ln-empty">Keine Wörter.</div>'; return; }
-    E.lpos = Math.min(E.lpos, deck.length - 1);
-    b.innerHTML = top + cardHtml(deck[E.lpos], E.lpos + 1, deck.length) +
-      `<div class="kk-nav"><button type="button" class="ln-btn soft" data-en="lprev" aria-label="Vorherige Karte">‹</button><button type="button" class="ln-btn soft kk-grow" data-en="kflip">Umdrehen</button><button type="button" class="ln-btn soft" data-en="lnext" aria-label="Nächste Karte">›</button></div>`;
+    const d = deck();
+    if (!d.length) { b.innerHTML = top + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty">Hier sind gerade keine Karten.</div></div>`; return; }
+    if (E.dpos >= d.length) {
+      b.innerHTML = top + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty"><b>Runde geschafft</b><button type="button" class="ln-btn" data-en="again">Nochmal</button></div></div>`;
+      return;
+    }
+    b.innerHTML = top + cardHtml(WORDS[d[E.dpos]], E.dpos + 1, d.length) +
+      `<div class="kk-rate">${ORDER.map(x => `<button type="button" class="r${x}" data-en="rate" data-l="${x}">${LV[x]}</button>`).join('')}</div>`;
   }
   function flipCard() { $('enCard')?.classList.toggle('flip'); }
-  function pickLevel(l) { const w = wordsOf(curStand())[E.lpos]; if (w) { setLevel(w, l); paintTabs(w); } }
+  function rate(l, btn) {
+    if (E.busy) return;
+    const w = WORDS[E.deck[E.dpos]]; if (!w) return;
+    setLevel(w, l); E.busy = true; btn?.classList.add('hit');
+    const k = $('enKK'); if (k) k.dataset.l = l;
+    setTimeout(() => { E.busy = false; E.dpos++; if (el && E.tab === 'karten') render(); }, 260);
+  }
+  function toggleSel(l) {
+    const i = P.sel.indexOf(l);
+    if (i >= 0) { if (P.sel.length === 1) { const k = $('enKK'); if (k) { k.classList.remove('wig'); void k.offsetWidth; k.classList.add('wig'); } return; } P.sel.splice(i, 1); }
+    else P.sel.push(l);
+    savePrefs(); render();
+  }
 
   // Einstellungen (Blatt von unten, am body, damit „fixed“ sicher greift)
   function openSheet() {
@@ -193,7 +214,7 @@
     const d = t.dataset;
     switch (d.en) {
       case 'tab': E.tab = d.x; render(); break;
-      case 'stand': E.stand = d.x; E.lpos = 0; E.open = null; render(); break;
+      case 'stand': E.stand = d.x; E.deck = null; E.open = null; render(); break;
       case 'done': {                                   // Abhaken mit zweitem Tipp bestätigen; erledigt → Tipp öffnet wieder
         const s = curStand();
         if (isDone(s)) { setDone(s, false); E.stand = s; render(); break; }
@@ -205,9 +226,9 @@
       case 'set': { const w = WORDS.find(x => x.id === d.id); if (w) { setLevel(w, +d.l); render(); } break; }
       case 'gear': openSheet(); break;
       case 'kflip': flipCard(); break;
-      case 'lv': pickLevel(+d.l); break;
-      case 'lprev': { const n = wordsOf(curStand()).length; E.lpos = (E.lpos + n - 1) % n; render(); break; }
-      case 'lnext': { const n = wordsOf(curStand()).length; E.lpos = (E.lpos + 1) % n; render(); break; }
+      case 'sel': toggleSel(+d.l); break;
+      case 'rate': rate(+d.l, t); break;
+      case 'again': E.deck = null; render(); break;
     }
   }
   function onKey(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'enCard') { e.preventDefault(); flipCard(); } }

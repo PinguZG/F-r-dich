@@ -211,6 +211,10 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .kk-tab.t0{--c:var(--warn)}.kk-tab.t1{--c:var(--accent2)}.kk-tab.t2{--c:var(--ok)}
 .kk-tab.on{margin-top:0;height:44px;background:var(--c);color:#fff}
 .kk.wig .kk-tab{animation:kkWig .4s}
+.kk-tab{cursor:pointer}
+.kk-none{padding-top:40px}
+.kk-empty{position:relative;z-index:1;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:4px 4px 22px 22px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--ink-soft);font-weight:600;text-align:center;padding:20px}
+.kk-empty b{font-family:Caveat,cursive;font-size:32px;color:var(--ink)}
 @keyframes kkWig{25%{transform:translateY(-5px)}75%{transform:translateY(2px)}}
 .kk-card{position:relative;z-index:1;perspective:1400px;cursor:pointer;outline:none}
 .kk-in{position:relative;min-height:330px;transition:transform .55s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
@@ -231,7 +235,10 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .kk-ipa{font-size:15px;font-weight:600;color:var(--ink-soft);margin-top:6px}
 .kk-def{font-size:15px;line-height:1.5;color:var(--ink);margin-top:12px;max-width:34ch}
 .kk-back .kk-mid .kk-big+.kk-ipa{margin-bottom:0}
-.kk-nav{display:flex;gap:10px;margin-top:16px}.kk-nav .kk-grow{flex:1}.kk-nav .ln-btn{font-size:18px}
+.kk-rate{display:flex;gap:10px;margin-top:18px}
+.kk-rate button{flex:1;min-height:56px;border-radius:20px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--ink);font:700 15px Quicksand,sans-serif;transition:transform .2s,background .2s}
+.kk-rate .r0{--c:var(--warn)}.kk-rate .r1{--c:var(--accent2)}.kk-rate .r2{--c:var(--ok)}
+.kk-rate button:active,.kk-rate button.hit{background:var(--c);color:#fff;transform:scale(.96)}
 .en-sheet{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.32);animation:enShIn .2s ease both}
 .en-sh{width:min(520px,100%);display:flex;flex-direction:column;gap:10px;padding:18px 16px max(22px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;animation:enShUp .3s cubic-bezier(.3,1.2,.5,1) both}
 .en-shx{width:40px;height:40px;border-radius:50%;border:0;background:var(--chip);color:var(--ink);font-size:18px}

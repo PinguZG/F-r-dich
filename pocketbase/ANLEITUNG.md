@@ -2001,3 +2001,8 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - Karteikarten: Modus Abfrage entfernt, alle Hilfstexte raus, oben nur „Bilder“-Regler + ⚙︎ (Schrift, Vorderseite), mehr Abstand zur Umdrehen-Leiste, Kartenkopf zeigt Seite + „n / 88“.
 - Übersicht: Suche + kleine Filter-Chips, ruhigere Zeilen. Obere Reiterleiste in Lernen kleiner, bei Ida nicht mehr klebend (`.ln-nav.solo`).
 - **Rücksetz-Weg:** `git checkout b7cb3d6 -- app/englisch.js app/lernen.css app/lernen.js app/sw.js app/lernen/englisch-data.js`.
+
+### v95 (19.11.2026): Karteikarten bewerten + Auswahl über Reiter
+- Unten drei Knöpfe **Sehr gut · Okay · Schlecht** (setzen den Stand, springen automatisch zur nächsten Karte); ‹ › und „Umdrehen“ entfernt – umdrehen nur per Tipp auf die Karte.
+- Die drei Reiter oben wählen, **welche** Karten drankommen (mehrfach wählbar, mindestens einer bleibt an; „Schlecht“ enthält auch noch nicht bewertete Wörter). Runde gemischt; am Ende „Runde geschafft · Nochmal“. Auswahl pro Gerät gespeichert (`wir-en-karten.sel`).
+- Namen überall: Schlecht (0) / Okay (1) / Sehr gut (2). **Rücksetz-Weg:** `git checkout eefcbb4 -- app/englisch.js app/lernen.css app/sw.js`.
