@@ -21,7 +21,9 @@
   "lampen": [
     { "name": "Bett",  "entity_id": "light.bett",  "farbe": "#ff9a52", "test": { "an": true,  "helligkeit": 45, "farbe": "#ff7828" } },
     { "name": "Küche", "entity_id": "light.kuche", "farbe": "#ffd9a8", "test": { "an": false, "helligkeit": 60, "farbe": "#ffd9a8" } },
-    { "name": "Tisch", "entity_id": "light.tisch", "farbe": "#ffb35c", "test": { "an": true,  "helligkeit": 50, "farbe": "#ff9646" } }
+    { "name": "Tisch", "entity_id": "light.tisch", "farbe": "#ffb35c", "test": { "an": true,  "helligkeit": 50, "farbe": "#ff9646" } },
+    // Govee H6181 am Monitor (Bluetooth, Integration "Govee LED BLE" ab v7.42.0-rc.18)
+    { "name": "Monitor", "entity_id": "light.govee_h6181", "farbe": "#9628ff", "test": { "an": true, "helligkeit": 80, "farbe": "#9628ff" } }
   ],
 
   // Farbnamen unter den Lampen (sonst wird ein Name aus dem Farbton bzw. Weißton gebildet), z. B. { "#ff7828": "Glut" }
