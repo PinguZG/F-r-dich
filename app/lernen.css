@@ -174,7 +174,8 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .en-check{flex:none;min-width:46px;height:46px;padding:0;border-radius:23px;border:2px solid var(--glass-border);background:transparent;color:var(--ink-soft);font:700 19px Quicksand,sans-serif;transition:all .25s}
 .en-check.sure{padding:0 14px;border-color:var(--ok);color:var(--ok);font-size:13px}
 .en-hero.done .en-check{background:var(--ok);border-color:var(--ok);color:#fff}
-.en-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--chip);margin-top:14px}
+.en-bar{display:flex;height:22px;border-radius:8px;overflow:hidden;background:color-mix(in srgb,var(--ink-soft) 30%,transparent);margin-top:14px}
+.en-bar span{height:100%;transition:width .5s ease}.en-bar span+span{box-shadow:inset 2px 0 0 rgba(0,0,0,.18)}
 .en-bar .g{background:var(--ok)}.en-bar .m{background:var(--en-y)}.en-bar .b{background:var(--en-r)}
 .en-meta{margin-top:8px;font-size:13px;font-weight:600;color:var(--ink-soft)}
 .en-stands{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
