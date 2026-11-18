@@ -71,6 +71,9 @@
     { "name": "Filmabend",  "icon": "film",  "farbe": "#7b5cff", "entity_id": "script.wir_filmabend", "fernseher": { "app": "Netflix", "lautstaerke": 35, "helligkeit": 50 } },
     // Gaming: alle Lampen, Bett-Streifen mit Farbverlauf Cyan–Blau–Lila–Magenta–Pink (HA-Skript script.gaming)
     { "name": "Gaming",     "icon": "bolt",  "farbe": "#b04dff", "entity_id": "script.gaming" },
+    // Kaminfeuer/Kerze: eingebaute Hue-Effekte auf dem Bett-Streifen (HA-Skripte script.kaminfeuer / script.kerze)
+    { "name": "Kaminfeuer", "icon": "flame", "farbe": "#ff5a1f", "entity_id": "script.kaminfeuer" },
+    { "name": "Kerze",      "icon": "stars", "farbe": "#ffb347", "entity_id": "script.kerze" },
     { "name": "Lesen",      "icon": "book",  "farbe": "#ffc27a", "entity_id": "script.wir_lesen" },
     { "name": "Gute Nacht", "icon": "moon",  "farbe": "#5b6cff", "entity_id": "script.wir_gute_nacht", "fernseher": { "app": "Netflix", "lautstaerke": 20, "helligkeit": 0 } },
     { "name": "Alles aus",  "icon": "power", "farbe": "#6b7085", "entity_id": "script.wir_alles_aus" }
