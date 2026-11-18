@@ -120,6 +120,18 @@
   const prefs = () => { try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (_) { return Object.assign({}, DEF); } };
   let P = null;
   const savePrefs = () => { try { localStorage.setItem(PREF, JSON.stringify(P)); } catch (_) {} };
+  // eigene Farben der drei Stufen (⚙︎): setzt --en-g/-y/-r am Lernen-Screen, Schrift darauf hell/dunkel je nach Helligkeit
+  const COL_DEF = { g: '#9fdcb0', y: '#f9dc8a', r: '#f6a39b' };
+  const onText = hex => { const n = parseInt(hex.slice(1), 16), L = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; return L > 0.6 ? '#3d2f36' : '#ffffff'; };
+  function applyColors() {
+    const root = $('s-lernen'); if (!root) return;
+    if (!P) P = prefs();
+    for (const k of ['g', 'y', 'r']) {
+      const c = P.colors?.[k];
+      if (c && /^#[0-9a-f]{6}$/i.test(c)) { root.style.setProperty('--en-' + k, c); root.style.setProperty('--en-on-' + k, onText(c)); }
+      else { root.style.removeProperty('--en-' + k); root.style.removeProperty('--en-on-' + k); }
+    }
+  }
   const fontOf = k => FONTS.find(f => f[0] === k) || FONTS[0];
   function loadFont(k) {
     const f = fontOf(k); if (!f[3] || $('enf-' + k)) return;
@@ -195,13 +207,19 @@
       <div class="ln-sub">Schrift</div>
       <div class="en-fonts">${FONTS.map(f => `<button type="button" data-s="font" data-x="${f[0]}" class="${P.font === f[0] ? 'on' : ''}" style="font-family:${f[2]}">${f[1]}</button>`).join('')}</div>
       <div class="ln-sub">Vorderseite</div>
-      <div class="ln-seg"><button type="button" data-s="dir" data-x="ed" class="${P.dir === 'ed' ? 'on' : ''}">Englisch</button><button type="button" data-s="dir" data-x="de" class="${P.dir === 'de' ? 'on' : ''}">Deutsch</button></div></div>`;
+      <div class="ln-seg"><button type="button" data-s="dir" data-x="ed" class="${P.dir === 'ed' ? 'on' : ''}">Englisch</button><button type="button" data-s="dir" data-x="de" class="${P.dir === 'de' ? 'on' : ''}">Deutsch</button></div>
+      <div class="ln-sub">Farben</div>
+      <div class="en-cols">${ORDER.map(l => { const k = 'gyr'[2 - l]; return `<label class="en-col"><input type="color" data-col="${k}" value="${(P.colors && P.colors[k]) || COL_DEF[k]}" aria-label="Farbe ${LV[l]}"><span>${LV[l]}</span></label>`; }).join('')}</div>
+      <button type="button" class="en-reset" data-s="reset">Standardfarben</button></div>`;
     FONTS.forEach(f => loadFont(f[0]));
     document.body.append(sh);
+    sh.oninput = e => { const k = e.target.dataset?.col; if (!k) return; P.colors = Object.assign({}, COL_DEF, P.colors, { [k]: e.target.value }); applyColors(); };
+    sh.onchange = e => { if (e.target.dataset?.col) savePrefs(); };
     sh.onclick = e => {
       if (e.target === sh) return closeSheet();
       const t = e.target.closest('[data-s]'); if (!t) return;
       if (t.dataset.s === 'close') return closeSheet();
+      if (t.dataset.s === 'reset') { P.colors = null; savePrefs(); applyColors(); sh.querySelectorAll('[data-col]').forEach(i => i.value = COL_DEF[i.dataset.col]); return; }
       P[t.dataset.s] = t.dataset.x; savePrefs();
       sh.querySelectorAll(`[data-s="${t.dataset.s}"]`).forEach(x => x.classList.toggle('on', x === t)); render();
     };
@@ -240,7 +258,7 @@
     el.innerHTML = '<div class="ln-empty">Lade …</div>';
     try { if (!window.WIR_VOKABELN_EN) await loadScript('/lernen/englisch-data.js'); } catch (_) { el.innerHTML = '<div class="ln-empty">Konnte nicht geladen werden. Bitte einmal mit Netz öffnen.</div>'; return; }
     if (!WORDS) prep();
-    load(); render();
+    load(); applyColors(); render();
     try { if (await pull() && el === target) render(); } catch (e) { console.warn('[englisch] offline/sync', e?.message); }
   }
   function unmount() { closeSheet(); if (el) { el.onclick = null; el.onkeydown = null; el.onchange = null; } el = null; }

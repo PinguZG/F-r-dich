@@ -2012,3 +2012,5 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - **v97:** Fortschrittsbalken oben dick wie in der Fahrschul-App: ein Balken, füllt sich anteilig grün (Sehr gut) · gelb (Okay) · rot (Schlecht), grau = noch nicht bewertet. Rücksetz-Weg: `git checkout 295d45d -- app/lernen.css app/sw.js`.
 
 - **v98:** Pastellfarben für Reiter, Knöpfe, Punkte und Balken: Sehr gut `--en-g` #9fdcb0 (mint), Okay `--en-y` #f9dc8a (butter), Schlecht `--en-r` #f6a39b (koralle), Schrift darauf `--en-on`. Rücksetz-Weg: `git checkout a1ca592 -- app/lernen.css app/sw.js`.
+
+- **v99:** ⚙︎ → „Farben“: für Sehr gut / Okay / Schlecht je ein Farbwähler (iOS-Farbrad), wirkt sofort auf Reiter, Knöpfe, Punkte und Balken; Schrift darauf automatisch hell/dunkel. „Standardfarben“ setzt zurück. Pro Gerät (`wir-en-karten.colors`). Rücksetz-Weg: `git checkout 9499945 -- app/englisch.js app/lernen.css app/sw.js`.
