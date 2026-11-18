@@ -164,7 +164,7 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 }
 
 /* Englisch-Vokabeln (englisch.js) */
-#s-lernen{--en-y:#f2c230;--en-r:#e5484d}          /* Englisch: Okay = gelb, Schlecht = rot (fest, in jeder Farbwelt) */
+#s-lernen{--en-g:#9fdcb0;--en-y:#f9dc8a;--en-r:#f6a39b;--en-on:#3d2f36}   /* Englisch: Pastell – Sehr gut mint, Okay butter, Schlecht koralle (fest) */
 .en-wrap{display:flex;flex-direction:column;gap:14px}
 .en-hero{padding:18px 18px 16px;border-radius:26px;background:var(--glass-strong);border:1px solid var(--glass-border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .en-hero-row{display:flex;align-items:center;gap:12px}
@@ -172,11 +172,11 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .en-hero-t small{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
 .en-hero-t h2{margin:2px 0 0;font-family:Caveat,cursive;font-size:38px;line-height:1;font-weight:700;color:var(--ink)}
 .en-check{flex:none;min-width:46px;height:46px;padding:0;border-radius:23px;border:2px solid var(--glass-border);background:transparent;color:var(--ink-soft);font:700 19px Quicksand,sans-serif;transition:all .25s}
-.en-check.sure{padding:0 14px;border-color:var(--ok);color:var(--ok);font-size:13px}
-.en-hero.done .en-check{background:var(--ok);border-color:var(--ok);color:#fff}
+.en-check.sure{padding:0 14px;border-color:var(--en-g);color:var(--en-g);font-size:13px}
+.en-hero.done .en-check{background:var(--en-g);border-color:var(--en-g);color:var(--en-on)}
 .en-bar{display:flex;height:22px;border-radius:8px;overflow:hidden;background:color-mix(in srgb,var(--ink-soft) 30%,transparent);margin-top:14px}
 .en-bar span{height:100%;transition:width .5s ease}.en-bar span+span{box-shadow:inset 2px 0 0 rgba(0,0,0,.18)}
-.en-bar .g{background:var(--ok)}.en-bar .m{background:var(--en-y)}.en-bar .b{background:var(--en-r)}
+.en-bar .g{background:var(--en-g)}.en-bar .m{background:var(--en-y)}.en-bar .b{background:var(--en-r)}
 .en-meta{margin-top:8px;font-size:13px;font-weight:600;color:var(--ink-soft)}
 .en-stands{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
 .en-stands button{flex:none;min-width:38px;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700}
@@ -193,14 +193,14 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .en-w b{font-size:16px}
 .en-de{display:block;font-size:14px;color:var(--ink-soft);font-weight:600}
 .en-dot{flex:none;width:10px;height:10px;border-radius:50%;display:inline-block;background:transparent;border:2px solid var(--glass-border)}
-.en-dot.l0{background:var(--en-r);border-color:var(--en-r)}.en-dot.l1{background:var(--en-y);border-color:var(--en-y)}.en-dot.l2{background:var(--ok);border-color:var(--ok)}
+.en-dot.l0{background:var(--en-r);border-color:var(--en-r)}.en-dot.l1{background:var(--en-y);border-color:var(--en-y)}.en-dot.l2{background:var(--en-g);border-color:var(--en-g)}
 .en-more{padding:0 14px 14px 36px}
 .en-ipa{font-size:13px;color:var(--ink-soft);font-weight:600}
 .en-def{font-size:14.5px;line-height:1.5;color:var(--ink);margin-top:4px}
 .en-set{display:flex;gap:6px;margin-top:10px}
 .en-set button{flex:1;min-height:38px;border-radius:14px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700;font-size:12.5px;padding:0 4px}
-.en-set button.on{color:#fff;border-color:transparent}
-.en-set button.on.l0{background:var(--en-r)}.en-set button.on.l1{background:var(--en-y);color:#3a2e00}.en-set button.on.l2{background:var(--ok)}
+.en-set button.on{color:var(--en-on);border-color:transparent}
+.en-set button.on.l0{background:var(--en-r)}.en-set button.on.l1{background:var(--en-y);color:var(--en-on)}.en-set button.on.l2{background:var(--en-g)}
 
 /* Karteikarten v92: Ordner-Reiter oben (Stand), Karte dreht sich beim Tippen, Zeichnung im Hintergrund */
 .kk-top{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-bottom:-6px}
@@ -210,9 +210,9 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .kk-tabs{position:absolute;top:0;left:0;right:0;height:44px;display:flex;gap:6px;padding:0 10px}
 .kk-tab{flex:1;height:36px;margin-top:8px;border:0;border-radius:14px 14px 0 0;padding:0 4px;font:700 12.5px Quicksand,sans-serif;color:var(--ink);
   background:color-mix(in srgb,var(--c) 32%,var(--glass-strong));transition:margin .25s,height .25s,background .25s,color .25s}
-.kk-tab.t0{--c:var(--en-r)}.kk-tab.t1{--c:var(--en-y)}.kk-tab.t2{--c:var(--ok)}
-.kk-tab.on{margin-top:0;height:44px;background:var(--c);color:#fff}
-.kk-tab.t1.on{color:#3a2e00}
+.kk-tab.t0{--c:var(--en-r)}.kk-tab.t1{--c:var(--en-y)}.kk-tab.t2{--c:var(--en-g)}
+.kk-tab.on{margin-top:0;height:44px;background:var(--c);color:var(--en-on)}
+.kk-tab.t1.on{color:var(--en-on)}
 .kk.wig .kk-tab{animation:kkWig .4s}
 .kk-tab{cursor:pointer}
 .kk-none{padding-top:40px}
@@ -228,7 +228,7 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
   background-image:linear-gradient(color-mix(in srgb,var(--warn) 55%,transparent),color-mix(in srgb,var(--warn) 55%,transparent)),
     repeating-linear-gradient(to bottom,transparent 0 33px,color-mix(in srgb,var(--accent2) 26%,transparent) 33px 34px);
   background-size:100% 2px,100% calc(100% - 60px);background-position:0 50px,0 60px;background-repeat:no-repeat}
-.kk[data-l="0"]{--top:var(--en-r)}.kk[data-l="1"]{--top:var(--en-y)}.kk[data-l="2"]{--top:var(--ok)}
+.kk[data-l="0"]{--top:var(--en-r)}.kk[data-l="1"]{--top:var(--en-y)}.kk[data-l="2"]{--top:var(--en-g)}
 .kk-back{transform:rotateY(180deg)}
 .kk-dd{position:absolute;right:6px;bottom:6px;width:72%;max-width:290px;opacity:.09;color:var(--ink);pointer-events:none}
 .kk-dd svg{display:block;width:100%;height:auto}
@@ -239,10 +239,10 @@ select.ln-input{appearance:none;-webkit-appearance:none;background-image:linear-
 .kk-def{font-size:15px;line-height:1.5;color:var(--ink);margin-top:12px;max-width:34ch}
 .kk-back .kk-mid .kk-big+.kk-ipa{margin-bottom:0}
 .kk-rate{display:flex;gap:10px;margin-top:18px}
-.kk-rate button{flex:1;min-height:56px;border-radius:20px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--ink);font:700 15px Quicksand,sans-serif;transition:transform .2s,background .2s}
-.kk-rate .r0{--c:var(--en-r)}.kk-rate .r1{--c:var(--en-y)}.kk-rate .r2{--c:var(--ok)}
-.kk-rate button:active,.kk-rate button.hit{background:var(--c);color:#fff;transform:scale(.96)}
-.kk-rate .r1:active,.kk-rate .r1.hit{color:#3a2e00}
+.kk-rate button{flex:1;min-height:56px;border-radius:22px;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--ink);font:700 15px Quicksand,sans-serif;transition:transform .2s,background .2s}
+.kk-rate .r0{--c:var(--en-r)}.kk-rate .r1{--c:var(--en-y)}.kk-rate .r2{--c:var(--en-g)}
+.kk-rate button:active,.kk-rate button.hit{background:var(--c);color:var(--en-on);transform:scale(.96)}
+.kk-rate .r1:active,.kk-rate .r1.hit{color:var(--en-on)}
 .en-sheet{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.32);animation:enShIn .2s ease both}
 .en-sh{width:min(520px,100%);display:flex;flex-direction:column;gap:10px;padding:18px 16px max(22px,env(safe-area-inset-bottom));border-radius:28px 28px 0 0;animation:enShUp .3s cubic-bezier(.3,1.2,.5,1) both}
 .en-shx{width:40px;height:40px;border-radius:50%;border:0;background:var(--chip);color:var(--ink);font-size:18px}
