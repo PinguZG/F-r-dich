@@ -203,7 +203,7 @@
   function openSheet() {
     closeSheet();
     const sh = document.createElement('div'); sh.className = 'en-sheet'; sh.id = 'enSheet';
-    sh.innerHTML = `<div class="en-sh glass"><div class="ln-row"><b class="ln-sp" style="font-size:17px">Einstellungen</b><button type="button" class="en-shx" data-s="close" aria-label="Schließen">✕</button></div>
+    sh.innerHTML = `<div class="en-sh"><div class="ln-row"><b class="ln-sp" style="font-size:17px">Einstellungen</b><button type="button" class="en-shx" data-s="close" aria-label="Schließen">✕</button></div>
       <div class="ln-sub">Schrift</div>
       <div class="en-fonts">${FONTS.map(f => `<button type="button" data-s="font" data-x="${f[0]}" class="${P.font === f[0] ? 'on' : ''}" style="font-family:${f[2]}">${f[1]}</button>`).join('')}</div>
       <div class="ln-sub">Vorderseite</div>

@@ -2014,3 +2014,5 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - **v98:** Pastellfarben für Reiter, Knöpfe, Punkte und Balken: Sehr gut `--en-g` #9fdcb0 (mint), Okay `--en-y` #f9dc8a (butter), Schlecht `--en-r` #f6a39b (koralle), Schrift darauf `--en-on`. Rücksetz-Weg: `git checkout a1ca592 -- app/lernen.css app/sw.js`.
 
 - **v99:** ⚙︎ → „Farben“: für Sehr gut / Okay / Schlecht je ein Farbwähler (iOS-Farbrad), wirkt sofort auf Reiter, Knöpfe, Punkte und Balken; Schrift darauf automatisch hell/dunkel. „Standardfarben“ setzt zurück. Pro Gerät (`wir-en-karten.colors`). Rücksetz-Weg: `git checkout 9499945 -- app/englisch.js app/lernen.css app/sw.js`.
+
+- **v100:** Einstellungs-Blatt deckend (Farbwelt-Hintergrund statt Glas), über allem (z-index 1000), max. 88 % Höhe und scrollbar. Rücksetz-Weg: `git checkout cf23f45 -- app/englisch.js app/lernen.css app/sw.js`.
