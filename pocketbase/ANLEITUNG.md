@@ -1985,3 +1985,10 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - Untere Leiste: `#s-lernen` (lernen.css) und `.pz-page.page` (puzzle.css) hatten ein eigenes `padding-bottom` ohne `--nav-h` → Inhalt verschwand hinter der Leiste. Jetzt `calc(var(--nav-h) + …)` wie bei `.page`.
 - Neu `app/liebe.js`: Pop-up für Ida beim nächsten Start („Ich liebe dich s ooo… “ läuft endlos, nach 2 s der zweite Satz), einmal pro Gerät bis ✕ (`localStorage` `wir-liebe-1-<userId>`), wartet auf die Blumen-Überraschung. Nochmal zeigen: `ID` in liebe.js ändern.
 - Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout fb5e4f8 -- app/index.html app/sw.js app/lernen.css app/puzzle.css app/englisch.js app/lernen/englisch-data.js`, `git rm app/liebe.js`.
+
+### v92 (19.11.2026): Englisch-Karteikarten neu
+- Karteikarten wie echte Karteikarten: oben drei Ordner-Reiter **Kann ich nicht / Kann ich / Kann ich gut** (Tipp wechselt den Stand, die Karte dreht sich dabei nicht), Karte dreht sich beim Tippen (vorne Englisch + Lautschrift, hinten Deutsch + Erklärung), Wörter mittig.
+- Zwei Modi: **Lernen** (blättern mit ‹ ›, Reiter setzt den Stand) und **Abfrage** (Auswahl, erst umdrehen, dann Reiter → nächste Karte; „nicht“ kommt nach 5 Karten wieder).
+- ⚙︎ öffnet Einstellungen: Schrift (Handschrift, Schulheft, Zart, Verspielt, Klar – Google Fonts bei Bedarf), Richtung, Teil. Gespeichert pro Gerät (`localStorage` `wir-en-karten`).
+- Hintergrund: 6 Zeichnungen aus Daniels Vorlagen (potrace), zufällig je Karte, 9 % Deckkraft, Farbe folgt der Farbwelt: `app/lernen/englisch-doodles.js` (nachgeladen, im SW-Cache).
+- Keine Datenbank-Änderung. **Rücksetz-Weg:** `git checkout f918cc7 -- app/englisch.js app/lernen.css app/sw.js`, `git rm app/lernen/englisch-doodles.js`.

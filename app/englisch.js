@@ -1,5 +1,5 @@
-// Englisch-Vokabeln (18.11.2026): Reiter „Englisch“ in Lernen → Ida. Übersicht aller Wörter + Karteikarten mit drei Knöpfen
-// (Kann ich nicht / Kann ich / Kann ich gut). Wörter: app/lernen/englisch-data.js (window.WIR_VOKABELN_EN), wird beim ersten Öffnen nachgeladen.
+// Englisch-Vokabeln (18.11.2026): Reiter „Englisch“ in Lernen → Ida. Übersicht aller Wörter + Karteikarten (v92: Ordner-Reiter
+// Kann ich nicht / Kann ich / Kann ich gut, Modi Lernen/Abfrage, Schrift/Richtung/Teil über ⚙︎, Hintergrund-Zeichnungen aus englisch-doodles.js). Wörter: app/lernen/englisch-data.js (window.WIR_VOKABELN_EN), wird beim ersten Öffnen nachgeladen.
 // Stand je Wort: lokal gespeichert (Offline) und in die Collection lern_vokabeln geschrieben (nur eigene Zeilen, Regeln serverseitig).
 (() => {
   const pb = window.WIR_PB;
@@ -11,7 +11,7 @@
   const LV = { 0: 'Kann ich nicht', 1: 'Kann ich', 2: 'Kann ich gut' };
 
   let WORDS = null, ST = { w: {}, q: {}, ids: {} }, el = null, flushing = false;
-  const E = { tab: 'liste', filter: 'alle', q: '', open: null, mode: 'offen', dir: 'ed', group: 'alle', ses: null };
+  const E = { tab: 'liste', filter: 'alle', q: '', open: null, mode: 'offen', km: 'lernen', lpos: 0, busy: false, ses: null };
   const SKEY = () => 'lernen-en-v1-' + uid();
   const load = () => { try { const j = JSON.parse(localStorage.getItem(SKEY()) || 'null'); if (j) ST = Object.assign({ w: {}, q: {}, ids: {} }, j); } catch (_) {} };
   const persist = () => { try { localStorage.setItem(SKEY(), JSON.stringify(ST)); } catch (_) {} };
@@ -98,52 +98,135 @@
     $('enQ').oninput = e => { E.q = e.target.value; $('enList').innerHTML = listHtml(); };
   }
 
+  // ---------- Karteikarten (Ordner-Reiter, Lernen/Abfrage, Einstellungen) ----------
+  const FONTS = [['caveat', 'Handschrift', "Caveat,cursive", ''], ['patrick', 'Schulheft', "'Patrick Hand',cursive", 'Patrick+Hand'],
+    ['shadows', 'Zart', "'Shadows Into Light',cursive", 'Shadows+Into+Light'], ['gloria', 'Verspielt', "'Gloria Hallelujah',cursive", 'Gloria+Hallelujah'],
+    ['klar', 'Klar', "Quicksand,sans-serif", '']];
+  const PREF = 'wir-en-karten';
+  const prefs = () => { try { return Object.assign({ font: 'caveat', dir: 'ed', group: 'alle' }, JSON.parse(localStorage.getItem(PREF) || '{}')); } catch (_) { return { font: 'caveat', dir: 'ed', group: 'alle' }; } };
+  let P = null;
+  const savePrefs = () => { try { localStorage.setItem(PREF, JSON.stringify(P)); } catch (_) {} };
+  const fontOf = k => FONTS.find(f => f[0] === k) || FONTS[0];
+  function loadFont(k) {
+    const f = fontOf(k); if (!f[3] || document.getElementById('enf-' + k)) return;
+    const l = document.createElement('link'); l.id = 'enf-' + k; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=' + f[3] + '&display=swap'; document.head.append(l);
+  }
+  let lastDoodle = -1;
+  function doodle() {
+    const D = window.WIR_EN_DOODLES; if (!D) return '';
+    const k = Object.keys(D); let i; do { i = Math.floor(Math.random() * k.length); } while (i === lastDoodle && k.length > 1);
+    lastDoodle = i; return D[k[i]];
+  }
+  let doodleLoading = false;
+  function needDoodles() {
+    if (window.WIR_EN_DOODLES || doodleLoading) return;
+    doodleLoading = true;
+    const s = document.createElement('script'); s.src = '/lernen/englisch-doodles.js';
+    s.onload = () => { if (el && E.tab === 'karten') { const d = doodle(); document.querySelectorAll('.kk-dd').forEach(x => x.innerHTML = d); } };
+    s.onerror = () => { doodleLoading = false; };
+    document.head.append(s);
+  }
+
+  const learnDeck = () => WORDS.filter(w => P.group === 'alle' || w.grp === P.group);
   function deckOf() {
-    return WORDS.filter(w => {
-      if (E.group !== 'alle' && w.grp !== E.group) return false;
+    return learnDeck().filter(w => {
       const l = lvl(w);
       if (E.mode === 'alle') return true;
       if (E.mode === 'schwer') return l === undefined || l === 0;
       return l !== 2;
     });
   }
+  // eine Karte: Reiter oben (wechseln den Stand, drehen nicht), Karte selbst dreht sich beim Tippen
+  function cardHtml(w, hintBack) {
+    const l = lvl(w), en = P.dir === 'ed', d = doodle();
+    const faceEn = `<div class="kk-big">${esc(w.en)}</div>${w.ipa ? `<div class="kk-ipa">${esc(w.ipa)}</div>` : ''}`;
+    const faceDe = `<div class="kk-big">${esc(w.de)}</div>`;
+    const front = en ? faceEn : faceDe, back = (en ? faceDe : faceEn) + `<div class="kk-def">${esc(w.def)}</div>`;
+    return `<div class="kk" id="enKK" data-l="${l === undefined ? 'n' : l}" style="--kf:${fontOf(P.font)[2]}">
+      <div class="kk-tabs">${[0, 1, 2].map(x => `<button type="button" class="kk-tab t${x} ${l === x ? 'on' : ''}" data-en="lv" data-l="${x}">${LV[x]}</button>`).join('')}</div>
+      <div class="kk-card" id="enCard" data-en="kflip" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="kk-in">
+        <div class="kk-face"><div class="kk-dd">${d}</div><div class="kk-head"><span>${esc(w.grp)}</span><span>${en ? 'Englisch' : 'Deutsch'}</span></div><div class="kk-mid">${front}</div><div class="kk-hint">Tippen zum Umdrehen</div></div>
+        <div class="kk-face kk-back"><div class="kk-dd">${d}</div><div class="kk-head"><span>${esc(w.grp)}</span><span>${en ? 'Deutsch' : 'Englisch'}</span></div><div class="kk-mid">${back}</div><div class="kk-hint">${hintBack}</div></div>
+      </div></div></div>`;
+  }
+  function paintTabs(w) {
+    const k = $('enKK'); if (!k) return; const l = lvl(w);
+    k.dataset.l = l === undefined ? 'n' : l;
+    k.querySelectorAll('.kk-tab').forEach(t => t.classList.toggle('on', +t.dataset.l === l));
+  }
   function vKarten(b) {
+    if (!P) P = prefs();
+    loadFont(P.font); needDoodles();
+    const top = `<div class="kk-top"><div class="ln-seg"><button type="button" data-en="km" data-x="lernen" class="${E.km === 'lernen' ? 'on' : ''}">Lernen</button><button type="button" data-en="km" data-x="abfrage" class="${E.km === 'abfrage' ? 'on' : ''}">Abfrage</button></div><button type="button" class="kk-gear" data-en="gear" aria-label="Einstellungen">⚙︎</button></div>`;
+    if (E.km === 'lernen') {
+      const deck = learnDeck(); if (!deck.length) { b.innerHTML = top + '<div class="ln-empty">Keine Wörter in diesem Teil.</div>'; return; }
+      E.lpos = Math.min(E.lpos, deck.length - 1);
+      const w = deck[E.lpos];
+      b.innerHTML = top + `<div class="ln-sub kk-info">Karte ${E.lpos + 1} von ${deck.length} · Reiter = Stand setzen</div>` + cardHtml(w, 'Tippen zum Zurückdrehen') +
+        `<div class="kk-nav"><button type="button" class="ln-btn soft" data-en="lprev" aria-label="Zurück">‹</button><button type="button" class="ln-btn soft kk-grow" data-en="kflip">Umdrehen</button><button type="button" class="ln-btn soft" data-en="lnext" aria-label="Weiter">›</button></div>`;
+      return;
+    }
     const s = E.ses;
     if (!s) {
       const n = deckOf().length;
       const M = [['offen', 'Alle außer „gut“'], ['schwer', 'Neu + nicht'], ['alle', 'Alle']];
-      b.innerHTML = `<div class="ln-card glass"><h3>Karteikarten</h3>
-        <div class="ln-sub">Wörter</div><div class="ln-seg en-filter">${M.map(([k, t]) => `<button type="button" data-en="mode" data-x="${k}" class="${E.mode === k ? 'on' : ''}">${t}</button>`).join('')}</div>
-        <div class="ln-sub" style="margin-top:12px">Richtung</div><div class="ln-seg"><button type="button" data-en="dir" data-x="ed" class="${E.dir === 'ed' ? 'on' : ''}">Englisch → Deutsch</button><button type="button" data-en="dir" data-x="de" class="${E.dir === 'de' ? 'on' : ''}">Deutsch → Englisch</button></div>
-        <div class="ln-sub" style="margin-top:12px">Teil</div><select class="ln-input" id="enGrp"><option value="alle">Alle Teile</option>${groups().map(g => `<option ${E.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
-        <button class="ln-btn big" type="button" data-en="start" style="margin-top:16px" ${n ? '' : 'disabled'}>${n ? `Start (${n} Wörter)` : 'Hier ist nichts mehr offen'}</button></div>`;
-      $('enGrp').onchange = e => { E.group = e.target.value; render(); };
+      b.innerHTML = top + `<div class="ln-card glass"><h3>Abfrage</h3>
+        <div class="ln-sub">Welche Wörter?</div><div class="ln-seg en-filter">${M.map(([k, t]) => `<button type="button" data-en="mode" data-x="${k}" class="${E.mode === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <div class="ln-sub" style="margin-top:10px">${P.group === 'alle' ? 'Alle Teile' : esc(P.group)} · ${P.dir === 'ed' ? 'Englisch → Deutsch' : 'Deutsch → Englisch'} (ändern über ⚙︎)</div>
+        <button class="ln-btn big" type="button" data-en="start" style="margin-top:14px" ${n ? '' : 'disabled'}>${n ? `Start (${n} Wörter)` : 'Hier ist nichts mehr offen'}</button></div>`;
       return;
     }
     if (s.pos >= s.deck.length) {
-      b.innerHTML = `<div class="ln-card glass ln-count"><b style="font-size:34px">Geschafft</b><span>${s.n} Bewertungen: ${s.r[2]} gut · ${s.r[1]} können · ${s.r[0]} nicht</span></div>
+      b.innerHTML = top + `<div class="ln-card glass ln-count"><b style="font-size:34px">Geschafft</b><span>${s.n} Bewertungen: ${s.r[2]} gut · ${s.r[1]} können · ${s.r[0]} nicht</span></div>
         <button class="ln-btn big" type="button" data-en="start">Nochmal</button><button class="ln-btn big soft" type="button" data-en="end">Zurück</button>`;
       return;
     }
-    const w = WORDS[s.deck[s.pos]], front = E.dir === 'ed';
-    const fq = front ? `<div class="q">${esc(w.en)}</div>${w.ipa ? `<div class="en-ipa">${esc(w.ipa)}</div>` : ''}` : `<div class="q">${esc(w.de)}</div>`;
-    const back = front ? `<div class="a"><b>${esc(w.de)}</b></div><div class="en-def">${esc(w.def)}</div>` : `<div class="a"><b>${esc(w.en)}</b>${w.ipa ? ` <span class="en-ipa">${esc(w.ipa)}</span>` : ''}</div><div class="en-def">${esc(w.def)}</div>`;
-    b.innerHTML = `<div class="ln-row"><div class="ln-sub ln-sp">Noch ${s.deck.length - s.pos} Karte${s.deck.length - s.pos === 1 ? '' : 'n'} ${dot(w)}</div><button class="ln-link" type="button" data-en="end">Beenden</button></div>
-      <div class="en-card glass ${s.flip ? 'flip' : ''}" ${s.flip ? '' : 'data-en="flip" role="button" tabindex="0"'}><div class="tag">${esc(w.grp)}</div>${fq}${s.flip ? `<hr>${back}` : '<div class="ln-hint" style="margin-top:18px">Tippen zum Umdrehen</div>'}</div>
-      ${s.flip ? `<div class="ln-acts en-acts"><button class="ln-btn no" type="button" data-en="rate" data-l="0">Kann ich nicht</button><button class="ln-btn soft" type="button" data-en="rate" data-l="1">Kann ich</button><button class="ln-btn ok" type="button" data-en="rate" data-l="2">Kann ich gut</button></div>` : '<button class="ln-btn big soft" type="button" data-en="flip">Antwort zeigen</button>'}`;
+    const w = WORDS[s.deck[s.pos]], left = s.deck.length - s.pos;
+    b.innerHTML = top + `<div class="ln-row kk-info"><div class="ln-sub ln-sp">Noch ${left} Karte${left === 1 ? '' : 'n'}</div><button class="ln-link" type="button" data-en="end">Beenden</button></div>` +
+      cardHtml(w, 'Wie gut konntest du es? Reiter oben antippen') + `<button type="button" class="ln-btn big soft" data-en="kflip">Umdrehen</button>`;
   }
-
+  function flipCard() { const c = $('enCard'); if (!c || E.busy) return; c.classList.toggle('flip'); }
+  function pickLevel(l) {
+    if (E.busy) return;
+    if (E.km === 'lernen') { const w = learnDeck()[E.lpos]; if (w) { setLevel(w, l); paintTabs(w); } return; }
+    const s = E.ses; if (!s) return;
+    const c = $('enCard'), k = $('enKK');
+    if (!c?.classList.contains('flip')) { k.classList.remove('wig'); void k.offsetWidth; k.classList.add('wig'); return; }   // Abfrage: erst die Lösung ansehen
+    const w = WORDS[s.deck[s.pos]];
+    setLevel(w, l); paintTabs(w); s.n++; s.r[l]++;
+    if (l === 0) s.deck.splice(Math.min(s.deck.length, s.pos + 5), 0, w.i);   // „nicht“: kommt in dieser Runde bald nochmal
+    E.busy = true; setTimeout(() => { E.busy = false; s.pos++; if (el && E.tab === 'karten') render(); }, 650);
+  }
   function start() {
-    const deck = shuffle(deckOf().map(w => w.i));
-    E.ses = { deck, pos: 0, flip: false, n: 0, r: { 0: 0, 1: 0, 2: 0 } };
+    E.ses = { deck: shuffle(deckOf().map(w => w.i)), pos: 0, n: 0, r: { 0: 0, 1: 0, 2: 0 } };
     render();
   }
-  function rate(l) {
-    const s = E.ses, w = WORDS[s.deck[s.pos]];
-    setLevel(w, l); s.n++; s.r[l]++;
-    if (l === 0) s.deck.splice(Math.min(s.deck.length, s.pos + 5), 0, w.i);   // „nicht“: kommt in dieser Runde bald nochmal
-    s.pos++; s.flip = false; render();
+
+  // Einstellungen (Blatt von unten, hängt am body, damit „fixed“ sicher greift)
+  function openSheet() {
+    closeSheet();
+    const sh = document.createElement('div'); sh.className = 'en-sheet'; sh.id = 'enSheet';
+    sh.innerHTML = `<div class="en-sh glass"><div class="ln-row"><b class="ln-sp" style="font-size:17px">Einstellungen</b><button type="button" class="en-shx" data-s="close" aria-label="Schließen">✕</button></div>
+      <div class="ln-sub">Schrift auf den Karten</div>
+      <div class="en-fonts">${FONTS.map(f => `<button type="button" data-s="font" data-x="${f[0]}" class="${P.font === f[0] ? 'on' : ''}" style="font-family:${f[2]}">${f[1]}</button>`).join('')}</div>
+      <div class="ln-sub">Richtung</div>
+      <div class="ln-seg"><button type="button" data-s="dir" data-x="ed" class="${P.dir === 'ed' ? 'on' : ''}">Englisch → Deutsch</button><button type="button" data-s="dir" data-x="de" class="${P.dir === 'de' ? 'on' : ''}">Deutsch → Englisch</button></div>
+      <div class="ln-sub">Teil</div>
+      <select class="ln-input" id="enShGrp"><option value="alle">Alle Teile</option>${groups().map(g => `<option ${P.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>`;
+    FONTS.forEach(f => loadFont(f[0]));
+    document.body.append(sh);
+    sh.onclick = e => {
+      if (e.target === sh) return closeSheet();
+      const t = e.target.closest('[data-s]'); if (!t) return;
+      if (t.dataset.s === 'close') return closeSheet();
+      if (t.dataset.s === 'font') P.font = t.dataset.x;
+      if (t.dataset.s === 'dir') P.dir = t.dataset.x;
+      savePrefs(); sh.querySelectorAll(`[data-s="${t.dataset.s}"]`).forEach(x => x.classList.toggle('on', x === t)); render();
+    };
+    $('enShGrp').onchange = e => { P.group = e.target.value; E.lpos = 0; E.ses = null; savePrefs(); render(); };
   }
+  function closeSheet() { $('enSheet')?.remove(); }
 
   function onClick(e) {
     const t = e.target.closest('[data-en]'); if (!t) return;
@@ -153,15 +236,18 @@
       case 'filter': E.filter = d.x; E.open = null; render(); break;
       case 'open': E.open = E.open === d.id ? null : d.id; $('enList').innerHTML = listHtml(); break;
       case 'set': { const w = WORDS.find(x => x.id === d.id); if (w) { setLevel(w, +d.l); render(); } break; }
+      case 'km': E.km = d.x; E.ses = null; render(); break;
       case 'mode': E.mode = d.x; render(); break;
-      case 'dir': E.dir = d.x; render(); break;
+      case 'gear': openSheet(); break;
       case 'start': start(); break;
       case 'end': E.ses = null; render(); break;
-      case 'flip': if (E.ses && !E.ses.flip) { E.ses.flip = true; render(); } break;
-      case 'rate': if (E.ses?.flip) rate(+d.l); break;
+      case 'kflip': flipCard(); break;
+      case 'lv': pickLevel(+d.l); break;
+      case 'lprev': { const n = learnDeck().length; E.lpos = (E.lpos + n - 1) % n; render(); break; }
+      case 'lnext': { const n = learnDeck().length; E.lpos = (E.lpos + 1) % n; render(); break; }
     }
   }
-  function onKey(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[data-en=flip]')) { e.preventDefault(); onClick(e); } }
+  function onKey(e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.id === 'enCard') { e.preventDefault(); flipCard(); } }
 
   // Einstieg aus lernen.js: zeigt den Englisch-Bereich im übergebenen Element
   async function mount(target) {
@@ -172,7 +258,7 @@
     load(); E.ses = null; render();
     try { if (await pull() && el === target) render(); } catch (e) { console.warn('[englisch] offline/sync', e?.message); }
   }
-  function unmount() { if (el) { el.onclick = null; el.onkeydown = null; } el = null; }
+  function unmount() { closeSheet(); if (el) { el.onclick = null; el.onkeydown = null; } el = null; }
   window.addEventListener('online', flush);
   window.WIR_ENGLISCH = { mount, unmount };
 })();
