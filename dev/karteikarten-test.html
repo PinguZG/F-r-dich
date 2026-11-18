@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Karteikarten Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6eef3; --ink:#2b2430; --ink-soft:#7a6f80; --paper:#fffdf8; --line:#c9dcf2; --margin:#f1a7b3;
+  --t-neu:#d9d4de; --t-0:#f6a5b6; --t-1:#fbe28a; --t-2:#a9e3b4;
+  --shadow:60,30,60;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1a22;--ink:#f3eef6;--ink-soft:#b3a9ba;--paper:#2a2630;--line:#3a4a5e;--margin:#7a3e4b;--t-neu:#5b5563;--t-0:#c56a80;--t-1:#c8ac46;--t-2:#5fae70;--shadow:0,0,0}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Quicksand,system-ui,sans-serif;
+  padding:max(20px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:Caveat,cursive;font-size:38px;margin:0;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:10px;border-radius:4px 4px 0 0;display:inline-block}
+
+/* Kartenstapel */
+.deck{position:relative;padding-top:34px;margin-top:6px}
+.ghost{position:absolute;left:10px;right:10px;height:60px;border-radius:14px 14px 0 0;background:var(--paper);opacity:.75;box-shadow:0 2px 6px rgba(var(--shadow),.08)}
+.ghost::before{content:"";position:absolute;top:-16px;width:84px;height:20px;border-radius:10px 10px 0 0;background:inherit}
+.ghost.g1{top:6px;transform:scale(.94);background:var(--t-1)} .ghost.g1::before{left:62%}
+.ghost.g2{top:18px;transform:scale(.97);background:var(--t-2)} .ghost.g2::before{left:30%}
+
+.card{position:relative;border-radius:6px 18px 18px 18px;background:var(--paper);min-height:300px;cursor:pointer;
+  box-shadow:0 14px 34px rgba(var(--shadow),.16),0 2px 6px rgba(var(--shadow),.08);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 33px,var(--line) 33px 34px);
+  background-position:0 58px;background-size:100% calc(100% - 58px);background-repeat:no-repeat;
+  transition:transform .25s}
+.card:active{transform:scale(.985)}
+/* rote Kopflinie wie auf echten Karteikarten */
+.card::after{content:"";position:absolute;left:0;right:0;top:56px;height:2px;background:var(--margin)}
+/* Reiter oben – Farbe & Position je nach Stand */
+.tab{position:absolute;top:-30px;height:32px;min-width:112px;padding:0 16px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--ink);background:var(--t-neu);transition:left .35s,background .35s}
+.tab::before,.tab::after{content:"";position:absolute;bottom:0;width:10px;height:10px;background:transparent}
+.card[data-l="neu"]{background-color:var(--paper)} .card[data-l="neu"] .tab{left:0;background:var(--t-neu)}
+.card[data-l="0"] .tab{left:calc(33% - 56px);background:var(--t-0)}
+.card[data-l="1"] .tab{left:calc(66% - 74px);background:var(--t-1)}
+.card[data-l="2"] .tab{left:calc(100% - 112px);background:var(--t-2)}
+.card[data-l="neu"]{border-top-left-radius:0}
+.card[data-l="2"]{border-top-left-radius:18px;border-top-right-radius:0}
+
+/* Hintergrund-Zeichnung */
+.doodle{position:absolute;right:8px;bottom:8px;width:62%;max-width:250px;opacity:.10;pointer-events:none}
+@media (prefers-color-scheme:dark){.doodle{opacity:.14;filter:invert(1)}}
+.doodle svg{width:100%;height:auto;display:block}
+
+.content{position:relative;padding:14px 20px 22px;min-height:300px;display:flex;flex-direction:column}
+.head{height:44px;display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+.word{margin-top:20px;font-family:Caveat,cursive;font-size:44px;line-height:1.05;font-weight:700}
+.ipa{font-size:15px;color:var(--ink-soft);font-weight:600;margin-top:6px}
+.back{margin-top:18px;display:none}
+.card.flip .back{display:block}
+.de{font-family:Caveat,cursive;font-size:32px;line-height:1.1;font-weight:700}
+.def{font-size:15px;line-height:1.55;margin-top:8px}
+.hint{margin-top:auto;padding-top:16px;text-align:center;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+.card.flip .hint{display:none}
+
+.acts{display:flex;gap:8px}
+.acts button{flex:1;min-height:54px;border:0;border-radius:20px;font:700 14px Quicksand,sans-serif;color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(var(--shadow),.12)}
+.acts button:active{transform:scale(.96)}
+.b0{background:var(--t-0)} .b1{background:var(--t-1)} .b2{background:var(--t-2)}
+.acts[hidden]{display:none}
+.show{width:100%;min-height:54px;border:0;border-radius:20px;background:var(--paper);color:var(--ink);font:700 15px Quicksand,sans-serif;box-shadow:0 4px 12px rgba(var(--shadow),.12)}
+.count{text-align:center;font-size:13px;font-weight:700;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Karteikarten – Test</h1>
+  <div class="legend">
+    <span><i style="background:var(--t-neu)"></i>Neu</span>
+    <span><i style="background:var(--t-0)"></i>Kann ich nicht</span>
+    <span><i style="background:var(--t-1)"></i>Kann ich</span>
+    <span><i style="background:var(--t-2)"></i>Kann ich gut</span>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="deck">
+    <div class="ghost g1"></div><div class="ghost g2"></div>
+    <div class="card" id="card" data-l="neu" role="button" tabindex="0">
+      <div class="tab" id="tab">Neu</div>
+      <div class="doodle" id="doodle"></div>
+      <div class="content">
+        <div class="head"><span id="grp"></span><span id="state"></span></div>
+        <div class="word" id="en"></div>
+        <div class="ipa" id="ipa"></div>
+        <div class="back"><div class="de" id="de"></div><div class="def" id="def"></div></div>
+        <div class="hint">Tippen zum Umdrehen</div>
+      </div>
+    </div>
+  </div>
+  <button class="show" id="show" type="button">Antwort zeigen</button>
+  <div class="acts" id="acts" hidden>
+    <button class="b0" data-l="0" type="button">Kann ich nicht</button>
+    <button class="b1" data-l="1" type="button">Kann ich</button>
+    <button class="b2" data-l="2" type="button">Kann ich gut</button>
+  </div>
+</div>
+
+<script>
+// Eigene Zeichnungen im Stil der Vorlagen (runde Köpfe, Strichfiguren) – keine kopierten Bilder
+const S = 'fill="#fff" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"';
+const L = 'fill="none" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"';
+const DOODLES = [
+  // Umarmung mit Herz
+  `<svg viewBox="0 0 220 180"><path ${S} d="M70 168v-50q0-22 22-22h10q20 0 20 22v50z"/><path ${S} d="M112 168v-48q0-22 22-22h8q20 0 20 22v48z"/>
+   <circle ${S} cx="88" cy="70" r="40"/><circle ${S} cx="140" cy="74" r="38"/>
+   <path ${L} d="M70 66q6-6 12 0M92 64q6-6 12 0M132 70q6-6 12 0M152 70q6-6 12 0"/><path ${L} d="M106 120q24 14 48-4M128 124q-20 10-40-2"/>
+   <path fill="#e85a72" stroke="#222" stroke-width="3" d="M114 18c-6-10-22-6-18 6c3 8 18 16 18 16s15-8 18-16c4-12-12-16-18-6z"/></svg>`,
+  // Von hinten, Händchen halten (rote Hosen)
+  `<svg viewBox="0 0 220 180"><circle ${S} cx="80" cy="66" r="52"/><circle ${S} cx="146" cy="66" r="52"/>
+   <path ${S} d="M52 108v34h56v-30M118 112v30h56v-34"/><rect x="48" y="132" width="62" height="22" rx="6" fill="#d9483b" stroke="#222" stroke-width="4"/>
+   <rect x="114" y="132" width="62" height="22" rx="6" fill="#d9483b" stroke="#222" stroke-width="4"/>
+   <path ${L} d="M100 118q12 8 24 18"/><path ${L} d="M60 156v14M96 156v14M126 156v14M164 156v14"/></svg>`,
+  // Wangenkuss
+  `<svg viewBox="0 0 220 180"><path ${S} d="M56 168v-36q0-18 18-18h22q18 0 18 18v36z"/><path ${S} d="M122 168v-40q0-18 18-18h14q18 0 18 18v40z"/>
+   <circle ${S} cx="84" cy="80" r="46"/><circle ${S} cx="146" cy="70" r="44"/>
+   <path ${L} d="M64 76q6 6 12 0M88 72q6 6 12 0M146 62l10 6l-10 6M168 66l-10 0"/><path ${L} d="M124 92q-6 4 0 8"/>
+   <path ${L} d="M120 124q-14 4-22 12"/><ellipse cx="74" cy="96" rx="9" ry="5" fill="#f6b9c6"/><ellipse cx="160" cy="88" rx="8" ry="5" fill="#f6b9c6"/></svg>`,
+  // Kuscheln im Liegen
+  `<svg viewBox="0 0 220 180"><path ${S} d="M30 140q0-16 20-16h130q22 0 22 14q0 12-22 12h-140q-10 0-10-10z"/>
+   <circle ${S} cx="70" cy="104" r="36"/><circle ${S} cx="146" cy="88" r="36"/>
+   <path ${L} d="M58 96v4M78 94v4M134 82l8 4M158 82l-8 4M138 94l6 2M156 94l-6 2"/><path ${L} d="M66 116q4 4 8 0"/>
+   <path ${L} d="M120 120q20 4 40-2"/></svg>`,
+  // Zusammen ein Herz halten
+  `<svg viewBox="0 0 220 180"><path ${S} d="M48 170v-46q0-18 18-18h26q16 0 16 18v46z"/><path ${S} d="M112 170v-46q0-18 16-18h26q18 0 18 18v46z"/>
+   <circle ${S} cx="78" cy="66" r="40"/><circle ${S} cx="142" cy="66" r="40"/>
+   <path ${L} d="M62 64q6-6 12 0M84 64q6-6 12 0M126 64q6-6 12 0M148 64q6-6 12 0M74 80q4 4 8 0M138 80q4 4 8 0"/>
+   <path fill="#e85a72" stroke="#222" stroke-width="3.5" d="M110 128c-8-14-30-8-24 8c4 10 24 22 24 22s20-12 24-22c6-16-16-22-24-8z"/></svg>`,
+];
+const WORDS = [
+  { en: 'astonishing', ipa: '[əˈstɒnɪʃɪŋ]', de: 'erstaunlich', def: 'noun: astonishment; verb: to astonish sb', grp: 'Buch S. 91' },
+  { en: 'melting pot', ipa: '[ˈmeltɪŋ pɒt]', de: 'Schmelztiegel', def: 'a situation in which people from different backgrounds are mixed together', grp: 'Wortliste S. 265' },
+  { en: 'to cherish sth', ipa: '[ˈtʃerɪʃ]', de: 'etw wertschätzen, etw lieben', def: 'to love sth a lot', grp: 'Wortliste S. 266' },
+];
+const LV = { neu: 'Neu', 0: 'Kann ich nicht', 1: 'Kann ich', 2: 'Kann ich gut' };
+const level = {}; let pos = 0, lastD = -1;
+const $ = id => document.getElementById(id);
+function pickDoodle() { let d; do { d = Math.floor(Math.random() * DOODLES.length); } while (d === lastD && DOODLES.length > 1); lastD = d; return DOODLES[d]; }
+function show() {
+  const w = WORDS[pos], l = level[w.en] ?? 'neu', c = $('card');
+  c.classList.remove('flip'); c.dataset.l = l;
+  $('tab').textContent = LV[l]; $('state').textContent = ''; $('grp').textContent = w.grp;
+  $('en').textContent = w.en; $('ipa').textContent = w.ipa; $('de').textContent = w.de; $('def').textContent = w.def;
+  $('doodle').innerHTML = pickDoodle();
+  $('count').textContent = `Karte ${pos + 1} von ${WORDS.length}`;
+  $('acts').hidden = true; $('show').hidden = false;
+}
+function flip() { $('card').classList.add('flip'); $('acts').hidden = false; $('show').hidden = true; }
+$('card').onclick = flip; $('show').onclick = flip;
+$('card').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } };
+$('acts').onclick = e => {
+  const b = e.target.closest('[data-l]'); if (!b) return;
+  const w = WORDS[pos]; level[w.en] = b.dataset.l;
+  const c = $('card'); c.dataset.l = b.dataset.l; $('tab').textContent = LV[b.dataset.l];   // Reiter wandert & färbt sich
+  setTimeout(() => { pos = (pos + 1) % WORDS.length; show(); }, 650);
+};
+show();
+</script>
+</body>
+</html>
