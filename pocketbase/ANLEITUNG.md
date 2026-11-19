@@ -2023,3 +2023,11 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - Gemütlich: In HA startet die Automation `automation.gemutlich_kaminfeuer_am_bett` nach `script.wir_gemuetlich` (4 s später) den Kaminfeuer-Effekt am Bett. `ha/packages/wir.yaml` bleibt dafür unverändert.
 - Lichtwecker (18.11.2026): `automation.lichtwecker_sanft_in_gemutlich_statt_sonnenaufgang` stoppt `script.wir_sonnenaufgang` sofort und startet `script.aufwachen_gemuetlich` (Überblendung über den Vorlauf in Gemütlich, App-Test 60 s). Die alte UI-Automation `automation.aufwachen` (05:00, voll hell) ist deaktiviert. Filmabend: `automation.filmabend_alles_rot_bett_rotes_kaminfeuer`. Zurück: diese Automationen in HA deaktivieren bzw. `automation.aufwachen` wieder aktivieren.
 - Rücksetzen: `git checkout e71140b -- home/config.jsonc` (Stand davor; Tag ließ sich nicht pushen), committen, pushen.
+
+## Lernen: AP2-Prüfungsaufgaben, 6-Tage-Plan, Karten im Look von Idas Bereich (19.11.2026, v101)
+- Neu in **Lernen (nur Daniel)**: Reiter **Aufgaben** mit 579 Prüfungsaufgaben aus allen AP2-Prüfungen (Elektro 152, Netz 187, WiSo 240), nach Themen sortiert, Zahl am Thema = in wie vielen Prüfungen es vorkam. Lösung aufklappbar, Aufgabe wird beim Aufklappen als „gesehen“ markiert; „Nur offene“-Filter. Daten in `app/lernen/lernen-pruef.js` (wird erst beim ersten Öffnen geladen).
+- **Plan** ist jetzt nach Tagen (Do 19.11. – Di 24.11., Prüfung Mi 25.11.) in aufklappbaren Tagen; „Los“ springt direkt zum Thema. Alte Plan-Einträge (`planId` ohne neuen Plan) werden ausgeblendet; `app/lernen/files/plan.html` entfällt.
+- **Karten** wie bei Ida: Reiter Sehr gut / Okay / Schlecht, Umdrehen per Tipp, drei Bewertungsknöpfe (Schlecht → Box 1, Okay → Box 2, Sehr gut → Box 3). Heute-Seite zeigt Fortschritt je Bereich.
+- Datenbank: **keine Schemaänderung**. „Gesehen“ wird als Karte `pq:<id>` in `lern_karten` gespeichert. Kein DB-Backup nötig.
+- Hinweis: einzelne Aufgaben stammen aus gescannten PDFs (Texterkennung), GA2 S26 teils rekonstruiert (im Text markiert).
+- **Rücksetz-Weg:** `git checkout vor-lernen-pruef -- app/lernen.js app/lernen.css app/sw.js app/lernen/lernen-data.js app/lernen/files/plan.html` (und `app/lernen/lernen-pruef.js` löschen), committen, pushen.

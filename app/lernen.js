@@ -108,6 +108,7 @@
       const t2 = { key: pt.id, planId: pt.id, title: pt.title, date: pt.date, area: pt.area, done: false, doneAt: '', custom: false };
       ST.T.push(t2); enqueue('lern_todos', 'planId', pt.id, todoData(t2));
     }
+    ST.T = ST.T.filter(t => !t.planId || planOf(t.planId));
     persist();
     return true;
   }
@@ -129,6 +130,7 @@
       DATA.areas[a].cards.forEach(c => { c.area = a; DATA.card[c.id] = c; });
     }
     ready = true;
+    ST.T = ST.T.filter(t => !t.planId || planOf(t.planId));       // Plan vom 19.11. ersetzt den alten (andere IDs)
     // lokale Plan-Aufgaben sofort anzeigen (auch offline), Server-Stand danach
     if (!ST.T.length) ST.T = DATA.plan.tasks.map(pt => ({ key: pt.id, planId: pt.id, title: pt.title, date: pt.date, area: pt.area, done: false, doneAt: '', custom: false }));
   }
@@ -159,11 +161,12 @@
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 
   // ---------- Ansicht ----------
-  const VIEWS = [['heute', 'Heute'], ['todos', 'To-dos'], ['stoff', 'Stoff'], ['karten', 'Karten'], ['rechnen', 'Rechnen'], ['probe', 'Probe'], ['dateien', 'Dateien']];
+  const VIEWS = [['heute', 'Heute'], ['todos', 'Plan'], ['pruef', 'Aufgaben'], ['stoff', 'Stoff'], ['karten', 'Karten'], ['rechnen', 'Rechnen'], ['probe', 'Probe'], ['dateien', 'Dateien']];
   let view = 'heute';
   const V = {                       // Zustand je Ansicht
     st: { area: 'elek', q: '', focus: null, open: new Set() },
     kf: { area: 'alle', sec: 'all', secs: null, mode: 'due', must: false },
+    pq: { area: 'elek', only: false, focus: null, o: new Set(), t: new Set(), sol: new Set() }, pl: { open: null },
     who: null, ses: null,                      // laufende Kartenrunde
     r: { area: 'elek', sel: 'mix', ids: null, cur: null, done: false },
     pf: { area: 'alle', cards: 15, calc: 5, min: 40, must: false },
@@ -179,7 +182,7 @@
     if (!ready || V.who !== 'daniel') return;
     const openTodos = ST.T.filter(t => !t.done && t.date === dstr()).length;
     $('lnNav').innerHTML = VIEWS.map(([k, n]) => `<button type="button" data-v="${k}" class="${k === view ? 'on' : ''}">${n}${k === 'todos' && openTodos ? `<i>${openTodos}</i>` : ''}</button>`).join('');
-    const fn = { heute: vHeute, todos: vTodos, stoff: vStoff, karten: vKarten, rechnen: vRechnen, probe: vProbe, dateien: vDateien }[view];
+    const fn = { heute: vHeute, todos: vTodos, pruef: vPruef, stoff: vStoff, karten: vKarten, rechnen: vRechnen, probe: vProbe, dateien: vDateien }[view];
     const el = body(); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     fn(el);
     banner();
@@ -192,7 +195,7 @@
   }
   function todoRow(t, withGo) {
     const pt = t.planId && planOf(t.planId), title = pt ? pt.title : t.title, date = pt ? pt.date : t.date, area = pt ? pt.area : t.area;
-    const canGo = pt && ['stoff', 'karten', 'rechnen', 'probe'].includes(pt.action);
+    const canGo = pt && ['stoff', 'karten', 'rechnen', 'probe', 'pruef'].includes(pt.action);
     return `<div class="ln-todo glass ${t.done ? 'done' : ''}"><button class="ln-chk" type="button" data-act="chk" data-k="${esc(t.key)}" aria-label="Abhaken">✓</button>
       <div class="ln-sp"><div class="ln-tt">${esc(title)}</div><div class="ln-tm">${[dlabel(date), pt?.timeSlot, area && area !== 'alle' ? AREAS[area] : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
       ${withGo && canGo && !t.done ? `<button class="ln-go" type="button" data-act="go" data-k="${esc(t.key)}">Los</button>` : ''}${t.custom ? `<button class="ln-del" type="button" data-act="del" data-k="${esc(t.key)}" aria-label="Löschen">✕</button>` : ''}</div>`;
@@ -211,21 +214,43 @@
       ${days >= 0 ? `<div class="ln-card glass"><div class="ln-row"><div class="ln-sp"><h3 style="margin:0">Karten heute</h3><div class="ln-sub">${due} fällig oder neu</div></div></div><button class="ln-btn big" type="button" data-act="startdue" style="margin-top:12px" ${due ? '' : 'disabled'}>${due ? 'Karten starten' : 'Alles geschafft'}</button></div>` : ''}
       <div class="ln-card glass"><h3>Aufgaben heute</h3>${tt.length ? '' : '<div class="ln-sub">Für heute steht nichts im Plan.</div>'}<div style="display:flex;flex-direction:column;gap:8px">${tt.map(t => todoRow(t, true)).join('')}</div>
         ${over ? `<button class="ln-link" type="button" data-v="todos" style="margin-top:8px">${over} überfällig anzeigen</button>` : ''}</div>
+      <div class="ln-card glass" id="lnPqHeute"><h3>Prüfungsaufgaben</h3><div class="ln-sub">Lade …</div></div>
       <div class="ln-card glass"><h3>Fortschritt (Karten in Box 3)</h3><div class="ln-rings">${AREA_ORDER.map(ring).join('')}</div></div>
       ${last ? `<div class="ln-card glass"><h3>Letzte Probe</h3><div class="ln-row"><div class="ln-sp"><b style="color:var(--ink);font-size:22px">${last.score} / ${last.total}</b> <span class="ln-sub">(${pct(last.score, last.total)} %)</span></div><div class="ln-sub">${last.area && last.area !== 'alle' ? esc(AREAS[last.area]) + ' · ' : ''}${esc((last.date || '').slice(0, 10).split('-').reverse().join('.'))}</div></div></div>` : ''}`;
+    needPQ().then(() => { if (view === 'heute') pqHeute(); }).catch(() => { const e = $('lnPqHeute'); if (e) e.hidden = true; });
+  }
+
+  function pqHeute() {
+    const el = $('lnPqHeute'); if (!el || !PQ) return;
+    el.innerHTML = `<h3>Prüfungsaufgaben</h3><div class="pq-bars">${AREA_ORDER.map(a => { const c = pqCount(a); return `<div class="pq-bar"><span>${AREAS[a]}</span><div class="ln-prog"><i style="width:${pct(c.seen, c.n)}%"></i></div><b>${c.seen}/${c.n}</b></div>`; }).join('')}</div>
+      <button class="ln-btn sm soft" type="button" data-v="pruef" style="margin-top:12px">Aufgaben öffnen</button>`;
   }
 
   // ===== To-dos =====
+  const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const wd = d => d ? WD[new Date(d + 'T00:00:00').getDay()] + ' ' + dlabel(d) : 'Ohne Datum';
+  function planDays() {
+    const g = {};
+    ST.T.forEach(t => { const d = (t.planId && planOf(t.planId)?.date) || t.date || ''; (g[d] = g[d] || []).push(t); });
+    return Object.keys(g).sort((a, b) => (a || '9').localeCompare(b || '9')).map(d => [d, g[d]]);
+  }
+  function daysHtml() {
+    const today = dstr(), P = V.pl;
+    return planDays().map(([d, L], i) => {
+      const done = L.filter(t => t.done).length, open = P.open.has(d || '-'), pt = L.map(t => t.planId && planOf(t.planId)).find(Boolean);
+      return `<div class="ln-card glass ln-sec ${open ? 'open' : ''} ${done === L.length ? 'read' : ''}"><button class="hd" type="button" data-act="day" data-d="${esc(d || '-')}"><span class="ln-t">${wd(d)}${d === today ? ' · Heute' : ''}<small class="pq-sm">${esc(pt?.dayTitle || 'Eigene To-dos')}</small></span><span class="pq-cnt">${done}/${L.length}</span><span class="ar">›</span></button>
+        <div class="bd">${open ? `<div style="display:flex;flex-direction:column;gap:8px">${L.map(t => todoRow(t, true)).join('')}</div>` : ''}</div></div>`;
+    }).join('');
+  }
   function vTodos(el) {
-    const today = dstr(), sort = (a, b) => (a.date || '9').localeCompare(b.date || '9');
-    const open = ST.T.filter(t => !t.done);
-    const grp = [['Heute', open.filter(t => t.date === today)], ['Überfällig', open.filter(t => t.date && t.date < today)], ['Kommend', open.filter(t => !t.date || t.date > today).sort(sort)], ['Erledigt', ST.T.filter(t => t.done).sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))]];
+    const today = dstr(), P = V.pl;
+    if (!P.open) { const ds = planDays().map(x => x[0]); P.open = new Set([ds.includes(today) ? today : (ds.find(d => d > today) || ds[ds.length - 1] || '-')]); }
     const a = V.add;
     el.innerHTML = `${V.tdOpen ? `<div class="ln-card glass ln-add"><h3 style="margin:0">Neues To-do</h3><input class="ln-input" id="tdTitle" placeholder="Titel" maxlength="200" value="${esc(a.title)}">
         <div class="ln-row"><input class="ln-input" id="tdDate" type="date" value="${esc(a.date)}"><select class="ln-input" id="tdArea"><option value="alle">Alle</option>${AREA_ORDER.map(k => `<option value="${k}" ${a.area === k ? 'selected' : ''}>${AREAS[k]}</option>`).join('')}</select></div>
         <div class="ln-row"><button class="ln-btn soft sm" type="button" data-act="tdcancel">Abbrechen</button><div class="ln-sp"></div><button class="ln-btn sm" type="button" data-act="tdsave">Speichern</button></div></div>`
-      : `<button class="ln-btn big" type="button" data-act="tdnew">Eigenes To-do</button>`}
-      ${grp.map(([n, l]) => l.length ? `<div class="ln-grp">${n} · ${l.length}</div>${l.map(t => todoRow(t, true)).join('')}` : '').join('')}`;
+      : `<button class="ln-btn soft sm" type="button" data-act="tdnew" style="align-self:flex-start">+ Eigenes To-do</button>`}
+      <div class="pq-grid" id="lnDays">${daysHtml()}</div>`;
   }
 
   // ===== Stoff =====
@@ -252,6 +277,61 @@
     $('stQ').oninput = e => { V.st.q = e.target.value; V.st.focus = null; $('lnStList').innerHTML = stoffList(); };
   }
 
+  // ===== Prüfungsaufgaben (echte AP2-Aufgaben nach Thema, Lösung zum Aufklappen) =====
+  let PQ = null;
+  const PQX = ['S26', 'S25', 'W24/25', 'S24', 'W23/24', 'S23', 'W22/23', 'S22', 'W21/22'];
+  async function needPQ() {
+    if (PQ) return PQ;
+    if (!window.LERN_PRUEF) await loadScript('/lernen/lernen-pruef.js');
+    const all = window.LERN_PRUEF.tasks.map((t, i) => Object.assign({ i }, t)), P = { all, by: {}, byId: {}, ex: {} };
+    for (const t of all) { P.byId[t.id] = t; (P.by[t.a + ':' + t.s] = P.by[t.a + ':' + t.s] || []).push(t); (P.ex[t.a] = P.ex[t.a] || new Set()).add(t.ex); }
+    for (const k in P.by) P.by[k].sort((x, y) => (PQX.indexOf(x.ex) - PQX.indexOf(y.ex)) || x.i - y.i);
+    return (PQ = P);
+  }
+  const pqSeen = t => !!ST.K['pq:' + t.id];
+  const pqCount = a => { const L = PQ.all.filter(t => t.a === a); return { n: L.length, seen: L.filter(pqSeen).length }; };
+  function pqSecs(a) {
+    const f = V.pq.focus;
+    return DATA.areas[a].sections.filter(s => PQ.by[a + ':' + s.id] && (!f || f.ids.includes(s.id))).map(s => { const L = PQ.by[a + ':' + s.id]; return { s, L, n: new Set(L.map(t => t.ex)).size }; })
+      .sort((x, y) => f ? 0 : (y.n - x.n || y.L.length - x.L.length));
+  }
+  function pqRow(t) {
+    const q = V.pq, open = q.t.has(t.id), sol = q.sol.has(t.id), seen = pqSeen(t), id = esc(t.id);
+    return `<div class="pq-row ${open ? 'open' : ''} ${seen ? 'seen' : ''}"><button type="button" class="pq-hd" data-act="pqt" data-id="${id}"><span class="pq-ex">${esc(t.ex)}</span><span class="pq-t">${esc(t.t)}<small>${esc(t.n)}${t.p ? ' · ' + t.p + ' P.' : ''}</small></span><span class="pq-ok">✓</span></button>
+      ${open ? `<div class="pq-bd"><div class="ln-html pq-q">${clean(t.q)}</div>${sol ? `<div class="pq-solh">Lösung</div><div class="ln-html pq-sol">${clean(t.sol)}</div>` : ''}
+        <div class="pq-acts"><button type="button" class="ln-btn sm ${sol ? 'soft' : ''}" data-act="pqsol" data-id="${id}">${sol ? 'Lösung verbergen' : 'Lösung anzeigen'}</button><button type="button" class="ln-btn sm soft" data-act="pqseen" data-id="${id}">${seen ? 'Gesehen ✓' : 'Gesehen'}</button></div></div>` : ''}</div>`;
+  }
+  function pqListHtml() {
+    const q = V.pq, a = q.area, N = PQ.ex[a]?.size || 0;
+    const secs = pqSecs(a).map(o => ({ ...o, L: q.only ? o.L.filter(t => !pqSeen(t)) : o.L, all: o.L })).filter(o => o.L.length);
+    if (!secs.length) return `<div class="ln-empty">${q.only ? 'Alles gesehen. Stark.' : 'Keine Aufgaben.'}</div>`;
+    return secs.map(o => {
+      const k = a + ':' + o.s.id, open = q.o.has(k), seenN = o.all.filter(pqSeen).length, heat = N ? (o.n / N >= 0.7 ? 'h3' : o.n / N >= 0.4 ? 'h2' : 'h1') : 'h1';
+      return `<div class="ln-card glass ln-sec ${open ? 'open' : ''} ${seenN === o.all.length ? 'read' : ''}"><button class="hd" type="button" data-act="pqsec" data-sk="${esc(k)}"><span class="ln-t">${esc(o.s.title.replace(/^\d+\s*·\s*/, ''))}<small class="pq-sm">${o.all.length} Aufgaben · ${seenN} gesehen</small></span><span class="pq-freq ${heat}" title="Kam in ${o.n} von ${N} Prüfungen vor">${o.n}/${N}</span><span class="ar">›</span></button>
+        <div class="bd">${open ? `<div class="pq-list">${o.L.map(pqRow).join('')}</div>` : ''}</div></div>`;
+    }).join('');
+  }
+  function pqHeadHtml() {
+    const q = V.pq, f = q.focus, tot = AREA_ORDER.reduce((x, a) => { const c = pqCount(a); return { n: x.n + c.n, seen: x.seen + c.seen }; }, { n: 0, seen: 0 });
+    return `<div class="ln-prog"><i style="width:${pct(tot.seen, tot.n)}%"></i></div><div class="ln-sub" style="margin-top:6px">${tot.seen} von ${tot.n} Aufgaben gesehen · Zahl am Thema = in so vielen Prüfungen kam es vor</div>
+      <div class="ln-seg" style="margin-top:10px">${AREA_ORDER.map(a => { const c = pqCount(a); return `<button type="button" data-act="pqarea" data-a="${a}" class="${q.area === a ? 'on' : ''}">${AREAS[a]} ${c.seen}/${c.n}</button>`; }).join('')}</div>
+      <div class="ln-row" style="margin-top:10px"><button type="button" class="pq-chip ${q.only ? 'on' : ''}" data-act="pqonly">Nur offene</button><div class="ln-sp"></div>${f ? `<span class="ln-sub">Aus dem Plan</span><button class="ln-link" type="button" data-act="pqunfocus">Alle Themen</button>` : ''}</div>`;
+  }
+  function pqRefresh() { const h = $('lnPqHead'), l = $('lnPqList'); if (h) h.innerHTML = pqHeadHtml(); if (l) l.innerHTML = pqListHtml(); }
+  async function vPruef(el) {
+    if (!PQ) {
+      el.innerHTML = '<div class="ln-empty">Lade Prüfungsaufgaben …</div>';
+      try { await needPQ(); } catch (_) { el.innerHTML = '<div class="ln-empty">Konnte nicht geladen werden. Bitte einmal mit Netz öffnen.</div>'; return; }
+      if (view !== 'pruef') return;
+    }
+    el.innerHTML = `<div class="ln-card glass" id="lnPqHead">${pqHeadHtml()}</div><div class="pq-grid" id="lnPqList">${pqListHtml()}</div>`;
+  }
+  function pqMark(t, on) {
+    const k = 'pq:' + t.id;
+    if (on) { ST.K[k] = { b: 1, d: '' }; enqueue('lern_karten', 'cardId', k, { box: 1, due: '' }); }
+    else { delete ST.K[k]; enqueue('lern_karten', 'cardId', k, null, true); }
+  }
+
   // ===== Karten (Leitner) =====
   function kPool() {
     const f = V.kf; let pool = cardsOf(f.area);
@@ -272,7 +352,7 @@
         <label class="check"><input type="checkbox" class="switch" id="kfMust" ${f.must ? 'checked' : ''}><span>Nur MUSS-Themen</span></label></div>
       <div class="ln-card glass"><div class="ln-prog"><i style="width:${pct(s.b3, s.total)}%"></i></div>
         <div class="ln-boxes" style="margin-top:12px"><div><b>${s.n}</b><span>Neu</span></div><div><b>${s.b1}</b><span>Box 1</span></div><div><b>${s.b2}</b><span>Box 2</span></div><div><b>${s.b3}</b><span>Box 3</span></div></div>
-        <div class="ln-note" style="margin-top:10px">Richtig: nächste Box (Box 2 nach 1 Tag, Box 3 nach 3 Tagen). Falsch: zurück in Box 1, kommt gleich nochmal.</div></div>
+        <div class="ln-note" style="margin-top:10px">Sehr gut → Box 3 (kommt in 3 Tagen), Okay → Box 2 (1 Tag), Schlecht → Box 1 (gleich wieder). Reiter oben in der Runde wählen die Stufen.</div></div>
       <button class="ln-btn big" type="button" data-act="kstart" ${queue.length ? '' : 'disabled'}>${queue.length ? `${queue.length} Karten starten` : 'Nichts in dieser Auswahl'}</button>`;
     $('kfSec') && ($('kfSec').onchange = e => { if (e.target.value === '__plan') return; V.kf.secs = null; V.kf.sec = e.target.value; render(); });
     $('kfMode').onchange = e => { V.kf.mode = e.target.value; render(); };
@@ -282,36 +362,37 @@
     const f = V.kf, pool = kPool();
     return shuffle(pool.filter(c => f.mode === 'all' || (f.mode === 'b1' ? ST.K[c.id]?.b === 1 : isDue(c))));
   }
-  function startSession() { V.ses = { queue: buildQueue(), pos: 0, flip: false, known: 0, wrong: 0 }; render(); }
+  // Rundenlogik wie bei Ida: Reiter oben = welche Stufen drankommen, Karte dreht sich beim Tippen, drei Knöpfe bewerten.
+  // Schlecht → Box 1 (gleich wieder), Okay → Box 2 (1 Tag), Sehr gut → Box 3 (3 Tage). Neue Karten zählen als „Schlecht“.
+  const LVN = { 0: 'Schlecht', 1: 'Okay', 2: 'Sehr gut' }, LORD = [2, 1, 0];
+  const lvOf = c => { const s = ST.K[c.id]; return !s ? 0 : s.b >= 3 ? 2 : s.b === 2 ? 1 : 0; };
+  function setBoxTo(c, b) { ST.K[c.id] = { b, d: dstr(INT[b]) }; enqueue('lern_karten', 'cardId', c.id, { box: b, due: ST.K[c.id].d }); }
+  function startSession() { V.ses = { base: buildQueue(), sel: [0, 1, 2], deck: null, pos: 0, flip: false, busy: false, n: [0, 0, 0] }; render(); }
+  function sesDeck(S) { if (!S.deck) { S.deck = shuffle(S.base.filter(c => S.sel.includes(lvOf(c)))); S.pos = 0; } return S.deck; }
   function vSession(el) {
-    const S = V.ses;
-    if (!S.queue.length || S.pos >= S.queue.length) {
-      el.innerHTML = `<div class="ln-card glass ln-count"><b>${S.queue.length ? 'Runde fertig' : 'Nichts fällig'}</b><span>${S.known} gewusst · ${S.wrong} falsch</span><small>${S.queue.length ? 'Pause machen, später wieder „Heute fällig“.' : ''}</small></div>
-        <button class="ln-btn big" type="button" data-act="kend">Fertig</button>`;
+    const S = V.ses, deck = sesDeck(S);
+    const tabs = `<div class="kk-tabs">${LORD.map(x => `<button type="button" class="kk-tab t${x} ${S.sel.includes(x) ? 'on' : ''}" data-act="ksel" data-l="${x}" aria-pressed="${S.sel.includes(x)}">${LVN[x]}</button>`).join('')}</div>`;
+    const top = `<div class="ln-row"><button class="ln-link" type="button" data-act="kend">‹ Beenden</button><div class="ln-sp"></div><span class="ln-sub">${Math.max(0, deck.length - S.pos)} übrig</span></div>`;
+    if (!S.base.length) { el.innerHTML = top + `<div class="kk kk-none">${tabs}<div class="kk-empty"><b>Nichts fällig</b><button type="button" class="ln-btn" data-act="kend">Fertig</button></div></div>`; return; }
+    if (!deck.length) { el.innerHTML = top + `<div class="kk kk-none">${tabs}<div class="kk-empty">Hier sind gerade keine Karten.</div></div>`; return; }
+    if (S.pos >= deck.length) {
+      el.innerHTML = top + `<div class="kk kk-none">${tabs}<div class="kk-empty"><b>Runde geschafft</b><span>${S.n[2]} sehr gut · ${S.n[1]} okay · ${S.n[0]} schlecht</span><button type="button" class="ln-btn" data-act="kagain">Nochmal</button><button type="button" class="ln-link" data-act="kend">Fertig</button></div></div>`;
       return;
     }
-    const c = S.queue[S.pos], sec = DATA.sec[c.area + ':' + c.s], bx = ST.K[c.id];
-    el.innerHTML = `<div class="ln-row"><button class="ln-link" type="button" data-act="kend">‹ Beenden</button><div class="ln-sp"></div><span class="ln-sub">noch ${S.queue.length - S.pos}</span></div>
-      <div class="ln-fc ${S.flip ? 'flip' : ''}" id="lnFc"><div class="in" id="lnFcIn"><div class="face"><div class="tag">${esc(sec?.title || '')} · ${sec ? PRI[sec.p] : ''} · ${bx ? 'Box ' + bx.b : 'neu'}</div><div class="q ln-html">${clean(c.q)}</div></div>
-        <div class="face back"><div class="tag">Antwort</div><div class="a ln-html">${clean(c.a)}</div></div></div></div>
-      <div class="ln-hint">Erst selbst antworten, dann tippen zum Umdrehen · danach wischen: rechts gewusst, links falsch</div>
-      <div class="ln-acts"><button class="ln-btn no" type="button" data-act="kno">Falsch</button><button class="ln-btn soft pass" type="button" data-act="kskip">Weiter</button><button class="ln-btn ok" type="button" data-act="kyes">Gewusst</button></div>`;
-    const fc = $('lnFc'); let x0 = null, dx = 0, moved = false;
-    fc.onpointerdown = e => { x0 = e.clientX; dx = 0; moved = false; };
-    fc.onpointermove = e => { if (x0 == null) return; dx = e.clientX - x0; if (Math.abs(dx) > 8) moved = true; if (S.flip && moved) fc.style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`; };
-    fc.onpointerup = fc.onpointercancel = () => {
-      if (x0 == null) return; x0 = null;
-      if (S.flip && Math.abs(dx) > 90) { markCard(dx > 0); return; }
-      fc.style.transform = '';
-      if (!moved) { S.flip = !S.flip; fc.classList.toggle('flip', S.flip); }
-    };
+    const c = deck[S.pos], sec = DATA.sec[c.area + ':' + c.s], face = (cls, side, body) => `<div class="kk-face ${cls}"><div class="kk-head"><span>${side}</span><span>${S.pos + 1} / ${deck.length}</span></div><div class="kk-mid">${body}</div></div>`;
+    el.innerHTML = top + `<div class="kk lnk" id="lnKK" data-l="${lvOf(c)}">${tabs}
+      <div class="kk-card ${S.flip ? 'flip' : ''}" id="lnKc" data-act="kflip" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="kk-in">
+        ${face('', 'Frage · ' + esc(sec?.title || ''), `<div class="kk-big kk-q">${esc(c.q)}</div>`)}${face('kk-back', 'Antwort', `<div class="kk-ans ln-html">${clean(c.a)}</div>`)}
+      </div></div></div>
+      <div class="kk-rate">${LORD.slice().reverse().map(x => `<button type="button" class="r${x}" data-act="krate" data-l="${x}">${LVN[x]}</button>`).join('')}</div>
+      <div class="ln-hint">Erst selbst antworten, dann tippen zum Umdrehen und bewerten.</div>`;
+    const kc = $('lnKc'); kc.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); kc.click(); } };
   }
-  function markCard(ok) {
-    const S = V.ses, c = S.queue[S.pos];
-    setBox(c, ok);
-    if (ok) S.known++; else { S.wrong++; S.queue.splice(Math.min(S.queue.length, S.pos + 5), 0, c); }
-    S.pos++; S.flip = false;
-    const fc = $('lnFc'); if (fc) { fc.classList.add('fly'); fc.style.transform = `translateX(${ok ? 140 : -140}px)`; setTimeout(render, 180); } else render();
+  function rateCard(l, btn) {
+    const S = V.ses, c = S.deck?.[S.pos]; if (!c || S.busy) return;
+    S.busy = true; btn?.classList.add('hit'); setBoxTo(c, l + 1); S.n[l]++;
+    const k = $('lnKK'); if (k) k.dataset.l = l;
+    setTimeout(() => { S.busy = false; S.pos++; S.flip = false; if (V.ses === S && view === 'karten') render(); }, 260);
   }
 
   // ===== Rechnen =====
@@ -404,7 +485,7 @@
   }
 
   // ===== Dateien =====
-  const FILES = [['netz', 'Netzwerktechnik', 'Lernmappe offline'], ['elek', 'Elektrotechnik', 'Lernmappe offline'], ['wiso', 'WiSO', 'Lernmappe offline'], ['plan', 'Lernplan 17.–25.11.', 'Plan offline']];
+  const FILES = [['netz', 'Netzwerktechnik', 'Lernmappe offline'], ['elek', 'Elektrotechnik', 'Lernmappe offline'], ['wiso', 'WiSO', 'Lernmappe offline']];
   const ext = n => (n.split('.').pop() || '').slice(0, 4).toUpperCase();
   async function loadFiles() {
     try { V.files = (await pb.collection('lern_dateien').getFullList({ requestKey: null })).reverse(); try { V.token = await pb.files.getToken(); } catch (_) {} }
@@ -476,9 +557,18 @@
       case 'kfarea': V.kf.area = d.a; V.kf.sec = 'all'; V.kf.secs = null; render(); break;
       case 'kstart': startSession(); break;
       case 'kend': V.ses = null; render(); break;
-      case 'kyes': markCard(true); break;
-      case 'kno': markCard(false); break;
-      case 'kskip': V.ses.pos++; V.ses.flip = false; render(); break;
+      case 'kflip': { const S = V.ses, k = $('lnKc'); if (S && k) { S.flip = !S.flip; k.classList.toggle('flip', S.flip); } break; }
+      case 'krate': rateCard(+d.l, b); break;
+      case 'ksel': { const S = V.ses, l = +d.l, i = S.sel.indexOf(l); if (i >= 0) { if (S.sel.length === 1) { const k = $('lnKK'); if (k) { k.classList.remove('wig'); void k.offsetWidth; k.classList.add('wig'); } break; } S.sel.splice(i, 1); } else S.sel.push(l); S.deck = null; render(); break; }
+      case 'kagain': V.ses.deck = null; V.ses.n = [0, 0, 0]; render(); break;
+      case 'day': { const o = V.pl.open; o.has(d.d) ? o.delete(d.d) : o.add(d.d); const e = $('lnDays'); if (e) e.innerHTML = daysHtml(); break; }
+      case 'pqarea': V.pq.area = d.a; pqRefresh(); break;
+      case 'pqonly': V.pq.only = !V.pq.only; pqRefresh(); break;
+      case 'pqunfocus': V.pq.focus = null; V.pq.o = new Set(); pqRefresh(); break;
+      case 'pqsec': { const o = V.pq.o; o.has(d.sk) ? o.delete(d.sk) : o.add(d.sk); pqRefresh(); break; }
+      case 'pqt': { const o = V.pq.t; o.has(d.id) ? o.delete(d.id) : o.add(d.id); pqRefresh(); break; }
+      case 'pqsol': { const t = PQ.byId[d.id], sl = V.pq.sol; if (!t) break; if (sl.has(d.id)) sl.delete(d.id); else { sl.add(d.id); if (!pqSeen(t)) pqMark(t, true); } pqRefresh(); break; }
+      case 'pqseen': { const t = PQ.byId[d.id]; if (!t) break; pqMark(t, !pqSeen(t)); pqRefresh(); break; }
       case 'rarea': V.r.area = d.a; V.r.sel = 'mix'; V.r.ids = null; V.r.val = ''; newR(); render(); break;
       case 'rcheck': rCheck(); break;
       case 'rnext': newR(); V.r.val = ''; render(); break;
@@ -504,7 +594,8 @@
     if (!pt) return;
     const a = pt.area, t = pt.target || {};
     if (pt.action === 'stoff') { V.st = { area: AREAS[a] ? a : 'elek', q: '', focus: t.sections ? { area: a, ids: t.sections } : null, open: new Set((t.sections || []).map(id => a + ':' + id)) }; go('stoff'); }
-    else if (pt.action === 'karten') { V.kf = { area: AREAS[a] ? a : 'alle', sec: 'all', secs: t.sections || null, mode: 'due', must: false }; V.ses = null; view = 'karten'; startSession(); }
+    else if (pt.action === 'karten') { V.kf = { area: AREAS[a] ? a : 'alle', sec: 'all', secs: t.sections || null, mode: t.mode || 'due', must: false }; V.ses = null; view = 'karten'; startSession(); }
+    else if (pt.action === 'pruef') { V.pq.area = AREAS[a] ? a : 'elek'; V.pq.focus = t.sections ? { area: a, ids: t.sections } : null; V.pq.only = !!t.only; V.pq.o = new Set((t.sections || []).map(id => a + ':' + id)); go('pruef'); }
     else if (pt.action === 'rechnen') { V.r = { area: AREAS[a] ? a : 'elek', sel: 'mix', ids: t.generators || null, cur: null, done: false, val: '' }; go('rechnen'); }
     else if (pt.action === 'probe') { V.pf = { area: AREAS[a] ? a : 'alle', cards: t.cards || 15, calc: t.calc || 5, min: t.minutes || 40, must: !!t.onlyMust }; if (!V.P) go('probe'); else go('probe'); }
   }
