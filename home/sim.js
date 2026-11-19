@@ -7,6 +7,7 @@ const { EventEmitter } = require('events');
 const FAIL_RATE = Number(process.env.SIM_FAIL_RATE ?? 0.03);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const iso = (t = Date.now()) => new Date(t).toISOString();
+const uid = () => require('crypto').randomBytes(16).toString('hex');
 const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
 
 function kelvinRgb(k) {
@@ -35,10 +36,13 @@ class Sim extends EventEmitter {
     this.mode = 'test';
     this.states = new Map();
     this.kwh = 1.8;
+    this.todos = new Map();   // To-do-Listen (Einkaufsliste) wie in HA: [{ uid, summary, status, description }]
     this.setConfig(cfg);
   }
 
-  setConfig(cfg) {
+  // extra = interne Entitäten nur für wir-home (hier: die To-do-Liste der Einkaufsliste)
+  setConfig(cfg, extra = this.extra || []) {
+    this.extra = extra;
     this.cfg = cfg;
     const now = Date.now();
     const put = (id, state, attributes, changed) => {
@@ -83,6 +87,12 @@ class Sim extends EventEmitter {
     put(k.co2, String(climate(now, 'co2')), { unit_of_measurement: 'ppm' });
     put(k.strom_heute, String(this.kwh), { unit_of_measurement: 'kWh' });
     put(k.leistung, String(this.watt()), { unit_of_measurement: 'W' });
+    // Einkaufsliste: startet wie die echte mit „Milch“; Beschreibung (64) kann die simulierte Liste, die echte nicht
+    for (const id of extra.filter(x => x.startsWith('todo.'))) {
+      if (this.todos.has(id)) continue;
+      this.todos.set(id, [{ uid: uid(), summary: 'Milch', status: 'needs_action' }]);
+      put(id, '1', { friendly_name: 'Einkaufsliste', supported_features: 15 | 64 }, now);
+    }
   }
 
   // Verbrauch wie in der Vorlage: Lampen Helligkeit × 0,09 W, Fernseher 42 W, Geräte laut Konfiguration
@@ -184,6 +194,28 @@ class Sim extends EventEmitter {
         return this.set(id, 'playing', ap ? { source: ap.name, app_name: ap.name, media_title: ap.test } : { source: data.source, app_name: '', media_title: data.source });
       }
     }
+  }
+
+  // To-do-Liste wie HA: get_items -> { items }, add_item / update_item (rename, status, description) / remove_item
+  async todo(service, id, data = {}) {
+    await wait(60 + Math.random() * 150);
+    if (Math.random() < FAIL_RATE) throw new Error('Testmodus: Home Assistant hat nicht geantwortet');
+    const list = this.todos.get(id);
+    if (!list) throw new Error('Unbekannte Liste ' + id);
+    const find = k => list.find(i => i.uid === k) || list.find(i => i.summary === k);
+    if (service === 'get_items') return { items: list.map(i => ({ ...i })) };
+    if (service === 'add_item') list.push({ uid: uid(), summary: String(data.item), status: 'needs_action', ...(data.description ? { description: data.description } : {}) });
+    else if (service === 'update_item') {
+      const it = find(data.item);
+      if (!it) throw new Error('Eintrag nicht gefunden');
+      if (data.rename != null) it.summary = String(data.rename);
+      if (data.status) it.status = data.status;
+      if (data.description != null) { if (data.description) it.description = data.description; else delete it.description; }
+    } else if (service === 'remove_item') {
+      for (const k of [].concat(data.item)) { const it = find(k); if (!it) throw new Error('Eintrag nicht gefunden'); list.splice(list.indexOf(it), 1); }
+    } else throw new Error('todo.' + service + ' gibt es nicht');
+    this.set(id, String(list.filter(i => i.status === 'needs_action').length));
+    return null;
   }
 
   async call(domain, service, ids, data) {

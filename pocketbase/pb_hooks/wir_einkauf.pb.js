@@ -13,3 +13,13 @@ onRecordAfterUpdateSuccess((e) => {
   catch (err) { e.app.logger().error('grocery push', 'error', String(err)); }
   e.next();
 }, 'grocery_entries');
+
+// ha_uid (Verknüpfung mit der Home-Assistant-To-do-Liste) setzt nur wir-home als Superuser – Werte aus der App werden ignoriert
+onRecordCreateRequest((e) => {
+  if (!e.hasSuperuserAuth()) e.record.set('ha_uid', '');
+  e.next();
+}, 'grocery_entries');
+onRecordUpdateRequest((e) => {
+  if (!e.hasSuperuserAuth()) e.record.set('ha_uid', e.record.original().getString('ha_uid'));
+  e.next();
+}, 'grocery_entries');

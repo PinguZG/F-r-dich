@@ -145,6 +145,11 @@
     ]
   },
 
+  // Einkaufsliste <-> Home Assistant (home/einkauf.js): Zwei-Wege-Abgleich der Wir-Liste "liste" mit der HA-To-do-Liste
+  // "entity" (Sprachassistent: draufsetzen, abfragen, abhaken). Artikel aus HA bekommen "autor" (PocketBase-ID oder Name)
+  // als Autor – der Push an die andere Person läuft wie gewohnt. "an": false schaltet den Abgleich ab.
+  "einkauf": { "an": true, "entity": "todo.einkaufsliste", "liste": "Einkauf", "autor": "dtm8ddyyr9ns4h3" },
+
   // Zuhause-Extras (Karten auf Start): Partner-Ecke, Abfahrten, Pakete, System-Status. Nichts davon geht in home_state –
   // die App fragt über PocketBase, wir-home prüft den Nutzer. Ausführlich: ANLEITUNG.md, Abschnitt "Zuhause-Extras".
   "extras": {

@@ -7,27 +7,9 @@
   const myId = () => (pb.authStore.record || pb.authStore.model)?.id;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-  const CATS = [
-    ['obst', 'Obst & Gemüse', '🥦'], ['kuehl', 'Kühlregal', '🧀'], ['fleisch', 'Fleisch & Fisch', '🥩'], ['brot', 'Brot & Backwaren', '🥖'],
-    ['vorrat', 'Vorrat & Konserven', '🥫'], ['gewuerz', 'Gewürze & Backen', '🧂'], ['suess', 'Süßes & Snacks', '🍫'], ['getraenke', 'Getränke', '🥤'],
-    ['tk', 'Tiefkühl', '🧊'], ['haushalt', 'Haushalt', '🧽'], ['drogerie', 'Drogerie', '🧴'], ['sonst', 'Sonstiges', '📦'],
-  ];
-  const C = (cat, s) => s.split('|').map(x => { const [e, n] = x.split(' ', 2).length === 2 ? [x.split(' ')[0], x.slice(x.indexOf(' ') + 1)] : ['🛒', x]; return { cat, emoji: e, name: n }; });
-  const CATALOG = [
-    ...C('obst', '🍎 Äpfel|🍌 Bananen|🍐 Birnen|🍇 Trauben|🍓 Erdbeeren|🫐 Heidelbeeren|🍊 Orangen|🍋 Zitronen|🥝 Kiwi|🍉 Wassermelone|🥭 Mango|🍍 Ananas|🥑 Avocado|🍅 Tomaten|🥒 Gurke|🥕 Karotten|🥔 Kartoffeln|🧅 Zwiebeln|🧄 Knoblauch|🫑 Paprika|🥦 Brokkoli|🥬 Salat|🥬 Spinat|🍄 Champignons|🌽 Mais|🥒 Zucchini|🍆 Aubergine|🌿 Basilikum|🌿 Petersilie|🫚 Ingwer|🥬 Rucola|🍠 Süßkartoffeln|🫛 Erbsen|🥬 Lauch|🥗 Blumenkohl'),
-    ...C('kuehl', '🥛 Milch|🧈 Butter|🧀 Käse|🧀 Gouda|🧀 Mozzarella|🧀 Feta|🧀 Parmesan|🥚 Eier|🥣 Joghurt|🥣 Quark|🥛 Sahne|🥛 Schmand|🧀 Frischkäse|🥛 Hafermilch|🍮 Pudding|🥟 Tortellini|🧈 Margarine|🌭 Würstchen|🥓 Speck|🍕 Pizzateig'),
-    ...C('fleisch', '🍗 Hähnchen|🥩 Hackfleisch|🥩 Steak|🍖 Schnitzel|🐟 Lachs|🍤 Garnelen|🐟 Thunfisch|🥓 Schinken|🍖 Salami|🦃 Putenbrust'),
-    ...C('brot', '🍞 Brot|🥖 Baguette|🥐 Croissants|🥯 Brötchen|🍞 Toast|🥨 Brezeln|🫓 Wraps|🍰 Kuchen|🫓 Knäckebrot'),
-    ...C('vorrat', '🍝 Nudeln|🍚 Reis|🥫 Tomatensoße|🥫 Passierte Tomaten|🥫 Kidneybohnen|🥫 Kichererbsen|🥫 Mais (Dose)|🫒 Oliven|🥣 Müsli|🥣 Haferflocken|🍯 Honig|🍓 Marmelade|🥜 Erdnussbutter|🍫 Nutella|☕ Kaffee|🍵 Tee|🫙 Linsen|🥫 Suppe|🍜 Ramen|🫒 Olivenöl|🌻 Sonnenblumenöl|🍶 Essig|🍶 Sojasoße|🥫 Ketchup|🥫 Mayo|🥫 Senf'),
-    ...C('gewuerz', '🧂 Salz|🌶️ Pfeffer|🌶️ Paprikapulver|🌿 Oregano|🧂 Zucker|🌾 Mehl|🧁 Backpulver|🍫 Kakao|🌰 Nüsse|🍦 Vanillezucker|🥥 Kokosmilch|🧂 Brühe'),
-    ...C('suess', '🍫 Schokolade|🍪 Kekse|🍬 Gummibärchen|🍿 Popcorn|🥨 Chips|🥜 Erdnüsse|🍦 Eis|🍩 Donuts|🍫 Riegel|🍭 Bonbons'),
-    ...C('getraenke', '💧 Wasser|💧 Sprudel|🧃 Apfelsaft|🧃 Orangensaft|🥤 Cola|🥤 Limo|🍺 Bier|🍷 Wein|🍾 Sekt|🧋 Eistee|☕ Kaffeebohnen|🥤 Energy Drink'),
-    ...C('tk', '🍕 Pizza|🍟 Pommes|🥦 TK-Gemüse|🍨 Eiscreme|🫐 TK-Beeren|🐟 Fischstäbchen|🥟 Maultaschen|🍤 TK-Garnelen'),
-    ...C('haushalt', '🧻 Toilettenpapier|🧻 Küchenrolle|🧽 Schwämme|🧴 Spülmittel|🫧 Spülmaschinentabs|🧺 Waschmittel|🧺 Weichspüler|🗑️ Müllbeutel|🧹 Putzmittel|💡 Glühbirne|🔋 Batterien|🕯️ Kerzen|🍱 Frischhaltefolie|🧻 Taschentücher|🧯 Alufolie|🧺 Backpapier'),
-    ...C('drogerie', '🪥 Zahnpasta|🪥 Zahnbürste|🧴 Shampoo|🧴 Duschgel|🧼 Seife|🧴 Bodylotion|🧴 Deo|🧴 Sonnencreme|🪒 Rasierer|🩹 Pflaster|💊 Schmerztabletten|🧴 Handcreme|💄 Lippenpflege|🧻 Wattepads|🩲 Binden|🧴 Haarspülung|🧴 Gesichtscreme'),
-  ];
+  // Katalog + Vergleich aus app/lib/grocery-catalog.js (gemeinsam mit wir-home)
+  const { CATS, CATALOG, norm } = window.WIR_GROCERY;
   const catOf = k => CATS.find(c => c[0] === k) || CATS[CATS.length - 1];
-  const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').trim();
 
   let lists = [], listId = '', entries = [], custom = [], started = false, openCats = new Set();
   try { listId = localStorage.getItem('wir-grocery-list') || ''; } catch (_) {}

@@ -12,6 +12,7 @@ const path = require('path');
 const conf = require('./config');
 const { Sim } = require('./sim');
 const makeExtras = require('./extras');
+const makeEinkauf = require('./einkauf');
 
 const env = (k, d) => (process.env[k] ?? d);
 const need = k => { const v = process.env[k]; if (!v) { console.error('Fehlt: ' + k); process.exit(1); } return v; };
@@ -127,6 +128,9 @@ function publicConfig() {
 // ----------------------------------------------------------------------
 let backend = null;
 let extras = null;
+let einkauf = null;   // Abgleich Einkaufsliste <-> HA-To-do-Liste (home/einkauf.js)
+// interne Entitäten nur für wir-home (nie in home_state / an die App): ADB des Fernsehers, To-do-Liste der Einkaufsliste
+const internIds = () => [intern.adb, einkauf?.entity()].filter(Boolean);
 const states = new Map();
 const meta = { mode: 'test', connected: false, error: '', scene: '', scene_at: '', since: new Date().toISOString(), beat: 0 };
 
@@ -144,6 +148,8 @@ function slim(s) {
 function onState(s) {
   const was = states.get(s.entity_id);
   states.set(s.entity_id, s);
+  // To-do-Liste geändert (z. B. per Sprachassistent) -> Einkaufsliste gleich abgleichen
+  if (einkauf && s.entity_id === einkauf.entity()) { if (!s.missing) einkauf.soon(); return; }
   // interne Entitäten (ADB) nie nach home_state – nur die ausgewertete Antwort
   if (s.entity_id === intern.adb) {
     adbSeq++; tvEcht(); tvWatchState(s.entity_id, was); kinoLicht(s, was);
@@ -181,6 +187,7 @@ function startBackend() {
     meta.mode = 'test';
     log('Modus: TEST (HA_URL/HA_TOKEN nicht gesetzt) – Home Assistant wird simuliert');
   }
+  backend.setConfig(C.cfg, internIds());
   backend.on('state', onState);
   backend.on('status', st => {
     if (st.connected !== meta.connected || st.error !== meta.error) log('Status:', st.connected ? 'verbunden' : 'getrennt', st.error || '');
@@ -190,6 +197,7 @@ function startBackend() {
       weckerSoon();
       kalender().catch(err => log('Kalender:', err.message));
       tvDiscover().catch(err => log('Fernseher suchen:', err.message));
+      einkauf?.soon();
     }
   });
   backend.start();
@@ -418,7 +426,7 @@ async function tvDiscover() {
   if (found.adb !== intern.adb || found.wol !== intern.wol) {
     log('Fernseher intern:', 'ADB', found.adb || '–', '· WOL', found.wol || '–');
     Object.assign(intern, found);
-    backend.setConfig(C.cfg, intern.adb ? [intern.adb] : []);
+    backend.setConfig(C.cfg, internIds());
     put('_config', publicConfig());
     if (!intern.adb) put('_tv', {});
   }
@@ -998,6 +1006,20 @@ const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
   // Wecker-Einstellungen wurden in der App geändert (pb_hooks/wir_zuhause.pb.js) -> zu HA übertragen
   if (req.method === 'POST' && req.url === '/wecker') { weckerSoon(300); req.resume(); return send(200, { ok: true }); }
+  // NUR Testmodus (lokal): simulierte To-do-Liste lesen/ändern, z. B. POST /sim/einkauf {"service":"add_item","data":{"item":"Brot"}}
+  if (req.url === '/sim/einkauf' && meta.mode === 'test' && einkauf?.entity()) {
+    const id = einkauf.entity();
+    if (req.method === 'GET') return backend.todo('get_items', id).then(r => send(200, r), err => send(502, { message: err.message }));
+    if (req.method === 'POST') {
+      let b = '';
+      req.on('data', c => { b += c; if (b.length > 10000) req.destroy(); });
+      req.on('end', () => {
+        let m; try { m = JSON.parse(b); } catch (_) { return send(400, { message: 'JSON?' }); }
+        backend.todo(String(m.service), id, m.data || {}).then(() => send(200, { ok: true }), err => send(400, { message: err.message }));
+      });
+      return;
+    }
+  }
   // Diagnose (nur lokal auf dem VPS, z. B. per ssh + curl): Fernseher-nahe Entitäten
   if (req.method === 'GET' && req.url === '/diag/entities') {
     if (!backend?.overview) return send(400, { message: 'nur im echten Modus' });
@@ -1083,6 +1105,10 @@ async function main() {
   // Datensätze von Geräten, die nicht mehr in der Konfiguration stehen, bleiben liegen – die App zeigt nur Konfiguriertes.
 
   extras = makeExtras({ log, api, configFile: CONFIG, backend: () => backend, meta });
+  einkauf = makeEinkauf({
+    log, api, configFile: CONFIG, backend: () => backend, meta, states,
+    store: { get: () => { try { return JSON.parse(cache.get('_einkauf') || 'null'); } catch (_) { return null; } }, set: d => put('_einkauf', d) },
+  });
   server.listen(PORT, '127.0.0.1', () => log(`wir-home hört auf 127.0.0.1:${PORT}`));
   startBackend();
 
@@ -1110,7 +1136,8 @@ async function main() {
     reloadTimer = setTimeout(() => {
       try {
         C = readConfig();
-        backend.setConfig(C.cfg);
+        einkauf.reload();
+        backend.setConfig(C.cfg, internIds());
         put('_config', publicConfig());
         klimaTrim();
         log('Konfiguration neu geladen');

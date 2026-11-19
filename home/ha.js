@@ -160,6 +160,14 @@ class HA extends EventEmitter {
     await this.send({ type: 'call_service', domain, service, service_data: data || {}, target: { entity_id: ids } }, timeoutMs);
   }
 
+  // To-do-Liste (Einkaufsliste): get_items mit Antwort ({ items: [{ uid, summary, status, description }] }), sonst add/update/remove_item
+  async todo(service, id, data) {
+    if (!this.ready) throw new Error('Home Assistant nicht verbunden');
+    const get = service === 'get_items';
+    const r = await this.send({ type: 'call_service', domain: 'todo', service, service_data: data || {}, target: { entity_id: id }, ...(get ? { return_response: true } : {}) }, 15000);
+    return get ? r?.response?.[id] : null;
+  }
+
   // kurzlebiger signierter Link auf eine Datei in HA (z. B. /media/local/…), ohne das Token weiterzugeben
   async signPath(p, expires = 120) {
     return (await this.send({ type: 'auth/sign_path', path: p, expires })).path;

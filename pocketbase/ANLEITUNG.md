@@ -1864,7 +1864,7 @@ Die App läuft komplett auf dem Heim-PC unter http://127.0.0.1:8090: eigene Pock
 - **Sicherung:** Tag `vor-spiele-shop2`, Backup `/home/pingu/backups/vor-spiele-shop2-2026-11-13/` (integrity ok).
 - **Rücksetz-Weg:** `git checkout vor-spiele-shop2 -- app/games.js app/shop.js app/games.css app/index.html app/sw.js pocketbase/pb_hooks/shop_lib.js pocketbase/pb_hooks/spiele_lib.js pocketbase/pb_hooks/wir_spiele.pb.js`, sw-Version hochzählen, committen, pushen (kein reset/force). Das Feld `started` darf bleiben (stört nicht).
 
-## Pastell-Farbwelt + Wischen 13.11.2026 (Wir `wir-v65`)
+## Pastell-Farbwelt + Wischen 13.11.2026 (Wir `wir-v103`)
 
 - **Neue Farbwelt „Pastell“** (hell: Rosa, Flieder, Pfirsich, weiße Glas-Kacheln mit weichem Glow). Variablen `html[data-theme="pastell"]` in `shared/base.css`, Eintrag in `shared/look.js` (`THEMES`) und Auswahl-Kachel in `app/index.html`. `users.theme` ist Text, kein Schemawechsel. Die alten Farbwelten bleiben unverändert.
 - **Zuhause hell:** `app/zuhause-pastell.css` (neu) überschreibt die dunklen Zuhause-Farben nur bei Pastell (Handy und Tablet). Zuhause läuft im Shadow-DOM, deshalb setzt `zuhause.js` die aktuelle Farbwelt als Attribut `data-th` am Host (MutationObserver). Aurora und die anderen Farbwelten sehen aus wie vorher. Bewusst dunkel: Claude-Cockpit (Rahmen pastell), Raumansicht im Tablet, Wecker-Klingeln, Bildschirmschoner. Pakete/System/Claude-Seite lokal ohne Daten, optisch ungeprüft.
@@ -2039,3 +2039,18 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - Plan (Do 19.11. – Di 24.11.): pro Tag erst Wissen (Stoff, Rechentrainer, Karten), dann eine oder zwei Original-Prüfungen. „Los“ öffnet die Prüfung direkt. In „Aufgaben“ gibt es je Aufgabe „Im Original ansehen“.
 - Sicherung: DB-Backup vorher nur per SSH auf dem VPS möglich (`sqlite3 … ".backup …"`), nicht aus der Claude-Sitzung.
 - **Rücksetz-Weg:** `git checkout vor-lernen-klausur -- app/lernen.js app/lernen.css app/sw.js app/lernen/lernen-data.js`, `app/lernen/lernen-klausur.js` und `app/lernen/vendor/` löschen, committen, pushen. Die Collection `lern_notizen` kann bleiben (schadet nicht).
+## Einkaufsliste ↔ Home Assistant (Sprachassistent) (19.11.2026, wir-v103)
+- **Was:** Die Wir-Liste „🛒 Einkauf“ und die HA-To-do-Liste `todo.einkaufsliste` gleichen sich in beide Richtungen ab – Daniel kann per Sprachassistent Sachen draufsetzen, abfragen und abhaken. Andere Wir-Listen (z. B. Drogerie) bleiben unberührt.
+- **Wer macht es:** `wir-home` (`home/einkauf.js`) über die vorhandene HA-Verbindung (kein neues Token): alle 60 s und ~1,5 s nach jeder Änderung von `todo.einkaufsliste` (Zustand = Anzahl offen). HA-Seite per `todo.get_items` (mit Antwort), `add_item`, `update_item`, `remove_item`.
+- **Regeln:**
+  - Neu in HA (offen) → in „Einkauf“: gleichnamigen Eintrag (ohne Groß/Klein/Akzente) verknüpfen, erledigten wieder öffnen; sonst neu mit Emoji/Kategorie aus dem App-Katalog (`app/lib/grocery-catalog.js`, gemeinsam mit der App) bzw. `grocery_custom`, sonst „Sonstiges“. Katalog-Schreibweise gewinnt („brot“ → „Brot“, auch in HA). Autor = `einkauf.autor` (Daniel) → der Push an Ida aus `grocery_lib.js` läuft normal.
+  - Neu in Wir (offen) → in HA anlegen. Abhaken (`done` ↔ `completed`) und Löschen (nur verknüpfte) in beide Richtungen. Angabe (`spec`) ↔ `description` nur, wenn die HA-Liste Beschreibungen kann – die jetzige lokale Liste kann es nicht (`supported_features` 15), dann bleibt die Angabe nur in Wir.
+  - Ändern sich beide Seiten zwischen zwei Abgleichen, gewinnt PocketBase (je Feld).
+  - Zuordnung über das neue Feld `grocery_entries.ha_uid` (Migration `1795800000_wir_einkauf_ha.js`, nur additiv; setzt nur wir-home – Werte aus der App ignoriert der Hook in `wir_einkauf.pb.js`). Der zuletzt abgeglichene Stand je Paar liegt in `home_state` unter `_einkauf` (statt einer Datei: der Dienst läuft mit `ProtectHome=read-only`).
+  - Robust: HA getrennt/Fehler → nichts passiert, nächster Lauf holt nach; Fehler nur ins Log (gleiche Meldung einmal). Fehlen in HA auf einmal ≥ 2 und mehr als die Hälfte der verknüpften Einträge (Liste geleert/neu angelegt), löscht Wir nichts, sondern löst die Verknüpfungen und überträgt offene neu.
+- **Einstellungen:** `home/config.jsonc` → `"einkauf": { "an": true, "entity": "todo.einkaufsliste", "liste": "Einkauf", "autor": "<PocketBase-ID oder Name>" }`. `"an": false` schaltet ab.
+- **Log:** `journalctl -u wir-home -n 50 --no-pager | grep Einkauf` („HA → Wir neu „Brot““, „Wir → HA {"status":"completed"}“ …).
+- **Lokal testen:** Testmodus simuliert die To-do-Liste (startet mit „Milch“). Nur im Testmodus: `curl localhost:8095/sim/einkauf` (lesen), `curl -X POST localhost:8095/sim/einkauf -d '{"service":"add_item","data":{"item":"Brot"}}'` (auch `update_item` mit `status`/`rename`, `remove_item`).
+- **Sicherung:** Tag `vor-einkauf-ha`, Backup `/home/pingu/backups/vor-einkauf-ha-2026-11-19/`.
+- **Rücksetz-Weg (nur Abgleich aus):** in `home/config.jsonc` `"an": false`, commit, push (wir-home lädt neu).
+- **Rücksetz-Weg (Code):** `git checkout vor-einkauf-ha -- home/index.js home/ha.js home/sim.js home/config.jsonc app/grocery.js app/index.html pocketbase/pb_hooks/wir_einkauf.pb.js && git rm -q home/einkauf.js app/lib/grocery-catalog.js`, `CACHE` in `app/sw.js` hochzählen, commit, push (kein reset/force). Feld `ha_uid` und `home_state` `_einkauf` dürfen bleiben (stören nicht). Die Einträge in HA bleiben ebenfalls stehen.
