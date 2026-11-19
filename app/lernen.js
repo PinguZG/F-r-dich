@@ -161,7 +161,7 @@
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 
   // ---------- Ansicht ----------
-  const VIEWS = [['heute', 'Heute'], ['todos', 'Plan'], ['pruef', 'Aufgaben'], ['stoff', 'Stoff'], ['karten', 'Karten'], ['rechnen', 'Rechnen'], ['probe', 'Probe'], ['dateien', 'Dateien']];
+  const VIEWS = [['heute', 'Heute'], ['todos', 'Plan'], ['klausur', 'Prüfungen'], ['pruef', 'Aufgaben'], ['stoff', 'Stoff'], ['karten', 'Karten'], ['rechnen', 'Rechnen'], ['probe', 'Probe'], ['dateien', 'Dateien']];
   let view = 'heute';
   const V = {                       // Zustand je Ansicht
     st: { area: 'elek', q: '', focus: null, open: new Set() },
@@ -182,7 +182,7 @@
     if (!ready || V.who !== 'daniel') return;
     const openTodos = ST.T.filter(t => !t.done && t.date === dstr()).length;
     $('lnNav').innerHTML = VIEWS.map(([k, n]) => `<button type="button" data-v="${k}" class="${k === view ? 'on' : ''}">${n}${k === 'todos' && openTodos ? `<i>${openTodos}</i>` : ''}</button>`).join('');
-    const fn = { heute: vHeute, todos: vTodos, pruef: vPruef, stoff: vStoff, karten: vKarten, rechnen: vRechnen, probe: vProbe, dateien: vDateien }[view];
+    const fn = { heute: vHeute, todos: vTodos, klausur: vKlausur, pruef: vPruef, stoff: vStoff, karten: vKarten, rechnen: vRechnen, probe: vProbe, dateien: vDateien }[view];
     const el = body(); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     fn(el);
     banner();
@@ -195,7 +195,7 @@
   }
   function todoRow(t, withGo) {
     const pt = t.planId && planOf(t.planId), title = pt ? pt.title : t.title, date = pt ? pt.date : t.date, area = pt ? pt.area : t.area;
-    const canGo = pt && ['stoff', 'karten', 'rechnen', 'probe', 'pruef'].includes(pt.action);
+    const canGo = pt && ['stoff', 'karten', 'rechnen', 'probe', 'pruef', 'klausur'].includes(pt.action);
     return `<div class="ln-todo glass ${t.done ? 'done' : ''}"><button class="ln-chk" type="button" data-act="chk" data-k="${esc(t.key)}" aria-label="Abhaken">✓</button>
       <div class="ln-sp"><div class="ln-tt">${esc(title)}</div><div class="ln-tm">${[dlabel(date), pt?.timeSlot, area && area !== 'alle' ? AREAS[area] : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
       ${withGo && canGo && !t.done ? `<button class="ln-go" type="button" data-act="go" data-k="${esc(t.key)}">Los</button>` : ''}${t.custom ? `<button class="ln-del" type="button" data-act="del" data-k="${esc(t.key)}" aria-label="Löschen">✕</button>` : ''}</div>`;
@@ -299,7 +299,7 @@
     const q = V.pq, open = q.t.has(t.id), sol = q.sol.has(t.id), seen = pqSeen(t), id = esc(t.id);
     return `<div class="pq-row ${open ? 'open' : ''} ${seen ? 'seen' : ''}"><button type="button" class="pq-hd" data-act="pqt" data-id="${id}"><span class="pq-ex">${esc(t.ex)}</span><span class="pq-t">${esc(t.t)}<small>${esc(t.n)}${t.p ? ' · ' + t.p + ' P.' : ''}</small></span><span class="pq-ok">✓</span></button>
       ${open ? `<div class="pq-bd"><div class="ln-html pq-q">${clean(t.q)}</div>${sol ? `<div class="pq-solh">Lösung</div><div class="ln-html pq-sol">${clean(t.sol)}</div>` : ''}
-        <div class="pq-acts"><button type="button" class="ln-btn sm ${sol ? 'soft' : ''}" data-act="pqsol" data-id="${id}">${sol ? 'Lösung verbergen' : 'Lösung anzeigen'}</button><button type="button" class="ln-btn sm soft" data-act="pqseen" data-id="${id}">${seen ? 'Gesehen ✓' : 'Gesehen'}</button></div></div>` : ''}</div>`;
+        <div class="pq-acts"><button type="button" class="ln-btn sm ${sol ? 'soft' : ''}" data-act="pqsol" data-id="${id}">${sol ? 'Lösung verbergen' : 'Lösung anzeigen'}</button><button type="button" class="ln-btn sm soft" data-act="pqseen" data-id="${id}">${seen ? 'Gesehen ✓' : 'Gesehen'}</button>${EXTERM[t.ex] ? `<button type="button" class="ln-btn sm soft" data-act="pqorig" data-id="${id}">Im Original ansehen</button>` : ''}</div></div>` : ''}</div>`;
   }
   function pqListHtml() {
     const q = V.pq, a = q.area, N = PQ.ex[a]?.size || 0;
@@ -484,13 +484,23 @@
       <button class="ln-btn big" type="button" data-act="pagain">Neue Probe</button>`;
   }
 
+  // ===== Prüfungen (Original-PDFs, Datei lernen/lernen-klausur.js) =====
+  V.kl = V.kl || { area: 'elek', open: null, miss: false };
+  const needKL = () => V._kl || (V._kl = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = '/lernen/lernen-klausur.js'; sc.onload = res; sc.onerror = () => { V._kl = null; rej(); }; document.head.append(sc); }));
+  const klCtx = () => ({ pb, uid, getFiles: () => V.files || [], reload: () => { V.files = null; return loadFiles(); } });
+  function vKlausur(el) {
+    if (V.files === null) { el.innerHTML = '<div class="ln-empty">Lade …</div>'; loadFiles(); return; }
+    needKL().then(() => { if (view === 'klausur') window.LERN_KL.list(el, klCtx(), V.kl); }).catch(() => { el.innerHTML = '<div class="ln-empty">Prüfungsansicht konnte nicht geladen werden (offline?).</div>'; });
+  }
+  const EXTERM = { 'S26': 'APS26', 'S25': 'APS25', 'W24/25': 'APW2425', 'S24': 'APS24', 'W23/24': 'APW2324', 'S23': 'APS23', 'W22/23': 'APW2223', 'S22': 'APS22', 'W21/22': 'APW2122' };
+
   // ===== Dateien =====
   const FILES = [['netz', 'Netzwerktechnik', 'Lernmappe offline'], ['elek', 'Elektrotechnik', 'Lernmappe offline'], ['wiso', 'WiSO', 'Lernmappe offline']];
   const ext = n => (n.split('.').pop() || '').slice(0, 4).toUpperCase();
   async function loadFiles() {
     try { V.files = (await pb.collection('lern_dateien').getFullList({ requestKey: null })).reverse(); try { V.token = await pb.files.getToken(); } catch (_) {} }
     catch (_) { V.files = V.files || []; V.filesErr = true; }
-    if (view === 'dateien') render();
+    if (view === 'dateien' || view === 'klausur') render();
   }
   const fileUrl = (r, o) => pb.files.getURL(r, r.datei, o || {});
   function vDateien(el) {
@@ -568,6 +578,7 @@
       case 'pqsec': { const o = V.pq.o; o.has(d.sk) ? o.delete(d.sk) : o.add(d.sk); pqRefresh(); break; }
       case 'pqt': { const o = V.pq.t; o.has(d.id) ? o.delete(d.id) : o.add(d.id); pqRefresh(); break; }
       case 'pqsol': { const t = PQ.byId[d.id], sl = V.pq.sol; if (!t) break; if (sl.has(d.id)) sl.delete(d.id); else { sl.add(d.id); if (!pqSeen(t)) pqMark(t, true); } pqRefresh(); break; }
+      case 'pqorig': { const t = PQ.byId[d.id]; if (!t || !EXTERM[t.ex]) break; V.kl = { area: t.a, open: { area: t.a, term: EXTERM[t.ex] }, miss: false }; go('klausur'); break; }
       case 'pqseen': { const t = PQ.byId[d.id]; if (!t) break; pqMark(t, !pqSeen(t)); pqRefresh(); break; }
       case 'rarea': V.r.area = d.a; V.r.sel = 'mix'; V.r.ids = null; V.r.val = ''; newR(); render(); break;
       case 'rcheck': rCheck(); break;
@@ -596,6 +607,7 @@
     if (pt.action === 'stoff') { V.st = { area: AREAS[a] ? a : 'elek', q: '', focus: t.sections ? { area: a, ids: t.sections } : null, open: new Set((t.sections || []).map(id => a + ':' + id)) }; go('stoff'); }
     else if (pt.action === 'karten') { V.kf = { area: AREAS[a] ? a : 'alle', sec: 'all', secs: t.sections || null, mode: t.mode || 'due', must: false }; V.ses = null; view = 'karten'; startSession(); }
     else if (pt.action === 'pruef') { V.pq.area = AREAS[a] ? a : 'elek'; V.pq.focus = t.sections ? { area: a, ids: t.sections } : null; V.pq.only = !!t.only; V.pq.o = new Set((t.sections || []).map(id => a + ':' + id)); go('pruef'); }
+    else if (pt.action === 'klausur') { V.kl = { area: AREAS[a] ? a : 'elek', open: { area: a, term: t.term, tab: t.tab } }; go('klausur'); }
     else if (pt.action === 'rechnen') { V.r = { area: AREAS[a] ? a : 'elek', sel: 'mix', ids: t.generators || null, cur: null, done: false, val: '' }; go('rechnen'); }
     else if (pt.action === 'probe') { V.pf = { area: AREAS[a] ? a : 'alle', cards: t.cards || 15, calc: t.calc || 5, min: t.minutes || 40, must: !!t.onlyMust }; if (!V.P) go('probe'); else go('probe'); }
   }
