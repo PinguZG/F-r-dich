@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 106, date: '2026-11-20',
+      features: ['Seitenmenü: Die untere Leiste ist weg. Ein kleiner Pfeil am linken Rand öffnet das Menü mit allen Reitern.'],
+      small: ['Kleines Tutorial beim ersten Öffnen zeigt, wo das Menü ist.'],
+      hotfix: [] },
     { v: 73, date: '2026-11-13',
       features: [
         'Puzzle: zusammen oder allein, vier Stufen (Leicht, Mittel, Schwer, Profi), dazu Aufgeteilt und Blind.',

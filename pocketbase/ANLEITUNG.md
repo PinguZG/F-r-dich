@@ -2067,3 +2067,9 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 Neu: Die untere 5-Reiter-Leiste ist weg. Am linken Rand sitzt ein kleiner Pfeil; Tippen klappt ein Menü von links aus (Start, Erinnerungen, Zuhause, Spiele, Wir zwei). Schließt per Reiter-Wechsel, Tippen daneben oder Esc. Neue Reiter: einfach weitere `<button class="tab-btn" data-go="…">` in `<nav class="tabbar">`.
 Dateien: `app/drawer.css`, `app/drawer.js`, Markup in `app/index.html`. Keine Datenbank-Änderung, keine Sicherung nötig.
 Rücksetz-Weg: `git checkout vor-seitenmenue -- app/index.html app/sw.js` und `app/drawer.css`/`app/drawer.js` löschen (neuen Commit, kein reset/force).
+
+## Tutorial „Wo ist die Leiste hin?“ + Update-Hinweis (20.11.2026, wir-v106)
+Neu: Beim nächsten Öffnen (bei beiden, einmal pro Gerät) tippt eine Sprechblase langsam „Wo ist die Leiste hin?“ mit nach unten schauenden Augen, nach 1 s Pause zeigt ein Pfeil auf den Menü-Pfeil. Sprechblase und Pfeil sind deckend. Ein Tipp irgendwo schließt es, sobald der Text durchgelaufen ist. Gemerkt in `localStorage` (`wir-tut-menu-v1`). Erneut sehen: den Eintrag im Browser löschen.
+Update-Hinweis: `shared/changelog.js` zeigt nach jedem Update das Fenster „Was ist neu?“ auf beiden Handys (auch bei Ida). Dafür bei jeder Version oben einen Eintrag ergänzen (Nummer = `wir-vNN`); ohne Eintrag kommt nichts.
+Dateien: `app/tutorial.js`, `app/tutorial.css`. Keine Datenbank-Änderung.
+Rücksetz-Weg: `git checkout vor-tutorial -- app/index.html app/sw.js shared/changelog.js`, `app/tutorial.*` löschen (neuer Commit).
