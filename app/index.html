@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="/match.css">
 <link rel="stylesheet" href="/tablet.css">
 <link rel="stylesheet" href="/blume.css">
+<link rel="stylesheet" href="/drawer.css">
 </head>
 <body>
 
@@ -77,6 +78,8 @@
   </div>
 </header>
 
+<button class="nav-handle" id="navHandle" aria-label="Menü öffnen" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+<div class="nav-backdrop" id="navBackdrop"></div>
 <nav class="tabbar" aria-label="Navigation">
   <button class="tab-btn" data-go="s-home"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.1 5.6 5.7 2.2-5.7 2.2L12 18.8l-2.1-5.6L4.2 11l5.7-2.2z"/><path d="M18.5 16.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><span class="tab-lbl">Start</span></button>
   <button class="tab-btn" data-go="s-memories"><span class="tab-ico"><svg class="ico-line" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="14" rx="3"/><circle cx="12" cy="12.5" r="3.6"/><path d="M8.5 5.5 9.8 3.5h4.4l1.3 2"/></svg></span><span class="tab-lbl">Erinnerungen</span></button>
@@ -1361,6 +1364,7 @@
 </div>
 
 <script src="/shared/ui.js"></script>
+<script src="/drawer.js"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);

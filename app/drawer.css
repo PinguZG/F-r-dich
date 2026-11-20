@@ -1,0 +1,38 @@
+/* Seitenmenü (20.11.2026): ersetzt die untere Leiste. Kleiner Pfeil am linken Rand klappt das Menü aus. */
+body,body{--nav-h:0px;--drawer-w:min(260px,78vw)}
+.page{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important}
+@media (min-width:768px){
+  body{--side-w:0px}
+  .page{padding-left:max(28px,env(safe-area-inset-left))!important}
+}
+.tabbar{
+  left:0!important;right:auto!important;top:0!important;bottom:0!important;margin:0!important;max-width:none!important;
+  width:var(--drawer-w)!important;height:auto!important;
+  padding:calc(env(safe-area-inset-top) + 18px) 12px calc(env(safe-area-inset-bottom) + 18px)!important;
+  border-radius:0 28px 28px 0!important;
+  flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;gap:6px!important;
+  z-index:60;transform:translateX(-105%)!important;visibility:hidden;
+  transition:transform .35s var(--glide,cubic-bezier(.2,.8,.2,1)),visibility 0s .35s;
+}
+body.nav-open .tabbar{transform:none!important;visibility:visible;transition:transform .35s var(--glide,cubic-bezier(.2,.8,.2,1)),visibility 0s}
+body.in-app.chat-open .tabbar{transform:translateX(-105%)!important}
+body.in-app.chat-open.nav-open .tabbar{transform:none!important}
+.tab-btn{flex:0 0 auto!important;width:100%;height:54px!important;flex-direction:row!important;justify-content:flex-start!important;
+  gap:14px!important;padding:0 12px;border-radius:20px}
+.tab-btn:hover{background:var(--chip)}
+.tab-btn.on{background:var(--chip)}
+.tab-lbl{font-size:15px!important;font-weight:700}
+.tab-ico{flex:0 0 auto}
+.nav-dot{top:-2px;right:2px}
+.nav-backdrop{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s}
+body.nav-open .nav-backdrop{opacity:1;pointer-events:auto}
+.nav-handle{
+  position:fixed;left:0;top:50%;z-index:25;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--glass-border);border-left:none;
+  border-radius:0 16px 16px 0;background:color-mix(in srgb,var(--bg2) 80%,transparent);color:var(--ink-soft);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer;display:none;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(var(--shadow),.18);opacity:.8;
+}
+.nav-handle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+body.in-app .nav-handle{display:flex}
+body.in-app.chat-open .nav-handle,body.zh-full .nav-handle,body.drawing .nav-handle{display:none}
+body.nav-open .nav-handle{display:none}

@@ -2062,3 +2062,8 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - **Datenbank:** Kein neues Schema. Nutzt `lern_vokabeln` (nur eigene Zeilen): Karte `wordId = pol:<id>`, level 0–2; Plan-Aufgabe `wordId = pplan:<id>`, level 1 = erledigt.
 - **Sicherung:** Tag `vor-politik`. Kein DB-Backup nötig (keine Schemaänderung, nur neue Zeilen in einer bestehenden Collection).
 - **Rücksetz-Weg:** `git checkout vor-politik -- app/lernen.js app/englisch.js app/index.html app/sw.js app/lernen.css && git rm -q app/politik.js app/lernen/politik-data.js`, dann `wir-vNN` in `app/sw.js` hochzählen, committen, pushen. Gespeicherte `pol:`/`pplan:`-Zeilen bleiben harmlos in der Datenbank.
+
+## Seitenmenü statt unterer Leiste (20.11.2026, wir-v105)
+Neu: Die untere 5-Reiter-Leiste ist weg. Am linken Rand sitzt ein kleiner Pfeil; Tippen klappt ein Menü von links aus (Start, Erinnerungen, Zuhause, Spiele, Wir zwei). Schließt per Reiter-Wechsel, Tippen daneben oder Esc. Neue Reiter: einfach weitere `<button class="tab-btn" data-go="…">` in `<nav class="tabbar">`.
+Dateien: `app/drawer.css`, `app/drawer.js`, Markup in `app/index.html`. Keine Datenbank-Änderung, keine Sicherung nötig.
+Rücksetz-Weg: `git checkout vor-seitenmenue -- app/index.html app/sw.js` und `app/drawer.css`/`app/drawer.js` löschen (neuen Commit, kein reset/force).
