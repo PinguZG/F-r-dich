@@ -343,3 +343,31 @@ body.kv-open{overflow:hidden}
 .ks[data-tool="text"] .kx,.ks[data-tool="eraser"] .kx{pointer-events:auto;cursor:pointer}
 .kx-in{outline:2px dashed var(--accent);outline-offset:2px;resize:none;overflow:hidden;background:rgba(255,255,255,.7);min-width:6ch}
 @media(max-width:699px){.kv-top{padding:5px 8px}.kv-b{padding:7px 9px}}
+
+/* ---- Politik (Idas Bereich, politik.js) ---- */
+.po-when{font-weight:700;font-size:14px;color:var(--ink-soft);white-space:nowrap}
+.po-note{font-size:13px;line-height:1.5;color:var(--ink-soft);padding:2px 4px 8px}
+.po-day{margin-bottom:12px;padding:14px;border-radius:22px;background:var(--card,var(--glass));border:1px solid var(--card-line,var(--glass-border))}
+.po-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.po-day.past{opacity:.72}
+.po-dh{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--ink)}
+.po-dh .po-dc{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.po-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:var(--accent);color:var(--accent-ink)}
+.po-fokus{margin:2px 0 8px;font-size:13.5px;color:var(--ink-soft);line-height:1.4}
+.po-task{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:9px 4px;border:0;background:transparent;color:var(--ink);font:600 14.5px/1.4 Quicksand,sans-serif}
+.po-task i{flex:none;width:22px;height:22px;margin-top:1px;border-radius:50%;border:2px solid var(--ink-soft)}
+.po-task.done i{background:var(--en-g);border-color:var(--en-g);box-shadow:inset 0 0 0 4px var(--en-g),inset 0 0 0 11px var(--en-on-g)}
+.po-task.done span{text-decoration:line-through;color:var(--ink-soft)}
+.po-go{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.po-go button{height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--glass-border);background:transparent;color:var(--ink-soft);font-weight:700;font-size:12.5px}
+.po-th{margin-bottom:10px;border-radius:20px;background:var(--card,var(--glass));border:1px solid var(--card-line,var(--glass-border));overflow:hidden}
+.po-thh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:14px 16px;border:0;background:transparent;text-align:left;color:var(--ink)}
+.po-thh b{display:block;font-size:16px}.po-thh small{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-soft);font-weight:600}
+.po-thh i{font-style:normal;font-size:22px;color:var(--ink-soft)}
+.po-thb{padding:0 16px 16px}
+.po-thb h4{margin:14px 0 6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.po-thb ul{margin:0;padding-left:18px;font-size:14.5px;line-height:1.55;color:var(--ink)}
+.po-thb li{margin-bottom:5px}
+.po-tk{margin-top:14px;min-height:42px;font-size:14px}
+.kk-txt{font-family:Quicksand,sans-serif;font-size:21px;line-height:1.35;font-weight:700}
+.kk-ans{font-weight:600;font-size:17px;line-height:1.5;color:var(--ink);max-width:36ch}

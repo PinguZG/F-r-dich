@@ -541,6 +541,7 @@
 
   // ---------- Klicks ----------
   function onClick(e) {
+    const ida = e.target.closest('[data-ida]'); if (ida) { showIda(ida.dataset.ida); return; }
     const v = e.target.closest('[data-v]'); if (v) { go(v.dataset.v); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const d = b.dataset, act = d.act;
@@ -621,17 +622,24 @@
   }
   // Profilwahl: „Wer lernt?“ – Daniel hat die Lernmappen, Ida bekommt ihren Bereich später
   function showWho() {
-    V.who = null; clearInterval(V.ptimer); window.WIR_ENGLISCH?.unmount();
+    V.who = null; clearInterval(V.ptimer); window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount();
     $('lnNav').innerHTML = ''; $('lnNav').classList.remove('solo'); $('lnSync').hidden = true; const wb = $('lnWhoBtn'); if (wb) wb.hidden = true;
     const card = (w, n, sub) => `<button class="ln-who glass" type="button" data-act="who" data-w="${w}"><span class="ln-av">${n[0]}</span><b>${n}</b><small>${sub}</small></button>`;
-    body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Dein Bereich') + '</div>';
+    body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Englisch · Politik') + '</div>';
+  }
+  // Idas Reiter: Englisch (englisch.js) und Politik (politik.js, Lernplan bis zur Kurzarbeit)
+  function showIda(tab) {
+    V.idaTab = tab; window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount();
+    $('lnNav').classList.remove('solo');
+    $('lnNav').innerHTML = [['englisch', 'Englisch'], ['politik', 'Politik']].map(([k, n]) => `<button type="button" data-ida="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
+    const mod = tab === 'politik' ? window.WIR_POLITIK_UI : window.WIR_ENGLISCH;
+    if (mod) mod.mount(body()); else body().innerHTML = '<div class="ln-empty">Konnte nicht geladen werden.</div>';
   }
   async function pickWho(w) {
     const wb = $('lnWhoBtn'); if (wb) wb.hidden = false;
     $('lnNav').innerHTML = '';
     if (w === 'ida') {                                   // Idas Bereich: Reiter „Englisch“ (englisch.js, Vokabeln)
-      V.who = 'ida'; $('lnNav').classList.add('solo'); $('lnNav').innerHTML = '<button type="button" class="on">Englisch</button>';
-      if (window.WIR_ENGLISCH) window.WIR_ENGLISCH.mount(body()); else body().innerHTML = '<div class="ln-empty">Englisch konnte nicht geladen werden.</div>';
+      V.who = 'ida'; showIda(V.idaTab || 'englisch');
       return;
     }
     if (!isDaniel()) { V.who = 'x'; body().innerHTML = '<div class="ln-card glass ln-count"><b style="font-size:40px">Daniel</b><span>Das ist Daniels Lernbereich.</span><small>Er ist privat.</small></div>'; return; }

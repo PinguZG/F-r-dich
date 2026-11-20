@@ -56,6 +56,7 @@
     const rows = await pb.collection('lern_vokabeln').getFullList({ requestKey: null, batch: 500 });
     ST.w = {}; ST.done = {}; ST.ids = {};
     rows.forEach(r => {
+      if (!r.wordId.startsWith('en7:') && !r.wordId.startsWith('stand:')) return;   // Politik-Zeilen (pol:/pplan:) gehören politik.js
       ST.ids[r.wordId] = r.id;
       if (r.wordId.startsWith('stand:')) ST.done[r.wordId.slice(6)] = r.level === 1; else ST.w[r.wordId] = r.level;
     });

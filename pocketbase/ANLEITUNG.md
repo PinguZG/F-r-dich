@@ -2054,3 +2054,11 @@ Der Dienst `wir-push` schreibt jede verschickte Push-Nachricht in die neue Colle
 - **Sicherung:** Tag `vor-einkauf-ha`, Backup `/home/pingu/backups/vor-einkauf-ha-2026-11-19/`.
 - **Rücksetz-Weg (nur Abgleich aus):** in `home/config.jsonc` `"an": false`, commit, push (wir-home lädt neu).
 - **Rücksetz-Weg (Code):** `git checkout vor-einkauf-ha -- home/index.js home/ha.js home/sim.js home/config.jsonc app/grocery.js app/index.html pocketbase/pb_hooks/wir_einkauf.pb.js && git rm -q home/einkauf.js app/lib/grocery-catalog.js`, `CACHE` in `app/sw.js` hochzählen, commit, push (kein reset/force). Feld `ha_uid` und `home_state` `_einkauf` dürfen bleiben (stören nicht). Die Einträge in HA bleiben ebenfalls stehen.
+
+## Politik für Ida (Lernen → Ida → Reiter „Politik“, 20.11.2026)
+- **Neu:** Zweiter Reiter in Idas Lernbereich: Lernplan bis zur Kurzarbeit am Mi 25.11.2026 (Aufgaben abhaken), Übersichten je Thema, 65 Karteikarten (Sehr gut/Okay/Schlecht). Themen: Grundwissen, Rechtsstaat und Demokratie, Gewaltenteilung, Grundgesetz (Art. 1, 20, 79 (3)), Grundrechte im Konflikt (Art. 1–5, 8, 14), Karikaturanalyse.
+- **Dateien:** `app/politik.js` (Oberfläche), `app/lernen/politik-data.js` (Inhalt, Plan, Karten), Einbindung in `app/lernen.js` (`showIda`), `app/index.html`, `app/sw.js` (wir-v104), Styles am Ende von `app/lernen.css`. In `app/englisch.js` ignoriert der Abgleich jetzt fremde Zeilen.
+- **Inhalte pflegen:** Nur `politik-data.js` ändern. Neue Karten immer hinten an die Liste des Themas anhängen (die Karten-ID ist Thema + Position, Umsortieren würde den Lernstand vermischen). Fakten (Amtsinhaber) mit „Stand der Fakten“ oben in der Datei prüfen.
+- **Datenbank:** Kein neues Schema. Nutzt `lern_vokabeln` (nur eigene Zeilen): Karte `wordId = pol:<id>`, level 0–2; Plan-Aufgabe `wordId = pplan:<id>`, level 1 = erledigt.
+- **Sicherung:** Tag `vor-politik`. Kein DB-Backup nötig (keine Schemaänderung, nur neue Zeilen in einer bestehenden Collection).
+- **Rücksetz-Weg:** `git checkout vor-politik -- app/lernen.js app/englisch.js app/index.html app/sw.js app/lernen.css && git rm -q app/politik.js app/lernen/politik-data.js`, dann `wir-vNN` in `app/sw.js` hochzählen, committen, pushen. Gespeicherte `pol:`/`pplan:`-Zeilen bleiben harmlos in der Datenbank.
