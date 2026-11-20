@@ -236,14 +236,14 @@ async function doPings() {
 }
 
 // a3) App-Update: steigt die Cache-Version in app/sw.js (wir-vNN), bekommen die Personen aus UPDATE_PUSH_TO (Namen, Komma; Standard "ida") einen Push.
-//     Erster Lauf merkt sich nur die Version. state.appVersion = zuletzt gemeldete Nummer.
+//     Erster Lauf meldet die aktuelle Version einmal. state.appVersion = zuletzt gemeldete Nummer.
 const SW_FILE = process.env.APP_SW || '/home/pingu/F-r-dich/app/sw.js';
 const UPDATE_TO = (process.env.UPDATE_PUSH_TO || 'ida').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
 async function doUpdate() {
   let v = 0;
   try { v = Number((require('fs').readFileSync(SW_FILE, 'utf8').match(/CACHE\s*=\s*'wir-v(\d+)'/) || [])[1]) || 0; } catch (_) { return; }
   if (!v) return;
-  if (!state.appVersion) { state.appVersion = v; stateDirty = true; return; }
+  if (!state.appVersion) state.appVersion = v - 1;   // erster Lauf: die aktuelle Version gilt als das erste Update und wird einmal gemeldet
   if (v <= state.appVersion) return;
   state.appVersion = v; stateDirty = true;
   await saveState(); // erst merken, dann senden -> nie doppelt

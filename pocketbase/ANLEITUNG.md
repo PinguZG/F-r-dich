@@ -2075,5 +2075,5 @@ Dateien: `app/tutorial.js`, `app/tutorial.css`. Keine Datenbank-Änderung.
 Rücksetz-Weg: `git checkout vor-tutorial -- app/index.html app/sw.js shared/changelog.js`, `app/tutorial.*` löschen (neuer Commit).
 
 ## Push bei jedem App-Update (20.11.2026)
-Neu: `wir-push` liest alle 30 s `app/sw.js` im Repo. Steigt `wir-vNN`, bekommt Ida (Nutzername „ida“, ohne Groß/Klein) einen Push „✨ Neue Version von Wir“; Tippen öffnet Start. Andere/weitere Empfänger: in `/etc/wir-push.env` `UPDATE_PUSH_TO=ida,daniel` (Namen, Komma) und `sudo systemctl restart wir-push` (über Daniel). Der erste Lauf merkt sich nur die Version (`push_state.value.appVersion`), schickt also nichts. Datei: `push/index.js` (`doUpdate`). Keine Schema-Änderung.
+Neu: `wir-push` liest alle 30 s `app/sw.js` im Repo. Steigt `wir-vNN`, bekommt Ida (Nutzername „ida“, ohne Groß/Klein) einen Push „✨ Neue Version von Wir“; Tippen öffnet Start. Andere/weitere Empfänger: in `/etc/wir-push.env` `UPDATE_PUSH_TO=ida,daniel` (Namen, Komma) und `sudo systemctl restart wir-push` (über Daniel). Der erste Lauf meldet die aktuelle Version einmal (Stand in `push_state.value.appVersion`), danach nur noch Erhöhungen. Datei: `push/index.js` (`doUpdate`). Keine Schema-Änderung.
 Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushen (Auto-Deploy startet `wir-push` neu).
