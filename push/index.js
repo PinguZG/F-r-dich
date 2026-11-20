@@ -125,7 +125,7 @@ const name = id => users[id]?.name || 'Dein Schatz';
 const otherOf = id => Object.keys(users).find(u => u !== id);
 
 // Benachrichtigungen sind nicht abschaltbar: push_prefs/notify_prefs bleiben bestehen, werden aber ignoriert.
-const PREF_KEYS = ['pings', 'photos', 'dates', 'clay', 'tabs', 'planned'];
+const PREF_KEYS = ['pings', 'photos', 'dates', 'clay', 'tabs', 'planned', 'update'];
 
 async function send(to, category, payload) {
   if (!to || !users[to]) return;
@@ -232,6 +232,24 @@ async function doPings() {
       ? { title: `✏️ ${n}`, body: p.message, go: 's-wir', tag: 'ping-' + p.id }
       : { title: (PING_TEXT[p.type] || PING_TEXT.support)(n), body: 'Tippe, um zu antworten 💕', go: 's-wir', tag: 'ping-' + p.id };
     await send(p.to, 'pings', payload);
+  }
+}
+
+// a3) App-Update: steigt die Cache-Version in app/sw.js (wir-vNN), bekommen die Personen aus UPDATE_PUSH_TO (Namen, Komma; Standard "ida") einen Push.
+//     Erster Lauf merkt sich nur die Version. state.appVersion = zuletzt gemeldete Nummer.
+const SW_FILE = process.env.APP_SW || '/home/pingu/F-r-dich/app/sw.js';
+const UPDATE_TO = (process.env.UPDATE_PUSH_TO || 'ida').toLowerCase().split(',').map(x => x.trim()).filter(Boolean);
+async function doUpdate() {
+  let v = 0;
+  try { v = Number((require('fs').readFileSync(SW_FILE, 'utf8').match(/CACHE\s*=\s*'wir-v(\d+)'/) || [])[1]) || 0; } catch (_) { return; }
+  if (!v) return;
+  if (!state.appVersion) { state.appVersion = v; stateDirty = true; return; }
+  if (v <= state.appVersion) return;
+  state.appVersion = v; stateDirty = true;
+  await saveState(); // erst merken, dann senden -> nie doppelt
+  for (const u of Object.values(users)) {
+    if (!UPDATE_TO.includes(String(u.name || '').toLowerCase())) continue;
+    await send(u.id, 'update', { title: '✨ Neue Version von Wir', body: 'Tippe, um zu sehen, was neu ist.', go: 's-home', tag: 'update-' + v });
   }
 }
 
@@ -462,7 +480,7 @@ async function tick() {
     users = Object.fromEntries((await list('users')).map(u => [u.id, u]));
     if (!state) await loadState();
     const steps = [
-      doPings, doLove, doQueue, doTabs, doEntries, doSelections, doDates,
+      doPings, doUpdate, doLove, doQueue, doTabs, doEntries, doSelections, doDates,
       () => doPhotos('photos', 'photos', 'photos', 's-memories', { icon: '📷', one: 'Foto', many: 'Fotos', where: 'Erinnerungen' }),
       () => doPhotos('clay', 'clay_photos', 'clay', 's-clay-done', { icon: '🧸', one: 'Clay-Foto', many: 'Clay-Fotos', where: 'unseren Figuren' }),
     ];
