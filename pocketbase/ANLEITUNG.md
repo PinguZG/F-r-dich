@@ -2077,3 +2077,12 @@ Rücksetz-Weg: `git checkout vor-tutorial -- app/index.html app/sw.js shared/cha
 ## Push bei jedem App-Update (20.11.2026)
 Neu: `wir-push` liest alle 30 s `app/sw.js` im Repo. Steigt `wir-vNN`, bekommt Ida (Nutzername „ida“, ohne Groß/Klein) einen Push „✨ Neue Version von Wir“; Tippen öffnet Start. Andere/weitere Empfänger: in `/etc/wir-push.env` `UPDATE_PUSH_TO=ida,daniel` (Namen, Komma) und `sudo systemctl restart wir-push` (über Daniel). Der erste Lauf meldet die aktuelle Version einmal (Stand in `push_state.value.appVersion`), danach nur noch Erhöhungen. Datei: `push/index.js` (`doUpdate`). Keine Schema-Änderung.
 Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushen (Auto-Deploy startet `wir-push` neu).
+
+## Kunst für Ida (Lernen → Ida → Reiter „Kunst“, 21.11.2026, wir-v107)
+- **Neu:** Dritter Reiter in Idas Lernbereich für Experimentelles Gestalten (Prüfung). Unterreiter: Stoff (Impressionismus, Japonismus & Manet, Wegbereiter der Moderne mit Merkmal-Tabellen und Bildern), Bilder (Galerie mit Vergrößern), Fragen (die Aufgaben aus den Unterrichts-PDFs mit Musterantwort), Karten (Text- und Bildkarten, Sehr gut/Okay/Schlecht), Originale (5 PDFs: 3 Unterrichts-PDFs, Steckbriefe Cézanne/Gauguin/van Gogh, Japonismus-Blatt, dazu Idas 3 Handzettel als Fotos).
+- **Dateien:** `app/kunst.js`, `app/kunst.css`, `app/lernen/kunst-data.js` (Inhalt), `app/lernen/kunst/*.jpg` (aus den PDFs gezogene Bilder), `app/lernen/files/kunst-*.pdf` (Originale, nicht im Offline-Cache), Einbindung in `app/lernen.js` (`showIda`), `app/index.html`, `app/sw.js`, `shared/changelog.js`.
+- **Inhalte pflegen:** Nur `kunst-data.js` ändern. Neue Karten hinten anhängen (ID = Thema + Position, Bildkarten `b-<Dateiname>`).
+- **Hinweis:** Fragen-Antworten stammen aus den PDFs/dem Handzettel, ergänzt durch Allgemeinwissen (z. B. Öffnung Japans, Name „Impressionismus“); vor der Prüfung mit dem Buchtext (S. 188–191, 204–207) abgleichen.
+- **Datenbank:** Kein neues Schema. Nutzt `lern_vokabeln` (nur eigene Zeilen): `wordId = kun:<id>`, level 0–2.
+- **Sicherung:** Tag `vor-kunst`. Kein DB-Backup nötig (keine Schemaänderung).
+- **Rücksetz-Weg:** `git checkout vor-kunst -- app/lernen.js app/index.html app/sw.js shared/changelog.js && git rm -rq app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/lernen/files/kunst-*.pdf`, dann `wir-vNN` in `app/sw.js` hochzählen, committen, pushen.
