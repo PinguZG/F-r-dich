@@ -27,6 +27,14 @@ window.WIR_KUNST = {
           'Genres: Landschaft, Stadt- und Freizeitszenen, Serien im wechselnden Licht.',
           'Keine klaren Umrisslinien; der komplette Seheindruck entsteht erst im Auge des Betrachters aus der Distanz.',
           'Neue Motive: weg von den klassischen Gattungen, Landschaft & Gärten, städtisches und bürgerliches Leben (wenig Sozialkritik).'] },
+        { h: 'Handzettel 2: Impressionismus (1860–1890)', punkte: [
+          'Idee/Ziel: momentaner Lichteindruck, Atmosphäre, moderne Freizeit und Alltag; Beobachtung statt Erzählung.',
+          'Farbgebung: helle, leuchtende, oft bunte Lokalfarben, meistens ohne Schwarz (→ farbige Schatten); Komplementärkontraste zur Lichtsteigerung.',
+          'Malweise/Technik: „en plein air“ (= draußen an der Luft), kurze lockere tupfende Striche, kaum Konturen, sichtbarer und spontaner, aber leichter Pinselduktus; Serienmalerei (z. B. ein Motiv in verschiedenen Lichtsituationen); oft der Prima-Malerei ähnlich.',
+          'Komposition/Raum: Aus- und Abschnitte, Blick wirkt „fotografisch“ wie eine Momentaufnahme; flacher atmosphärischer Raum mit wenig Tiefeninszenierung; Staffeln in horizontale Zonen.',
+          'Motivwahl: Alltags- und Freizeitorte des (vor-)städtischen Lebens, z. B. Stadtparks, Cafés, Theater, Landschaften, Bahnhöfe.',
+          'Leitkünstler: Monet, Renoir, Pissarro, Degas, Morisot.',
+          'Beispielbilder: Monet „Rouen Cathedral“ (Serie), Renoir „La Grenouillère“, Morisot (Boot auf dem Wasser), Degas „Der Tanzunterricht“, Monet „Impression, Sonnenaufgang“.'] },
         { h: 'Name & Wahrnehmung', punkte: [
           'Der Name kommt von Monets Bild „Impression, Sonnenaufgang“ (1872).',
           'Anfangs wurde der Stil verspottet (Kritiker: nur „Eindruck“, unfertig, Skizze), später wurde er prägend.',
@@ -36,6 +44,7 @@ window.WIR_KUNST = {
           'Pierre-Auguste Renoir: „Le Bal du moulin de la Galette“ (1876), Freizeit und Lebensfreude.',
           'Edgar Degas: „Der Tanzunterricht“ (um 1874), Ballett, Ausschnitt wie ein Schnappschuss.',
           'Camille Pissarro: Stadtansichten, „Place du Havre“ (1893).',
+          'Berthe Morisot: Frauen und Familienszenen, Boote am Wasser, heller lockerer Strich.',
           'Édouard Manet: Wegbereiter und Außenseiter, näher zu Realismus und Japonismus (siehe nächstes Thema).'] },
         { h: 'Monet: Serien im wechselnden Licht', punkte: [
           'Dasselbe Motiv zu verschiedenen Tageszeiten und Jahreszeiten: Heuhaufen, Kathedrale von Rouen, Seerosen.',
@@ -73,7 +82,16 @@ window.WIR_KUNST = {
         ['Was bedeutet „pastos“?', 'Dicker, deckender Farbauftrag, bei dem der Pinselstrich sichtbar bleibt.'],
         ['Wie entsteht der Seheindruck bei impressionistischen Bildern?', 'Erst im Auge des Betrachters aus der Distanz (Farbflecken mischen sich optisch).'],
         ['Serien von Monet?', 'Heuhaufen, Kathedrale von Rouen, Seerosen, Japanische Brücke – dasselbe Motiv in wechselndem Licht.'],
-        ['Warum zählt der Impressionismus kaum Sozialkritik?', 'Motive stammen aus bürgerlichem Leben und Freizeit, nicht aus Not oder Politik (anders als Realismus/Courbet).']
+        ['Warum zählt der Impressionismus kaum Sozialkritik?', 'Motive stammen aus bürgerlichem Leben und Freizeit, nicht aus Not oder Politik (anders als Realismus/Courbet).'],
+        ['Von wann bis wann geht der Impressionismus (Handzettel)?', 'Ca. 1860–1890.'],
+        ['Idee/Ziel des Impressionismus?', 'Momentaner Lichteindruck, Atmosphäre, moderne Freizeit und Alltag; Beobachtung statt Erzählung.'],
+        ['Was heißt „en plein air“?', 'Draußen an der frischen Luft malen (Freilichtmalerei).'],
+        ['Was ist Serienmalerei?', 'Ein Motiv in verschiedenen Lichtsituationen (z. B. Monets Kathedrale von Rouen).'],
+        ['Wie sind impressionistische Bilder räumlich aufgebaut?', 'Flacher atmosphärischer Raum mit wenig Tiefeninszenierung, Staffelung in horizontale Zonen.'],
+        ['Warum wirkt die Komposition „fotografisch“?', 'Aus- und Abschnitte wie bei einer Momentaufnahme.'],
+        ['Typische Motivorte der Impressionisten?', 'Alltags- und Freizeitorte des (vor-)städtischen Lebens: Stadtparks, Cafés, Theater, Landschaften, Bahnhöfe.'],
+        ['Leitkünstler des Impressionismus?', 'Monet, Renoir, Pissarro, Degas, Morisot.'],
+        ['Warum kein Schwarz im Impressionismus?', 'Schatten werden farbig gemalt (Komplementärkontraste), das steigert das Licht.']
       ]
     },
     {
@@ -82,8 +100,23 @@ window.WIR_KUNST = {
         { h: 'Japonismus – was ist das?', punkte: [
           'Begeisterung europäischer Künstler für japanische Kunst, v. a. den Farbholzschnitt (Ukiyo-e), ab ca. 1860/70.',
           'Voraussetzung: Öffnung Japans zum Weltmarkt nach Jahrhunderten der Abschottung (Mitte 19. Jh., durch Druck westlicher Mächte, USA).',
-          'Wege zu den Künstlern: Weltausstellungen, Kunsthändler und Sammler in Paris, importierte Drucke und Gebrauchsgegenstände.',
+          'Wege zu den Künstlern: Farbholzschnitte kamen ab 1870 als Verpackungsmaterial für Tee und andere Güter nach Europa, dazu Weltausstellungen, Kunsthändler und Sammler in Paris.',
           'Kritik: oft exotisierend, Klischees von „Fernost“, Verkleidung und Oberflächlichkeit statt echtem Verstehen (z. B. Monet, „La Japonaise“, 1876: Frau im Kimono).'] },
+        { h: 'Handzettel: Japonismus (ca. ab 1860)', punkte: [
+          'Was ist es? Europäische Aufnahme japanischer Holzschnitte (Hokusai, Hiroshige): keine eigene Epoche, sondern Formeinfluss.',
+          'Flächige Farbigkeit: Farben in größeren geschlossenen Flächen, kaum weiche Verläufe oder realistische Schattierungen, eher „Comic/Plakat“-artig als Ölmalerei mit Tiefe.',
+          'Starke Umrisslinien: Formen mit dicken, deutlichen Linien umrandet (Figuren, Häuser, Bäume) – typisch für Holzschnitt.',
+          'Asymmetrische/diagonale Komposition: erzeugt Spannung.',
+          'Ausschnitte („fotografischer Effekt“): Dinge sind angeschnitten und ragen aus dem Bildrand, die Szene wirkt, als ginge sie weiter.',
+          'Wenig Zentralperspektive: Fluchtpunkt nicht klassisch in der Mitte (wie in der Renaissance), weniger Raumtiefe, Raum wirkt flacher und zweidimensional, oft Überlagerungen und vertikal gestaffelter Aufbau.',
+          'Leere Flächen/Muster: große unbemalte oder einfarbige Flächen (z. B. einfarbiger Himmel) oder dekorative Muster; das Bild wirkt weniger räumlich.',
+          'Beeinflusst: Manet, Degas, van Gogh (nachgezeichnete Holzschnitte), Gauguin.',
+          'Monet „Die japanische Brücke“ (1899): nur das Motiv des Japonismus wurde übernommen, nicht die Technik.'] },
+        { h: 'Zugang & Künstler (Blatt „Japonismus“)', punkte: [
+          'Japanische Farbholzschnitte gelangten erstmals ab 1870 als Verpackungsmaterial für Tee und andere Güter nach Europa. Dort wurde ihr großer künstlerischer Wert erkannt, und es entstand eine Sammelleidenschaft in Künstlerkreisen.',
+          'Kitagawa Utamaro (1753–1806), Katsushika Hokusai (1760–1849), Utagawa Hiroshige (1797–1858).',
+          'Beispiele: Hokusai „Ansichten des Berges Fuji“ (u. a. „Große Welle vor Kanagawa“, „Hodogaya an der Tōkaidō-Straße“, 1831), Hiroshige „Abendglocken am Mii-Tempel“ (1834).',
+          'Zusätzliche Merkmale: Abschaffung des Mittefelds, Aufwertung der Fläche, dynamischer Wert des Pinselstrichs, Zweidimensionalität, klar umrandete Flächen, weder Licht noch Schatten.'] },
         { h: 'Eigenschaften des japanischen Farbholzschnitts', punkte: [
           'Asymmetrischer Bildaufbau.',
           'Fragmentierter Bildausschnitt: vom Rahmen beschnittene Gegenstände.',
@@ -116,7 +149,7 @@ window.WIR_KUNST = {
       aufgaben: [
         ['Beschreibe kurz, wie die Öffnung Japans zum Weltmarkt ablief.', 'Nach über 200 Jahren Abschottung erzwangen westliche Mächte, vor allem die USA (Perry, 1853/54), Handelsverträge. Danach kamen Waren und Kunst nach Europa; Japan zeigte sich auf Weltausstellungen.'],
         ['Erläutere und beurteile die Kritik am Japonismus.', 'Kritik: Exotismus und Klischees, Kimono als Kostüm („La Japonaise“), Oberflächlichkeit, Aneignung ohne Verständnis der Kultur. Beurteilung: einerseits Aneignung und Verkleidung, andererseits echter künstlerischer Impuls (Fläche, Ausschnitt, Farbe), der die Moderne mit ermöglichte.'],
-        ['Wie bekamen die Künstler (& andere) die Kunst aus Japan zu sehen?', 'Über Weltausstellungen, Kunsthändler und Sammler in Paris, importierte Drucke (teils als Verpackungsmaterial), Kataloge und Sammlungen der Künstler selbst.'],
+        ['Wie bekamen die Künstler (& andere) die Kunst aus Japan zu sehen?', 'Japanische Farbholzschnitte kamen ab ca. 1870 zunächst als Verpackungsmaterial für Tee und andere Güter nach Europa. Dort erkannte man ihren künstlerischen Wert, und es entstand eine Sammelleidenschaft in Künstlerkreisen; dazu Weltausstellungen, Kunsthändler und Sammler in Paris.'],
         ['Nenne die Eigenschaften des japanischen Farbholzschnitts.', 'Asymmetrie, beschnittener Bildausschnitt, keine Zentralperspektive, Vogelperspektive, kein Schatten/Modellierung, Leerflächen, schwarze Konturen. Technik: Holzschnitt.'],
         ['Vergleiche euer Bilderpaar: Wie ließ sich der Künstler vom japanischen Farbholzschnitt inspirieren?', 'Je Paar benennen: Ausschnitt/Anschnitt, Flächigkeit, Konturlinien, Aufsicht, Leerfläche, Farbe. Beispiel van Gogh/Hiroshige: Kopie mit Rahmen, flache Farbfelder, schwarze Linien, abgeschnittener Baum.'],
         ['Warum waren Manets Bilder ein Skandal?', 'Nackte Frauen im bürgerlichen Alltag (Pariser Gesellschaft) ohne mythologische Rechtfertigung, Angriff auf Moralvorstellungen; dazu flächige Malweise und harte Kontraste statt Idealisierung.']
@@ -133,7 +166,14 @@ window.WIR_KUNST = {
         ['Manets Malweise?', 'Starke Hell-Dunkel-Kontraste, flächig, keine Perspektive/Tiefe.'],
         ['Woran knüpft Manets „Frühstück im Grünen“ an?', 'Raimondis „Urteil des Paris“ (nach Raffael) und Tizians „Ländliches Konzert“.'],
         ['Wer griff Manets Frühstück im Grünen später auf?', 'Monet (1865/66) und Picasso (1960er).'],
-        ['Was zeigt Manets Porträt von Émile Zola (1868) im Hintergrund?', 'Japanischen Holzschnitt, Wandschirm und eine Olympia-Reproduktion – Beleg für Japonismus.']
+        ['Was zeigt Manets Porträt von Émile Zola (1868) im Hintergrund?', 'Japanischen Holzschnitt, Wandschirm und eine Olympia-Reproduktion – Beleg für Japonismus.'],
+        ['Ist der Japonismus eine eigene Epoche?', 'Nein, ein Formeinfluss (europäische Aufnahme japanischer Holzschnitte), ca. ab 1860.'],
+        ['Wie kamen japanische Holzschnitte erstmals nach Europa?', 'Ab 1870 als Verpackungsmaterial für Tee und andere Güter; dann Sammelleidenschaft in Künstlerkreisen.'],
+        ['Drei wichtige japanische Künstler mit Lebensdaten?', 'Utamaro (1753–1806), Hokusai (1760–1849), Hiroshige (1797–1858).'],
+        ['Welche Merkmale übernahmen die Europäer? (Handzettel)', 'Flächige Farbigkeit, starke Umrisslinien, asymmetrisch/diagonale Komposition, Ausschnitte, wenig Zentralperspektive, leere Flächen/Muster.'],
+        ['Warum wirken Ausschnitte im Japonismus „fotografisch“?', 'Dinge sind angeschnitten und ragen aus dem Bildrand; die Szene scheint weiterzugehen und erzeugt Spannung.'],
+        ['Was übernahm Monet in „Die japanische Brücke“ (1899)?', 'Nur das Motiv, nicht die Technik.'],
+        ['Wen beeinflusste der Japonismus?', 'Manet, Degas, van Gogh (er zeichnete Holzschnitte nach), Gauguin.']
       ]
     },
     {
@@ -171,6 +211,13 @@ window.WIR_KUNST = {
           'Kleine, rhythmisierte Striche nebeneinander (Wellenlinien, Kreise, Spiralen) für Dynamik.',
           'Wegbereiter des Expressionismus; Nachwirkung auch bei Balla („Ein Kind läuft über den Balkon“, 1912).',
           'Werke: „Sternennacht“ (1889), „Zwölf Sonnenblumen in einer Vase“ (1888), „Porträt des Dr. Gachet“ (1890), „Weizenfeld mit Zypressen“ (1889).'] },
+        { h: 'Steckbriefe (Daten & Werk)', punkte: [
+          'Cézanne (1839–1906): Wegbereiter der Moderne; begann auf Wunsch des Vaters ein Studium der Rechtswissenschaften (Bankierslehre im Unterricht); Bewerbung an der École des Beaux-Arts scheiterte mehrmals; Erbschaft des Vaters sicherte die späten Jahre; verkaufte schon zu Lebzeiten Bilder an Künstler und Sammler.',
+          'Cézanne, Werk: Frühphase Romantik und beginnender Realismus; impressionistische Phase nach Pissarro und Manet; in Landschaften wird der illusionistische Tiefenraum aufgehoben, Gegenstände werden als Volumen und auf geometrische Grundformen zurückgeführt, die Ferne wird wie die Gegenstände behandelt (Verlassen des traditionellen Bildraums); flächig-diagonaler Farbauftrag, Farbflächen nebeneinander, Konstruktion und Harmonie parallel zur Natur; Thema Montagne Sainte-Victoire (30 Ölbilder, 45 Aquarelle); malt auch mit breitem Spachtel in oft horizontaler Richtung.',
+          'Gauguin (1848–1903): beeinflusst Nabis und Symbolismus, Wegbereiter des Expressionismus; Marine, dann Börsenmakler (luxuriöser Lebensstil); ausschließliche Hinwendung zur Malerei führte in finanzielle und persönliche Krisen; Streben nach einfachem, ursprünglichem Leben, viele Ortswechsel, Reisen in die Südsee; begann impressionistisch.',
+          'Gauguin, Werk: Abkehr von der Nachahmung der Wirklichkeit führt auf den Weg der Abstraktion; gewagte unrealistische Farben, große gleichfarbige Flächen, dekorative Wirkung; völliger Verzicht auf Schlagschatten für die Geschlossenheit der Komposition; Körperschatten stark reduziert; Themen: ländliche Landschaften und Menschen, Südsee als exotisches Paradies, Religion, mystische Themen.',
+          'Van Gogh (1853–1890): Ausbildung im Kunsthandel des Onkels; mit 28 Jahren Entscheidung, Maler zu werden; Autodidakt (Kopien nach Rembrandt, Hals); Orte: Paris, Antwerpen, Arles; kurze Künstlergemeinschaft mit Gauguin endete mit dem abgeschnittenen Ohr; psychische Erkrankungen, Klinikaufenthalte; Tod durch Selbstmord; Einfluss auf Fauves, Brücke und Blauen Reiter.',
+          'Van Gogh, Werk: Themen einfache Menschen, Landschaften, Blumen; will Stimmung, Gefühl oder Idee transportieren; impressionistische gestrichelte, kommaförmige Pinselzüge oder Punkte; ungewöhnliche Perspektiven (winzige Personen in der Landschaft); individuelle Symbolsprache; reifer Stil am Ende in Arles; übersteigert die Farbe, vereinfacht die Form; sehr zügige Malweise als bewusstes Ausdrucksmittel (Lebendigkeit, Intensität, Unmittelbarkeit), schnell, aber nicht ekstatisch; Spachtel zum Farbauftrag.'] },
         { h: 'Klassische Werkanalyse (Prüfungsaufgabe)', punkte: [
           'Komposition: Bildaufbau (Dreieck, Diagonalen, Symmetrie), Ausschnitt, Bildmitte, Blickführung, Verhältnis Figur–Raum.',
           'Raum: Perspektive, Tiefe oder Flächigkeit, Vorder-/Mittel-/Hintergrund, Überschneidungen.',
@@ -206,7 +253,18 @@ window.WIR_KUNST = {
         ['Van Gogh: Pinselstrich?', 'Pastos, aus der Tube, kleine rhythmisierte Striche (Wellen, Kreise, Spiralen), teils mit Spachtel.'],
         ['Van Gogh: Lebensumstände?', 'Autodidakt, Geldsorgen, psychische Erkrankung, ungeklärter Selbstmord, zu Lebzeiten kein Bild verkauft.'],
         ['Welche Stilrichtung bereitet van Gogh vor?', 'Expressionismus.'],
-        ['Die vier Kriterien der klassischen Werkanalyse?', 'Komposition, Raum, Farbe, Licht.']
+        ['Die vier Kriterien der klassischen Werkanalyse?', 'Komposition, Raum, Farbe, Licht.'],
+        ['Lebensdaten von Cézanne, Gauguin, van Gogh?', 'Cézanne 1839–1906, Gauguin 1848–1903, van Gogh 1853–1890.'],
+        ['Cézanne: Was tut er mit dem Bildraum?', 'Hebt den illusionistischen Tiefenraum auf; Ferne wird wie die Gegenstände behandelt, Gegenstände als Volumen auf Grundformen zurückgeführt.'],
+        ['Cézanne: Lieblingsmotiv?', 'Montagne Sainte-Victoire (30 Ölbilder, 45 Aquarelle).'],
+        ['Cézanne: Technik?', 'Als Erster zerlegt er Objekte in einfache geometrische Grundformen; flächiger, diagonaler Farbauftrag, auch mit breitem Spachtel.'],
+        ['Gauguin: Welche Strömungen beeinflusst er?', 'Nabis und Symbolismus; Wegbereiter des Expressionismus.'],
+        ['Gauguin: Warum verzichtet er auf Schlagschatten?', 'Für die Geschlossenheit der Komposition; Körperschatten stark reduziert.'],
+        ['Gauguin: Bildthemen?', 'Ländliche Landschaften, Südsee als exotisches Paradies, Religion/Mystik.'],
+        ['Van Gogh: Wie kam er zur Malerei?', 'Kunsthandel des Onkels; mit 28 Entscheidung Maler zu werden; Autodidakt (Kopien nach Rembrandt, Hals).'],
+        ['Van Gogh: Wen beeinflusste er?', 'Fauves, Brücke, Blauer Reiter.'],
+        ['Van Gogh: Warum malt er so schnell?', 'Bewusstes Ausdrucksmittel für Lebendigkeit, Intensität, Unmittelbarkeit.'],
+        ['Van Gogh: Welche Elemente vom Impressionismus?', 'Gestrichelte, kommaförmige Pinselzüge oder Punkte; Malen vor dem Motiv.']
       ]
     }
   ],
@@ -268,7 +326,13 @@ window.WIR_KUNST = {
     { f: 'gogh-sonnenblumen', k: 'Vincent van Gogh', t: 'Zwölf Sonnenblumen in einer Vase', j: '1888', th: 'weg', m: 'Gelb in Gelb, Spachtel, pastos' },
     { f: 'gogh-gachet', k: 'Vincent van Gogh', t: 'Porträt des Dr. Gachet', j: '1890', th: 'weg', m: 'Seelenporträt, Blau–Orange' },
     { f: 'gogh-weizenfeld', k: 'Vincent van Gogh', t: 'Weizenfeld mit Zypressen', j: '1889', th: 'weg', m: 'Bewegte Striche, Ausdrucksfarbe' },
-    { f: 'balla-kind', k: 'Giacomo Balla', t: 'Ein Kind läuft über den Balkon', j: '1912', th: 'weg', m: 'Futurismus: Bewegung, rhythmisierte Striche' }
+    { f: 'balla-kind', k: 'Giacomo Balla', t: 'Ein Kind läuft über den Balkon', j: '1912', th: 'weg', m: 'Futurismus: Bewegung, rhythmisierte Striche' },
+    { f: 'renoir-grenouillere', k: 'Pierre-Auguste Renoir', t: 'La Grenouillère', j: '', th: 'imp', m: 'Freizeit am Wasser, flirrendes Licht' },
+    { f: 'morisot-boot', k: 'Berthe Morisot', t: 'Frauen im Boot', j: '', th: 'imp', m: 'Impressionistische Leitkünstlerin, Wasser und Licht' },
+    { f: 'cezanne-victoire1895', k: 'Paul Cézanne', t: 'Mont Sainte-Victoire', j: '1895', th: 'weg', m: 'Berg in Farbflächen und Grundformen' },
+    { f: 'cezanne-victoire1880', k: 'Paul Cézanne', t: 'Montagne Sainte-Victoire', j: '1880–90', th: 'weg', m: 'Frühere Fassung, flächig-diagonaler Strich' },
+    { f: 'hokusai-hodogaya', k: 'Katsushika Hokusai', t: 'Hodogaya an der Tōkaidō-Straße', j: '1831', th: 'jap', m: 'Ansichten des Berges Fuji, Farbholzschnitt' },
+    { f: 'hiroshige-midera', k: 'Utagawa Hiroshige', t: 'Abendglocken am Mii-Tempel', j: '1834', th: 'jap', m: 'Landschaft, gestaffelte Zonen, Leerfläche' }
   ],
   // Vergleichstabellen (Kopf + Zeilen)
   tabellen: [
@@ -300,7 +364,13 @@ window.WIR_KUNST = {
   originale: [
     { n: 'Impressionismus', d: 'Arbeitsblätter mit Bildern, Merkmalen und Aufgaben (38 Seiten)', f: '/lernen/files/kunst-impressionismus.pdf' },
     { n: 'Japonismus, Manet & van Gogh', d: 'Japanischer Farbholzschnitt, Bildpaare, Manet (36 Seiten)', f: '/lernen/files/kunst-japonismus-manet-van-gogh.pdf' },
-    { n: 'Wegbereiter der Moderne', d: 'Cézanne, Gauguin, van Gogh, Werkanalyse (44 Seiten)', f: '/lernen/files/kunst-wegbereiter-der-moderne.pdf' }
+    { n: 'Wegbereiter der Moderne', d: 'Cézanne, Gauguin, van Gogh, Werkanalyse (44 Seiten)', f: '/lernen/files/kunst-wegbereiter-der-moderne.pdf' },
+    { n: 'Steckbriefe Cézanne, Gauguin, van Gogh', d: 'Lebensdaten, Werk und Malstil (4 Seiten)', f: '/lernen/files/kunst-steckbriefe-cezanne-gauguin-van-gogh.pdf' },
+    { n: 'Japonismus (Blatt)', d: 'Zugang nach Europa, Künstler, Merkmale (1 Seite)', f: '/lernen/files/kunst-japonismus-blatt.pdf' }
   ],
-  notizen: [{ n: 'Handzettel: Impressionismus', f: '/lernen/kunst/zettel-impressionismus.jpg' }]
+  notizen: [
+    { n: 'Handzettel: Impressionismus (1)', f: '/lernen/kunst/zettel-impressionismus.jpg' },
+    { n: 'Handzettel: Impressionismus (1860–1890)', f: '/lernen/kunst/zettel-impressionismus2.jpg' },
+    { n: 'Handzettel: Japonismus', f: '/lernen/kunst/zettel-japonismus.jpg' }
+  ]
 };
