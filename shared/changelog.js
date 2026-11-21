@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 107, date: '2026-11-21',
+      features: ['Lernen → Ida: neuer Reiter „Kunst“ für Experimentelles Gestalten mit Stoff, Bildern, Prüfungsfragen, Karteikarten und den Original-PDFs.'],
+      small: [],
+      hotfix: [] },
     { v: 106, date: '2026-11-20',
       features: ['Seitenmenü: Die untere Leiste ist weg. Ein kleiner Pfeil am linken Rand öffnet das Menü mit allen Reitern.'],
       small: ['Kleines Tutorial beim ersten Öffnen zeigt, wo das Menü ist.'],
