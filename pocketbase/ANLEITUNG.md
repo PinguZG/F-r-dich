@@ -2086,3 +2086,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Datenbank:** Kein neues Schema. Nutzt `lern_vokabeln` (nur eigene Zeilen): `wordId = kun:<id>`, level 0–2.
 - **Sicherung:** Tag `vor-kunst`. Kein DB-Backup nötig (keine Schemaänderung).
 - **Rücksetz-Weg:** `git checkout vor-kunst -- app/lernen.js app/index.html app/sw.js shared/changelog.js && git rm -rq app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/lernen/files/kunst-*.pdf`, dann `wir-vNN` in `app/sw.js` hochzählen, committen, pushen.
+
+### Kunst: Anpassung an die Kurzarbeit (21.11.2026, wir-v108)
+- **Anlass:** Mail der Lehrkraft: Themen sind Impressionismus, Japonismus, Wegbereiter der Moderne; Bilder der Epoche zuordnen, Gestaltungsmerkmale erkennen, bei Wegbereitern auch den Künstler; Teil einer Werkanalyse; Hintergrundwissen aus Präsentationen/Buchtexten.
+- **Neu:** Reiter „Zuordnen“ (Bild → Epoche, bei Wegbereitern → Künstler, danach Merkmale der Epoche), Werkanalyse-Hinweis je Epoche. Nicht Prüfungsrelevantes entfernt (Bilder von Picasso, Klimt, Kirchner, Braque, Balla, Vermeer, Courbet, Millet u. a.; Künstlerlisten Impressionismus/Japonismus). Manet gehört jetzt zum Impressionismus.
+- **Achtung Karten-IDs:** Beim Kürzen wurden Karten entfernt/verschoben, dadurch ändern sich Karten-IDs (`kun:<id>`); alter Lernstand einzelner Karten kann nicht mehr passen. Danach wieder nur anhängen.
+- **Rücksetz-Weg:** `git checkout vor-kunst-kurzarbeit -- app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
