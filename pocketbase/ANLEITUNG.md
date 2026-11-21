@@ -2092,3 +2092,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Neu:** Reiter „Zuordnen“ (Bild → Epoche, bei Wegbereitern → Künstler, danach Merkmale der Epoche), Werkanalyse-Hinweis je Epoche. Nicht Prüfungsrelevantes entfernt (Bilder von Picasso, Klimt, Kirchner, Braque, Balla, Vermeer, Courbet, Millet u. a.; Künstlerlisten Impressionismus/Japonismus). Manet gehört jetzt zum Impressionismus.
 - **Achtung Karten-IDs:** Beim Kürzen wurden Karten entfernt/verschoben, dadurch ändern sich Karten-IDs (`kun:<id>`); alter Lernstand einzelner Karten kann nicht mehr passen. Danach wieder nur anhängen.
 - **Rücksetz-Weg:** `git checkout vor-kunst-kurzarbeit -- app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
+
+### Kunst: Merkmale, Analyse, Künstler-Training (21.11.2026, wir-v109)
+- **Neu:** Thema „Epochen unterscheiden“ (Vergleichstabelle, Entscheidungshilfe, Erkennungs-Karten), Reiter „Analyse“ (Vorgehen, worauf je Epoche achten, Musteranalysen: Monet Sonnenschirm, Hiroshige Abendregen, Cézanne Mont Sainte-Victoire, Gauguin, van Gogh Gachet), im „Zuordnen“-Training zusätzlich Modus „Nur Künstler“ mit Merkmalen von Cézanne/Gauguin/van Gogh.
+- **Entfernt:** Bildkarten in den Karteikarten, Realismus (Vorläufer-Abschnitt, Courbet-Bild, Realismus-Bezüge in Fragen), Werkanalyse-Abschnitte im Stoff (jetzt im Reiter Analyse).
+- **Datenbank:** Kein neues Schema; `kun:b-…`-Zeilen (alte Bildkarten) bleiben ungenutzt in `lern_vokabeln`.
+- **Rücksetz-Weg:** `git checkout vor-kunst-kurzarbeit -- app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
