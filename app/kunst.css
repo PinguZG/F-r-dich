@@ -38,3 +38,6 @@
 .ku-res{margin-top:12px;padding:14px 16px;border-radius:20px;background:var(--card,var(--glass));border:2px solid var(--card-line,var(--glass-border));color:var(--ink);display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.45}
 .ku-res.ok{border-color:#3aa56a}.ku-res.no{border-color:#d4584f}
 .ku-res ul{margin:2px 0 6px;padding-left:18px}.ku-mh{font-weight:800;color:var(--ink-soft);font-size:12px;margin-top:6px}
+.ku-ol{margin:0;padding-left:20px;line-height:1.55;font-size:14px;color:var(--ink)}
+.ku-a+.ku-a{margin-top:8px}
+.ku-t tbody tr:first-child th,.ku-t tbody tr:first-child td{border-top:0}

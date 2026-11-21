@@ -13,7 +13,7 @@
   const IMG = f => '/lernen/kunst/' + encodeURIComponent(f) + '.jpg';
 
   let D = null, CARDS = [], ST = { w: {}, q: {}, ids: {} }, el = null, flushing = false;
-  const E = { tab: 'stoff', thema: 'imp', bthema: 'alle', open: null, fopen: null, sel: [0, 1, 2], deck: null, dkey: '', dpos: 0, busy: false, ctype: 'alle', zoom: null, q: null };
+  const E = { tab: 'stoff', thema: 'vgl', bthema: 'alle', qmode: 'alle', athema: 'imp', aopen: null, open: null, fopen: null, sel: [0, 1, 2], deck: null, dkey: '', dpos: 0, busy: false, ctype: 'alle', zoom: null, q: null };
   const SKEY = () => 'lernen-kun-v1-' + uid();
   const load = () => { try { const j = JSON.parse(localStorage.getItem(SKEY()) || 'null'); if (j) ST = Object.assign({ w: {}, q: {}, ids: {} }, j); } catch (_) {} };
   const persist = () => { try { localStorage.setItem(SKEY(), JSON.stringify(ST)); } catch (_) {} };
@@ -55,14 +55,14 @@
   const prep = () => {
     D = window.WIR_KUNST; CARDS = [];
     D.themen.forEach(t => t.karten.forEach((k, i) => CARDS.push({ id: t.id + '-' + (i + 1), thema: t.id, kind: 'text', q: k[0], a: k[1], i: CARDS.length })));
-    D.bilder.forEach(b => CARDS.push({ id: 'b-' + b.f, thema: b.th, kind: 'bild', b, i: CARDS.length }));
   };
-  const poolOf = () => CARDS.filter(c => (E.thema === 'alle' || c.thema === E.thema) && (E.ctype === 'alle' || c.kind === E.ctype));
+  const poolOf = () => CARDS.filter(c => E.thema === 'alle' || c.thema === E.thema);
   const counts = pool => { const c = { all: pool.length, neu: 0, 0: 0, 1: 0, 2: 0 }; pool.forEach(x => { const l = lvl(x); if (l === undefined) c.neu++; else c[l]++; }); return c; };
   const themaName = id => D.themen.find(t => t.id === id)?.name || id;
+  const EP = () => D.themen.filter(t => t.merk);
 
   // ---------- Kopf ----------
-  const TABS = [['stoff', 'Stoff'], ['zuordnen', 'Zuordnen'], ['bilder', 'Bilder'], ['fragen', 'Fragen'], ['karten', 'Karten'], ['original', 'Originale']];
+  const TABS = [['stoff', 'Stoff'], ['zuordnen', 'Zuordnen'], ['analyse', 'Analyse'], ['bilder', 'Bilder'], ['fragen', 'Fragen'], ['karten', 'Karten'], ['original', 'Originale']];
   function head() {
     const c = counts(CARDS), pc = v => c.all ? v / c.all * 100 : 0;
     return `<section class="en-hero">
@@ -75,7 +75,7 @@
   function render() {
     if (!el) return;
     el.innerHTML = '<div class="en-wrap">' + head() + '<div id="kuBody" class="en-body"></div></div>' + zoomHtml();
-    ({ stoff: vStoff, zuordnen: vZuordnen, bilder: vBilder, fragen: vFragen, karten: vKarten, original: vOrig })[E.tab]($('kuBody'));
+    ({ stoff: vStoff, zuordnen: vZuordnen, analyse: vAnalyse, bilder: vBilder, fragen: vFragen, karten: vKarten, original: vOrig })[E.tab]($('kuBody'));
   }
   const themaChips = (key, all) => `<div class="en-chips">${(all ? [['alle', 'Alle']] : []).concat(D.themen.map(t => [t.id, t.name])).map(([k, n]) => `<button type="button" data-ku="${key}" data-x="${esc(k)}" class="${E[key === 'bthema' ? 'bthema' : 'thema'] === k ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>`;
   const imgBtn = (b, cls = '') => `<button type="button" class="ku-img ${cls}" data-ku="zoom" data-x="${esc(b.f)}" aria-label="${esc(b.t)} vergrößern"><img src="${IMG(b.f)}" alt="${esc(b.k + ': ' + b.t)}" loading="lazy" decoding="async"></button>`;
@@ -111,17 +111,18 @@
 
   // ---------- Zuordnen (Prüfung: Bild → Epoche, bei Wegbereitern zusätzlich → Künstler) ----------
   const ARTISTS = ['Paul Cézanne', 'Paul Gauguin', 'Vincent van Gogh'];
-  function startQ() { E.q = { deck: shuffle(D.bilder.map((b, i) => i).filter(i => D.bilder[i].z !== 0)), pos: 0, step: 'e', pe: null, pk: null, ok: 0, done: 0 }; }
+  function startQ() { const kw = E.qmode === 'weg'; E.q = { deck: shuffle(D.bilder.map((b, i) => i).filter(i => D.bilder[i].z !== 0 && (!kw || D.bilder[i].th === 'weg'))), pos: 0, step: kw ? 'k' : 'e', pe: kw ? 'weg' : null, pk: null, ok: 0, done: 0 }; }
   function vZuordnen(b) {
     if (!E.q) startQ();
     const q = E.q;
+    const modes = `<div class="en-chips">${[['alle', 'Epoche (+ Künstler)'], ['weg', 'Nur Künstler (Wegbereiter)']].map(([k, n]) => `<button type="button" data-ku="qmode" data-x="${k}" class="${E.qmode === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
     if (q.pos >= q.deck.length) {
-      b.innerHTML = `<div class="kk kk-none"><div class="kk-empty"><b>Fertig: ${q.ok} von ${q.done} richtig</b><button type="button" class="ln-btn" data-ku="qagain">Nochmal</button></div></div>`; return;
+      b.innerHTML = modes + `<div class="kk kk-none"><div class="kk-empty"><b>Fertig: ${q.ok} von ${q.done} richtig</b><button type="button" class="ln-btn" data-ku="qagain">Nochmal</button></div></div>`; return;
     }
     const im = D.bilder[q.deck[q.pos]], th = D.themen.find(t => t.id === im.th), n = q.pos + 1;
     const needK = im.th === 'weg';
     let ask = '', opts = '';
-    if (q.step === 'e') { ask = 'Welcher Epoche gehört das Bild an?'; opts = D.themen.map(t => `<button type="button" class="ku-opt" data-ku="qe" data-x="${esc(t.id)}">${esc(t.name)}</button>`).join(''); }
+    if (q.step === 'e') { ask = 'Welcher Epoche gehört das Bild an?'; opts = EP().map(t => `<button type="button" class="ku-opt" data-ku="qe" data-x="${esc(t.id)}">${esc(t.name)}</button>`).join(''); }
     else if (q.step === 'k') { ask = 'Von welchem Künstler ist das Werk?'; opts = ARTISTS.map(a => `<button type="button" class="ku-opt" data-ku="qk" data-x="${esc(a)}">${esc(a)}</button>`).join(''); }
     let res = '';
     if (q.step === 'r') {
@@ -130,10 +131,10 @@
         <div>Epoche: <b>${esc(th.name)}</b>${eOk ? '' : ' (du: ' + esc(themaName(q.pe)) + ')'}</div>
         ${needK ? `<div>Künstler: <b>${esc(im.k)}</b>${kOk ? '' : ' (du: ' + esc(q.pk) + ')'}</div>` : ''}
         <div>${esc(im.t)}${im.j ? ', ' + esc(im.j) : ''}${im.m ? ' · ' + esc(im.m) : ''}</div>
-        <div class="ku-mh">Gestaltungsmerkmale ${esc(th.name)}</div><ul>${th.merk.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+        <div class="ku-mh">${needK ? 'Merkmale ' + esc(im.k) : 'Gestaltungsmerkmale ' + esc(th.name)}</div><ul>${(needK ? (D.kuenstler.find(a => a.k === im.k)?.merk || th.merk) : th.merk).map(m => `<li>${esc(m)}</li>`).join('')}</ul>
         <button type="button" class="ln-btn" data-ku="qnext">Weiter</button></div>`;
     }
-    b.innerHTML = `<div class="ku-qh"><span>${n} / ${q.deck.length}</span><span>${q.ok} richtig</span></div>
+    b.innerHTML = modes + `<div class="ku-qh"><span>${n} / ${q.deck.length}</span><span>${q.ok} richtig</span></div>
       <button type="button" class="ku-img ku-qimg" data-ku="zoomq" aria-label="Bild vergrößern"><img src="${IMG(im.f)}" alt="Bild zuordnen"></button>
       ${ask ? `<div class="ku-ask">${ask}</div><div class="ku-opts">${opts}</div>` : ''}${res}`;
   }
@@ -145,9 +146,22 @@
     render();
   }
 
+  // ---------- Analyse (Werkanalyse-Training) ----------
+  function vAnalyse(b) {
+    const A = D.analyse, ep = A.epochen[E.athema] || A.epochen.imp, t = D.themen.find(x => x.id === E.athema);
+    const chips = `<div class="en-chips">${EP().map(x => `<button type="button" data-ku="athema" data-x="${esc(x.id)}" class="${E.athema === x.id ? 'on' : ''}">${esc(x.name)}</button>`).join('')}</div>`;
+    b.innerHTML = `<div class="po-note">Werkanalyse: Teil der Kurzarbeit, je nachdem welche Bereiche in der Epoche möglich sind.</div>` + chips +
+      `<div class="ku-tw"><div class="ku-tt">So gehst du vor</div><ol class="ku-ol">${A.vorgehen.map(v => `<li>${esc(v)}</li>`).join('')}</ol></div>` +
+      `<div class="ku-tw"><div class="ku-tt">${esc(t.name)}: Darauf achtest du</div><div class="ku-ts"><table class="ku-t"><tbody>${ep.achten.map(r => `<tr><th scope="row">${esc(r[0])}</th><td>${esc(r[1])}</td></tr>`).join('')}</tbody></table></div></div>` +
+      `<div class="ku-strip-h">Musteranalysen</div>` + ep.muster.map((m, i) => {
+        const k = E.athema + i, open = E.aopen === k;
+        return `<section class="po-th ${open ? 'open' : ''}"><button type="button" class="po-thh" data-ku="aopen" data-id="${esc(k)}"><span><b>${esc(m.bild)}</b></span><i>${open ? '–' : '+'}</i></button>${open ? `<div class="po-thb">${imgBtn({ f: m.f, t: m.bild, k: '' })}${m.text.map(x => `<p class="ku-a">${esc(x)}</p>`).join('')}</div>` : ''}</section>`;
+      }).join('');
+  }
+
   // ---------- Fragen ----------
   function vFragen(b) {
-    b.innerHTML = `<div class="po-note">So kam es im Unterricht dran. Tippe auf eine Frage, überlege zuerst selbst, dann siehst du die Antwort.</div>` + D.themen.map(t =>
+    b.innerHTML = `<div class="po-note">So kam es im Unterricht dran. Tippe auf eine Frage, überlege zuerst selbst, dann siehst du die Antwort.</div>` + D.themen.filter(t => t.aufgaben.length).map(t =>
       `<div class="ku-strip-h">${esc(t.name)}</div>` + t.aufgaben.map((a, i) => {
         const k = t.id + '-f' + i, open = E.fopen === k;
         return `<section class="po-th ${open ? 'open' : ''}"><button type="button" class="po-thh" data-ku="fopen" data-id="${esc(k)}"><span><b>${esc(a[0])}</b></span><i>${open ? '–' : '+'}</i></button>${open ? `<div class="po-thb"><p class="ku-a">${esc(a[1])}</p></div>` : ''}</section>`;
@@ -158,20 +172,20 @@
   const tabsHtml = () => `<div class="kk-tabs">${ORDER.map(x => `<button type="button" class="kk-tab t${x} ${E.sel.includes(x) ? 'on' : ''}" data-ku="sel" data-l="${x}" aria-pressed="${E.sel.includes(x)}">${LV[x]}</button>`).join('')}</div>`;
   const inSel = c => { const l = lvl(c); return E.sel.includes(l === undefined ? 0 : l); };
   function deck() {
-    const key = E.thema + '|' + E.ctype + '|' + [...E.sel].sort().join('');
+    const key = E.thema + '|' + [...E.sel].sort().join('');
     if (!E.deck || E.dkey !== key) { E.dkey = key; E.dpos = 0; E.deck = shuffle(poolOf().filter(inSel).map(c => c.i)); }
     return E.deck;
   }
   function vKarten(b) {
     const chips = `<div class="en-chips">${[['alle', 'Alle']].concat(D.themen.map(t => [t.id, t.name])).map(([k, n]) => `<button type="button" data-ku="thema" data-x="${esc(k)}" class="${E.thema === k ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>` +
-      `<div class="en-chips">${[['alle', 'Text + Bild'], ['text', 'Nur Text'], ['bild', 'Nur Bilder']].map(([k, n]) => `<button type="button" data-ku="ctype" data-x="${k}" class="${E.ctype === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+'';
     const d = deck();
     if (!d.length) { b.innerHTML = chips + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty">Hier sind gerade keine Karten.</div></div>`; return; }
     if (E.dpos >= d.length) { b.innerHTML = chips + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty"><b>Runde geschafft</b><button type="button" class="ln-btn" data-ku="again">Nochmal</button></div></div>`; return; }
     const c = CARDS[d[E.dpos]], l = lvl(c), n = E.dpos + 1;
     const face = (cls, side, body) => `<div class="kk-face ${cls}"><div class="kk-head"><span>${side}</span><span>${n} / ${d.length}</span></div><div class="kk-mid">${body}</div></div>`;
-    const front = c.kind === 'bild' ? `<img class="ku-kimg" src="${IMG(c.b.f)}" alt="Gemälde"><div class="ku-kq">Epoche? (Wegbereiter: Künstler?)</div>` : `<div class="kk-big kk-txt">${esc(c.q)}</div>`;
-    const back = c.kind === 'bild' ? `<div class="kk-txt kk-ans"><b>${esc(themaName(c.thema))}</b><br>${esc(c.b.k)}: ${esc(c.b.t)}${c.b.j ? ' (' + esc(c.b.j) + ')' : ''}<br><small>${esc(c.b.m || '')}</small></div>` : `<div class="kk-txt kk-ans">${esc(c.a)}</div>`;
+    const front = `<div class="kk-big kk-txt">${esc(c.q)}</div>`;
+    const back = `<div class="kk-txt kk-ans">${esc(c.a)}</div>`;
     b.innerHTML = chips + `<div class="kk" id="kuKK" data-l="${l === undefined ? 'n' : l}" style="--kf:Quicksand,sans-serif">${tabsHtml()}
       <div class="kk-card" id="kuCard" data-ku="kflip" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="kk-in">
         ${face('', 'Frage', front)}${face('kk-back', 'Antwort', back)}
@@ -206,13 +220,15 @@
       case 'tab': E.tab = d.x; render(); break;
       case 'thema': E.thema = d.x; E.deck = null; E.open = null; render(); break;
       case 'bthema': E.bthema = d.x; render(); break;
-      case 'ctype': E.ctype = d.x; E.deck = null; render(); break;
       case 'open': E.open = E.open === d.id ? null : d.id; render(); break;
       case 'fopen': E.fopen = E.fopen === d.id ? null : d.id; render(); break;
       case 'gokarten': E.tab = 'karten'; E.thema = d.x; E.deck = null; render(); break;
+      case 'qmode': E.qmode = d.x; startQ(); render(); break;
+      case 'aopen': E.aopen = E.aopen === d.id ? null : d.id; render(); break;
+      case 'athema': E.athema = d.x; E.aopen = null; render(); break;
       case 'qe': qAnswer('e', d.x); break;
       case 'qk': qAnswer('k', d.x); break;
-      case 'qnext': E.q.pos++; E.q.step = 'e'; E.q.pe = null; E.q.pk = null; render(); break;
+      case 'qnext': E.q.pos++; E.q.step = E.qmode === 'weg' ? 'k' : 'e'; E.q.pe = E.qmode === 'weg' ? 'weg' : null; E.q.pk = null; render(); break;
       case 'qagain': startQ(); render(); break;
       case 'zoomq': { const im = D.bilder[E.q.deck[E.q.pos]]; E.zoom = im.f; el.querySelector('.ku-zoom')?.remove(); el.insertAdjacentHTML('beforeend', zoomHtml(true)); break; }
       case 'zoom': E.zoom = d.x; el.querySelector('.ku-zoom')?.remove(); el.insertAdjacentHTML('beforeend', zoomHtml()); break;

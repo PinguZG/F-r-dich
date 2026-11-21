@@ -1,11 +1,119 @@
 // Experimentelles Gestalten (Kunst) – Lernstoff für Ida (Kurzarbeit: Impressionismus, Japonismus, Wegbereiter der Moderne).
-// Quelle: Unterrichts-PDFs, Steckbriefe, Handzettel + Mail von Lukas Pulst. Karten-IDs: Thema-ID + Position (nie umsortieren, nur anhängen).
-// z:0 = Bild nicht im Zuordnungs-Training (mehrdeutig). merk = Gestaltungsmerkmale der Epoche.
+// Quelle: Unterrichts-PDFs, Steckbriefe, Handzettel + Mail der Lehrkraft. Karten-IDs: Thema-ID + Position (nie umsortieren, nur anhängen).
+// z:0 = Bild nicht im Zuordnungs-Training (mehrdeutig). merk = Gestaltungsmerkmale der Epoche. kuenstler = Merkmale der Wegbereiter. analyse = Werkanalyse-Training.
 window.WIR_KUNST = {
  "fach": "Experimentelles Gestalten",
  "anlass": "Prüfung",
- "hinweis": "Kurzarbeit: Die letzten drei Epochen (Impressionismus, Japonismus, Wegbereiter der Moderne). Bilder der richtigen Epoche zuordnen und die Gestaltungsmerkmale erkennen; bei den Wegbereitern zusätzlich dem Künstler zuordnen (bei Impressionismus/Japonismus nicht nötig). Dazu ein Teil einer Werkanalyse und Hintergrundwissen aus Präsentationen und Buchtexten.",
+ "hinweis": "Kurzarbeit: Die drei Epochen (Impressionismus, Japonismus, Wegbereiter der Moderne) an Merkmalen unterscheiden und benennen, ein Bild der richtigen Epoche zuordnen, einen Teil einer Werkanalyse schreiben, bei den Wegbereitern das Bild dem Künstler zuordnen (Cézanne, Gauguin, van Gogh).",
  "themen": [
+  {
+   "id": "vgl",
+   "name": "Epochen unterscheiden",
+   "untertitel": "Impressionismus · Japonismus · Wegbereiter: woran erkenne ich was?",
+   "sektionen": [
+    {
+     "h": "Entscheidungshilfe: So ordnest du ein Bild ein",
+     "punkte": [
+      "Schau zuerst auf die Linie: dicke schwarze Umrisse, einfarbige Flächen, angeschnittene Ausschnitte, kaum Tiefe, kaum Schatten → Japonismus.",
+      "Dann auf Pinselstrich und Licht: tupfende, lockere Striche, aufgelöste Konturen, flimmerndes Licht, farbige Schatten, Alltags- oder Freizeitszene wie ein Schnappschuss → Impressionismus.",
+      "Dann auf Ausdruck und Form: Farbe stärker als die Natur (unnatürliche Farben), betonte Form (Geometrie, Kontur, Fläche) oder wilder rhythmischer Strich, Stimmung statt Seheindruck → Wegbereiter der Moderne (dann Künstler bestimmen).",
+      "Falle: Van Goghs Holzschnitt-Kopien (Pflaumenbaum, Abendregen) sind Japonismus. Monets „Japanische Brücke“ übernimmt nur das Motiv des Japonismus, nicht die Technik.",
+      "Merksatz: Impressionismus = Licht und Moment. Japonismus = Fläche und Linie. Wegbereiter = Form, Farbe und Ausdruck."
+     ]
+    },
+    {
+     "h": "Die drei Wegbereiter erkennen",
+     "punkte": [
+      "Paul Cézanne: Zerlegung der Motive in geometrische Grundformen (Kegel, Kugel, Zylinder); Bildaufbau aus Farbflecken/Farbflächen in parallelen, oft diagonalen Pinselstrichen; Farbe über Warm-Kalt-Kontraste, Räumlichkeit durch Farbe statt Linearperspektive; ruhige, ausgewogene, konstruierte Komposition (Harmonie von Form und Farbe); typische Motive: Montagne Sainte-Victoire, Stillleben (Äpfel), Badende, Landschaft/Bucht.",
+      "Paul Gauguin: dunkle Konturlinie um klare Flächen (Cloisonismus); große, einheitliche, leuchtende Farbflächen, Farben unnatürlich (Komplementärkontraste); kein Schlagschatten, kaum Körperschatten, fehlende Modellierung; Perspektive missachtet: sehr flächig, dekorativ; typische Motive: Tahiti/Südsee-Menschen, mythisch-religiöse Themen, Bretagne.",
+      "Vincent van Gogh: dicker (pastoser) Farbauftrag, Pinselstriche plastisch sichtbar; kurze, rhythmisierte Striche als Wellen, Kreise, Spiralen (Dynamik); reine kräftige Farben, Komplementärkontraste (z. B. Blau–Orange, Gelb–Violett), Farbe als Stimmung; Motive stark vereinfacht, Vorbild: japanische Holzschnitte (Flächen, Umrisse); typische Motive: Sternennacht, Sonnenblumen, Zypressen, Weizenfelder, Porträts."
+     ]
+    }
+   ],
+   "aufgaben": [],
+   "karten": [
+    [
+     "Tupfende lockere Striche, kaum Konturen, farbige Schatten, flimmerndes Licht: welche Epoche?",
+     "Impressionismus."
+    ],
+    [
+     "Dicke schwarze Umrisse, flache Farbfelder, angeschnittener Ausschnitt, kaum Raumtiefe: welche Epoche?",
+     "Japonismus (Einfluss des Farbholzschnitts)."
+    ],
+    [
+     "Unnatürlich leuchtende Farben, vereinfachte Formen, Ausdruck von Gefühl statt Seheindruck: welche Epoche?",
+     "Wegbereiter der Moderne (Postimpressionismus)."
+    ],
+    [
+     "Momentaufnahme eines Alltags- oder Freizeitmotivs im Freien: welche Epoche?",
+     "Impressionismus."
+    ],
+    [
+     "Asymmetrische Diagonale, Vogelperspektive, große Leerfläche: welche Epoche?",
+     "Japonismus."
+    ],
+    [
+     "Serien desselben Motivs in wechselndem Licht: welche Epoche?",
+     "Impressionismus (z. B. Monet)."
+    ],
+    [
+     "Motiv in geometrische Grundformen zerlegt: welche Epoche und welcher Künstler?",
+     "Wegbereiter, Cézanne."
+    ],
+    [
+     "Wodurch unterscheiden sich Impressionismus und Japonismus bei der Linie?",
+     "Impressionismus: Konturen lösen sich auf. Japonismus: starke schwarze Umrisslinien."
+    ],
+    [
+     "Wodurch unterscheiden sich Impressionismus und Japonismus beim Raum?",
+     "Impressionismus: flacher atmosphärischer Raum (Luftperspektive). Japonismus: kaum Raum, Flächigkeit, keine Zentralperspektive, Vogelperspektive."
+    ],
+    [
+     "Wodurch unterscheiden sich Impressionismus und Japonismus beim Licht?",
+     "Impressionismus: Licht und farbige Schatten sind das Thema. Japonismus: weder Licht noch Schatten, schattenloser Farbgebrauch."
+    ],
+    [
+     "Was haben Impressionismus und Japonismus gemeinsam?",
+     "Angeschnittene Ausschnitte wie ein Foto, flacher Raum, kein klassisches Tiefenbild."
+    ],
+    [
+     "Was ist neu bei den Wegbereitern gegenüber dem Impressionismus?",
+     "Nicht mehr nur der Seheindruck: Form (Cézanne), Fläche und Symbol (Gauguin), Ausdruck und Stimmung (van Gogh)."
+    ],
+    [
+     "Welcher Künstler: dunkle Konturlinie, große leuchtende Farbflächen, Südsee, kein Schlagschatten?",
+     "Gauguin."
+    ],
+    [
+     "Welcher Künstler: dicke Farbe, Wellen und Spiralen, Blau–Orange, Zypressen/Sternennacht?",
+     "Van Gogh."
+    ],
+    [
+     "Welcher Künstler: Farbflecken in parallelen Strichen, Berg/Stillleben, Grundformen?",
+     "Cézanne."
+    ],
+    [
+     "Cézanne oder Gauguin: Welcher malt mit Cloisonismus?",
+     "Gauguin."
+    ],
+    [
+     "Cézanne oder van Gogh: Wer löst Formen in Kegel, Kugel, Zylinder?",
+     "Cézanne."
+    ],
+    [
+     "Gauguin oder van Gogh: Wessen Pinselstrich ist rhythmisch und plastisch sichtbar?",
+     "Van Gogh (Gauguin malt flächig-glatt)."
+    ],
+    [
+     "Wer arbeitet über Warm-Kalt-Kontraste?",
+     "Cézanne."
+    ],
+    [
+     "Wer verzichtet völlig auf Schlagschatten?",
+     "Gauguin (van Gogh hat ebenfalls keine Körper-/Schlagschatten durch den japanischen Einfluss)."
+    ]
+   ]
+  },
   {
    "id": "imp",
    "name": "Impressionismus",
@@ -19,8 +127,7 @@ window.WIR_KUNST = {
       "Abgelehnte Künstler zeigten ihre Werke im „Salon des Réfusés“ (der Zurückgewiesenen).",
       "Die Fotografie wurde zur starken Konkurrenz der Porträtmalerei.",
       "Farbtuben ermöglichten den Malern, die Ateliers zu verlassen (Freilichtmalerei).",
-      "Junge Künstler suchten neue Wege des malerischen Ausdrucks in der freien Natur.",
-      "Vorläufer Realismus (Courbet, Millet): einfache Menschen bei der Arbeit, ohne Idealisierung – die Impressionisten gehen weiter zum Seheindruck."
+      "Junge Künstler suchten neue Wege des malerischen Ausdrucks in der freien Natur."
      ]
     },
     {
@@ -72,15 +179,6 @@ window.WIR_KUNST = {
       "Starke Kontraste zwischen Licht und Schatten statt weicher Abstufungen.",
       "Figuren fügen sich nicht in die Tiefe ein, keine Perspektive: sehr flächige Darstellung.",
       "Bildzitat: „Das Frühstück im Grünen“ greift Raimondis Kupferstich „Urteil des Paris“ (nach Raffael, um 1515) und Tizians „Ländliches Konzert“ (1511) auf."
-     ]
-    },
-    {
-     "h": "Werkanalyse: Monet, „Camille Monet und Sohn Jean auf dem Hügel“ (1875)",
-     "punkte": [
-      "Schwerer durchzuführen sind: Perspektive/Raum (gelöste Konturen, kaum Tiefenkonstruktion), Linie/Kontur, Inhalt/Ikonografie (keine Handlung, kein tieferer Sinn).",
-      "Anlass: Familienspaziergang im Freien (Monets Frau Camille mit Sohn Jean, Sommer 1875 bei Argenteuil); Monet hält den flüchtigen Moment fest.",
-      "Impressionistisch wegen: Momentaufnahme, Wind im Kleid und Schirm, Licht und farbige Schatten (blau-violett), lockerer tupfender Pinselstrich, Gesichter nur angedeutet, helle Farbpalette.",
-      "Komposition: Figur in Untersicht vor Himmel, Diagonale der Wiese, zweite kleine Figur im Hintergrund, Anschnitt/Ausschnitt wie ein Foto."
      ]
     }
    ],
@@ -185,7 +283,7 @@ window.WIR_KUNST = {
     ],
     [
      "Warum zählt der Impressionismus kaum Sozialkritik?",
-     "Motive stammen aus bürgerlichem Leben und Freizeit, nicht aus Not oder Politik (anders als Realismus/Courbet)."
+     "Motive stammen aus bürgerlichem Leben und Freizeit, nicht aus Not oder Politik."
     ],
     [
      "Von wann bis wann geht der Impressionismus (Handzettel)?",
@@ -301,7 +399,6 @@ window.WIR_KUNST = {
       "Monet ↔ Hiroshige: „Die japanische Brücke“ (um 1899) – Brücke als Bildmotiv im eigenen Garten in Giverny, Bildausschnitt, wenig Tiefe.",
       "Manet „Im Boot“ (1874) ↔ Kuniyoshi: Anschnitt, Boot als Diagonale, Ausschnitt wie ein Holzschnitt.",
       "Manet „Émile Zola“ (1868): japanischer Holzschnitt und Wandschirm hängen im Hintergrund des Porträts – direkter Beleg für die Sammelleidenschaft.",
-      "Courbet „Die Woge“ (1870) ↔ Hokusai „Die große Welle“: Wellenmotiv, großer Bildausschnitt.",
       "Van Gogh „Die Kurtisane“ (1887): Kimono-Muster und flächige Ornamentik nach japanischem Holzschnitt."
      ]
     },
@@ -449,38 +546,11 @@ window.WIR_KUNST = {
      "h": "Steckbriefe (Daten & Werk)",
      "punkte": [
       "Cézanne (1839–1906): Wegbereiter der Moderne; begann auf Wunsch des Vaters ein Studium der Rechtswissenschaften (Bankierslehre im Unterricht); Bewerbung an der École des Beaux-Arts scheiterte mehrmals; Erbschaft des Vaters sicherte die späten Jahre; verkaufte schon zu Lebzeiten Bilder an Künstler und Sammler.",
-      "Cézanne, Werk: Frühphase Romantik und beginnender Realismus; impressionistische Phase nach Pissarro und Manet; in Landschaften wird der illusionistische Tiefenraum aufgehoben, Gegenstände werden als Volumen und auf geometrische Grundformen zurückgeführt, die Ferne wird wie die Gegenstände behandelt (Verlassen des traditionellen Bildraums); flächig-diagonaler Farbauftrag, Farbflächen nebeneinander, Konstruktion und Harmonie parallel zur Natur; Thema Montagne Sainte-Victoire (30 Ölbilder, 45 Aquarelle); malt auch mit breitem Spachtel in oft horizontaler Richtung.",
+      "Cézanne, Werk: impressionistische Phase nach Pissarro und Manet; in Landschaften wird der illusionistische Tiefenraum aufgehoben, Gegenstände werden als Volumen und auf geometrische Grundformen zurückgeführt, die Ferne wird wie die Gegenstände behandelt (Verlassen des traditionellen Bildraums); flächig-diagonaler Farbauftrag, Farbflächen nebeneinander, Konstruktion und Harmonie parallel zur Natur; Thema Montagne Sainte-Victoire (30 Ölbilder, 45 Aquarelle); malt auch mit breitem Spachtel in oft horizontaler Richtung.",
       "Gauguin (1848–1903): beeinflusst Nabis und Symbolismus, Wegbereiter des Expressionismus; Marine, dann Börsenmakler (luxuriöser Lebensstil); ausschließliche Hinwendung zur Malerei führte in finanzielle und persönliche Krisen; Streben nach einfachem, ursprünglichem Leben, viele Ortswechsel, Reisen in die Südsee; begann impressionistisch.",
       "Gauguin, Werk: Abkehr von der Nachahmung der Wirklichkeit führt auf den Weg der Abstraktion; gewagte unrealistische Farben, große gleichfarbige Flächen, dekorative Wirkung; völliger Verzicht auf Schlagschatten für die Geschlossenheit der Komposition; Körperschatten stark reduziert; Themen: ländliche Landschaften und Menschen, Südsee als exotisches Paradies, Religion, mystische Themen.",
       "Van Gogh (1853–1890): Ausbildung im Kunsthandel des Onkels; mit 28 Jahren Entscheidung, Maler zu werden; Autodidakt (Kopien nach Rembrandt, Hals); Orte: Paris, Antwerpen, Arles; kurze Künstlergemeinschaft mit Gauguin endete mit dem abgeschnittenen Ohr; psychische Erkrankungen, Klinikaufenthalte; Tod durch Selbstmord; Einfluss auf Fauves, Brücke und Blauen Reiter.",
       "Van Gogh, Werk: Themen einfache Menschen, Landschaften, Blumen; will Stimmung, Gefühl oder Idee transportieren; impressionistische gestrichelte, kommaförmige Pinselzüge oder Punkte; ungewöhnliche Perspektiven (winzige Personen in der Landschaft); individuelle Symbolsprache; reifer Stil am Ende in Arles; übersteigert die Farbe, vereinfacht die Form; sehr zügige Malweise als bewusstes Ausdrucksmittel (Lebendigkeit, Intensität, Unmittelbarkeit), schnell, aber nicht ekstatisch; Spachtel zum Farbauftrag."
-     ]
-    },
-    {
-     "h": "Klassische Werkanalyse (Prüfungsaufgabe)",
-     "punkte": [
-      "Komposition: Bildaufbau (Dreieck, Diagonalen, Symmetrie), Ausschnitt, Bildmitte, Blickführung, Verhältnis Figur–Raum.",
-      "Raum: Perspektive, Tiefe oder Flächigkeit, Vorder-/Mittel-/Hintergrund, Überschneidungen.",
-      "Farbe: Palette, Kontraste (Komplementär, Warm-Kalt, Hell-Dunkel), Lokalfarbe oder Ausdrucksfarbe, Farbauftrag.",
-      "Licht: Lichtquelle, Schatten (Körper-/Schlagschatten), Stimmung, farbige Schatten."
-     ]
-    },
-    {
-     "h": "Beispielanalyse: van Gogh, „Porträt des Dr. Gachet“ (Juni 1890)",
-     "punkte": [
-      "Komposition: sitzende Halbfigur in kompaktem Dreieck, Kopf in die Hand gestützt, Blick abwesend und melancholisch; Tisch mit Fingerhutblüte (Digitalis) im Vordergrund.",
-      "Raum: kaum Tiefe, Hintergrund ist eine flache blaue Fläche mit Pinselspuren, Tisch kippt nach vorne – flächige Darstellung ohne konstruierte Perspektive.",
-      "Farbe: Kontrast Blau (Rock/Hintergrund) gegen Orange-Rot (Gesicht, Hände, Tisch); Ausdrucksfarbe statt Lokalfarbe; pastoser, rhythmischer Strich.",
-      "Licht: kein Schlagschatten, Licht wird über Farbwerte (Hell-Dunkel, Warm-Kalt) modelliert; Stimmung gedämpft traurig.",
-      "Deutung: seelisches Porträt (Melancholie), Ausdruck statt naturgetreuer Abbildung – Wegbereiter des Expressionismus."
-     ]
-    },
-    {
-     "h": "Werkanalyse: Welche Bereiche sind je Epoche möglich?",
-     "punkte": [
-      "Impressionismus: gut möglich sind Farbe, Licht, Malweise/Pinselduktus und Komposition (Ausschnitt). Schwer: Raum/Perspektive, Linie/Kontur (gelöst), Inhalt (keine Handlung).",
-      "Japonismus: gut möglich sind Komposition (asymmetrisch, Ausschnitt), Raum (flach, ohne Zentralperspektive), Linie (Umrisse) und Farbe (flächig). Licht/Schatten fehlen.",
-      "Wegbereiter: Komposition, Raum, Farbe und Licht möglich (Raum meist flächig, Farbe als Ausdrucksmittel, Schatten stark reduziert)."
      ]
     }
    ],
@@ -498,8 +568,8 @@ window.WIR_KUNST = {
      "Zuordnen: Cézanne „Mont Sainte-Victoire“ → Geometrisierung, Farbflecken/-flächen. Gauguin „Wie? Bist du eifersüchtig?“ → Cloisonismus, Flächen, leuchtende Komplementärfarben. Van Gogh „Sternennacht“ → rhythmische Wellenlinien, pastos, Ausdrucksfarbe."
     ],
     [
-     "Findet weitere Neuerungen/Unterschiede zum Impressionismus und Realismus.",
-     "Zum Impressionismus: Form/Struktur (Cézanne), Gefühl und Symbolik (Gauguin), seelischer Ausdruck (van Gogh) statt reinem Seheindruck. Zum Realismus: nicht Abbildung, sondern Ausdruck, Vereinfachung, flächige Farbe."
+     "Findet weitere Neuerungen/Unterschiede zum Impressionismus.",
+     "Zum Impressionismus: Form/Struktur (Cézanne), Gefühl und Symbolik (Gauguin), seelischer Ausdruck (van Gogh) statt reinem Seheindruck."
     ],
     [
      "Führe eine klassische Werkanalyse eines der drei Werke durch (Komposition, Raum, Farbe, Licht).",
@@ -797,15 +867,6 @@ window.WIR_KUNST = {
    "m": "Farbholzschnitt"
   },
   {
-   "f": "courbet-woge",
-   "k": "Gustave Courbet",
-   "t": "Die Woge",
-   "j": "1870",
-   "th": "jap",
-   "m": "Vergleich zu Hokusai",
-   "z": 0
-  },
-  {
    "f": "utamaro-schoenen",
    "k": "Kitagawa Utamaro",
    "t": "Die drei Schönen des Tages",
@@ -1040,6 +1101,79 @@ window.WIR_KUNST = {
  ],
  "tabellen": [
   {
+   "id": "vgl",
+   "th": "vgl",
+   "titel": "Die drei Epochen im Vergleich",
+   "kopf": [
+    "",
+    "Impressionismus",
+    "Japonismus",
+    "Wegbereiter"
+   ],
+   "zeilen": [
+    [
+     "Zeit",
+     "ca. 1860–1890",
+     "ca. ab 1860 (Formeinfluss, keine eigene Epoche)",
+     "ab ca. 1880, Weg in die Moderne"
+    ],
+    [
+     "Idee",
+     "momentaner Lichteindruck, Atmosphäre",
+     "Formen des Farbholzschnitts übernehmen",
+     "Form, Ausdruck, Gefühl statt Seheindruck"
+    ],
+    [
+     "Farbe",
+     "hell, bunt, kein Schwarz, farbige Schatten",
+     "flächig, geschlossene Farbfelder, kaum Verläufe",
+     "leuchtend, Ausdrucksfarbe, Komplementärkontraste"
+    ],
+    [
+     "Linie/Kontur",
+     "Konturen lösen sich auf",
+     "starke schwarze Umrisslinien",
+     "Cézanne: Form; Gauguin: Kontur (Cloisonismus); van Gogh: Strich"
+    ],
+    [
+     "Pinsel/Technik",
+     "tupfend, locker, spontan, en plein air",
+     "Holzschnitt: glatte Flächen",
+     "Cézanne: Flecken/Flächen; Gauguin: glatte Flächen; van Gogh: pastos"
+    ],
+    [
+     "Raum",
+     "flach, atmosphärisch (Luftperspektive)",
+     "kaum Tiefe, keine Zentralperspektive, Vogelperspektive",
+     "Raum aufgelöst oder flächig (Cézanne: Tiefe durch Farbe)"
+    ],
+    [
+     "Komposition",
+     "Ausschnitt wie Momentaufnahme",
+     "asymmetrisch, diagonal, angeschnitten, Leerflächen",
+     "ausgewogen konstruiert (Cézanne), dekorativ (Gauguin), dynamisch (van Gogh)"
+    ],
+    [
+     "Licht/Schatten",
+     "Licht ist das Thema, farbige Schatten",
+     "weder Licht noch Schatten",
+     "kaum Schlagschatten (Gauguin, van Gogh)"
+    ],
+    [
+     "Motive",
+     "Alltag, Freizeit, Landschaft, Stadt, Serien",
+     "Landschaft, Szenen, Porträts (nach Holzschnitten)",
+     "Berge/Stillleben (C.), Südsee/Mythos (G.), Natur/Porträt (vG.)"
+    ],
+    [
+     "Folge",
+     "Wegbereiter der Moderne",
+     "Impressionisten, van Gogh, Gauguin",
+     "Kubismus (C.), Expressionismus (G., vG.)"
+    ]
+   ]
+  },
+  {
    "id": "imp",
    "th": "imp",
    "titel": "Impressionismus auf einen Blick (Handzettel)",
@@ -1199,5 +1333,186 @@ window.WIR_KUNST = {
    "n": "Handzettel: Japonismus",
    "f": "/lernen/kunst/zettel-japonismus.jpg"
   }
- ]
+ ],
+ "kuenstler": [
+  {
+   "k": "Paul Cézanne",
+   "merk": [
+    "Zerlegung der Motive in geometrische Grundformen (Kegel, Kugel, Zylinder)",
+    "Bildaufbau aus Farbflecken/Farbflächen in parallelen, oft diagonalen Pinselstrichen",
+    "Farbe über Warm-Kalt-Kontraste, Räumlichkeit durch Farbe statt Linearperspektive",
+    "ruhige, ausgewogene, konstruierte Komposition (Harmonie von Form und Farbe)",
+    "typische Motive: Montagne Sainte-Victoire, Stillleben (Äpfel), Badende, Landschaft/Bucht"
+   ]
+  },
+  {
+   "k": "Paul Gauguin",
+   "merk": [
+    "dunkle Konturlinie um klare Flächen (Cloisonismus)",
+    "große, einheitliche, leuchtende Farbflächen, Farben unnatürlich (Komplementärkontraste)",
+    "kein Schlagschatten, kaum Körperschatten, fehlende Modellierung",
+    "Perspektive missachtet: sehr flächig, dekorativ",
+    "typische Motive: Tahiti/Südsee-Menschen, mythisch-religiöse Themen, Bretagne"
+   ]
+  },
+  {
+   "k": "Vincent van Gogh",
+   "merk": [
+    "dicker (pastoser) Farbauftrag, Pinselstriche plastisch sichtbar",
+    "kurze, rhythmisierte Striche als Wellen, Kreise, Spiralen (Dynamik)",
+    "reine kräftige Farben, Komplementärkontraste (z. B. Blau–Orange, Gelb–Violett), Farbe als Stimmung",
+    "Motive stark vereinfacht, Vorbild: japanische Holzschnitte (Flächen, Umrisse)",
+    "typische Motive: Sternennacht, Sonnenblumen, Zypressen, Weizenfelder, Porträts"
+   ]
+  }
+ ],
+ "analyse": {
+  "vorgehen": [
+   "Beschreibung (neutral: Motiv, Format, Technik, was ist zu sehen?)",
+   "Komposition (Bildaufbau, Ausschnitt, Linien, Blickführung)",
+   "Raum (Perspektive, Tiefe oder Fläche, Staffelung)",
+   "Farbe (Palette, Kontraste, Farbauftrag/Pinselstrich, Lokal- oder Ausdrucksfarbe)",
+   "Licht (Lichtquelle, Schatten, Stimmung)",
+   "Deutung und Epochen-Zuordnung (Merkmale nennen und am Bild belegen)"
+  ],
+  "epochen": {
+   "imp": {
+    "achten": [
+     [
+      "Komposition",
+      "Ausschnitt wie Foto, angeschnittene Figuren, offener Bildaufbau, Staffelung in horizontale Zonen, oft Diagonalen"
+     ],
+     [
+      "Raum",
+      "flacher, atmosphärischer Raum, Luftperspektive, gelöste Konturen (Raum/Linie sind schwerer zu analysieren)"
+     ],
+     [
+      "Farbe",
+      "hell, bunt, kein Schwarz, Komplementärkontraste, tupfende Farbflecken, sichtbarer lockerer Pinselduktus"
+     ],
+     [
+      "Licht",
+      "Licht und Atmosphäre sind Thema, farbige Schatten, Spiegelungen, Tages-/Jahreszeit"
+     ],
+     [
+      "Inhalt",
+      "Alltag/Freizeit, keine Handlung, keine Botschaft (Deutung begrenzt)"
+     ]
+    ],
+    "muster": [
+     {
+      "f": "monet-sonnenschirm",
+      "bild": "Claude Monet, „Camille Monet und Sohn Jean auf dem Hügel“, 1875",
+      "text": [
+       "Beschreibung: Das Hochformat zeigt eine Frau mit Sonnenschirm und Kleid auf einer Anhöhe, unten rechts steht ein Kind, davor eine Wiese mit Blumen, dahinter ein bewölkter Himmel. Es ist ein Ölbild, gemalt im Freien.",
+       "Komposition: Die Hauptfigur steht in Untersicht vor dem Himmel und bildet mit dem Schirm eine diagonale Achse. Der Ausschnitt wirkt zufällig wie eine Momentaufnahme, das Kind im Hintergrund ist angeschnitten gesetzt.",
+       "Raum: Es gibt kaum konstruierte Tiefe. Wiese und Himmel gehen flach ineinander über, Konturen lösen sich auf (Luftperspektive).",
+       "Farbe: Helle Töne, Blau und Weiß im Kleid, Grün und Gelb in der Wiese. Schatten sind farbig (blau-violett), kein Schwarz. Der Pinselduktus ist locker und tupfend und bleibt sichtbar.",
+       "Licht: Sonnenlicht und Wind bestimmen die Stimmung, Lichtreflexe auf Kleid und Gras. Die Gesichter sind nur angedeutet, das Licht ist das eigentliche Thema.",
+       "Einordnung: Impressionismus, weil Momentaufnahme im Freien, Licht, farbige Schatten, lockerer Strich und ein Alltagsmotiv zusammenkommen. Raum, Linie und Inhalt sind schwer zu analysieren, weil Konturen fehlen und keine Handlung erzählt wird."
+      ]
+     }
+    ]
+   },
+   "jap": {
+    "achten": [
+     [
+      "Komposition",
+      "asymmetrisch, diagonal, angeschnittene Gegenstände (fotografischer Effekt), Leerflächen"
+     ],
+     [
+      "Raum",
+      "keine Zentralperspektive, flach/zweidimensional, Vogelperspektive, Überlagerungen und vertikale Staffelung"
+     ],
+     [
+      "Linie",
+      "starke schwarze Umrisslinien um Figuren, Häuser, Bäume"
+     ],
+     [
+      "Farbe",
+      "flächig, geschlossene Farbfelder, kaum Verläufe oder Modellierung, dekorative Muster"
+     ],
+     [
+      "Licht",
+      "weder Licht noch Schatten (schattenloser Farbgebrauch)"
+     ]
+    ],
+    "muster": [
+     {
+      "f": "hiroshige-gogh-regen",
+      "bild": "Hiroshige, „Abendregen an der großen Brücke von Atake“, 1857 (links), Farbholzschnitt; rechts Kopie von van Gogh, 1887",
+      "text": [
+       "Beschreibung: Der Holzschnitt zeigt eine große Holzbrücke, über die Menschen mit Schirmen und Hüten im Regen laufen; darunter ein Fluss mit einem Boot.",
+       "Komposition: Die Brücke zieht sich als starke Diagonale durch das Bild und ist vom Rahmen beschnitten. Die Anordnung ist asymmetrisch, der Ausschnitt wirkt wie ein Foto.",
+       "Raum: Es gibt keine Zentralperspektive. Die Szene ist aus erhöhter Position (Vogelperspektive) gesehen, der Raum wirkt flach, die Brücke ist größer als alles Dahinterliegende.",
+       "Linie und Farbe: Der Regen ist als feine parallele Linien gesetzt. Die Brücke ist als geschlossene dunkle Fläche gezeigt, der Himmel in einem flächigen Verlauf. Es gibt keine Modellierung und keine Schatten.",
+       "Einordnung: Japanischer Farbholzschnitt, ein Vorbild des Japonismus. Van Gogh übernimmt Flächen, Umrisse und Ausschnitt und fügt einen Schriftzeichen-Rahmen hinzu, malt aber in Öl mit kräftigeren Farben."
+      ]
+     }
+    ]
+   },
+   "weg": {
+    "achten": [
+     [
+      "Komposition",
+      "ausgewogen konstruiert (Cézanne), dekorativ/flächig (Gauguin), dynamisch durch Strichführung (van Gogh)"
+     ],
+     [
+      "Raum",
+      "Tiefe durch Farbe statt Linearperspektive, oder flächig (Gauguin, van Gogh); Perspektive wird zugunsten der Komposition missachtet"
+     ],
+     [
+      "Farbe",
+      "Ausdrucksfarbe statt Lokalfarbe, Komplementär- und Warm-Kalt-Kontraste, Farbfläche (Cézanne/Gauguin) oder pastoser Strich (van Gogh)"
+     ],
+     [
+      "Licht",
+      "kaum Schlagschatten, kein einheitliches Naturlicht; Hell-Dunkel über Farbwerte"
+     ],
+     [
+      "Linie",
+      "Kontur betont (Gauguin), Strichrhythmus (van Gogh), Geometrie (Cézanne)"
+     ]
+    ],
+    "muster": [
+     {
+      "f": "cezanne-victoire",
+      "bild": "Paul Cézanne, „Mont Sainte-Victoire“, 1904",
+      "text": [
+       "Beschreibung: Die Landschaft zeigt den Berg Sainte-Victoire hinter einer Ebene mit Feldern und Bäumen unter einem hellen Himmel.",
+       "Komposition: Der Berg steht ausgewogen im Zentrum und ist der Ruhepunkt; Felder und Himmel sind in horizontale Zonen gegliedert, das Bild wirkt konstruiert und harmonisch.",
+       "Raum: Die Tiefe entsteht nicht durch Linearperspektive, sondern durch Farbe: kalte Blau- und Violetttöne treten zurück, warme Orange- und Grüntöne kommen nach vorn. Formen werden auf geometrische Grundformen zurückgeführt.",
+       "Farbe: Das Bild besteht aus Farbflecken und kleinen, oft parallelen diagonalen Pinselstrichen, die sich zu Farbflächen verbinden. Warm-Kalt-Kontraste bestimmen die Farbwirkung.",
+       "Licht: Es gibt kaum Schlagschatten, das Licht ist diffus und wird über Farbwerte aufgebaut.",
+       "Einordnung: Wegbereiter der Moderne, Cézanne, weil Form und Struktur wichtiger sind als der flüchtige Eindruck; er bereitet den Kubismus vor."
+      ]
+     },
+     {
+      "f": "gauguin-eifersuechtig",
+      "bild": "Paul Gauguin, „Wie? Bist du eifersüchtig?“, 1892",
+      "text": [
+       "Beschreibung: Zwei Tahitianerinnen am Strand, eine sitzt, eine liegt, Meer und Himmel sind kaum zu erkennen.",
+       "Komposition: Die Figuren füllen das Bild diagonal, der Ausschnitt ist eng, die Anordnung dekorativ und flächig.",
+       "Raum: Die Perspektive wird zugunsten der Komposition missachtet, der Raumeindruck fehlt, der Boden wirkt wie eine Fläche.",
+       "Farbe: Große einheitliche Farbflächen in Rosa, Orange, Grün und Blau, nicht an Gegenstandsfarben gebunden. Komplementärkontraste steigern die Leuchtkraft. Dunkle Konturen grenzen die Flächen ab (Cloisonismus).",
+       "Licht: Es gibt weder Schlagschatten noch starke Körperschatten, die Körper sind kaum modelliert.",
+       "Einordnung: Wegbereiter des Expressionismus, Gauguin, wegen Flächigkeit, Konturlinie, Ausdrucksfarbe und Südsee-Thema."
+      ]
+     },
+     {
+      "f": "gogh-gachet",
+      "bild": "Vincent van Gogh, „Porträt des Dr. Gachet“, 1890",
+      "text": [
+       "Beschreibung: Ein sitzender Mann mit Kopf in der Hand, vor ihm ein Tisch mit einer Pflanze (Fingerhut).",
+       "Komposition: Die Halbfigur bildet ein kompaktes Dreieck, der gestützte Kopf zeigt Melancholie.",
+       "Raum: Der Hintergrund ist eine flache Fläche, der Tisch kippt nach vorn, es gibt keine konstruierte Perspektive.",
+       "Farbe: Kontrast zwischen Blau (Rock, Hintergrund) und Orange-Rot (Gesicht, Hände, Tisch). Der Farbauftrag ist pastos, die Striche sind rhythmisch und bleiben sichtbar. Die Farbe drückt Stimmung aus, nicht Natur.",
+       "Licht: Kein Schlagschatten, das Licht kommt aus den Farbwerten.",
+       "Einordnung: Wegbereiter des Expressionismus, van Gogh, wegen Ausdrucksfarbe, Komplementärkontrast, pastosem Strich und seelischem Ausdruck."
+      ]
+     }
+    ]
+   }
+  }
+ }
 };
