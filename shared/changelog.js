@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 108, date: '2026-11-21',
+      features: ['Kunst (Lernen → Ida): neues Zuordnen-Training für die Kurzarbeit – Bild der Epoche zuordnen, bei den Wegbereitern auch dem Künstler. Stoff auf das Prüfungsrelevante gekürzt.'],
+      small: [],
+      hotfix: [] },
     { v: 107, date: '2026-11-21',
       features: ['Lernen → Ida: neuer Reiter „Kunst“ für Experimentelles Gestalten mit Stoff, Bildern, Prüfungsfragen, Karteikarten und den Original-PDFs.'],
       small: [],

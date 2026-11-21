@@ -13,7 +13,7 @@
   const IMG = f => '/lernen/kunst/' + encodeURIComponent(f) + '.jpg';
 
   let D = null, CARDS = [], ST = { w: {}, q: {}, ids: {} }, el = null, flushing = false;
-  const E = { tab: 'stoff', thema: 'imp', bthema: 'alle', open: null, fopen: null, sel: [0, 1, 2], deck: null, dkey: '', dpos: 0, busy: false, ctype: 'alle', zoom: null };
+  const E = { tab: 'stoff', thema: 'imp', bthema: 'alle', open: null, fopen: null, sel: [0, 1, 2], deck: null, dkey: '', dpos: 0, busy: false, ctype: 'alle', zoom: null, q: null };
   const SKEY = () => 'lernen-kun-v1-' + uid();
   const load = () => { try { const j = JSON.parse(localStorage.getItem(SKEY()) || 'null'); if (j) ST = Object.assign({ w: {}, q: {}, ids: {} }, j); } catch (_) {} };
   const persist = () => { try { localStorage.setItem(SKEY(), JSON.stringify(ST)); } catch (_) {} };
@@ -62,7 +62,7 @@
   const themaName = id => D.themen.find(t => t.id === id)?.name || id;
 
   // ---------- Kopf ----------
-  const TABS = [['stoff', 'Stoff'], ['bilder', 'Bilder'], ['fragen', 'Fragen'], ['karten', 'Karten'], ['original', 'Originale']];
+  const TABS = [['stoff', 'Stoff'], ['zuordnen', 'Zuordnen'], ['bilder', 'Bilder'], ['fragen', 'Fragen'], ['karten', 'Karten'], ['original', 'Originale']];
   function head() {
     const c = counts(CARDS), pc = v => c.all ? v / c.all * 100 : 0;
     return `<section class="en-hero">
@@ -75,14 +75,14 @@
   function render() {
     if (!el) return;
     el.innerHTML = '<div class="en-wrap">' + head() + '<div id="kuBody" class="en-body"></div></div>' + zoomHtml();
-    ({ stoff: vStoff, bilder: vBilder, fragen: vFragen, karten: vKarten, original: vOrig })[E.tab]($('kuBody'));
+    ({ stoff: vStoff, zuordnen: vZuordnen, bilder: vBilder, fragen: vFragen, karten: vKarten, original: vOrig })[E.tab]($('kuBody'));
   }
   const themaChips = (key, all) => `<div class="en-chips">${(all ? [['alle', 'Alle']] : []).concat(D.themen.map(t => [t.id, t.name])).map(([k, n]) => `<button type="button" data-ku="${key}" data-x="${esc(k)}" class="${E[key === 'bthema' ? 'bthema' : 'thema'] === k ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>`;
   const imgBtn = (b, cls = '') => `<button type="button" class="ku-img ${cls}" data-ku="zoom" data-x="${esc(b.f)}" aria-label="${esc(b.t)} vergrößern"><img src="${IMG(b.f)}" alt="${esc(b.k + ': ' + b.t)}" loading="lazy" decoding="async"></button>`;
-  const cap = b => `<span class="ku-cap"><b>${esc(b.k)}</b><span>${esc(b.t)}${b.j ? ', ' + esc(b.j) : ''}</span></span>`;
-  function zoomHtml() {
+  const cap = b => `<span class="ku-cap"><em>${esc(themaName(b.th))}</em><b>${esc(b.k)}</b><span>${esc(b.t)}${b.j ? ', ' + esc(b.j) : ''}</span></span>`;
+  function zoomHtml(blind) {
     const b = E.zoom && D.bilder.find(x => x.f === E.zoom); if (!b) return '';
-    return `<div class="ku-zoom" data-ku="unzoom" role="dialog" aria-label="Bild"><img src="${IMG(b.f)}" alt="${esc(b.t)}"><div class="ku-zc"><b>${esc(b.k)}</b><span>${esc(b.t)}${b.j ? ', ' + esc(b.j) : ''}</span>${b.m ? '<small>' + esc(b.m) + '</small>' : ''}</div></div>`;
+    return `<div class="ku-zoom" data-ku="unzoom" role="dialog" aria-label="Bild"><img src="${IMG(b.f)}" alt="${esc(b.t)}">${blind || (E.tab === 'zuordnen') ? '' : `<div class="ku-zc"><b>${esc(b.k)}</b><span>${esc(b.t)}${b.j ? ', ' + esc(b.j) : ''}</span>${b.m ? '<small>' + esc(b.m) + '</small>' : ''}</div>`}</div>`;
   }
   function table(t) {
     return `<div class="ku-tw"><div class="ku-tt">${esc(t.titel)}</div><div class="ku-ts"><table class="ku-t"><thead><tr>${t.kopf.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${t.zeilen.map(r => `<tr>${r.map((c, i) => i === 0 ? `<th scope="row">${esc(c)}</th>` : `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
@@ -107,6 +107,42 @@
   function vBilder(b) {
     const list = D.bilder.filter(x => E.bthema === 'alle' || x.th === E.bthema);
     b.innerHTML = themaChips('bthema', true) + `<div class="ku-grid">${list.map(x => `<figure class="ku-fig">${imgBtn(x)}<figcaption>${cap(x)}</figcaption></figure>`).join('')}</div>`;
+  }
+
+  // ---------- Zuordnen (Prüfung: Bild → Epoche, bei Wegbereitern zusätzlich → Künstler) ----------
+  const ARTISTS = ['Paul Cézanne', 'Paul Gauguin', 'Vincent van Gogh'];
+  function startQ() { E.q = { deck: shuffle(D.bilder.map((b, i) => i).filter(i => D.bilder[i].z !== 0)), pos: 0, step: 'e', pe: null, pk: null, ok: 0, done: 0 }; }
+  function vZuordnen(b) {
+    if (!E.q) startQ();
+    const q = E.q;
+    if (q.pos >= q.deck.length) {
+      b.innerHTML = `<div class="kk kk-none"><div class="kk-empty"><b>Fertig: ${q.ok} von ${q.done} richtig</b><button type="button" class="ln-btn" data-ku="qagain">Nochmal</button></div></div>`; return;
+    }
+    const im = D.bilder[q.deck[q.pos]], th = D.themen.find(t => t.id === im.th), n = q.pos + 1;
+    const needK = im.th === 'weg';
+    let ask = '', opts = '';
+    if (q.step === 'e') { ask = 'Welcher Epoche gehört das Bild an?'; opts = D.themen.map(t => `<button type="button" class="ku-opt" data-ku="qe" data-x="${esc(t.id)}">${esc(t.name)}</button>`).join(''); }
+    else if (q.step === 'k') { ask = 'Von welchem Künstler ist das Werk?'; opts = ARTISTS.map(a => `<button type="button" class="ku-opt" data-ku="qk" data-x="${esc(a)}">${esc(a)}</button>`).join(''); }
+    let res = '';
+    if (q.step === 'r') {
+      const eOk = q.pe === im.th, kOk = !needK || q.pk === im.k, all = eOk && kOk;
+      res = `<div class="ku-res ${all ? 'ok' : 'no'}"><b>${all ? 'Richtig' : 'Nicht ganz'}</b>
+        <div>Epoche: <b>${esc(th.name)}</b>${eOk ? '' : ' (du: ' + esc(themaName(q.pe)) + ')'}</div>
+        ${needK ? `<div>Künstler: <b>${esc(im.k)}</b>${kOk ? '' : ' (du: ' + esc(q.pk) + ')'}</div>` : ''}
+        <div>${esc(im.t)}${im.j ? ', ' + esc(im.j) : ''}${im.m ? ' · ' + esc(im.m) : ''}</div>
+        <div class="ku-mh">Gestaltungsmerkmale ${esc(th.name)}</div><ul>${th.merk.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+        <button type="button" class="ln-btn" data-ku="qnext">Weiter</button></div>`;
+    }
+    b.innerHTML = `<div class="ku-qh"><span>${n} / ${q.deck.length}</span><span>${q.ok} richtig</span></div>
+      <button type="button" class="ku-img ku-qimg" data-ku="zoomq" aria-label="Bild vergrößern"><img src="${IMG(im.f)}" alt="Bild zuordnen"></button>
+      ${ask ? `<div class="ku-ask">${ask}</div><div class="ku-opts">${opts}</div>` : ''}${res}`;
+  }
+  function qAnswer(kind, x) {
+    const q = E.q, im = D.bilder[q.deck[q.pos]];
+    if (kind === 'e') { q.pe = x; q.step = im.th === 'weg' ? 'k' : 'r'; }
+    else { q.pk = x; q.step = 'r'; }
+    if (q.step === 'r') { q.done++; if (q.pe === im.th && (im.th !== 'weg' || q.pk === im.k)) q.ok++; }
+    render();
   }
 
   // ---------- Fragen ----------
@@ -134,8 +170,8 @@
     if (E.dpos >= d.length) { b.innerHTML = chips + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty"><b>Runde geschafft</b><button type="button" class="ln-btn" data-ku="again">Nochmal</button></div></div>`; return; }
     const c = CARDS[d[E.dpos]], l = lvl(c), n = E.dpos + 1;
     const face = (cls, side, body) => `<div class="kk-face ${cls}"><div class="kk-head"><span>${side}</span><span>${n} / ${d.length}</span></div><div class="kk-mid">${body}</div></div>`;
-    const front = c.kind === 'bild' ? `<img class="ku-kimg" src="${IMG(c.b.f)}" alt="Gemälde"><div class="ku-kq">Wer? Was? Wann? Epoche?</div>` : `<div class="kk-big kk-txt">${esc(c.q)}</div>`;
-    const back = c.kind === 'bild' ? `<div class="kk-txt kk-ans"><b>${esc(c.b.k)}</b><br>${esc(c.b.t)}${c.b.j ? ' (' + esc(c.b.j) + ')' : ''}<br><small>${esc(themaName(c.thema))}${c.b.m ? ' · ' + esc(c.b.m) : ''}</small></div>` : `<div class="kk-txt kk-ans">${esc(c.a)}</div>`;
+    const front = c.kind === 'bild' ? `<img class="ku-kimg" src="${IMG(c.b.f)}" alt="Gemälde"><div class="ku-kq">Epoche? (Wegbereiter: Künstler?)</div>` : `<div class="kk-big kk-txt">${esc(c.q)}</div>`;
+    const back = c.kind === 'bild' ? `<div class="kk-txt kk-ans"><b>${esc(themaName(c.thema))}</b><br>${esc(c.b.k)}: ${esc(c.b.t)}${c.b.j ? ' (' + esc(c.b.j) + ')' : ''}<br><small>${esc(c.b.m || '')}</small></div>` : `<div class="kk-txt kk-ans">${esc(c.a)}</div>`;
     b.innerHTML = chips + `<div class="kk" id="kuKK" data-l="${l === undefined ? 'n' : l}" style="--kf:Quicksand,sans-serif">${tabsHtml()}
       <div class="kk-card" id="kuCard" data-ku="kflip" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="kk-in">
         ${face('', 'Frage', front)}${face('kk-back', 'Antwort', back)}
@@ -174,6 +210,11 @@
       case 'open': E.open = E.open === d.id ? null : d.id; render(); break;
       case 'fopen': E.fopen = E.fopen === d.id ? null : d.id; render(); break;
       case 'gokarten': E.tab = 'karten'; E.thema = d.x; E.deck = null; render(); break;
+      case 'qe': qAnswer('e', d.x); break;
+      case 'qk': qAnswer('k', d.x); break;
+      case 'qnext': E.q.pos++; E.q.step = 'e'; E.q.pe = null; E.q.pk = null; render(); break;
+      case 'qagain': startQ(); render(); break;
+      case 'zoomq': { const im = D.bilder[E.q.deck[E.q.pos]]; E.zoom = im.f; el.querySelector('.ku-zoom')?.remove(); el.insertAdjacentHTML('beforeend', zoomHtml(true)); break; }
       case 'zoom': E.zoom = d.x; el.querySelector('.ku-zoom')?.remove(); el.insertAdjacentHTML('beforeend', zoomHtml()); break;
       case 'unzoom': E.zoom = null; el.querySelector('.ku-zoom')?.remove(); break;
       case 'kflip': $('kuCard')?.classList.toggle('flip'); break;
