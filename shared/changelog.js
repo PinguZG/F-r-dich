@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 112, date: '2026-11-22',
+      features: ['Prüfungen: Stift-Schreiben nur mit dem Stift (Finger scrollen und zoomen nur), freies Zoomen mit zwei Fingern, Handballen-Schutz.'],
+      small: ['Kleine Leiste: Rückgängig und Radierer (der Stift-Knopf radiert auch).'],
+      hotfix: [] },
     { v: 111, date: '2026-11-22',
       features: ['Prüfungen: Antwortfelder direkt auf den Antwortzeilen der Original-PDFs (tippen statt Reiter), oben „Antworten kopieren“. Stift-, Marker- und Textleiste entfernt.'],
       small: [],

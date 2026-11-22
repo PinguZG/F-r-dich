@@ -383,3 +383,6 @@ body.kv-open{overflow:hidden}
 .ks[data-draw="1"] .kf-b{pointer-events:none}
 .kv-copy{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:9100;background:var(--bg1);border:1px solid var(--glass-border);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .kv-copy textarea{width:100%;box-sizing:border-box;font:inherit;font-size:13px;border-radius:12px;border:1px solid var(--glass-border);background:var(--bg2);color:var(--ink);padding:8px}
+
+/* Stift: Finger scrollen/zoomen per Skript, nur der Stift zeichnet */
+.ks,.kp,.kp *{touch-action:none}

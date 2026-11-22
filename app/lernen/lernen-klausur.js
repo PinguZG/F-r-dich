@@ -128,9 +128,48 @@
     const D = { rec, pages: [], z: 1, dead: false, hist: [], ready: false };
     const sc = document.createElement('div'); sc.className = 'ks'; sc.innerHTML = '<div class="kv-load">Lade …</div>';
     host.append(sc);
+    D.z = D.z || 1;
+    let penUntil = 0; const penNear = () => Date.now() < penUntil;
+    const tp = new Map(); let pz = null, last = null, vel = { x: 0, y: 0 }, raf = 0;
+    const dist = () => { const a = [...tp.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1; };
+    const mid = () => { const a = [...tp.values()], r = sc.getBoundingClientRect(); return { x: (a[0].x + a[1].x) / 2 - r.left, y: (a[0].y + a[1].y) / 2 - r.top }; };
+    const clampZ = z => Math.max(0.35, Math.min(5, z));
+    sc.addEventListener('pointermove', e => { if (e.pointerType === 'pen') penUntil = Date.now() + 900; });
+    sc.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'pen') { penUntil = Date.now() + 900; return; }
+      if (e.pointerType !== 'touch') return;
+      if (penNear() || e.width > 40 || e.height > 40) return;      // Handballen / Hand am Stift: ignorieren
+      cancelAnimationFrame(raf); tp.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
+      if (tp.size === 2) { const m = mid(); pz = { d: dist(), z: D.z, nz: D.z, fx: (sc.scrollLeft + m.x) / Math.max(1, sc.scrollWidth), fy: (sc.scrollTop + m.y) / Math.max(1, sc.scrollHeight) }; }
+      last = { t: performance.now() }; vel = { x: 0, y: 0 };
+    });
+    sc.addEventListener('pointermove', e => {
+      const t = tp.get(e.pointerId); if (!t || e.pointerType !== 'touch') return;
+      if (penNear()) { tp.delete(e.pointerId); pz = null; return; }
+      const dx = e.clientX - t.x, dy = e.clientY - t.y; t.x = e.clientX; t.y = e.clientY;
+      if (tp.size === 2 && pz) {
+        const nz = clampZ(pz.z * dist() / pz.d), m = mid(); pz.nz = nz; sc.style.setProperty('--z', nz);
+        sc.scrollLeft = pz.fx * sc.scrollWidth - m.x; sc.scrollTop = pz.fy * sc.scrollHeight - m.y;
+      } else if (tp.size === 1) {
+        const now = performance.now(), dt = Math.max(1, now - last.t); last.t = now;
+        sc.scrollLeft -= dx; sc.scrollTop -= dy; vel = { x: 0.8 * vel.x + 0.2 * (dx / dt), y: 0.8 * vel.y + 0.2 * (dy / dt) };
+      }
+    });
+    const upT = e => {
+      if (!tp.has(e.pointerId)) return; tp.delete(e.pointerId);
+      if (pz && tp.size < 2) { const z = pz.nz; pz = null; D.setZoom(z); }
+      if (tp.size === 0 && (Math.abs(vel.x) > 0.05 || Math.abs(vel.y) > 0.05)) {
+        let vx = vel.x * 16, vy = vel.y * 16;
+        const step = () => { sc.scrollLeft -= vx; sc.scrollTop -= vy; vx *= 0.94; vy *= 0.94; if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) raf = requestAnimationFrame(step); };
+        raf = requestAnimationFrame(step);
+      }
+    };
+    sc.addEventListener('pointerup', upT); sc.addEventListener('pointercancel', upT);
+    sc.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); D.setZoom(clampZ(+(D.z * (e.deltaY < 0 ? 1.1 : 1 / 1.1)).toFixed(2))); }, { passive: false });
+    sc.addEventListener('focusin', e => { if (e.target.closest && e.target.closest('.kf-b') && Date.now() - penAt < 350) e.target.blur(); });
     const pg$ = i => { const p = (ann.p[i] = ann.p[i] || { s: [], t: [] }); if (!p.a) p.a = {}; return p; };
     const touch = () => { ann.ts = Date.now(); try { localStorage.setItem(annKey(fid), JSON.stringify(ann)); } catch (_) {} queue(ctx, fid, ann); hooks.onHist(); };
-    let io = null, ro = null, chain = Promise.resolve(), editing = null;
+    let io = null, ro = null, chain = Promise.resolve(), editing = null, penAt = 0;
 
     function setMode() {
       sc.dataset.tool = S.tool;
@@ -230,17 +269,19 @@
       const el = pg.el; let cur = null, wasEdit = false, moved = false, sx = 0, sy = 0, erased = null;
       const pos = e => { const r = el.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, r]; };
       el.addEventListener('pointerdown', e => {
-        const t = S.tool; wasEdit = !!editing; moved = false;
-        if (t === 'hand' || e.target.closest('.kx,.kx-in,.kf-b')) return;
-        if (e.pointerType === 'touch' && S.po && t !== 'text') return;
+        wasEdit = !!editing; moved = false;
+        if (e.pointerType === 'touch') return;                       // Finger zeichnen nie (nur scrollen/zoomen, siehe initTouch)
+        penAt = Date.now();
+        if (e.pointerType === 'pen') { e.preventDefault(); const ae = document.activeElement; if (ae && ae.blur && ae.closest && ae.closest('.kf-b')) ae.blur(); }
+        const t = (S.erase || (e.buttons & 32) || e.button === 5 || (e.pointerType === 'pen' && (e.buttons & 2))) ? 'eraser' : 'pen';
         const [x, y, r] = pos(e); sx = e.clientX; sy = e.clientY;
-        if (t === 'pen' || t === 'marker') {
-          e.preventDefault(); el.setPointerCapture(e.pointerId);
-          const mk = t === 'marker', w = WIDTHS[S.w][1] * (mk ? 4.5 : 1);
-          cur = { c: COLORS[S.color], w, a: mk ? 0.4 : 1, p: [Math.round(x * 1e4), Math.round(y * 1e4)], lx: e.clientX, ly: e.clientY };
+        if (t === 'pen') {
+          e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) {}
+          const w = WIDTHS[1][1];
+          cur = { c: COLORS[0], w, a: 1, p: [Math.round(x * 1e4), Math.round(y * 1e4)], lx: e.clientX, ly: e.clientY };
           ink(pg); strokePath(pg.ki.getContext('2d'), cur, pg.ki.width, pg.ki.height);
         } else if (t === 'eraser') {
-          e.preventDefault(); el.setPointerCapture(e.pointerId); erased = []; cur = { er: true }; erase(pg, e, r);
+          e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) {} erased = []; cur = { er: true }; erase(pg, e, r);
         }
       });
       function erase(pg, e, r) {
@@ -348,6 +389,7 @@
     root.innerHTML = `<header class="kv-top"><button type="button" class="kv-b" data-k="back">‹ Zurück</button><b class="kv-title">${esc(A[1])} · ${esc(ex.label)}</b><button type="button" class="kv-b" data-k="copyans">Antworten kopieren</button><span class="kv-timer" data-k="time"></span></header>
       <nav class="kv-tabs"></nav>
       <div class="kv-tools">
+        <button type="button" class="kv-b" data-k="undo">↶</button><button type="button" class="kv-b" data-k="erase">Radierer</button><i class="kv-sep"></i>
         <button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
         <i class="kv-sep"></i><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
       </div><div class="kv-panes"></div>`;
@@ -387,6 +429,8 @@
       const m = document.createElement('div'); m.className = 'kv-copy'; m.innerHTML = '<div class="ln-sub">Text markieren und kopieren, dann im Chat einfügen.</div><textarea readonly rows="12"></textarea><button type="button" class="kv-b" data-k="copyclose">Schließen</button>'; m.querySelector('textarea').value = txt; root.append(m); m.querySelector('textarea').select();
     }
     function upd() {
+      root.querySelector('[data-k=erase]').classList.toggle('on', !!S.erase);
+      const d0 = cur(); root.querySelector('[data-k=undo]').disabled = !(d0 && d0.hist.length);
       root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 2; root.querySelector('[data-k=split]').classList.toggle('on', split);
     }
     function clock() {
@@ -406,14 +450,15 @@
       if (b.dataset.c) { S.color = +b.dataset.c; saveUi(); upd(); return; }
       if (k === 'copyans') copyAnswers();
       else if (k === 'copyclose') root.querySelector('.kv-copy')?.remove();
+      else if (k === 'erase') { S.erase = !S.erase; upd(); }
       else if (k === 'back') close();
       else if (k === 'w') { S.w = (S.w + 1) % 3; saveUi(); upd(); }
       else if (k === 'ts') { S.ts = (S.ts + 1) % 3; saveUi(); upd(); }
       else if (k === 'po') { S.po = !S.po; saveUi(); Object.values(docs).forEach(x => x.setMode()); upd(); }
       else if (k === 'undo') d && d.undo();
       else if (k === 'clear') { if (b.dataset.sure) { d && d.clearPage(); delete b.dataset.sure; b.textContent = 'Seite leeren'; } else { b.dataset.sure = '1'; b.textContent = 'Sicher?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Seite leeren'; }, 3000); } }
-      else if (k === 'zm' && d) d.setZoom(Math.max(1, +(d.z - 0.25).toFixed(2)));
-      else if (k === 'zp' && d) d.setZoom(Math.min(3.5, +(d.z + 0.25).toFixed(2)));
+      else if (k === 'zm' && d) d.setZoom(Math.max(0.35, +(d.z - 0.25).toFixed(2)));
+      else if (k === 'zp' && d) d.setZoom(Math.min(5, +(d.z + 0.25).toFixed(2)));
       else if (k === 'zf' && d) d.setZoom(1);
       else if (k === 'split') { split = !split; layout(); }
       else if (k === 'timer') { timer = timer ? null : Date.now() + A[2] * 60000; clock(); }
