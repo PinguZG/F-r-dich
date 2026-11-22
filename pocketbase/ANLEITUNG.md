@@ -2098,3 +2098,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Entfernt:** Bildkarten in den Karteikarten, Realismus (Vorläufer-Abschnitt, Courbet-Bild, Realismus-Bezüge in Fragen), Werkanalyse-Abschnitte im Stoff (jetzt im Reiter Analyse).
 - **Datenbank:** Kein neues Schema; `kun:b-…`-Zeilen (alte Bildkarten) bleiben ungenutzt in `lern_vokabeln`.
 - **Rücksetz-Weg:** `git checkout vor-kunst-kurzarbeit -- app/kunst.js app/kunst.css app/lernen/kunst-data.js app/lernen/kunst app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
+
+## Prüfungen: Antworten schreiben (Lernen → Prüfungen → Reiter „Antworten“, 22.11.2026, wir-v110)
+- **Neu:** Im Prüfungs-Viewer (Original-PDFs mit Belegsatz) gibt es den Reiter „Antworten“: je Aufgabe Nummer + Textfeld (Rechenweg), automatisch gespeichert (lokal + `lern_notizen`, `fileId = ans:<bereich>:<AP-Term>`), „Antworten kopieren“ liefert Text zur Korrektur im Chat (enthält auch Text-Notizen aus den PDF-Seiten). Liste zeigt „Antworten ✎“.
+- **Korrektur:** Antworten in den Chat einfügen; Claude korrigiert (Lösungen in `lernen-pruef.js`/Lösungs-PDF) und pflegt `docs/lernen/fehlerlog.md`.
+- **Dateien:** `app/lernen/lernen-klausur.js`, `app/lernen.css`, `docs/lernen/fehlerlog.md`, `app/sw.js`, `shared/changelog.js`. Kein neues Schema.
+- **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js`, `wir-vNN` hochzählen, committen, pushen.

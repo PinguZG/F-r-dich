@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 110, date: '2026-11-22',
+      features: ['Lernen → Prüfungen: neuer Reiter „Antworten“ zum Schreiben von Antworten und Rechenwegen, mit Kopieren zur Korrektur.'],
+      small: [],
+      hotfix: [] },
     { v: 109, date: '2026-11-21',
       features: ['Kunst (Lernen → Ida): neue Reiter „Analyse“ (Werkanalyse mit Musteranalysen) und Epochen-Vergleich; Künstler-Training für Cézanne, Gauguin und van Gogh.'],
       small: ['Bildkarten und Realismus entfernt, Karten nur noch Merkmale.'],
