@@ -2117,3 +2117,4 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Leiste:** nur Rückgängig, Radierer (Stift-Knopf/Radierende radiert ebenfalls), Zoom, Timer, Nebeneinander.
 - **Grenzen:** Getestet mit simulierten Pointer-Events, nicht am Xiaomi Pad 5. Bei Problemen bitte beschreiben (Finger zeichnet / Stift zeichnet nicht / Scrollen ruckelt).
 - **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110), `wir-vNN` hochzählen.
+- **Nachtrag (v113):** Handballen-Schwelle von 40 auf 120 px angehoben (Finger auf dem Tablet wurden teils ignoriert), Zoom-Anzeige in % neben „Breite“, Doppeltipp = Breite ↔ 2,2×.

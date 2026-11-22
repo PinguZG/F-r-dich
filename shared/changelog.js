@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 113, date: '2026-11-22',
+      features: [],
+      small: ['Prüfungen: Zoom-Anzeige in %, Doppeltipp wechselt zwischen Breite und 2,2×.'],
+      hotfix: ['Prüfungen: Finger-Berührungen wurden auf dem Tablet teils als Handballen ignoriert, dadurch ging Zoomen/Scrollen nicht.'] },
     { v: 112, date: '2026-11-22',
       features: ['Prüfungen: Stift-Schreiben nur mit dem Stift (Finger scrollen und zoomen nur), freies Zoomen mit zwei Fingern, Handballen-Schutz.'],
       small: ['Kleine Leiste: Rückgängig und Radierer (der Stift-Knopf radiert auch).'],
