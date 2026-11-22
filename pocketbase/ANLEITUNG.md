@@ -2104,3 +2104,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Korrektur:** Antworten in den Chat einfügen; Claude korrigiert (Lösungen in `lernen-pruef.js`/Lösungs-PDF) und pflegt `docs/lernen/fehlerlog.md`.
 - **Dateien:** `app/lernen/lernen-klausur.js`, `app/lernen.css`, `docs/lernen/fehlerlog.md`, `app/sw.js`, `shared/changelog.js`. Kein neues Schema.
 - **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js`, `wir-vNN` hochzählen, committen, pushen.
+
+### Prüfungen: Antwortfelder direkt auf den Zeilen (22.11.2026, wir-v111)
+- **Geändert:** Der Reiter „Antworten“ (v110) ist weg. Stattdessen erkennt der Prüfungs-Viewer auf jeder PDF-Seite die Antwortzeilen (`detectFields` in `app/lernen/lernen-klausur.js`: waagerechte Linien, auch helle/wellige Scans; gleich abständige Linien = ein Block; Tabellen mit senkrechten Linien werden übersprungen) und legt ein Textfeld mit „Nr.“-Feld darüber. Tabellenzellen und Skizzen: weiter das Textwerkzeug.
+- **Speicherung:** in den Notizen der Datei (`lern_notizen`, je Seite `a[<Feld>] = {n, t}`), lokal + Server wie Stift/Text. „Antworten kopieren“ (oben) liefert Text zur Korrektur im Chat.
+- **Grenzen:** Erkennung getestet mit künstlichen Scan-Seiten, nicht mit den echten PDFs. Falsche/fehlende Felder bitte melden (Seite + Aufgabe), Schwellwerte in `detectFields` anpassen.
+- **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110) oder `vor-kunst-kurzarbeit`-Stand davor, `wir-vNN` hochzählen.
