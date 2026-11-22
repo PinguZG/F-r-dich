@@ -2111,3 +2111,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Grenzen:** Erkennung getestet mit künstlichen Scan-Seiten, nicht mit den echten PDFs. Falsche/fehlende Felder bitte melden (Seite + Aufgabe), Schwellwerte in `detectFields` anpassen.
 - **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110) oder `vor-kunst-kurzarbeit`-Stand davor, `wir-vNN` hochzählen.
 - **Nachtrag (v111):** Die Werkzeugleiste (Hand/Stift/Marker/Text/Radierer, Farben, Strich, Rückgängig, Seite leeren) ist im Prüfungs-Viewer entfernt; es bleiben Zoom, Timer und „Nebeneinander“. Stift-/Textnotizen früherer Versionen werden nicht mehr angezeigt, bleiben aber in `lern_notizen` erhalten.
+
+### Prüfungen: Stift-Eingabe und freies Zoomen (22.11.2026, wir-v112)
+- **Stift:** Gezeichnet wird nur mit Stift (`pointerType` pen) oder Maus; Finger (`touch`) zeichnen nie. Fingers scrollen (eigene Pan-Logik mit Schwung) und zoomen frei mit zwei Fingern (0,35–5×, Knöpfe − / + / Breite, Strg + Mausrad am PC). Handballen-Schutz: Berührungen werden ignoriert, solange der Stift in der Nähe war (900 ms) oder die Berührungsfläche groß ist (> 40 px). Stift auf einem Antwortfeld zeichnet, öffnet aber keine Tastatur; Finger-Tipp auf ein Feld tippt wie gewohnt.
+- **Leiste:** nur Rückgängig, Radierer (Stift-Knopf/Radierende radiert ebenfalls), Zoom, Timer, Nebeneinander.
+- **Grenzen:** Getestet mit simulierten Pointer-Events, nicht am Xiaomi Pad 5. Bei Problemen bitte beschreiben (Finger zeichnet / Stift zeichnet nicht / Scrollen ruckelt).
+- **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110), `wir-vNN` hochzählen.
