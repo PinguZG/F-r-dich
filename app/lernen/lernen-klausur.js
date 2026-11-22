@@ -261,12 +261,60 @@
     return D;
   }
 
+  // ---------- Antworten schreiben (Reiter „Antworten“): Aufgabe + Text/Rechenweg, lokal + lern_notizen, zum Kopieren ----------
+  const ansKey = ex => 'ans:' + ex.area + ':' + ex.term;
+  const ansLocal = ex => { try { return JSON.parse(localStorage.getItem('ln-' + ansKey(ex))); } catch (_) { return null; } };
+  const hasAns = ex => { const a = ansLocal(ex); return !!a && (a.rows || []).some(r => (r.t || '').trim()); };
+  const nextLabel = l => { const m = /^\s*(\d+)\s*([a-zA-Z]?)\s*$/.exec(l || ''); if (!m) return ''; return m[2] ? m[1] + ' ' + String.fromCharCode(m[2].charCodeAt(0) + 1) : m[1] + ' a'; };
+  function mkAns(ctx, ex, host, getNotes) {
+    const fid = ansKey(ex), A = AREA[ex.area];
+    let ans = ansLocal(ex) || { ts: 0, p: {}, rows: [{ n: '', t: '' }] };
+    if (!ans.rows || !ans.rows.length) ans.rows = [{ n: '', t: '' }];
+    const el = document.createElement('div'); el.className = 'ka'; host.append(el);
+    let dead = false, shownText = false;
+    const save = () => { ans.ts = Date.now(); try { localStorage.setItem('ln-' + fid, JSON.stringify(ans)); } catch (_) {} queue(ctx, fid, ans); const st = el.querySelector('.ka-st'); if (st) st.textContent = 'Gespeichert'; };
+    const fit = ta => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight, 96) + 'px'; };
+    function buildText() {
+      const d = new Date(), out = [`Prüfung: ${A[1]} ${ex.label} (${ex.term.replace('AP', 'AP ')})`, `Bearbeitet am ${d.toLocaleDateString('de-DE')}`, ''];
+      ans.rows.filter(r => (r.t || '').trim()).forEach(r => { out.push(`Aufgabe ${(r.n || '?').trim()}:`, r.t.trim(), ''); });
+      (getNotes ? getNotes() : []).forEach(n => out.push(n));
+      return out.join('\n').trim() + '\n';
+    }
+    function draw() {
+      el.innerHTML = `<div class="ka-top"><div class="ln-sub">Schreibe zu jeder Aufgabe die Nummer (z. B. 2 b) und deine Antwort, bei Rechnungen mit Rechenweg. Der Stand wird automatisch gespeichert.</div></div>
+        <div class="ka-rows">${ans.rows.map((r, i) => `<div class="ka-row" data-i="${i}"><div class="ka-h"><input class="ka-n" data-f="n" inputmode="text" autocapitalize="off" autocomplete="off" placeholder="Aufgabe, z. B. 2 b" value="${esc(r.n)}"><button type="button" class="ka-x" data-k="del" aria-label="Antwort löschen">✕</button></div><textarea class="ka-t" data-f="t" placeholder="Antwort / Rechenweg …" spellcheck="false">${esc(r.t)}</textarea></div>`).join('')}</div>
+        <div class="ka-bar"><button type="button" class="ln-btn soft sm" data-k="add">+ Antwort</button><button type="button" class="ln-btn sm" data-k="copy">Antworten kopieren</button><span class="ka-st"></span></div>
+        ${shownText ? `<div class="ka-out"><div class="ln-sub">Falls Kopieren nicht klappt: Text markieren und kopieren.</div><textarea class="ka-o" readonly rows="10">${esc(buildText())}</textarea></div>` : ''}`;
+      el.querySelectorAll('.ka-t').forEach(fit);
+    }
+    el.addEventListener('input', e => {
+      const f = e.target.dataset.f, row = e.target.closest('.ka-row'); if (!f || !row) return;
+      ans.rows[+row.dataset.i][f] = e.target.value; if (f === 't') fit(e.target); save();
+    });
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k;
+      if (k === 'add') { const last = ans.rows[ans.rows.length - 1]; ans.rows.push({ n: nextLabel(last && last.n), t: '' }); save(); draw(); const t = el.querySelectorAll('.ka-t'); t[t.length - 1].focus(); }
+      else if (k === 'del') {
+        const i = +b.closest('.ka-row').dataset.i, r = ans.rows[i];
+        if ((r.t || '').trim() && b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sicher?'; setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = '✕'; } }, 3000); return; }
+        ans.rows.splice(i, 1); if (!ans.rows.length) ans.rows.push({ n: '', t: '' }); save(); draw();
+      } else if (k === 'copy') {
+        const txt = buildText(); let ok = false;
+        try { await navigator.clipboard.writeText(txt); ok = true; } catch (_) {}
+        shownText = !ok; draw(); const st = el.querySelector('.ka-st'); if (st) st.textContent = ok ? 'Kopiert – jetzt im Chat einfügen' : 'Text unten kopieren';
+      }
+    });
+    draw();
+    (async () => { const r = await pull(ctx, fid); if (!dead && r && (r.ts || 0) > (ans.ts || 0) && r.rows) { ans = r; try { localStorage.setItem('ln-' + fid, JSON.stringify(ans)); } catch (_) {} draw(); } })();
+    return { el, flush() { clearTimeout(timers[fid]); push(ctx, fid, ans); }, destroy() { dead = true; el.remove(); } };
+  }
+
   // ---------- Vollbild-Viewer für eine Prüfung ----------
   function openExam(ctx, ex, tab) {
     document.querySelector('.kv')?.remove();
     const av = KORD.filter(k => k === 'extra' ? ex.extra.length : ex.docs[k]);
     const recOf = k => k === 'extra' ? ex.extra[0] : ex.docs[k];
-    let active = tab && av.includes(tab) ? tab : (av.find(k => k !== 'loes') || av[0]), split = false, sure = false, timer = null, tick = null;
+    let active = tab && (av.includes(tab) || tab === 'ant') ? tab : (av.find(k => k !== 'loes') || av[0]), split = false, sure = false, timer = null, tick = null, ansP = null;
     const docs = {}, A = AREA[ex.area];
     const root = document.createElement('div'); root.className = 'kv';
     root.innerHTML = `<header class="kv-top"><button type="button" class="kv-b" data-k="back">‹ Zurück</button><b class="kv-title">${esc(A[1])} · ${esc(ex.label)}</b><span class="kv-timer" data-k="time"></span></header>
@@ -281,6 +329,8 @@
       </div><div class="kv-panes"></div>`;
     document.body.append(root); document.body.classList.add('kv-open');
     const panes = root.querySelector('.kv-panes'), tabsEl = root.querySelector('.kv-tabs');
+    const notes = () => { const out = []; av.filter(k => k !== 'beleg' && k !== 'loes').forEach(k => { const a = annLocal(recOf(k).id); if (!a) return; Object.keys(a.p || {}).sort((x, y) => x - y).forEach(i => (a.p[i].t || []).slice().sort((u, v) => u.y - v.y).forEach(t => out.push(`Text auf ${KIND[k]}, Seite ${i}: ${t.t}`))); }); return out.length ? ['Notizen aus den PDF-Seiten:'].concat(out, ['']) : []; };
+    function getAns() { if (!ansP) { const host = document.createElement('div'); host.className = 'kv-pane kv-ans'; panes.append(host); ansP = mkAns(ctx, ex, host, notes); ansP.host = host; } return ansP; }
     function getDoc(k) {
       if (docs[k]) return docs[k];
       const host = document.createElement('div'); host.className = 'kv-pane'; panes.append(host);
@@ -293,18 +343,20 @@
     }
     function layout() {
       const sh = shown(); Object.keys(docs).forEach(k => { docs[k].host.style.display = sh.includes(k) ? '' : 'none'; });
-      sh.forEach(k => getDoc(k)); panes.classList.toggle('two', sh.length === 2);
-      sh.forEach(k => { docs[k].host.style.display = ''; docs[k].setMode(); });
-      tabsEl.innerHTML = av.map(k => `<button type="button" class="${k === active ? 'on' : ''}${k === 'loes' ? ' warn' : ''}" data-tab="${k}">${k === 'loes' && sure ? 'Wirklich ansehen?' : KIND[k]}${hasAnn(recOf(k).id) ? '<i></i>' : ''}</button>`).join('');
+      sh.filter(k => k !== 'ant').forEach(k => getDoc(k)); panes.classList.toggle('two', sh.length === 2);
+      if (sh.includes('ant')) getAns().host.style.display = ''; else if (ansP) ansP.host.style.display = 'none';
+      sh.filter(k => k !== 'ant').forEach(k => { docs[k].host.style.display = ''; docs[k].setMode(); });
+      root.classList.toggle('kv-onans', active === 'ant');
+      tabsEl.innerHTML = av.map(k => `<button type="button" class="${k === active ? 'on' : ''}${k === 'loes' ? ' warn' : ''}" data-tab="${k}">${k === 'loes' && sure ? 'Wirklich ansehen?' : KIND[k]}${hasAnn(recOf(k).id) ? '<i></i>' : ''}</button>`).join('') + `<button type="button" class="${active === 'ant' ? 'on' : ''}" data-tab="ant">Antworten${hasAns(ex) ? '<i></i>' : ''}</button>`;
       upd();
     }
-    const cur = () => docs[shown().slice(-1)[0]] || docs[active];
+    const cur = () => docs[shown().filter(k => k !== 'ant').slice(-1)[0]] || docs[active];
     function upd() {
       root.querySelectorAll('.tl').forEach(b => b.classList.toggle('on', b.dataset.t === S.tool));
       root.querySelectorAll('.kv-dot').forEach(b => b.classList.toggle('on', +b.dataset.c === S.color));
       root.querySelector('[data-k=w]').textContent = 'Strich: ' + WIDTHS[S.w][0]; root.querySelector('[data-k=ts]').textContent = 'Text: ' + TSIZES[S.ts][0];
       root.querySelector('[data-k=po]').textContent = S.po ? 'Nur Stift: an' : 'Nur Stift: aus'; root.querySelector('[data-k=po]').classList.toggle('on', S.po);
-      root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 2; root.querySelector('[data-k=split]').classList.toggle('on', split);
+      root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 1; root.querySelector('[data-k=split]').classList.toggle('on', split);
       const d = cur(); root.querySelector('[data-k=undo]').disabled = !(d && d.hist.length);
     }
     function clock() {
@@ -313,7 +365,7 @@
       const s = Math.round((timer - Date.now()) / 1000), a = Math.abs(s);
       el.textContent = (s < 0 ? '+' : '') + Math.floor(a / 60) + ':' + String(a % 60).padStart(2, '0'); el.classList.toggle('over', s < 0); b.textContent = 'Timer ■';
     }
-    const close = () => { Object.values(docs).forEach(d => { d.flush(); d.destroy(); }); clearInterval(tick); root.remove(); document.body.classList.remove('kv-open'); removeEventListener('resize', layout); ctx.onClose && ctx.onClose(); };
+    const close = () => { Object.values(docs).forEach(d => { d.flush(); d.destroy(); }); if (ansP) { ansP.flush(); ansP.destroy(); } clearInterval(tick); root.remove(); document.body.classList.remove('kv-open'); removeEventListener('resize', layout); ctx.onClose && ctx.onClose(); };
     root.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k, d = cur();
       if (b.dataset.tab) {
@@ -363,10 +415,10 @@
       if (e) setTimeout(() => openExam(ctx, e, o.tab), 0); else st.miss = true;
     }
     el.innerHTML = `<div class="ln-card glass kl-top"><div class="ln-seg">${Object.keys(AREA).map(a => `<button type="button" data-a="${a}" class="${a === area ? 'on' : ''}">${AREA[a][0]} ${cnt(a) || ''}</button>`).join('')}</div>
-        <div class="ln-sub">Original-Blätter wie in der Prüfung: ansehen, mit Stift oder Text beschriften. Lösung bleibt zu, bis du sie öffnest.</div>
+        <div class="ln-sub">Original-Blätter wie in der Prüfung: ansehen, mit Stift oder Text beschriften. Im Reiter „Antworten“ schreibst du Antworten und Rechenwege und kopierst sie zur Korrektur. Lösung bleibt zu, bis du sie öffnest.</div>
         ${st.miss ? '<div class="ln-note">Diese Prüfung ist noch nicht hochgeladen. Unten die PDFs auswählen.</div>' : ''}</div>
       ${ex.length ? `<div class="kl-grid">${ex.map(e => `<button type="button" class="kl-row glass" data-e="${esc(e.key)}"><div class="kl-h"><b>${esc(e.label)}</b><small>${esc(e.term.replace('AP', 'AP '))}</small></div>
-          <div class="kl-chips">${KORD.filter(k => k === 'extra' ? e.extra.length : e.docs[k]).map(k => `<span class="kl-c${k === 'loes' ? ' w' : ''}">${KIND[k]}${hasAnn((k === 'extra' ? e.extra[0] : e.docs[k]).id) ? ' ✎' : ''}</span>`).join('')}</div></button>`).join('')}</div>`
+          <div class="kl-chips">${KORD.filter(k => k === 'extra' ? e.extra.length : e.docs[k]).map(k => `<span class="kl-c${k === 'loes' ? ' w' : ''}">${KIND[k]}${hasAnn((k === 'extra' ? e.extra[0] : e.docs[k]).id) ? ' ✎' : ''}</span>`).join('')}${hasAns(e) ? '<span class="kl-c">Antworten ✎</span>' : ''}</div></button>`).join('')}</div>`
         : '<div class="ln-card glass ln-empty">Für diesen Bereich ist noch nichts hochgeladen.</div>'}
       <details class="ln-card glass kl-up"${all.length ? '' : ' open'}><summary>Prüfungs-PDFs hochladen</summary>
         <div class="ln-sub">Alle PDFs auf einmal markieren (am PC im Browser am einfachsten). Name wie „01 - GA2 - APW2122 - Belegsatz.pdf“, dann wird alles automatisch richtig einsortiert. Liegt privat auf deinem Server.</div>
