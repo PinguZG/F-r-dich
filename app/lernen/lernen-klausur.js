@@ -62,7 +62,7 @@
   // ---------- Notizen speichern ----------
   const annKey = id => 'ln-ann:' + id;
   const annLocal = id => { try { return JSON.parse(localStorage.getItem(annKey(id))); } catch (_) { return null; } };
-  const hasAnn = id => { const a = annLocal(id); return !!a && Object.values(a.p || {}).some(p => (p.s && p.s.length) || (p.t && p.t.length)); };
+  const hasAnn = id => { const a = annLocal(id); return !!a && Object.values(a.p || {}).some(p => (p.s && p.s.length) || (p.t && p.t.length) || (p.a && Object.values(p.a).some(v => (v.t || '').trim()))); };
   const remote = {}, timers = {};
   async function pull(ctx, fid) {
     try { const r = await ctx.pb.collection('lern_notizen').getFirstListItem(ctx.pb.filter('fileId = {:f}', { f: fid }), { requestKey: null }); remote[fid] = r.id; return r.data && r.data.p ? r.data : null; }
@@ -81,6 +81,46 @@
     if (now) push(ctx, fid, ann); else timers[fid] = setTimeout(() => push(ctx, fid, ann), 1800);
   }
 
+  // ---------- Antwortzeilen auf Prüfungsseiten erkennen ----------
+  // Sucht waagerechte Linien (auch Scans: leicht hell/wellig), gruppiert gleich abständige Linien zu Antwortblöcken, verwirft Tabellen (senkrechte Linien).
+  // data = RGBA (Breite W, Höhe H). Ergebnis in Anteilen der Seitenbreite/-höhe; stabil über Geräte (immer gleiche Auflösung).
+  function detectFields(data, W, H) {
+    const m = new Uint8Array(W * H);
+    for (let i = 0, p = 0; p < W * H; p++, i += 4) m[p] = (data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11) < 235 ? 1 : 0;
+    const D = new Uint8Array(W * H);                                  // senkrecht um 2 Pixel verdickt (wellige Scanlinien)
+    for (let y = 0; y < H; y++) for (let k = -2; k <= 2; k++) { const yy = y + k; if (yy < 0 || yy >= H) continue; for (let x = 0; x < W; x++) if (m[yy * W + x]) D[y * W + x] = 1; }
+    const rows = [];
+    for (let y = 0; y < H; y++) {                                      // Zeile = breit (≥ 40 % der Seite) und dicht gefüllt (Linie, nicht Text)
+      let c = 0; const o = y * W; for (let x = 0; x < W; x++) c += D[o + x];
+      if (c < W * 0.4 * 0.7) continue;
+      const lo = Math.floor(c * 0.02), hi = Math.floor(c * 0.98); let k = 0, xl = 0, xh = 0;
+      for (let x = 0; x < W; x++) if (D[o + x]) { if (k === lo) xl = x; if (k === hi) { xh = x; break; } k++; }
+      const ext = xh - xl + 1;
+      if (ext > W * 0.4 && c * 0.96 / ext > 0.7) rows.push({ y, x0: xl, x1: xh });
+    }
+    const lines = [];
+    rows.forEach(r => { const l = lines[lines.length - 1]; if (l && r.y - l.ye <= 6) { l.ye = r.y; l.x0 = Math.min(l.x0, r.x0); l.x1 = Math.max(l.x1, r.x1); } else lines.push({ y: r.y, ye: r.y, x0: r.x0, x1: r.x1 }); });
+    lines.forEach(l => { l.y = Math.round((l.y + l.ye) / 2); });
+    const blocks = []; let cur = null;
+    const lo = W * 0.028, hi = W * 0.075;
+    lines.forEach((l, i) => {
+      const sp = i ? l.y - lines[i - 1].y : 0;
+      if (cur && sp >= lo && sp <= hi && (cur.sp == null || Math.abs(sp - cur.sp) <= cur.sp * 0.22)) { cur.lines.push(l); cur.sp = cur.sp == null ? sp : (cur.sp * (cur.lines.length - 2) + sp) / (cur.lines.length - 1); }
+      else { if (cur && cur.lines.length >= 2) blocks.push(cur); cur = { lines: [l], sp: null }; }
+    });
+    if (cur && cur.lines.length >= 2) blocks.push(cur);
+    const out = [];
+    blocks.forEach(b => {
+      const y0 = b.lines[0].y, y1 = b.lines[b.lines.length - 1].y, x0 = Math.min(...b.lines.map(l => l.x0)), x1 = Math.max(...b.lines.map(l => l.x1));
+      let vert = false;                                              // Tabelle? (senkrechte Linie über den ganzen Block)
+      for (let x = Math.max(2, x0); x <= Math.min(W - 3, x1) && !vert; x += 2) { let c = 0; for (let y = y0; y <= y1; y++) { const o = y * W + x; if (m[o] || m[o + 1] || m[o - 1] || m[o + 2] || m[o - 2]) c++; } if (c > (y1 - y0) * 0.7) vert = true; }
+      if (vert) return;
+      const sp = (y1 - y0) / (b.lines.length - 1);
+      out.push({ k: 'f' + Math.round(y0 / W * 1000), x: Math.max(0, x0 - 2) / W, w: Math.min(W, x1 + 2) / W - Math.max(0, x0 - 2) / W, y: y0 / H, h: (y1 - y0) / H, sp: sp / W, n: b.lines.length });
+    });
+    return out;
+  }
+
   // ---------- Ein Dokument (PDF) in einem Fenster ----------
   function mkDoc(ctx, rec, host, hooks) {
     const pb = ctx.pb, fid = rec.id;
@@ -88,7 +128,7 @@
     const D = { rec, pages: [], z: 1, dead: false, hist: [], ready: false };
     const sc = document.createElement('div'); sc.className = 'ks'; sc.innerHTML = '<div class="kv-load">Lade …</div>';
     host.append(sc);
-    const pg$ = i => (ann.p[i] = ann.p[i] || { s: [], t: [] });
+    const pg$ = i => { const p = (ann.p[i] = ann.p[i] || { s: [], t: [] }); if (!p.a) p.a = {}; return p; };
     const touch = () => { ann.ts = Date.now(); try { localStorage.setItem(annKey(fid), JSON.stringify(ann)); } catch (_) {} queue(ctx, fid, ann); hooks.onHist(); };
     let io = null, ro = null, chain = Promise.resolve(), editing = null;
 
@@ -146,6 +186,41 @@
     }
     function closeEdit() { if (editing) editing.ta.blur(); }
 
+    // --- Antwortfelder auf den Linien ---
+    function fields(pg) {
+      const L = pg.kf; if (!L || !pg.fl) return; L.innerHTML = '';
+      pg.fl.forEach(f => {
+        const v = pg$(pg.i).a[f.k] || { n: '', t: '' };
+        const box = document.createElement('div'); box.className = 'kf-b';
+        box.style.cssText = `left:${(f.x * 100).toFixed(3)}%;top:${(f.y * 100).toFixed(3)}%;width:${(f.w * 100).toFixed(3)}%;height:${(f.h * 100).toFixed(3)}%;--sp:${f.sp.toFixed(5)}`;
+        box.innerHTML = '<input class="kf-n" data-f="n" placeholder="Nr." maxlength="12" inputmode="text" autocapitalize="off" autocomplete="off" aria-label="Aufgabennummer"><textarea class="kf-t" data-f="t" spellcheck="false" aria-label="Antwort"></textarea>';
+        const inp = box.children[0], ta = box.children[1]; inp.value = v.n || ''; ta.value = v.t || '';
+        const set = () => { const a = pg$(pg.i).a; a[f.k] = { n: inp.value, t: ta.value }; if (!a[f.k].n.trim() && !a[f.k].t.trim()) delete a[f.k]; touch(); };
+        inp.addEventListener('input', set); ta.addEventListener('input', set);
+        L.append(box);
+      });
+    }
+    function detect(pg) {
+      if (pg.fl) return Promise.resolve();
+      chain = chain.then(async () => {
+        if (D.dead || pg.fl) return;
+        try {
+          const W = 1000, vp = pg.page.getViewport({ scale: W / pg.w }), cv = document.createElement('canvas'); cv.width = W; cv.height = Math.round(vp.height);
+          const cx = cv.getContext('2d', { willReadFrequently: true }); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+          await pg.page.render({ canvasContext: cx, viewport: vp }).promise;
+          pg.h = pg.w * cv.height / W; pg.fl = detectFields(cx.getImageData(0, 0, W, cv.height).data, W, cv.height);
+          cv.width = cv.height = 1;
+        } catch (_) { pg.fl = []; }
+        fields(pg);
+      });
+      return chain;
+    }
+    D.fieldTexts = () => {
+      const out = [];
+      D.pages.forEach(pg => { const a = (ann.p[pg.i] || {}).a || {}; Object.keys(a).sort((x, y) => (+x.slice(1)) - (+y.slice(1))).forEach(k => { const v = a[k]; if ((v.t || '').trim() || (v.n || '').trim()) out.push({ page: pg.i, n: (v.n || '').trim(), t: (v.t || '').trim() }); }); });
+      return out;
+    };
+
     function hitStroke(st, x, y, r, W, H) {
       const p = st.p;
       for (let i = 0; i < p.length; i += 2) { const dx = p[i] / 1e4 * W - x, dy = p[i + 1] / 1e4 * H - y; if (dx * dx + dy * dy < r * r) return true; }
@@ -156,7 +231,7 @@
       const pos = e => { const r = el.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, r]; };
       el.addEventListener('pointerdown', e => {
         const t = S.tool; wasEdit = !!editing; moved = false;
-        if (t === 'hand' || e.target.closest('.kx,.kx-in')) return;
+        if (t === 'hand' || e.target.closest('.kx,.kx-in,.kf-b')) return;
         if (e.pointerType === 'touch' && S.po && t !== 'text') return;
         const [x, y, r] = pos(e); sx = e.clientX; sy = e.clientY;
         if (t === 'pen' || t === 'marker') {
@@ -190,7 +265,7 @@
           else { const st = { c: cur.c, w: cur.w, a: cur.a, p: cur.p }; pg$(pg.i).s.push(st); D.hist.push({ op: 'add', i: pg.i, st }); touch(); ink(pg); }
           cur = null; erased = null; return;
         }
-        if (S.tool === 'text' && !moved && !wasEdit && e.type === 'pointerup' && !e.target.closest('.kx,.kx-in')) { const [x, y] = pos(e); editText(pg, null, x, y); }
+        if (S.tool === 'text' && !moved && !wasEdit && e.type === 'pointerup' && !e.target.closest('.kx,.kx-in,.kf-b')) { const [x, y] = pos(e); editText(pg, null, x, y); }
       };
       el.addEventListener('pointerup', end); el.addEventListener('pointercancel', e => { if (cur) { cur = null; ink(pg); } });
     }
@@ -201,6 +276,7 @@
         if (D.dead || !pg.vis) return;
         const cssW = pg.el.clientWidth; if (!cssW) return;
         const dpr = Math.min(window.devicePixelRatio || 1, 2), tw = Math.min(Math.round(cssW * dpr), 2400);
+        if (!pg.fl && !pg.fd) { pg.fd = true; detect(pg); }
         if (pg.ok && pg.rw === tw) { ink(pg); return; }
         const vp = pg.page.getViewport({ scale: tw / pg.w }), cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); cv.className = 'kc';
         try { await pg.page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise; } catch (_) { return; }
@@ -242,8 +318,8 @@
         for (let i = 1; i <= D.pdf.numPages; i++) {
           const page = await D.pdf.getPage(i), v = page.getViewport({ scale: 1 });
           const el = document.createElement('div'); el.className = 'kp'; el.style.aspectRatio = v.width + ' / ' + v.height;
-          el.innerHTML = '<canvas class="kc"></canvas><canvas class="ki"></canvas><div class="kt"></div><span class="kn">' + i + ' / ' + D.pdf.numPages + '</span>';
-          const pg = { i, page, el, w: v.width, kc: el.children[0], ki: el.children[1], kt: el.children[2], ok: false, vis: false };
+          el.innerHTML = '<canvas class="kc"></canvas><canvas class="ki"></canvas><div class="kt"></div><span class="kn">' + i + ' / ' + D.pdf.numPages + '</span><div class="kf"></div>';
+          const pg = { i, page, el, w: v.width, kc: el.children[0], ki: el.children[1], kt: el.children[2], kf: el.children[4], ok: false, vis: false, h: v.height };
           D.pages.push(pg); wrap.append(el); bind(pg); texts(pg);
         }
         sc.innerHTML = ''; sc.append(wrap); setMode();
@@ -252,7 +328,7 @@
         D.pages.forEach(pg => { pg.el.dataset.i = pg.i; io.observe(pg.el); ro.observe(pg.el); });
         D.fit(); D.ready = true; hooks.onReady();
         const r = await pull(ctx, fid);
-        if (r && (r.ts || 0) > (ann.ts || 0) && !D.dead) { ann = r; try { localStorage.setItem(annKey(fid), JSON.stringify(ann)); } catch (_) {} D.pages.forEach(pg => { ink(pg); texts(pg); }); }
+        if (r && (r.ts || 0) > (ann.ts || 0) && !D.dead) { ann = r; try { localStorage.setItem(annKey(fid), JSON.stringify(ann)); } catch (_) {} D.pages.forEach(pg => { ink(pg); texts(pg); fields(pg); }); }
       } catch (e) {
         sc.innerHTML = '<div class="kv-load">Konnte die Datei nicht laden (' + esc(e && e.message || 'Fehler') + '). Netz prüfen. <button type="button" class="ln-btn soft sm" data-k="retry">Nochmal</button></div>';
         sc.querySelector('[data-k=retry]').onclick = () => { D.dead = true; sc.remove(); hooks.onRetry(); };
@@ -261,76 +337,22 @@
     return D;
   }
 
-  // ---------- Antworten schreiben (Reiter „Antworten“): Aufgabe + Text/Rechenweg, lokal + lern_notizen, zum Kopieren ----------
-  const ansKey = ex => 'ans:' + ex.area + ':' + ex.term;
-  const ansLocal = ex => { try { return JSON.parse(localStorage.getItem('ln-' + ansKey(ex))); } catch (_) { return null; } };
-  const hasAns = ex => { const a = ansLocal(ex); return !!a && (a.rows || []).some(r => (r.t || '').trim()); };
-  const nextLabel = l => { const m = /^\s*(\d+)\s*([a-zA-Z]?)\s*$/.exec(l || ''); if (!m) return ''; return m[2] ? m[1] + ' ' + String.fromCharCode(m[2].charCodeAt(0) + 1) : m[1] + ' a'; };
-  function mkAns(ctx, ex, host, getNotes) {
-    const fid = ansKey(ex), A = AREA[ex.area];
-    let ans = ansLocal(ex) || { ts: 0, p: {}, rows: [{ n: '', t: '' }] };
-    if (!ans.rows || !ans.rows.length) ans.rows = [{ n: '', t: '' }];
-    const el = document.createElement('div'); el.className = 'ka'; host.append(el);
-    let dead = false, shownText = false;
-    const save = () => { ans.ts = Date.now(); try { localStorage.setItem('ln-' + fid, JSON.stringify(ans)); } catch (_) {} queue(ctx, fid, ans); const st = el.querySelector('.ka-st'); if (st) st.textContent = 'Gespeichert'; };
-    const fit = ta => { ta.style.height = 'auto'; ta.style.height = Math.max(ta.scrollHeight, 96) + 'px'; };
-    function buildText() {
-      const d = new Date(), out = [`Prüfung: ${A[1]} ${ex.label} (${ex.term.replace('AP', 'AP ')})`, `Bearbeitet am ${d.toLocaleDateString('de-DE')}`, ''];
-      ans.rows.filter(r => (r.t || '').trim()).forEach(r => { out.push(`Aufgabe ${(r.n || '?').trim()}:`, r.t.trim(), ''); });
-      (getNotes ? getNotes() : []).forEach(n => out.push(n));
-      return out.join('\n').trim() + '\n';
-    }
-    function draw() {
-      el.innerHTML = `<div class="ka-top"><div class="ln-sub">Schreibe zu jeder Aufgabe die Nummer (z. B. 2 b) und deine Antwort, bei Rechnungen mit Rechenweg. Der Stand wird automatisch gespeichert.</div></div>
-        <div class="ka-rows">${ans.rows.map((r, i) => `<div class="ka-row" data-i="${i}"><div class="ka-h"><input class="ka-n" data-f="n" inputmode="text" autocapitalize="off" autocomplete="off" placeholder="Aufgabe, z. B. 2 b" value="${esc(r.n)}"><button type="button" class="ka-x" data-k="del" aria-label="Antwort löschen">✕</button></div><textarea class="ka-t" data-f="t" placeholder="Antwort / Rechenweg …" spellcheck="false">${esc(r.t)}</textarea></div>`).join('')}</div>
-        <div class="ka-bar"><button type="button" class="ln-btn soft sm" data-k="add">+ Antwort</button><button type="button" class="ln-btn sm" data-k="copy">Antworten kopieren</button><span class="ka-st"></span></div>
-        ${shownText ? `<div class="ka-out"><div class="ln-sub">Falls Kopieren nicht klappt: Text markieren und kopieren.</div><textarea class="ka-o" readonly rows="10">${esc(buildText())}</textarea></div>` : ''}`;
-      el.querySelectorAll('.ka-t').forEach(fit);
-    }
-    el.addEventListener('input', e => {
-      const f = e.target.dataset.f, row = e.target.closest('.ka-row'); if (!f || !row) return;
-      ans.rows[+row.dataset.i][f] = e.target.value; if (f === 't') fit(e.target); save();
-    });
-    el.addEventListener('click', async e => {
-      const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k;
-      if (k === 'add') { const last = ans.rows[ans.rows.length - 1]; ans.rows.push({ n: nextLabel(last && last.n), t: '' }); save(); draw(); const t = el.querySelectorAll('.ka-t'); t[t.length - 1].focus(); }
-      else if (k === 'del') {
-        const i = +b.closest('.ka-row').dataset.i, r = ans.rows[i];
-        if ((r.t || '').trim() && b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Sicher?'; setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = '✕'; } }, 3000); return; }
-        ans.rows.splice(i, 1); if (!ans.rows.length) ans.rows.push({ n: '', t: '' }); save(); draw();
-      } else if (k === 'copy') {
-        const txt = buildText(); let ok = false;
-        try { await navigator.clipboard.writeText(txt); ok = true; } catch (_) {}
-        shownText = !ok; draw(); const st = el.querySelector('.ka-st'); if (st) st.textContent = ok ? 'Kopiert – jetzt im Chat einfügen' : 'Text unten kopieren';
-      }
-    });
-    draw();
-    (async () => { const r = await pull(ctx, fid); if (!dead && r && (r.ts || 0) > (ans.ts || 0) && r.rows) { ans = r; try { localStorage.setItem('ln-' + fid, JSON.stringify(ans)); } catch (_) {} draw(); } })();
-    return { el, flush() { clearTimeout(timers[fid]); push(ctx, fid, ans); }, destroy() { dead = true; el.remove(); } };
-  }
-
   // ---------- Vollbild-Viewer für eine Prüfung ----------
   function openExam(ctx, ex, tab) {
     document.querySelector('.kv')?.remove();
     const av = KORD.filter(k => k === 'extra' ? ex.extra.length : ex.docs[k]);
     const recOf = k => k === 'extra' ? ex.extra[0] : ex.docs[k];
-    let active = tab && (av.includes(tab) || tab === 'ant') ? tab : (av.find(k => k !== 'loes') || av[0]), split = false, sure = false, timer = null, tick = null, ansP = null;
+    let active = tab && av.includes(tab) ? tab : (av.find(k => k !== 'loes') || av[0]), split = false, sure = false, timer = null, tick = null;
     const docs = {}, A = AREA[ex.area];
     const root = document.createElement('div'); root.className = 'kv';
-    root.innerHTML = `<header class="kv-top"><button type="button" class="kv-b" data-k="back">‹ Zurück</button><b class="kv-title">${esc(A[1])} · ${esc(ex.label)}</b><span class="kv-timer" data-k="time"></span></header>
+    root.innerHTML = `<header class="kv-top"><button type="button" class="kv-b" data-k="back">‹ Zurück</button><b class="kv-title">${esc(A[1])} · ${esc(ex.label)}</b><button type="button" class="kv-b" data-k="copyans">Antworten kopieren</button><span class="kv-timer" data-k="time"></span></header>
       <nav class="kv-tabs"></nav>
       <div class="kv-tools">
-        ${[['hand', 'Hand'], ['pen', 'Stift'], ['marker', 'Marker'], ['text', 'Text'], ['eraser', 'Radierer']].map(([k, n]) => `<button type="button" class="kv-b tl" data-t="${k}">${n}</button>`).join('')}
-        <i class="kv-sep"></i><span class="kv-cols">${COLORS.map((c, i) => `<button type="button" class="kv-dot" data-c="${i}" style="--c:${c}" aria-label="Farbe ${i + 1}"></button>`).join('')}</span>
-        <button type="button" class="kv-b" data-k="w"></button><button type="button" class="kv-b" data-k="ts"></button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="undo">↶ Zurück</button><button type="button" class="kv-b" data-k="clear">Seite leeren</button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="po"></button><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
+        <button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
+        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
       </div><div class="kv-panes"></div>`;
     document.body.append(root); document.body.classList.add('kv-open');
     const panes = root.querySelector('.kv-panes'), tabsEl = root.querySelector('.kv-tabs');
-    const notes = () => { const out = []; av.filter(k => k !== 'beleg' && k !== 'loes').forEach(k => { const a = annLocal(recOf(k).id); if (!a) return; Object.keys(a.p || {}).sort((x, y) => x - y).forEach(i => (a.p[i].t || []).slice().sort((u, v) => u.y - v.y).forEach(t => out.push(`Text auf ${KIND[k]}, Seite ${i}: ${t.t}`))); }); return out.length ? ['Notizen aus den PDF-Seiten:'].concat(out, ['']) : []; };
-    function getAns() { if (!ansP) { const host = document.createElement('div'); host.className = 'kv-pane kv-ans'; panes.append(host); ansP = mkAns(ctx, ex, host, notes); ansP.host = host; } return ansP; }
     function getDoc(k) {
       if (docs[k]) return docs[k];
       const host = document.createElement('div'); host.className = 'kv-pane'; panes.append(host);
@@ -343,21 +365,29 @@
     }
     function layout() {
       const sh = shown(); Object.keys(docs).forEach(k => { docs[k].host.style.display = sh.includes(k) ? '' : 'none'; });
-      sh.filter(k => k !== 'ant').forEach(k => getDoc(k)); panes.classList.toggle('two', sh.length === 2);
-      if (sh.includes('ant')) getAns().host.style.display = ''; else if (ansP) ansP.host.style.display = 'none';
-      sh.filter(k => k !== 'ant').forEach(k => { docs[k].host.style.display = ''; docs[k].setMode(); });
-      root.classList.toggle('kv-onans', active === 'ant');
-      tabsEl.innerHTML = av.map(k => `<button type="button" class="${k === active ? 'on' : ''}${k === 'loes' ? ' warn' : ''}" data-tab="${k}">${k === 'loes' && sure ? 'Wirklich ansehen?' : KIND[k]}${hasAnn(recOf(k).id) ? '<i></i>' : ''}</button>`).join('') + `<button type="button" class="${active === 'ant' ? 'on' : ''}" data-tab="ant">Antworten${hasAns(ex) ? '<i></i>' : ''}</button>`;
+      sh.forEach(k => getDoc(k)); panes.classList.toggle('two', sh.length === 2);
+      sh.forEach(k => { docs[k].host.style.display = ''; docs[k].setMode(); });
+      tabsEl.innerHTML = av.map(k => `<button type="button" class="${k === active ? 'on' : ''}${k === 'loes' ? ' warn' : ''}" data-tab="${k}">${k === 'loes' && sure ? 'Wirklich ansehen?' : KIND[k]}${hasAnn(recOf(k).id) ? '<i></i>' : ''}</button>`).join('');
       upd();
     }
-    const cur = () => docs[shown().filter(k => k !== 'ant').slice(-1)[0]] || docs[active];
+    const cur = () => docs[shown().slice(-1)[0]] || docs[active];
+    async function copyAnswers() {
+      const out = [`Prüfung: ${A[1]} ${ex.label} (${ex.term.replace('AP', 'AP ')})`, `Bearbeitet am ${new Date().toLocaleDateString('de-DE')}`, ''];
+      av.filter(k => k !== 'beleg' && k !== 'loes').forEach(k => {
+        const d = docs[k]; const fl = d && d.fieldTexts ? d.fieldTexts() : (() => { const a = annLocal(recOf(k).id); const r = []; a && Object.keys(a.p || {}).sort((x, y) => x - y).forEach(i => Object.values(a.p[i].a || {}).forEach(v => { if ((v.t || '').trim() || (v.n || '').trim()) r.push({ page: +i, n: (v.n || '').trim(), t: (v.t || '').trim() }); })); return r; })();
+        fl.forEach(f => out.push(`Aufgabe ${f.n || '?'} (Seite ${f.page}, ${KIND[k]}):`, f.t || '(leer)', ''));
+        const a = annLocal(recOf(k).id), tx = [];
+        a && Object.keys(a.p || {}).sort((x, y) => x - y).forEach(i => (a.p[i].t || []).slice().sort((u, v) => u.y - v.y).forEach(t => tx.push(`Seite ${i}: ${t.t}`)));
+        if (tx.length) out.push(`Text-Notizen auf ${KIND[k]}:`, ...tx, '');
+      });
+      const txt = out.join('\n').trim() + '\n', b = root.querySelector('[data-k=copyans]'), old = 'Antworten kopieren';
+      let ok = false; try { await navigator.clipboard.writeText(txt); ok = true; } catch (_) {}
+      if (ok) { b.textContent = 'Kopiert ✓'; setTimeout(() => { b.textContent = old; }, 2500); return; }
+      root.querySelector('.kv-copy')?.remove();
+      const m = document.createElement('div'); m.className = 'kv-copy'; m.innerHTML = '<div class="ln-sub">Text markieren und kopieren, dann im Chat einfügen.</div><textarea readonly rows="12"></textarea><button type="button" class="kv-b" data-k="copyclose">Schließen</button>'; m.querySelector('textarea').value = txt; root.append(m); m.querySelector('textarea').select();
+    }
     function upd() {
-      root.querySelectorAll('.tl').forEach(b => b.classList.toggle('on', b.dataset.t === S.tool));
-      root.querySelectorAll('.kv-dot').forEach(b => b.classList.toggle('on', +b.dataset.c === S.color));
-      root.querySelector('[data-k=w]').textContent = 'Strich: ' + WIDTHS[S.w][0]; root.querySelector('[data-k=ts]').textContent = 'Text: ' + TSIZES[S.ts][0];
-      root.querySelector('[data-k=po]').textContent = S.po ? 'Nur Stift: an' : 'Nur Stift: aus'; root.querySelector('[data-k=po]').classList.toggle('on', S.po);
-      root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 1; root.querySelector('[data-k=split]').classList.toggle('on', split);
-      const d = cur(); root.querySelector('[data-k=undo]').disabled = !(d && d.hist.length);
+      root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 2; root.querySelector('[data-k=split]').classList.toggle('on', split);
     }
     function clock() {
       const el = root.querySelector('[data-k=time]'), b = root.querySelector('[data-k=timer]');
@@ -365,7 +395,7 @@
       const s = Math.round((timer - Date.now()) / 1000), a = Math.abs(s);
       el.textContent = (s < 0 ? '+' : '') + Math.floor(a / 60) + ':' + String(a % 60).padStart(2, '0'); el.classList.toggle('over', s < 0); b.textContent = 'Timer ■';
     }
-    const close = () => { Object.values(docs).forEach(d => { d.flush(); d.destroy(); }); if (ansP) { ansP.flush(); ansP.destroy(); } clearInterval(tick); root.remove(); document.body.classList.remove('kv-open'); removeEventListener('resize', layout); ctx.onClose && ctx.onClose(); };
+    const close = () => { Object.values(docs).forEach(d => { d.flush(); d.destroy(); }); clearInterval(tick); root.remove(); document.body.classList.remove('kv-open'); removeEventListener('resize', layout); ctx.onClose && ctx.onClose(); };
     root.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return; const k = b.dataset.k, d = cur();
       if (b.dataset.tab) {
@@ -374,7 +404,9 @@
       }
       if (b.dataset.t) { S.tool = b.dataset.t; Object.values(docs).forEach(x => x.setMode()); upd(); return; }
       if (b.dataset.c) { S.color = +b.dataset.c; saveUi(); upd(); return; }
-      if (k === 'back') close();
+      if (k === 'copyans') copyAnswers();
+      else if (k === 'copyclose') root.querySelector('.kv-copy')?.remove();
+      else if (k === 'back') close();
       else if (k === 'w') { S.w = (S.w + 1) % 3; saveUi(); upd(); }
       else if (k === 'ts') { S.ts = (S.ts + 1) % 3; saveUi(); upd(); }
       else if (k === 'po') { S.po = !S.po; saveUi(); Object.values(docs).forEach(x => x.setMode()); upd(); }
@@ -415,10 +447,10 @@
       if (e) setTimeout(() => openExam(ctx, e, o.tab), 0); else st.miss = true;
     }
     el.innerHTML = `<div class="ln-card glass kl-top"><div class="ln-seg">${Object.keys(AREA).map(a => `<button type="button" data-a="${a}" class="${a === area ? 'on' : ''}">${AREA[a][0]} ${cnt(a) || ''}</button>`).join('')}</div>
-        <div class="ln-sub">Original-Blätter wie in der Prüfung: ansehen, mit Stift oder Text beschriften. Im Reiter „Antworten“ schreibst du Antworten und Rechenwege und kopierst sie zur Korrektur. Lösung bleibt zu, bis du sie öffnest.</div>
+        <div class="ln-sub">Original-Blätter wie in der Prüfung: auf den Antwortzeilen direkt tippen (oben „Nr.“ = Aufgabennummer), mit Stift oder Text beschriften, oben „Antworten kopieren“ zur Korrektur. Lösung bleibt zu, bis du sie öffnest.</div>
         ${st.miss ? '<div class="ln-note">Diese Prüfung ist noch nicht hochgeladen. Unten die PDFs auswählen.</div>' : ''}</div>
       ${ex.length ? `<div class="kl-grid">${ex.map(e => `<button type="button" class="kl-row glass" data-e="${esc(e.key)}"><div class="kl-h"><b>${esc(e.label)}</b><small>${esc(e.term.replace('AP', 'AP '))}</small></div>
-          <div class="kl-chips">${KORD.filter(k => k === 'extra' ? e.extra.length : e.docs[k]).map(k => `<span class="kl-c${k === 'loes' ? ' w' : ''}">${KIND[k]}${hasAnn((k === 'extra' ? e.extra[0] : e.docs[k]).id) ? ' ✎' : ''}</span>`).join('')}${hasAns(e) ? '<span class="kl-c">Antworten ✎</span>' : ''}</div></button>`).join('')}</div>`
+          <div class="kl-chips">${KORD.filter(k => k === 'extra' ? e.extra.length : e.docs[k]).map(k => `<span class="kl-c${k === 'loes' ? ' w' : ''}">${KIND[k]}${hasAnn((k === 'extra' ? e.extra[0] : e.docs[k]).id) ? ' ✎' : ''}</span>`).join('')}</div></button>`).join('')}</div>`
         : '<div class="ln-card glass ln-empty">Für diesen Bereich ist noch nichts hochgeladen.</div>'}
       <details class="ln-card glass kl-up"${all.length ? '' : ' open'}><summary>Prüfungs-PDFs hochladen</summary>
         <div class="ln-sub">Alle PDFs auf einmal markieren (am PC im Browser am einfachsten). Name wie „01 - GA2 - APW2122 - Belegsatz.pdf“, dann wird alles automatisch richtig einsortiert. Liegt privat auf deinem Server.</div>
@@ -429,5 +461,5 @@
     const inp = el.querySelector('#klFile'); inp.onchange = () => { if (inp.files.length) upload(ctx, [...inp.files], el.querySelector('#klMsg')); };
   }
 
-  window.LERN_KL = { list, open: (ctx, a, term, tab) => { const e = exams(ctx.getFiles()).find(x => x.area === a && x.term === term); if (e) { openExam(ctx, e, tab); return true; } return false; }, parse, exams };
+  window.LERN_KL = { detectFields, list, open: (ctx, a, term, tab) => { const e = exams(ctx.getFiles()).find(x => x.area === a && x.term === term); if (e) { openExam(ctx, e, tab); return true; } return false; }, parse, exams };
 })();
