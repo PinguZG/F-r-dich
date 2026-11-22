@@ -348,12 +348,8 @@
     root.innerHTML = `<header class="kv-top"><button type="button" class="kv-b" data-k="back">‹ Zurück</button><b class="kv-title">${esc(A[1])} · ${esc(ex.label)}</b><button type="button" class="kv-b" data-k="copyans">Antworten kopieren</button><span class="kv-timer" data-k="time"></span></header>
       <nav class="kv-tabs"></nav>
       <div class="kv-tools">
-        ${[['hand', 'Hand'], ['pen', 'Stift'], ['marker', 'Marker'], ['text', 'Text'], ['eraser', 'Radierer']].map(([k, n]) => `<button type="button" class="kv-b tl" data-t="${k}">${n}</button>`).join('')}
-        <i class="kv-sep"></i><span class="kv-cols">${COLORS.map((c, i) => `<button type="button" class="kv-dot" data-c="${i}" style="--c:${c}" aria-label="Farbe ${i + 1}"></button>`).join('')}</span>
-        <button type="button" class="kv-b" data-k="w"></button><button type="button" class="kv-b" data-k="ts"></button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="undo">↶ Zurück</button><button type="button" class="kv-b" data-k="clear">Seite leeren</button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
-        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="po"></button><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
+        <button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
+        <i class="kv-sep"></i><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
       </div><div class="kv-panes"></div>`;
     document.body.append(root); document.body.classList.add('kv-open');
     const panes = root.querySelector('.kv-panes'), tabsEl = root.querySelector('.kv-tabs');
@@ -391,12 +387,7 @@
       const m = document.createElement('div'); m.className = 'kv-copy'; m.innerHTML = '<div class="ln-sub">Text markieren und kopieren, dann im Chat einfügen.</div><textarea readonly rows="12"></textarea><button type="button" class="kv-b" data-k="copyclose">Schließen</button>'; m.querySelector('textarea').value = txt; root.append(m); m.querySelector('textarea').select();
     }
     function upd() {
-      root.querySelectorAll('.tl').forEach(b => b.classList.toggle('on', b.dataset.t === S.tool));
-      root.querySelectorAll('.kv-dot').forEach(b => b.classList.toggle('on', +b.dataset.c === S.color));
-      root.querySelector('[data-k=w]').textContent = 'Strich: ' + WIDTHS[S.w][0]; root.querySelector('[data-k=ts]').textContent = 'Text: ' + TSIZES[S.ts][0];
-      root.querySelector('[data-k=po]').textContent = S.po ? 'Nur Stift: an' : 'Nur Stift: aus'; root.querySelector('[data-k=po]').classList.toggle('on', S.po);
       root.querySelector('[data-k=split]').hidden = innerWidth < 900 || av.length < 2; root.querySelector('[data-k=split]').classList.toggle('on', split);
-      const d = cur(); root.querySelector('[data-k=undo]').disabled = !(d && d.hist.length);
     }
     function clock() {
       const el = root.querySelector('[data-k=time]'), b = root.querySelector('[data-k=timer]');

@@ -6,7 +6,7 @@
 (() => {
   const ENTRIES = [
     { v: 111, date: '2026-11-22',
-      features: ['Prüfungen: Antwortfelder direkt auf den Antwortzeilen der Original-PDFs (tippen statt Reiter), oben „Antworten kopieren“.'],
+      features: ['Prüfungen: Antwortfelder direkt auf den Antwortzeilen der Original-PDFs (tippen statt Reiter), oben „Antworten kopieren“. Stift-, Marker- und Textleiste entfernt.'],
       small: [],
       hotfix: ['Reiter „Antworten“ entfernt (Felder sind jetzt auf den Seiten).'] },
     { v: 110, date: '2026-11-22',

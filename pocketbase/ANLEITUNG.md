@@ -2110,3 +2110,4 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Speicherung:** in den Notizen der Datei (`lern_notizen`, je Seite `a[<Feld>] = {n, t}`), lokal + Server wie Stift/Text. „Antworten kopieren“ (oben) liefert Text zur Korrektur im Chat.
 - **Grenzen:** Erkennung getestet mit künstlichen Scan-Seiten, nicht mit den echten PDFs. Falsche/fehlende Felder bitte melden (Seite + Aufgabe), Schwellwerte in `detectFields` anpassen.
 - **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110) oder `vor-kunst-kurzarbeit`-Stand davor, `wir-vNN` hochzählen.
+- **Nachtrag (v111):** Die Werkzeugleiste (Hand/Stift/Marker/Text/Radierer, Farben, Strich, Rückgängig, Seite leeren) ist im Prüfungs-Viewer entfernt; es bleiben Zoom, Timer und „Nebeneinander“. Stift-/Textnotizen früherer Versionen werden nicht mehr angezeigt, bleiben aber in `lern_notizen` erhalten.
