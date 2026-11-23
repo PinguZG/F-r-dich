@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 113, date: '2026-11-23',
+      features: ['Lernen: SQL-Kapitel unter Datenbanken (SELECT, GROUP BY, JOIN, ALTER TABLE, Benutzerrechte), 23 SQL-Karten und 9 Übungsaufgaben.'],
+      small: [],
+      hotfix: [] },
     { v: 112, date: '2026-11-22',
       features: ['Prüfungen: Stift-Schreiben nur mit dem Stift (Finger scrollen und zoomen nur), freies Zoomen mit zwei Fingern, Handballen-Schutz.'],
       small: ['Kleine Leiste: Rückgängig und Radierer (der Stift-Knopf radiert auch).'],

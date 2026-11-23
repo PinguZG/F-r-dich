@@ -280,19 +280,20 @@
   // ===== Prüfungsaufgaben (echte AP2-Aufgaben nach Thema, Lösung zum Aufklappen) =====
   let PQ = null;
   const PQX = ['S26', 'S25', 'W24/25', 'S24', 'W23/24', 'S23', 'W22/23', 'S22', 'W21/22'];
+  const pqXi = e => { const i = PQX.indexOf(e); return i < 0 ? 99 : i; }; // Übungsaufgaben (ex = 'Übung') ans Ende
   async function needPQ() {
     if (PQ) return PQ;
     if (!window.LERN_PRUEF) await loadScript('/lernen/lernen-pruef.js');
     const all = window.LERN_PRUEF.tasks.map((t, i) => Object.assign({ i }, t)), P = { all, by: {}, byId: {}, ex: {} };
-    for (const t of all) { P.byId[t.id] = t; (P.by[t.a + ':' + t.s] = P.by[t.a + ':' + t.s] || []).push(t); (P.ex[t.a] = P.ex[t.a] || new Set()).add(t.ex); }
-    for (const k in P.by) P.by[k].sort((x, y) => (PQX.indexOf(x.ex) - PQX.indexOf(y.ex)) || x.i - y.i);
+    for (const t of all) { P.byId[t.id] = t; (P.by[t.a + ':' + t.s] = P.by[t.a + ':' + t.s] || []).push(t); if (t.ex !== 'Übung') (P.ex[t.a] = P.ex[t.a] || new Set()).add(t.ex); }
+    for (const k in P.by) P.by[k].sort((x, y) => (pqXi(x.ex) - pqXi(y.ex)) || x.i - y.i);
     return (PQ = P);
   }
   const pqSeen = t => !!ST.K['pq:' + t.id];
   const pqCount = a => { const L = PQ.all.filter(t => t.a === a); return { n: L.length, seen: L.filter(pqSeen).length }; };
   function pqSecs(a) {
     const f = V.pq.focus;
-    return DATA.areas[a].sections.filter(s => PQ.by[a + ':' + s.id] && (!f || f.ids.includes(s.id))).map(s => { const L = PQ.by[a + ':' + s.id]; return { s, L, n: new Set(L.map(t => t.ex)).size }; })
+    return DATA.areas[a].sections.filter(s => PQ.by[a + ':' + s.id] && (!f || f.ids.includes(s.id))).map(s => { const L = PQ.by[a + ':' + s.id]; return { s, L, n: new Set(L.filter(t => t.ex !== 'Übung').map(t => t.ex)).size }; })
       .sort((x, y) => f ? 0 : (y.n - x.n || y.L.length - x.L.length));
   }
   function pqRow(t) {

@@ -2117,3 +2117,8 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Leiste:** nur Rückgängig, Radierer (Stift-Knopf/Radierende radiert ebenfalls), Zoom, Timer, Nebeneinander.
 - **Grenzen:** Getestet mit simulierten Pointer-Events, nicht am Xiaomi Pad 5. Bei Problemen bitte beschreiben (Finger zeichnet / Stift zeichnet nicht / Scrollen ruckelt).
 - **Rücksetz-Weg:** `git checkout vor-pruefung-antworten -- app/lernen/lernen-klausur.js app/lernen.css app/sw.js shared/changelog.js` (Stand v110), `wir-vNN` hochzählen.
+
+### Lernen: SQL-Kapitel, Karten und Übungsaufgaben (23.11.2026, wir-v113)
+- **Neu:** Abschnitt „9 · Datenbanken & Diagramme“ (netz) um eine SQL-Übersicht erweitert (SELECT-Reihenfolge, GROUP BY/HAVING, JOIN, INSERT/UPDATE/DELETE, CREATE/ALTER TABLE mit Fremdschlüssel, CREATE USER/GRANT, typische Fehler). 23 neue SQL-Karten (`netz:c<hash>`, Abschnitt `db`) und 9 Übungsaufgaben im IHK-Stil (`netz-UEB-sql1…9`, `ex: 'Übung'`) unter „Aufgaben“, zählen nicht als Prüfungsvorkommen.
+- **Dateien:** `app/lernen/lernen-data.js`, `app/lernen/lernen-pruef.js`, `app/lernen.js` (Übungen ans Ende, nicht in der Prüfungs-Zählung), `app/sw.js`, `shared/changelog.js`. Datenbank/Schema unverändert, kein Backup nötig; bestehender Lernfortschritt bleibt (Karten-IDs unverändert).
+- **Rücksetz-Weg:** `git checkout vor-sql -- app/lernen/lernen-data.js app/lernen/lernen-pruef.js app/lernen.js app/sw.js shared/changelog.js` (kein reset/force), `wir-vNN` hochzählen.
