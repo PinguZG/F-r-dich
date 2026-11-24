@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 115, date: '2026-11-24',
+      features: [],
+      small: ['Ida · Politik: auf das Wesentliche gekürzt (nur noch, was in der Themenliste verlangt wird, 59 Karten).'],
+      hotfix: [] },
     { v: 114, date: '2026-11-24',
       features: ['Ida · Politik: Inhalte komplett neu auf die Themenliste der Kurzarbeit zugeschnitten (6 Themen, 71 Karten, Plan für Di/Mi).'],
       small: ['Prüfungen: Zoom-Anzeige in %, Doppeltipp wechselt zwischen Breite und 2,2×.'],

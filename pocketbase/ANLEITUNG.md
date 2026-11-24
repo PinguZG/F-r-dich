@@ -2129,3 +2129,4 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Karten-IDs neu** (`basis`, `rsdem`, `gewalt`, `ggart`, `konfl`, `kari`), alter Lernstand (`pol:grund-…` usw.) in `lern_vokabeln` wird nicht mehr angezeigt und bleibt unberührt in der Datenbank.
 - **Nicht aus den PDFs:** Art. 3, 4 (Wortlaut im PDF unleserlich), Wahlorgane Bundesversammlung/BVerfG, Karikaturanalyse-Schema (die Themenliste nennt sie, die PDF enthält keinen Arbeitsbogen dazu). Bitte mit dem Unterricht abgleichen.
 - **Rücksetz-Weg:** `git checkout vor-politik-neu -- app/lernen/politik-data.js app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
+- **Nachtrag (v115):** Politik weiter gekürzt auf die Themenliste: direkte/repräsentative Demokratie zu „Grundwissen“, Staatsorgane und Konflikt-Beispiele knapper, Menschenrechte/Bürgerrechte, Verfassungsbeschwerde, Schutzpflicht, Satzanfänge entfernt (59 Karten). Karten-IDs verschieben sich dadurch erneut.
