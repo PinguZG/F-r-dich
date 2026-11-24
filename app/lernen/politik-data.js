@@ -52,7 +52,7 @@ window.WIR_POLITIK = {
    "aufgaben": [
     [
      "n2a",
-     "Übersicht „Grundgesetz und Grundrechte“ (Art. 1, 20, 79) lesen, Karten dazu"
+     "Übersicht „Grundgesetz und Grundrechte“ (Art. 1, Art. 20, Art. 79 Abs. 3) lesen, Karten dazu"
     ],
     [
      "n2b",
@@ -303,65 +303,87 @@ window.WIR_POLITIK = {
   {
    "id": "ggart",
    "name": "Grundgesetz und Grundrechte",
-   "untertitel": "Art. 1, Art. 20, Art. 79 Abs. 3",
+   "untertitel": "Grundrechte allgemein, Art. 1, Art. 20, Art. 79 Abs. 3",
    "sektionen": [
     {
-     "h": "Grundrechte",
+     "h": "Grundgesetz und Grundrechte",
      "punkte": [
-      "Grundrechte sind Rechte, die das Grundgesetz dem Einzelnen gegenüber dem Staat garantiert (Freiheits-, Gleichheits-, Unverletzlichkeitsrechte).",
-      "Art. 1: Die Menschenwürde ist unantastbar. Der Staat muss sie achten und schützen.",
-      "Art. 2: Recht auf Leben und körperliche Unversehrtheit.",
-      "Art. 3: Alle Menschen sind vor dem Gesetz gleich.",
-      "Sie begrenzen die Macht des Staates und schützen vor Willkür; sie wirken auch im Alltag (z. B. gleiche Behandlung von Frauen und Männern durch private Arbeitgeber)."
+      "Das Grundgesetz (GG) ist die Verfassung der Bundesrepublik Deutschland.",
+      "Grundrechte sind Rechte, die das GG dem Einzelnen gegenüber dem Staat garantiert: Freiheitsrechte, Gleichheitsrechte und Unverletzlichkeitsrechte. Beispiele: Art. 1 (Menschenwürde), Art. 2 (Leben und körperliche Unversehrtheit), Art. 3 (Gleichheit vor dem Gesetz).",
+      "Warum wichtig? Sie begrenzen die Macht des Staates und schützen vor Willkür. Sie wirken auch im Alltag, z. B. muss ein privater Arbeitgeber Frauen und Männer gleich behandeln."
      ]
     },
     {
-     "h": "Die wichtigsten Artikel",
+     "h": "Art. 1 GG: Menschenwürde",
      "punkte": [
-      "Art. 1 Abs. 1: „Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.“ Sie steht an der Spitze der Verfassungswerte und ist nicht abwägungsfähig.",
-      "Art. 1 Abs. 3: Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht. Alle Staatsgewalten müssen sich an die Grundrechte halten.",
-      "Art. 20: legt die Prinzipien Demokratie, Republik, Bundesstaat, Sozialstaat und Rechtsstaat fest.",
-      "Art. 79 Abs. 3 („Ewigkeitsklausel“): Eine Änderung des GG, die die Gliederung des Bundes in Länder, die grundsätzliche Mitwirkung der Länder bei der Gesetzgebung oder die Grundsätze der Art. 1 und 20 berührt, ist unzulässig. Auch eine Zweidrittelmehrheit kann sie nicht abschaffen.",
-      "Eine Änderung des GG braucht zwei Drittel von Bundestag und Bundesrat. Art. 79 Abs. 3 schützt Art. 1 und 20 trotzdem vor jeder Änderung."
+      "Abs. 1: Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.",
+      "Die Menschenwürde steht an der Spitze der Verfassungswerte und ist nicht abwägungsfähig.",
+      "Abs. 3: Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht. Alle Staatsgewalten müssen sich an die Grundrechte halten."
+     ]
+    },
+    {
+     "h": "Art. 20 GG: Staatsprinzipien",
+     "punkte": [
+      "Abs. 1: Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat.",
+      "Art. 20 legt die Prinzipien Demokratie, Republik, Bundesstaat, Sozialstaat und Rechtsstaat fest.",
+      "Abs. 2: Alle Staatsgewalt geht vom Volke aus (Wahlen und Abstimmungen, besondere Organe der Gesetzgebung, vollziehenden Gewalt und Rechtsprechung).",
+      "Abs. 3: Gesetzgebung an die verfassungsmäßige Ordnung, vollziehende Gewalt und Rechtsprechung an Gesetz und Recht gebunden."
+     ]
+    },
+    {
+     "h": "Art. 79 Abs. 3 GG: Ewigkeitsklausel",
+     "punkte": [
+      "Eine Änderung des GG, die die Gliederung des Bundes in Länder, die grundsätzliche Mitwirkung der Länder bei der Gesetzgebung oder die in Art. 1 und 20 niedergelegten Grundsätze berührt, ist unzulässig.",
+      "Geschützt sind also: die Grundsätze aus Art. 1 und 20, die Gliederung in Länder, die Mitwirkung der Länder bei der Gesetzgebung.",
+      "Eine normale Änderung des GG braucht zwei Drittel von Bundestag und Bundesrat (Art. 79 Abs. 2). Die Ewigkeitsklausel kann aber auch eine Zweidrittelmehrheit nicht abschaffen.",
+      "Warum wichtig? Art. 20 legt die Grundprinzipien fest, Art. 79 Abs. 3 schützt sie dauerhaft. Auch Mehrheiten dürfen den Rechtsstaat nicht abschaffen."
      ]
     }
    ],
    "karten": [
     [
+     "Was ist das Grundgesetz?",
+     "Die Verfassung der Bundesrepublik Deutschland."
+    ],
+    [
      "Was sind Grundrechte?",
      "Rechte, die das Grundgesetz dem Einzelnen gegenüber dem Staat garantiert (Freiheits-, Gleichheits-, Unverletzlichkeitsrechte)."
+    ],
+    [
+     "Warum sind Grundrechte wichtig?",
+     "Sie begrenzen die Macht des Staates und schützen vor Willkür; sie wirken auch im Alltag (z. B. gleiche Behandlung von Frauen und Männern durch private Arbeitgeber)."
     ],
     [
      "Was steht in Art. 1 Abs. 1 GG?",
      "Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt."
     ],
     [
-     "Was steht in Art. 2 GG (Kern)?",
-     "Recht auf Leben und körperliche Unversehrtheit (und freie Entfaltung der Persönlichkeit)."
-    ],
-    [
-     "Was steht in Art. 3 Abs. 1 GG?",
-     "Alle Menschen sind vor dem Gesetz gleich."
-    ],
-    [
      "Was sagt Art. 1 Abs. 3 GG?",
      "Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht."
-    ],
-    [
-     "Warum sind Grundrechte wichtig?",
-     "Sie begrenzen die Macht des Staates und schützen vor Willkür."
     ],
     [
      "Was legt Art. 20 GG fest?",
      "Demokratie, Republik, Bundesstaat, Sozialstaat, Rechtsstaat."
     ],
     [
-     "Was regelt Art. 79 Abs. 3 GG?",
-     "Die Ewigkeitsklausel: Die Grundsätze der Art. 1 und 20, die Gliederung in Länder und deren Mitwirkung bei der Gesetzgebung dürfen nicht geändert werden."
+     "Was sagt Art. 20 Abs. 1 GG?",
+     "Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat."
     ],
     [
-     "Warum sind Art. 20 und Art. 79 so wichtig?",
-     "Art. 20 legt die Grundprinzipien fest, Art. 79 Abs. 3 schützt sie dauerhaft, auch eine Zweidrittelmehrheit kann sie nicht abschaffen."
+     "Was sagt Art. 20 Abs. 2 GG?",
+     "Alle Staatsgewalt geht vom Volke aus (Wahlen und Abstimmungen, besondere Organe der Gesetzgebung, vollziehenden Gewalt und Rechtsprechung)."
+    ],
+    [
+     "Was regelt Art. 79 Abs. 3 GG (Ewigkeitsklausel)?",
+     "Änderungen sind unzulässig, wenn sie die Gliederung in Länder, deren Mitwirkung bei der Gesetzgebung oder die Grundsätze der Art. 1 und 20 berühren."
+    ],
+    [
+     "Welche Mehrheit braucht eine GG-Änderung und was kann trotzdem nicht geändert werden?",
+     "Zwei Drittel von Bundestag und Bundesrat. Die Grundsätze aus Art. 1 und 20 (Art. 79 Abs. 3) kann auch eine Zweidrittelmehrheit nicht abschaffen."
+    ],
+    [
+     "Warum sind Art. 20 und Art. 79 Abs. 3 so wichtig?",
+     "Art. 20 legt die Grundprinzipien fest, Art. 79 Abs. 3 schützt sie dauerhaft."
     ]
    ]
   },
