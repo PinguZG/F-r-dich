@@ -1,226 +1,246 @@
-/* Politik – Kurzarbeit Mi 25.11.2026 (Themenliste der Lehrkraft). Stand der Fakten: 20.11.2026.
+/* Politik – Kurzarbeit Mi 25.11.2026 (Themenliste der Lehrkraft). Quellen: Arbeitsblätter, Infoblatt „Grundrechte im Konflikt“, Schaubilder Gewaltenteilung/Staatsorgane, Musterlösung Grundgesetz, eigene Notizen (PDF „Pug“). Stand der Fakten: 24.11.2026.
    plan:   [{ id, iso, tag, fokus, aufgaben: [[id, Text]], themen: [Thema-IDs für „Karten“-Knöpfe] }]
    themen: [{ id, name, untertitel, sektionen: [{ h, punkte: [] }], karten: [[Frage, Antwort]] }]
-   Karten-IDs ergeben sich aus Thema-ID + Position (grund-1, grund-2 …) – bestehende Karten nie umsortieren, nur hinten anhängen. */
+   Karten-IDs ergeben sich aus Thema-ID + Position (basis-1, basis-2 …) – bestehende Karten nie umsortieren, nur hinten anhängen. */
 window.WIR_POLITIK = {
   fach: 'Politik', anlass: 'Kurzarbeit', datumKurz: 'Mi 25.11.', pruefung: '2026-11-25',
-  stand: 'Stand der Fakten: 20.11.2026. Amtsinhaber bitte kurz vor der Arbeit noch einmal gegenchecken, falls etwas passiert ist.',
-  hinweis: 'Fünf Tage, jeden Tag ein Thema, am Ende ein Gesamtdurchlauf. Aufgabe antippen = erledigt.',
+  stand: 'Alles, was laut Lehrkraft gefragt wird: Grundwissen, Rechtsstaat/Demokratie/Gewaltenteilung, Grundgesetz (Art. 1, 20, 79), Grundrechte im Konflikt (Art. 1–5, 8, 14), Karikaturanalyse. Stand der Fakten: 24.11.2026.',
+  hinweis: 'Zwei Tage, drei Themen pro Tag. Aufgabe antippen = erledigt. Die Übersichten reichen auf Prüfungsniveau, mit den Karten fragst du dich ab.',
   plan: [
-    { id: 'd1', iso: '2026-11-20', tag: 'Fr 20.11.', fokus: 'Grundwissen: Wer ist wer?', themen: ['grund'], aufgaben: [
-      ['d1a', 'Übersicht „Grundwissen“ lesen (Bundespräsident, Kanzler, Regierung, Ministerpräsident Bayern, Demokratie)'],
-      ['d1b', 'Karteikarten „Grundwissen“ einmal komplett durch'],
-      ['d1c', 'Alle „Schlecht“-Karten nochmal'] ] },
-    { id: 'd2', iso: '2026-11-21', tag: 'Sa 21.11.', fokus: 'Rechtsstaat, Demokratie, Gewaltenteilung (Arbeitsblatt)', themen: ['rechtsstaat'], aufgaben: [
-      ['d2a', 'Übersicht „Rechtsstaat und Demokratie“ lesen'],
-      ['d2b', 'Arbeitsblatt dazu noch einmal durchgehen'],
-      ['d2c', 'Karteikarten „Rechtsstaat und Demokratie“ durch'],
-      ['d2d', 'Gestern „Grundwissen“ kurz wiederholen'] ] },
-    { id: 'd3', iso: '2026-11-22', tag: 'So 22.11.', fokus: 'Horizontale und vertikale Gewaltenteilung (Präsentation)', themen: ['gewalten'], aufgaben: [
-      ['d3a', 'Übersicht „Gewaltenteilung“ lesen'],
-      ['d3b', 'Präsentation dazu durchgehen'],
-      ['d3c', 'Skizze zeichnen: Bund · Länder · Kommunen und Legislative · Exekutive · Judikative'],
-      ['d3d', 'Karteikarten „Gewaltenteilung“ durch'] ] },
-    { id: 'd4', iso: '2026-11-23', tag: 'Mo 23.11.', fokus: 'Grundgesetz (Art. 1, 20, 79 Abs. 3) und Grundrechte im Konflikt (Arbeitsblatt)', themen: ['gg', 'konflikt'], aufgaben: [
-      ['d4a', 'Übersicht „Grundgesetz“ lesen, Art. 1, 20 und 79 (3) sicher können'],
-      ['d4b', 'Arbeitsblatt Grundgesetz durchgehen'],
-      ['d4c', 'Übersicht „Grundrechte im Konflikt“ lesen (Art. 1–5, 8, 14)'],
-      ['d4d', 'Karteikarten „Grundgesetz“ und „Grundrechte im Konflikt“ durch'] ] },
-    { id: 'd5', iso: '2026-11-24', tag: 'Di 24.11.', fokus: 'Karikaturanalyse und alles wiederholen', themen: ['karikatur'], aufgaben: [
-      ['d5a', 'Übersicht „Karikaturanalyse“ lesen, die drei Schritte auswendig'],
-      ['d5b', 'Eine Karikatur aus dem Unterricht laut analysieren (Beschreibung, Deutung, Beurteilung)'],
-      ['d5c', 'Karteikarten „Alle“, nur Schlecht und Okay'],
-      ['d5d', 'Früh ins Bett'] ] },
-    { id: 'd6', iso: '2026-11-25', tag: 'Mi 25.11.', fokus: 'Kurzarbeit', themen: ['grund'], aufgaben: [
-      ['d6a', 'Morgens 10 Minuten: Grundwissen-Karten (Namen und Ämter)'],
-      ['d6b', 'Art. 1, 20, 79 (3) in eigenen Worten im Kopf durchgehen'],
-      ['d6c', 'Kurzarbeit schreiben'] ] }
+    { id: 'n1', iso: '2026-11-24', tag: 'Di 24.11.', fokus: 'Heute: Grundwissen, Rechtsstaat/Demokratie, Gewaltenteilung',
+      themen: ['basis', 'rsdem', 'gewalt'],
+      aufgaben: [
+        ['n1a', 'Übersicht „Grundwissen“ lesen, dann die Karten dazu'],
+        ['n1b', 'Übersicht „Rechtsstaat, Demokratie, Gewaltenteilung“ lesen, dann die Karten'],
+        ['n1c', 'Übersicht „Gewaltenteilung“ (horizontal und vertikal, Schaubild) lesen, dann die Karten'],
+        ['n1d', 'Alle „Schlecht“-Karten des Tages nochmal']
+      ] },
+    { id: 'n2', iso: '2026-11-25', tag: 'Mi 25.11.', fokus: 'Prüfungstag: Grundgesetz, Grundrechte im Konflikt, Karikatur',
+      themen: ['ggart', 'konfl', 'kari'],
+      aufgaben: [
+        ['n2a', 'Übersicht „Grundgesetz und Grundrechte“ (Art. 1, 20, 79) lesen, Karten dazu'],
+        ['n2b', 'Übersicht „Grundrechte im Konflikt“ (Art. 1–5, 8, 14, Prüfraster) lesen, Karten dazu'],
+        ['n2c', 'Übersicht „Karikaturanalyse“ lesen, Karten dazu'],
+        ['n2d', 'Alle Themen mit „Alle“ einmal durchgehen, „Schlecht“-Karten zuletzt']
+      ] }
   ],
   themen: [
-    { id: 'grund', name: 'Grundwissen', untertitel: 'Ämter, Staatsaufbau, Demokratie', sektionen: [
-      { h: 'Wer ist wer (Stand 20.11.2026)', punkte: [
-        'Bundespräsident: Frank-Walter Steinmeier. Zweite Amtszeit, endet am 18.03.2027. Eine dritte Amtszeit gibt es nicht.',
-        'Nachfolge: Die Bundesversammlung wählt den neuen Bundespräsidenten, geplant für Samstag, 30.01.2027. Wer es wird, ist noch offen.',
-        'Bundeskanzler: Friedrich Merz (CDU), seit Mai 2025, im zweiten Wahlgang gewählt.',
-        'Regierung: Koalition aus CDU/CSU und SPD. Vizekanzler und Finanzminister: Lars Klingbeil (SPD).',
-        'Bundestagspräsidentin: Julia Klöckner (CDU), seit März 2025.',
-        'Ministerpräsident von Bayern: Markus Söder (CSU). Bayern regiert eine Koalition aus CSU und Freien Wählern.' ] },
-      { h: 'Staatsaufbau', punkte: [
-        'Deutschland ist laut Art. 20 (1) GG ein demokratischer und sozialer Bundesstaat. Es ist eine parlamentarische Demokratie.',
-        'Das Grundgesetz gilt seit dem 23.05.1949. Hauptstadt: Berlin. 16 Bundesländer.',
-        'Bundestag: wird für 4 Jahre gewählt. Bundesrat: die Länder wirken bei der Gesetzgebung mit.',
-        'Der Bundespräsident ist Staatsoberhaupt und repräsentiert. Die Macht liegt bei Parlament und Regierung. Der Bundeskanzler bestimmt die Richtlinien der Politik.' ] },
-      { h: 'Demokratie', punkte: [
-        'Demokratie kommt aus dem Griechischen: demos = Volk, kratos = Herrschaft. Also Herrschaft des Volkes.',
-        'Art. 20 (2) GG: Alle Staatsgewalt geht vom Volke aus. Das Volk übt sie in Wahlen und Abstimmungen aus und durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung.',
-        'Deutschland ist eine repräsentative Demokratie: Das Volk wählt Abgeordnete, die für es entscheiden. Direkte Beteiligung (Volksentscheid) gibt es vor allem auf Landesebene.' ] }
-    ], karten: [
-      ['Wer ist aktuell Bundespräsident? Wann endet seine Amtszeit?', 'Frank-Walter Steinmeier. Seine zweite und letzte Amtszeit endet am 18.03.2027. Die Bundesversammlung wählt den Nachfolger, geplant für den 30.01.2027.'],
-      ['Wer ist aktuell Bundeskanzler?', 'Friedrich Merz (CDU), seit Mai 2025.'],
-      ['Welche Parteien sind aktuell an der Bundesregierung beteiligt?', 'CDU/CSU und SPD (schwarz-rote Koalition). Vizekanzler ist Lars Klingbeil (SPD).'],
-      ['Wer ist Ministerpräsident von Bayern?', 'Markus Söder (CSU). Koalition in Bayern: CSU und Freie Wähler.'],
-      ['Wer ist Bundestagspräsidentin?', 'Julia Klöckner (CDU).'],
-      ['Was bedeutet Demokratie?', 'Herrschaft des Volkes (griechisch demos = Volk, kratos = Herrschaft). Art. 20 (2) GG: Alle Staatsgewalt geht vom Volke aus.'],
-      ['Was ist der Unterschied zwischen direkter und repräsentativer Demokratie?', 'Direkt: Das Volk entscheidet selbst (Volksentscheid). Repräsentativ: Das Volk wählt Abgeordnete, die für es entscheiden. Auf Bundesebene gilt die repräsentative.'],
-      ['Wie ist Deutschland nach Art. 20 (1) GG verfasst?', 'Als demokratischer und sozialer Bundesstaat.'],
-      ['Wer wählt den Bundespräsidenten und für wie lange?', 'Die Bundesversammlung (Bundestagsabgeordnete plus gleich viele von den Landesparlamenten bestimmte Mitglieder). Amtszeit 5 Jahre, einmalige Wiederwahl.'],
-      ['Wann ist das Grundgesetz in Kraft getreten?', 'Am 23.05.1949.'],
-      ['Wofür ist der Bundesrat da?', 'Er vertritt die Länder und wirkt bei der Gesetzgebung des Bundes mit.']
-    ] },
-    { id: 'rechtsstaat', name: 'Rechtsstaat und Demokratie', untertitel: 'Merkmale (Arbeitsblatt)', sektionen: [
-      { h: 'Merkmale des Rechtsstaats', punkte: [
-        'Bindung an Recht und Gesetz (Art. 20 (3) GG): Gesetzgebung an die Verfassung, Regierung und Rechtsprechung an Gesetz und Recht.',
-        'Gewaltenteilung: Gesetzgebung, Regierung und Rechtsprechung sind getrennt und kontrollieren sich.',
-        'Grundrechte schützen die Bürger vor dem Staat und binden alle staatliche Gewalt (Art. 1 (3) GG).',
-        'Unabhängige Gerichte (Art. 97 GG): Richter sind nur dem Gesetz unterworfen.',
-        'Rechtsweggarantie (Art. 19 (4) GG): Wer vom Staat in seinen Rechten verletzt wird, kann vor Gericht gehen.',
-        'Rechtssicherheit: keine Strafe ohne Gesetz, keine rückwirkende Strafbarkeit (Art. 103 (2) GG).',
-        'Verhältnismäßigkeit: Staatliche Eingriffe müssen geeignet, erforderlich und angemessen sein.' ] },
-      { h: 'Merkmale der Demokratie', punkte: [
-        'Volkssouveränität: Die Macht geht vom Volk aus.',
-        'Freie, gleiche, geheime, allgemeine und unmittelbare Wahlen (Art. 38 GG).',
-        'Mehrparteiensystem und Opposition. Die Opposition kontrolliert die Regierung.',
-        'Mehrheitsprinzip, aber mit Minderheitenschutz.',
-        'Meinungs-, Presse- und Versammlungsfreiheit.',
-        'Wahl auf Zeit: Regierende können abgewählt werden.' ] },
-      { h: 'Zusammenhang', punkte: [
-        'Rechtsstaat sorgt dafür, dass der Staat sich an Regeln hält. Demokratie sorgt dafür, dass das Volk bestimmt, wer regiert. Beides zusammen: freiheitlich-demokratische Grundordnung.',
-        'Eine Mehrheit darf nicht alles: Grundrechte und die Ewigkeitsklausel (Art. 79 (3)) setzen Grenzen.' ] }
-    ], karten: [
-      ['Nenne vier Merkmale eines Rechtsstaats.', 'Bindung an Recht und Gesetz, Gewaltenteilung, Grundrechte, unabhängige Gerichte. Dazu: Rechtsweggarantie, Rechtssicherheit, Verhältnismäßigkeit.'],
-      ['Was sagt Art. 20 (3) GG?', 'Die Gesetzgebung ist an die verfassungsmäßige Ordnung gebunden. Die vollziehende Gewalt und die Rechtsprechung sind an Gesetz und Recht gebunden.'],
-      ['Was bedeutet die Rechtsweggarantie (Art. 19 (4) GG)?', 'Wer durch die öffentliche Gewalt in seinen Rechten verletzt wird, dem steht der Rechtsweg offen. Er kann also vor Gericht klagen.'],
-      ['Was bedeutet Verhältnismäßigkeit?', 'Ein Eingriff des Staates muss geeignet (hilft dem Ziel), erforderlich (kein milderes Mittel) und angemessen (Nutzen und Schaden stehen im Verhältnis) sein.'],
-      ['Nenne die Wahlgrundsätze nach Art. 38 GG.', 'Allgemein, unmittelbar, frei, gleich, geheim.'],
-      ['Was ist der Unterschied zwischen Rechtsstaat und Demokratie?', 'Rechtsstaat: Der Staat ist an Recht und Gesetz gebunden. Demokratie: Das Volk bestimmt, wer regiert. Beides gehört zur freiheitlich-demokratischen Grundordnung.'],
-      ['Warum ist Opposition wichtig?', 'Sie kontrolliert die Regierung, zeigt Alternativen auf und sorgt dafür, dass Macht abgegeben werden kann (Machtwechsel).'],
-      ['Was heißt Mehrheitsprinzip mit Minderheitenschutz?', 'Die Mehrheit entscheidet, darf aber Grundrechte und die Rechte der Minderheit nicht aufheben.'],
-      ['Was bedeutet „nulla poena sine lege“ (Art. 103 (2) GG)?', 'Keine Strafe ohne Gesetz. Eine Tat ist nur strafbar, wenn das vor der Tat gesetzlich bestimmt war (Rückwirkungsverbot).'],
-      ['Was bedeutet die Unabhängigkeit der Richter (Art. 97 GG)?', 'Richter sind nur dem Gesetz unterworfen. Weder Regierung noch Parlament dürfen ihnen Urteile vorschreiben.']
-    ] },
-    { id: 'gewalten', name: 'Gewaltenteilung', untertitel: 'Horizontal und vertikal (Präsentation)', sektionen: [
-      { h: 'Idee', punkte: [
-        'Montesquieu („Vom Geist der Gesetze“, 1748): Wenn eine Hand alle Macht hat, wird sie missbraucht. Deshalb wird die Macht aufgeteilt und gegenseitig kontrolliert (checks and balances).' ] },
-      { h: 'Horizontale Gewaltenteilung (nebeneinander)', punkte: [
-        'Legislative (Gesetzgebung): Bundestag, mit Mitwirkung des Bundesrats.',
-        'Exekutive (vollziehende Gewalt): Bundesregierung und Verwaltung.',
-        'Judikative (Rechtsprechung): Gerichte, an der Spitze das Bundesverfassungsgericht.',
-        'In Deutschland sind die Gewalten verschränkt: Der Kanzler wird vom Bundestag gewählt, die Regierung stützt sich auf die Mehrheit im Parlament. Kontrolliert wird durch Opposition, Untersuchungsausschüsse und das Bundesverfassungsgericht.',
-        'Die Medien gelten als „vierte Gewalt“. Das ist aber keine Gewalt im Sinne des Grundgesetzes.' ] },
-      { h: 'Vertikale Gewaltenteilung (übereinander)', punkte: [
-        'Ebenen: Bund, Länder, Kommunen. Das ist der Föderalismus.',
-        'Art. 30 und 70 GG: Staatliche Aufgaben sind Sache der Länder, soweit das Grundgesetz nichts anderes sagt.',
-        'Bundesrat: Die Länder wirken an Gesetzen des Bundes mit (Zustimmungs- und Einspruchsgesetze).',
-        'Art. 28 (2) GG: Gemeinden haben das Recht der kommunalen Selbstverwaltung.',
-        'Vorteile: Macht ist verteilt, Entscheidungen sind näher an den Menschen, Länder können eigene Wege gehen. Nachteil: Abstimmung dauert länger.' ] }
-    ], karten: [
-      ['Wer hat die Gewaltenteilung beschrieben?', 'Montesquieu, „Vom Geist der Gesetze“ (1748).'],
-      ['Nenne die drei Gewalten und je ein Organ in Deutschland.', 'Legislative: Bundestag. Exekutive: Bundesregierung. Judikative: Gerichte (z. B. Bundesverfassungsgericht).'],
-      ['Was ist horizontale Gewaltenteilung?', 'Die Aufteilung der Staatsgewalt nebeneinander: Gesetzgebung, vollziehende Gewalt und Rechtsprechung.'],
-      ['Was ist vertikale Gewaltenteilung?', 'Die Aufteilung der Macht auf mehrere Ebenen: Bund, Länder und Kommunen (Föderalismus).'],
-      ['Warum gibt es Gewaltenteilung?', 'Um Machtmissbrauch zu verhindern. Die Gewalten kontrollieren und begrenzen sich gegenseitig (checks and balances).'],
-      ['Wie sind die Gewalten in Deutschland verschränkt?', 'Der Bundestag wählt den Kanzler, die Regierung stützt sich auf die Parlamentsmehrheit. Die Kontrolle übernehmen Opposition, Untersuchungsausschüsse und das Bundesverfassungsgericht.'],
-      ['Welche Rolle hat der Bundesrat bei der vertikalen Gewaltenteilung?', 'Er vertritt die Länder und wirkt bei Bundesgesetzen mit (Zustimmungs- und Einspruchsgesetze).'],
-      ['Was regelt Art. 28 (2) GG?', 'Die kommunale Selbstverwaltung: Gemeinden regeln die Angelegenheiten vor Ort in eigener Verantwortung.'],
-      ['Wer ist im Zweifel für staatliche Aufgaben zuständig, Bund oder Länder? (Art. 30, 70 GG)', 'Die Länder, soweit das Grundgesetz dem Bund nichts zuweist.'],
-      ['Warum werden die Medien „vierte Gewalt“ genannt?', 'Sie kontrollieren Politik durch Berichterstattung. Es ist aber keine Gewalt im Sinne des Grundgesetzes.']
-    ] },
-    { id: 'gg', name: 'Grundgesetz', untertitel: 'Art. 1, Art. 20, Art. 79 (3)', sektionen: [
-      { h: 'Art. 1 – Menschenwürde', punkte: [
-        '(1) Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.',
-        '(2) Das deutsche Volk bekennt sich zu unverletzlichen und unveräußerlichen Menschenrechten.',
-        '(3) Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht.',
-        'Entstehung: Antwort auf die Verbrechen des Nationalsozialismus.' ] },
-      { h: 'Art. 20 – Staatsstrukturprinzipien', punkte: [
-        '(1) Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat. (Demokratie, Sozialstaat, Bundesstaat. Dazu: Republik und Rechtsstaat.)',
-        '(2) Alle Staatsgewalt geht vom Volke aus. Sie wird vom Volke in Wahlen und Abstimmungen und durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung ausgeübt.',
-        '(3) Die Gesetzgebung ist an die verfassungsmäßige Ordnung gebunden, die vollziehende Gewalt und die Rechtsprechung an Gesetz und Recht.',
-        '(4) Widerstandsrecht: Gegen jeden, der es unternimmt, diese Ordnung zu beseitigen, haben alle Deutschen das Recht zum Widerstand, wenn andere Abhilfe nicht möglich ist.' ] },
-      { h: 'Art. 79 – Änderung des Grundgesetzes', punkte: [
-        '(2) Eine Änderung braucht eine Zweidrittelmehrheit im Bundestag und im Bundesrat.',
-        '(3) Ewigkeitsklausel: Unzulässig ist eine Änderung, die die Gliederung des Bundes in Länder, die grundsätzliche Mitwirkung der Länder bei der Gesetzgebung oder die in Art. 1 und Art. 20 niedergelegten Grundsätze berührt.',
-        'Sinn: Die Demokratie soll sich nicht mit demokratischen Mitteln selbst abschaffen können. Hintergrund ist das Ende der Weimarer Republik.' ] }
-    ], karten: [
-      ['Was sagt Art. 1 (1) GG?', 'Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.'],
-      ['Was regelt Art. 1 (3) GG?', 'Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht.'],
-      ['Was regelt Art. 1 (2) GG?', 'Das Bekenntnis zu unverletzlichen und unveräußerlichen Menschenrechten als Grundlage jeder Gemeinschaft, des Friedens und der Gerechtigkeit.'],
-      ['Was steht in Art. 20 (1) GG?', 'Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat.'],
-      ['Was steht in Art. 20 (2) GG?', 'Alle Staatsgewalt geht vom Volke aus. Sie wird in Wahlen und Abstimmungen und durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung ausgeübt.'],
-      ['Was steht in Art. 20 (3) GG?', 'Bindung der Gesetzgebung an die verfassungsmäßige Ordnung, der vollziehenden Gewalt und der Rechtsprechung an Gesetz und Recht.'],
-      ['Was regelt Art. 20 (4) GG?', 'Das Widerstandsrecht: Alle Deutschen dürfen Widerstand leisten gegen jeden, der die Ordnung beseitigen will, wenn keine andere Abhilfe möglich ist.'],
-      ['Was ist die Ewigkeitsklausel? Wo steht sie?', 'Art. 79 (3) GG. Änderungen, die die Gliederung in Länder, die Mitwirkung der Länder bei der Gesetzgebung oder die Grundsätze aus Art. 1 und 20 berühren, sind unzulässig.'],
-      ['Welche Mehrheit braucht man, um das Grundgesetz zu ändern?', 'Zweidrittelmehrheit im Bundestag und im Bundesrat (Art. 79 (2) GG).'],
-      ['Wozu dient die Ewigkeitsklausel?', 'Sie schützt die Grundordnung, damit die Demokratie nicht mit demokratischen Mitteln abgeschafft werden kann (Lehre aus dem Ende der Weimarer Republik).'],
-      ['Welche Staatsstrukturprinzipien stecken in Art. 20?', 'Demokratie, Sozialstaat, Bundesstaat, Republik und Rechtsstaat.']
-    ] },
-    { id: 'konflikt', name: 'Grundrechte im Konflikt', untertitel: 'Art. 1–5, 8 und 14', sektionen: [
-      { h: 'Die Grundrechte im Überblick', punkte: [
-        'Art. 1: Menschenwürde. Unantastbar, wird nicht gegen andere Rechte abgewogen.',
-        'Art. 2: Freie Entfaltung der Persönlichkeit, Recht auf Leben und körperliche Unversehrtheit, Freiheit der Person.',
-        'Art. 3: Gleichheit vor dem Gesetz. Männer und Frauen sind gleichberechtigt. Niemand darf wegen Geschlecht, Abstammung, Rasse, Sprache, Heimat und Herkunft, Glauben, religiöser oder politischer Anschauungen oder wegen einer Behinderung benachteiligt oder bevorzugt werden.',
-        'Art. 4: Glaubens-, Gewissens- und Bekenntnisfreiheit, ungestörte Religionsausübung, Recht auf Kriegsdienstverweigerung.',
-        'Art. 5: Meinungs-, Informations-, Presse- und Rundfunkfreiheit, Kunst- und Wissenschaftsfreiheit. Eine Zensur findet nicht statt. Schranken: allgemeine Gesetze, Jugendschutz, Recht der persönlichen Ehre.',
-        'Art. 8: Versammlungsfreiheit. Alle Deutschen dürfen sich friedlich und ohne Waffen versammeln. Bei Versammlungen unter freiem Himmel kann das durch Gesetz beschränkt werden.',
-        'Art. 14: Eigentum und Erbrecht werden gewährleistet. Eigentum verpflichtet, sein Gebrauch soll zugleich dem Wohle der Allgemeinheit dienen. Enteignung nur zum Wohle der Allgemeinheit, durch Gesetz und gegen Entschädigung.' ] },
-      { h: 'Wenn Grundrechte kollidieren', punkte: [
-        'Grundrechte sind nicht grenzenlos. Wo die Freiheit des einen die Rechte anderer berührt, muss abgewogen werden.',
-        'Lösung: praktische Konkordanz. Beide Grundrechte sollen möglichst weitgehend erhalten bleiben, keines wird einfach „weggewischt“.',
-        'Prüfung der Verhältnismäßigkeit: geeignet, erforderlich, angemessen.',
-        'Schranken: Viele Grundrechte stehen unter Gesetzesvorbehalt (der Gesetzgeber darf sie einschränken). Der Wesensgehalt darf nie angetastet werden (Art. 19 (2) GG).',
-        'Die Menschenwürde (Art. 1) ist absolut geschützt.',
-        'Im Streitfall entscheiden die Gerichte, am Ende das Bundesverfassungsgericht.' ] },
-      { h: 'Typische Konflikte', punkte: [
-        'Meinungsfreiheit (Art. 5) gegen Persönlichkeitsrecht/Ehre (Art. 1, 2): Kritik ja, Beleidigung und Hetze nein.',
-        'Versammlungsfreiheit (Art. 8) gegen Rechte Dritter, z. B. Eigentum (Art. 14) oder Bewegungsfreiheit (Art. 2): Demos dürfen eingeschränkt werden, wenn Gefahr droht.',
-        'Kunstfreiheit (Art. 5) gegen Persönlichkeitsrecht (Art. 1, 2): Satire darf viel, aber nicht die Würde verletzen.',
-        'Glaubensfreiheit (Art. 4) gegen Gleichberechtigung (Art. 3): z. B. bei religiösen Kleidungsvorschriften oder Ausnahmen vom Unterricht.',
-        'Eigentum (Art. 14) gegen Sozialbindung: z. B. bei Mietpreisbremse oder Enteignung für Straßenbau.' ] }
-    ], karten: [
-      ['Was schützt Art. 1 GG und was ist daran besonders?', 'Die Menschenwürde. Sie ist unantastbar und wird nicht gegen andere Rechte abgewogen.'],
-      ['Was schützt Art. 2 GG?', 'Freie Entfaltung der Persönlichkeit, Leben, körperliche Unversehrtheit und Freiheit der Person.'],
-      ['Was schützt Art. 3 GG?', 'Gleichheit vor dem Gesetz, Gleichberechtigung von Männern und Frauen, Verbot der Benachteiligung z. B. wegen Geschlecht, Herkunft, Glauben, politischer Anschauung oder Behinderung.'],
-      ['Was schützt Art. 4 GG?', 'Glaubens-, Gewissens- und Bekenntnisfreiheit, ungestörte Religionsausübung und das Recht, den Kriegsdienst mit der Waffe zu verweigern.'],
-      ['Was schützt Art. 5 GG?', 'Meinungs-, Informations-, Presse- und Rundfunkfreiheit sowie Kunst und Wissenschaft. Zensur findet nicht statt.'],
-      ['Wo sind die Schranken der Meinungsfreiheit (Art. 5 (2))?', 'In den allgemeinen Gesetzen, den Vorschriften zum Jugendschutz und im Recht der persönlichen Ehre.'],
-      ['Was schützt Art. 8 GG?', 'Die Versammlungsfreiheit: Alle Deutschen dürfen sich friedlich und ohne Waffen versammeln.'],
-      ['Wie kann die Versammlungsfreiheit eingeschränkt werden?', 'Bei Versammlungen unter freiem Himmel durch Gesetz oder aufgrund eines Gesetzes, z. B. bei Gefahr für Dritte.'],
-      ['Was regelt Art. 14 GG?', 'Eigentum und Erbrecht sind gewährleistet. Eigentum verpflichtet. Enteignung nur zum Wohle der Allgemeinheit, durch Gesetz und gegen Entschädigung.'],
-      ['Wie löst man einen Konflikt zwischen zwei Grundrechten?', 'Durch Abwägung (praktische Konkordanz): Beide Rechte sollen möglichst weit erhalten bleiben. Geprüft wird die Verhältnismäßigkeit.'],
-      ['Was darf bei einer Einschränkung eines Grundrechts nie angetastet werden?', 'Der Wesensgehalt des Grundrechts (Art. 19 (2) GG).'],
-      ['Welches Grundrecht wird nicht gegen andere abgewogen?', 'Die Menschenwürde (Art. 1 (1) GG). Sie ist unantastbar.'],
-      ['Nenne ein Beispiel für einen Konflikt Meinungsfreiheit gegen Persönlichkeitsrecht.', 'Kritik an einer Person ist erlaubt. Beleidigung oder Hetze verletzen deren Ehre und sind nicht durch Art. 5 gedeckt.'],
-      ['Wer entscheidet am Ende über Grundrechtskonflikte?', 'Die Gerichte, in letzter Instanz das Bundesverfassungsgericht (Verfassungsbeschwerde).']
-    ] },
-    { id: 'karikatur', name: 'Karikaturanalyse', untertitel: 'Beschreiben, deuten, beurteilen', sektionen: [
-      { h: 'Was ist eine politische Karikatur?', punkte: [
-        'Eine Zeichnung, die ein politisches Thema oder Personen überspitzt darstellt, um Kritik zu üben. Sie zeigt immer eine Meinung des Zeichners, keine neutrale Abbildung.' ] },
-      { h: 'Schritt 0 – Einleitung', punkte: [
-        'Titel, Zeichner, Quelle (Zeitung), Datum, Thema in einem Satz. Beispiel: „Die Karikatur von … aus der … vom … thematisiert …“' ] },
-      { h: 'Schritt 1 – Beschreiben (neutral, nur Sichtbares)', punkte: [
-        'Was ist zu sehen? Personen, Gegenstände, Orte, Beschriftungen, Sprechblasen.',
-        'Wer ist dargestellt? Woran erkennt man die Person oder Gruppe?',
-        'Wie ist das Bild aufgebaut (Vordergrund, Hintergrund, Größenverhältnisse)?',
-        'Noch keine Wertung und keine Deutung.' ] },
-      { h: 'Schritt 2 – Deuten (analysieren)', punkte: [
-        'Politischer Hintergrund: Auf welches Ereignis oder Problem bezieht sich die Karikatur?',
-        'Was bedeuten die Symbole (z. B. Waage, Adler, Tonne, Schiff)? Wofür stehen die Personen?',
-        'Stilmittel: Übertreibung, Verfremdung, Vergleich/Metapher, Personifikation, Symbolik, Ironie.',
-        'Was sagt der Text (Titel, Beschriftung)?',
-        'Was ist die Aussage? Was will der Zeichner kritisieren?' ] },
-      { h: 'Schritt 3 – Beurteilen (Stellung nehmen)', punkte: [
-        'Welche Position vertritt der Zeichner? Wie wirkt die Karikatur (Wirkung auf die Betrachter)?',
-        'Ist die Darstellung angemessen oder zu einseitig und überspitzt?',
-        'Eigene Meinung begründet: Stimme ich zu? Warum (nicht)? Mit Argumenten und politischem Wissen.' ] }
-    ], karten: [
-      ['Was ist eine politische Karikatur?', 'Eine überspitzte Zeichnung zu einem politischen Thema oder Personen, die Kritik üben will und eine Meinung des Zeichners zeigt.'],
-      ['Welche Schritte hat eine Karikaturanalyse?', 'Einleitung (Titel, Zeichner, Quelle, Datum, Thema), 1. Beschreiben, 2. Deuten, 3. Beurteilen.'],
-      ['Was gehört in die Einleitung?', 'Titel, Zeichner, Quelle, Datum und das Thema in einem Satz.'],
-      ['Was gehört in die Beschreibung?', 'Nur das Sichtbare: Personen, Gegenstände, Beschriftungen, Aufbau. Keine Deutung und keine Wertung.'],
-      ['Was gehört in die Deutung?', 'Politischer Hintergrund, Bedeutung der Symbole und Personen, Stilmittel, Aussage und Kritik des Zeichners.'],
-      ['Was gehört in die Beurteilung?', 'Position des Zeichners, Wirkung, Angemessenheit und die eigene begründete Meinung.'],
-      ['Nenne vier Stilmittel von Karikaturen.', 'Übertreibung, Symbolik, Verfremdung, Personifikation (auch Vergleich/Metapher, Ironie).'],
-      ['Warum ist eine Karikatur nicht neutral?', 'Sie will Kritik üben und zeigt die Meinung des Zeichners. Deshalb gehört zur Analyse auch die Frage, wie einseitig sie ist.'],
-      ['Mit welchen Satzanfängen kann man deuten?', '„Der Zeichner stellt … als … dar, um zu zeigen, dass …“ · „… steht symbolisch für …“ · „Die Übertreibung verdeutlicht …“.']
-    ] }
+    {
+      id: 'basis', name: 'Grundwissen', untertitel: 'Ämter und was Demokratie bedeutet',
+      sektionen: [
+        { h: 'Wer ist wer', punkte: [
+          'Bundespräsident: Frank-Walter Steinmeier (SPD).',
+          'Bundeskanzler: Friedrich Merz (CDU/CSU).',
+          'Aktuelle Regierung: Koalition aus CDU/CSU und SPD.',
+          'Ministerpräsident von Bayern: Markus Söder (CSU).'] },
+        { h: 'Was bedeutet Demokratie?', punkte: [
+          'Griechisch: „demos“ = Volk, „kratos“ = Herrschaft, also Herrschaft des Volkes.',
+          'Art. 20 Abs. 1 GG: Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat.',
+          'Art. 20 Abs. 2 GG: Alle Staatsgewalt geht vom Volke aus. Sie wird vom Volke in Wahlen und Abstimmungen und durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung ausgeübt.'] }
+      ],
+      karten: [
+        ['Wer ist aktuell Bundespräsident?', 'Frank-Walter Steinmeier (SPD).'],
+        ['Wer ist aktuell Bundeskanzler?', 'Friedrich Merz (CDU/CSU).'],
+        ['Welche Parteien regieren aktuell in Deutschland?', 'Eine Koalition aus CDU/CSU und SPD.'],
+        ['Wer ist Ministerpräsident von Bayern?', 'Markus Söder (CSU).'],
+        ['Was bedeutet Demokratie?', 'Herrschaft des Volkes (griech. demos = Volk, kratos = Herrschaft).'],
+        ['Was sagt Art. 20 Abs. 1 GG?', 'Die Bundesrepublik Deutschland ist ein demokratischer und sozialer Bundesstaat.'],
+        ['Was sagt Art. 20 Abs. 2 GG?', 'Alle Staatsgewalt geht vom Volke aus. Sie wird in Wahlen und Abstimmungen und durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung ausgeübt.']
+      ]
+    },
+    {
+      id: 'rsdem', name: 'Rechtsstaat, Demokratie, Gewaltenteilung', untertitel: 'Warum staatliche Macht begrenzt werden muss',
+      sektionen: [
+        { h: 'Leitfrage: Warum muss staatliche Macht in einer Demokratie begrenzt werden?', punkte: [
+          'Ohne Kontrolle könnte eine Regierung willkürlich handeln: eigene Gerichte einsetzen, die Presse zensieren, Kritik verbieten. Bürgerinnen und Bürger und Minderheiten wären schutzlos.',
+          'Eine Mehrheit darf nicht alles. Sie ist an Grundrechte, Menschenwürde und Rechtsstaat gebunden.',
+          'Deshalb braucht es Demokratie, Rechtsstaat und Gewaltenteilung zusammen.'] },
+        { h: 'Die drei Begriffe', punkte: [
+          'Demokratie: Bürgerinnen und Bürger wirken an politischen Entscheidungen mit (direkt oder über gewählte Vertreter). Grundrechte müssen geachtet werden.',
+          'Rechtsstaat: Staatliches Handeln ist an Recht und Gesetz gebunden. Die Macht des Staates ist durch Verfassung und Gesetze begrenzt, Bürger sind vor Willkür geschützt (unabhängige Gerichte, faire Verfahren).',
+          'Gewaltenteilung: Staatliche Macht wird auf verschiedene Bereiche verteilt und kontrolliert, damit nicht eine Person oder Gruppe alles allein entscheidet.'] },
+        { h: 'Rechtsstaat: Art. 20 Abs. 3 GG', punkte: [
+          'Die Gesetzgebung ist an die verfassungsmäßige Ordnung gebunden, die vollziehende Gewalt und die Rechtsprechung an Gesetz und Recht.',
+          'Legislative (Parlamente): müssen sich beim Erlass von Gesetzen an das Grundgesetz und die übrige verfassungsmäßige Ordnung halten (z. B. in Bayern die Bayerische Verfassung).',
+          'Exekutive (Regierung und Verwaltung): darf nur auf Grundlage bestehender Gesetze handeln und keine willkürlichen Maßnahmen treffen.',
+          'Judikative (Gerichte): sind an geschriebene Gesetze und übergeordnete Rechtsgrundsätze (Gerechtigkeit, Verhältnismäßigkeit) gebunden.'] },
+        { h: 'Merkmale einer Demokratie', punkte: [
+          'Volkssouveränität: Die Macht geht vom Volk aus (Wahlen, Mitbestimmung, Volksentscheide). Regierung und Parlament entscheiden, weil das Volk ihnen durch Wahlen diese Macht gibt.',
+          'Freie, gleiche, geheime, allgemeine und unmittelbare Wahlen; regelmäßig, die Macht ist zeitlich begrenzt.',
+          'Mehrparteiensystem und Pluralismus: verschiedene Parteien und Interessen existieren, Opposition ist normal und wichtig.',
+          'Gewaltenteilung (Kontrolle statt Machtmissbrauch).',
+          'Rechtsstaatlichkeit: Der Staat handelt nur auf Grundlage von Gesetzen, Schutz vor Willkür.',
+          'Grundrechte und Menschenwürde: schützen jeden Einzelnen und Minderheiten.',
+          'Öffentlichkeit und freie Medien: Politik muss kritisierbar sein, Kontrolle durch Presse und Öffentlichkeit.',
+          'Merksatz: Mehrheit entscheidet, aber Rechtsstaat und Grundrechte begrenzen die Mehrheit.'] },
+        { h: 'Direkte und repräsentative Demokratie', punkte: [
+          'Direkte Demokratie: Bürger entscheiden selbst, z. B. über Gesetze (Volksentscheid, Volksabstimmung, Bürgerentscheid). Funktioniert gut auf überschaubarer, regionaler Ebene. Beispiele: Schweiz, Bayern (z. B. Volksbegehren).',
+          'Repräsentative Demokratie: Bürger wählen Abgeordnete, die für sie im Parlament entscheiden und Gesetze beschließen. Wahlen stehen im Zentrum, die Bürger kontrollieren über Wahlen, Öffentlichkeit, Medien und Gerichte. Beispiel: Deutschland.'] }
+      ],
+      karten: [
+        ['Warum muss staatliche Macht in einer Demokratie begrenzt werden?', 'Sonst kann eine Regierung willkürlich handeln (Gerichte, Presse, Kritik kontrollieren) und Bürger und Minderheiten wären schutzlos. Mehrheit ist an Grundrechte und Rechtsstaat gebunden.'],
+        ['Definition Demokratie (Arbeitsblatt)?', 'Bürgerinnen und Bürger wirken an politischen Entscheidungen mit, Grundrechte müssen geachtet werden.'],
+        ['Definition Rechtsstaat (Arbeitsblatt)?', 'Staatliches Handeln ist an Recht und Gesetz gebunden.'],
+        ['Definition Gewaltenteilung (Arbeitsblatt)?', 'Staatliche Macht wird auf verschiedene Bereiche verteilt und kontrolliert.'],
+        ['Was regelt Art. 20 Abs. 3 GG?', 'Gesetzgebung ist an die verfassungsmäßige Ordnung gebunden, vollziehende Gewalt und Rechtsprechung an Gesetz und Recht (Rechtsstaat).'],
+        ['Woran sind die drei Gewalten nach Art. 20 Abs. 3 gebunden?', 'Legislative: an das Grundgesetz/die verfassungsmäßige Ordnung. Exekutive: nur auf Grundlage von Gesetzen, keine Willkür. Judikative: an Gesetze und Rechtsgrundsätze wie Gerechtigkeit und Verhältnismäßigkeit.'],
+        ['Welche Wahlgrundsätze gelten in einer Demokratie?', 'Frei, gleich, geheim, allgemein und unmittelbar.'],
+        ['Was bedeutet Volkssouveränität?', 'Die Macht geht vom Volk aus, Regierung und Parlament entscheiden, weil das Volk ihnen die Macht durch Wahlen gibt.'],
+        ['Was heißt Mehrparteiensystem und Pluralismus?', 'Verschiedene Parteien und Interessen existieren, Opposition ist normal und wichtig.'],
+        ['Warum sind freie Medien in einer Demokratie wichtig?', 'Politik muss kritisierbar sein, Presse und Öffentlichkeit kontrollieren die Macht.'],
+        ['Wo liegt die Grenze der Mehrheitsentscheidung?', 'Die Mehrheit entscheidet, ist aber an Grundrechte, Menschenwürde und Rechtsstaat gebunden.'],
+        ['Was ist direkte Demokratie? Beispiel?', 'Bürger entscheiden direkt (Volksentscheid, Volksabstimmung). Beispiele: Schweiz, Bayern.'],
+        ['Was ist repräsentative Demokratie? Beispiel?', 'Bürger wählen Abgeordnete, die im Parlament entscheiden und Gesetze machen. Beispiel: Deutschland.'],
+        ['Wie kontrollieren Bürger in der repräsentativen Demokratie?', 'Über Wahlen, Öffentlichkeit, Medien und Gerichte.']
+      ]
+    },
+    {
+      id: 'gewalt', name: 'Gewaltenteilung', untertitel: 'Horizontal und vertikal, wer wählt wen',
+      sektionen: [
+        { h: 'Horizontale Gewaltenteilung (Schaubild „Gewaltenteilung in der BRD“)', punkte: [
+          'Legislative = gesetzgebende Gewalt: Bundestag und Bundesrat.',
+          'Exekutive = ausführende/vollziehende Gewalt: Regierung, Verwaltung, Militär, Polizei.',
+          'Judikative = rechtsprechende Gewalt: Gerichte (Fachgerichte) und Bundesverfassungsgericht, unabhängig.',
+          'Beispiel: Ein Gesetz sagt „Man braucht einen Ausweis“, dann sorgt die Verwaltung dafür, dass man ihn beantragen kann, und die Polizei achtet auf die Einhaltung. Bei Streit entscheiden Gerichte.',
+          'Das Bundesverfassungsgericht prüft, ob Gesetze zum Grundgesetz passen.',
+          'Gerichte prüfen auch, ob Staat und Behörden sich an die Gesetze halten.'] },
+        { h: 'Vertikale Gewaltenteilung = Föderalismus', punkte: [
+          'Die Macht ist zwischen Bund und Ländern aufgeteilt (Bundesstaat).',
+          'Auf Landesebene gibt es die gleichen Bereiche: Landesregierung, Landtag (Landesparlament), Landesverfassungsgerichte und Landesgerichte.',
+          'Das Volk ist die Grundlage von allem (im Schaubild unten).'] },
+        { h: 'Staatsorgane und Wahlen (Schaubild)', punkte: [
+          'Volk wählt den Bundestag (alle 4 Jahre) und die Landtage (alle 4 oder 5 Jahre, in Bayern 5).',
+          'Bundestag wählt den Bundeskanzler (Bundesregierung).',
+          'Bundesversammlung wählt den Bundespräsidenten (alle 5 Jahre). Sie besteht aus Mitgliedern des Bundestags und gleich vielen von den Ländern entsandten Mitgliedern.',
+          'Bundesrat: Vertretung der Länder, besteht aus Mitgliedern der Landesregierungen.',
+          'Bundesverfassungsgericht: Die Richter werden von Bundestag und Bundesrat gewählt.',
+          'Landtag wählt den Ministerpräsidenten, der die Landesregierung führt.'] }
+      ],
+      karten: [
+        ['Welche drei Gewalten gibt es?', 'Legislative (gesetzgebend), Exekutive (ausführend), Judikative (rechtsprechend).'],
+        ['Wer gehört zur Legislative im Bund?', 'Bundestag und Bundesrat.'],
+        ['Wer gehört zur Exekutive?', 'Regierung, Verwaltung, Militär, Polizei.'],
+        ['Wer gehört zur Judikative?', 'Gerichte (Fachgerichte) und das Bundesverfassungsgericht, unabhängig.'],
+        ['Was ist horizontale Gewaltenteilung?', 'Aufteilung der Staatsgewalt auf Legislative, Exekutive und Judikative.'],
+        ['Was ist vertikale Gewaltenteilung?', 'Aufteilung der Macht zwischen Bund und Ländern (Föderalismus).'],
+        ['Was prüft das Bundesverfassungsgericht?', 'Ob Gesetze zum Grundgesetz passen.'],
+        ['Welche Organe gibt es auf Landesebene?', 'Landesregierung, Landtag und Landesverfassungsgericht.'],
+        ['Wer wählt den Bundeskanzler?', 'Der Bundestag.'],
+        ['Wer wählt den Bundespräsidenten und wie lange?', 'Die Bundesversammlung, alle 5 Jahre.'],
+        ['Wie oft wird der Bundestag gewählt?', 'Alle 4 Jahre, vom Volk.'],
+        ['Wer wählt den Ministerpräsidenten?', 'Der Landtag.'],
+        ['Was ist der Bundesrat?', 'Die Vertretung der Länder auf Bundesebene (Mitglieder der Landesregierungen), wirkt an der Gesetzgebung mit.'],
+        ['Warum gibt es Gewaltenteilung?', 'Damit nicht eine Person oder Gruppe alles allein entscheidet: Machtmissbrauch verhindern, gegenseitige Kontrolle.']
+      ]
+    },
+    {
+      id: 'ggart', name: 'Grundgesetz und Grundrechte', untertitel: 'Art. 1, Art. 20, Art. 79 Abs. 3',
+      sektionen: [
+        { h: 'Grundrechte', punkte: [
+          'Grundrechte sind Rechte, die das Grundgesetz dem Einzelnen gegenüber dem Staat garantiert: Freiheitsrechte, Gleichheitsrechte, Unverletzlichkeitsrechte.',
+          'Art. 1: Die Menschenwürde ist unantastbar. Der Staat muss sie achten und schützen.',
+          'Art. 2: Recht auf Leben und körperliche Unversehrtheit.',
+          'Art. 3: Alle Menschen sind vor dem Gesetz gleich.',
+          'Warum wichtig? Sie begrenzen die Macht des Staates und schützen vor Willkür. Sie wirken auch im Alltag, z. B. muss ein privater Arbeitgeber Frauen und Männer gleich behandeln.',
+          'Der Grundrechtskatalog steht in Art. 1 bis 19 GG. Wird ein Grundrecht eingeschränkt, muss sein Kern (Wesensgehalt) erhalten bleiben (Art. 19 Abs. 2).',
+          'Wer seine Grundrechte durch den Staat verletzt sieht, kann Verfassungsbeschwerde beim Bundesverfassungsgericht erheben.'] },
+        { h: 'Menschenrechte und Bürgerrechte', punkte: [
+          'Menschenrechte stehen allen Menschen zu, z. B. das Recht auf Leben (Art. 2).',
+          'Bürgerrechte stehen nach dem GG nur Deutschen zu, z. B. die Versammlungsfreiheit (Art. 8).',
+          'Grundrechtsähnliche Artikel stehen außerhalb des Katalogs: z. B. Bundestagswahlrecht (Art. 38) und rechtliches Gehör (Art. 103 Abs. 1).'] },
+        { h: 'Die wichtigsten Artikel', punkte: [
+          'Art. 1 Abs. 1: „Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.“ Sie steht an der Spitze der Verfassungswerte und ist nicht abwägungsfähig.',
+          'Art. 1 Abs. 3: Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht. Alle Staatsgewalten müssen sich an die Grundrechte halten.',
+          'Art. 20: legt die Prinzipien Demokratie, Republik, Bundesstaat, Sozialstaat und Rechtsstaat fest.',
+          'Art. 79 Abs. 3 („Ewigkeitsklausel“): Eine Änderung des GG, die die Gliederung des Bundes in Länder, die grundsätzliche Mitwirkung der Länder bei der Gesetzgebung oder die Grundsätze der Art. 1 und 20 berührt, ist unzulässig. Auch eine Zweidrittelmehrheit kann sie nicht abschaffen.',
+          'Art. 79 Abs. 2: Jede Änderung des GG braucht zwei Drittel der Bundestagsmitglieder und zwei Drittel der Bundesratsstimmen.'] }
+      ],
+      karten: [
+        ['Was sind Grundrechte?', 'Rechte, die das Grundgesetz dem Einzelnen gegenüber dem Staat garantiert (Freiheits-, Gleichheits-, Unverletzlichkeitsrechte).'],
+        ['Was steht in Art. 1 Abs. 1 GG?', 'Die Würde des Menschen ist unantastbar. Sie zu achten und zu schützen ist Verpflichtung aller staatlichen Gewalt.'],
+        ['Was steht in Art. 2 GG (Kern)?', 'Recht auf Leben und körperliche Unversehrtheit (und freie Entfaltung der Persönlichkeit).'],
+        ['Was steht in Art. 3 Abs. 1 GG?', 'Alle Menschen sind vor dem Gesetz gleich.'],
+        ['Was sagt Art. 1 Abs. 3 GG?', 'Die Grundrechte binden Gesetzgebung, vollziehende Gewalt und Rechtsprechung als unmittelbar geltendes Recht.'],
+        ['Warum sind Grundrechte wichtig?', 'Sie begrenzen die Macht des Staates und schützen vor Willkür.'],
+        ['Wo steht der Grundrechtskatalog?', 'In Art. 1 bis 19 GG.'],
+        ['Was ist der Unterschied zwischen Menschenrechten und Bürgerrechten?', 'Menschenrechte stehen allen Menschen zu (z. B. Art. 2), Bürgerrechte nur Deutschen (z. B. Versammlungsfreiheit Art. 8).'],
+        ['Was legt Art. 20 GG fest?', 'Demokratie, Republik, Bundesstaat, Sozialstaat, Rechtsstaat.'],
+        ['Was regelt Art. 79 Abs. 3 GG?', 'Die Ewigkeitsklausel: Die Grundsätze der Art. 1 und 20, die Gliederung in Länder und deren Mitwirkung bei der Gesetzgebung dürfen nicht geändert werden.'],
+        ['Welche Mehrheit braucht eine Änderung des GG?', 'Zwei Drittel der Bundestagsmitglieder und zwei Drittel der Bundesratsstimmen.'],
+        ['Warum sind Art. 20 und Art. 79 so wichtig?', 'Art. 20 legt die Grundprinzipien fest, Art. 79 Abs. 3 schützt sie dauerhaft, auch eine Zweidrittelmehrheit kann sie nicht abschaffen.'],
+        ['Was passiert bei einer Einschränkung eines Grundrechts?', 'Der Wesensgehalt muss erhalten bleiben (Art. 19 Abs. 2).'],
+        ['Was kann man tun, wenn der Staat Grundrechte verletzt?', 'Verfassungsbeschwerde beim Bundesverfassungsgericht erheben.']
+      ]
+    },
+    {
+      id: 'konfl', name: 'Grundrechte im Konflikt', untertitel: 'Art. 1–5, 8, 14 und das Prüfraster',
+      sektionen: [
+        { h: 'Die Artikel im Kern', punkte: [
+          'Art. 1: Menschenwürde. Sie ist absolut und kann nicht gegen andere Rechte oder durch Verhältnismäßigkeit gerechtfertigt werden.',
+          'Art. 2: freie Entfaltung der Persönlichkeit (Abs. 1), Leben und körperliche Unversehrtheit (Abs. 2). Daraus (mit Art. 1) folgt das Recht auf informationelle Selbstbestimmung (Bundesverfassungsgericht, Volkszählungsurteil).',
+          'Art. 3: Gleichheit vor dem Gesetz; Männer und Frauen sind gleichberechtigt; niemand darf wegen Geschlecht, Herkunft, Sprache, Glauben, politischer Anschauung oder Behinderung benachteiligt werden.',
+          'Art. 4: Glaubens-, Gewissens- und Bekenntnisfreiheit, ungestörte Religionsausübung.',
+          'Art. 5: Meinungs-, Informations-, Presse- und Kunstfreiheit. Schranken (Abs. 2): allgemeine Gesetze, Jugendschutz, Recht der persönlichen Ehre. Kunst und Meinung sind nicht dasselbe, Kunstfreiheit ist ein eigenes Grundrecht.',
+          'Art. 8: Versammlungsfreiheit. Alle Deutschen dürfen sich friedlich und ohne Waffen versammeln, auch ohne Anmeldung oder Erlaubnis. Für Versammlungen unter freiem Himmel kann ein Gesetz sie einschränken.',
+          'Art. 14: Eigentum und Erbrecht werden gewährleistet. Eigentum verpflichtet, sein Gebrauch soll zugleich dem Wohle der Allgemeinheit dienen. Eigentum ist nicht schrankenlos.'] },
+        { h: 'Konflikte lösen: Prüfraster in vier Schritten', punkte: [
+          '1. Beteiligte und staatliche Maßnahme: Wer handelt, gegen wen, mit welcher Maßnahme?',
+          '2. Schutzbereich: Welches Grundrecht ist betroffen (Artikel und Absatz)?',
+          '3. Eingriff und Rechtsgrundlage: Liegt ein Eingriff vor? Gibt es eine gesetzliche Grundlage?',
+          '4. Verhältnismäßigkeit: legitimer Zweck, Geeignetheit, Erforderlichkeit (kein gleich wirksames milderes Mittel), Angemessenheit.',
+          'Wichtig: Die Menschenwürde steht voran als absolute Grenze. Eine festgestellte Verletzung kann nicht durch Verhältnismäßigkeit gerechtfertigt werden.',
+          'Eingriffe brauchen immer eine gesetzliche Grundlage, der Staat darf nicht beliebig handeln.'] },
+        { h: 'Beispiele für Konflikte', punkte: [
+          'Meinungsfreiheit (Art. 5) gegen Ehre/Persönlichkeitsrecht (Art. 2 und 1): Die Meinungsfreiheit endet bei Beleidigung, Jugendschutz und allgemeinen Gesetzen.',
+          'Versammlungsfreiheit (Art. 8): Versammlungen sind grundsätzlich erlaubnisfrei, eine Anmeldung ist nicht dasselbe wie eine Erlaubnis. Drohungen von Gegendemonstrierenden sind eine Sicherheitsfrage und staatliche Schutzaufgabe, kein automatischer Verbotsgrund.',
+          'Eigentum (Art. 14) gegen Gemeinwohl: Eigentum steht unter einem Gemeinwohlvorbehalt.',
+          'Glaubensfreiheit (Art. 4) gegen andere Rechte: Abwägung nach dem Prüfraster.'] }
+      ],
+      karten: [
+        ['Was ist das Besondere an Art. 1 (Menschenwürde) im Konfliktfall?', 'Sie ist absolut und kann nicht gegen andere Rechte oder durch Verhältnismäßigkeit gerechtfertigt werden.'],
+        ['Was schützt Art. 2 GG?', 'Freie Entfaltung der Persönlichkeit, Leben und körperliche Unversehrtheit, auch informationelle Selbstbestimmung (mit Art. 1).'],
+        ['Was verbietet Art. 3 GG?', 'Benachteiligung wegen Geschlecht, Herkunft, Sprache, Glauben, politischer Anschauung oder Behinderung. Alle sind vor dem Gesetz gleich.'],
+        ['Was schützt Art. 4 GG?', 'Glaubens-, Gewissens- und Bekenntnisfreiheit sowie ungestörte Religionsausübung.'],
+        ['Was schützt Art. 5 GG?', 'Meinungsfreiheit, Informationsfreiheit, Pressefreiheit und Kunstfreiheit.'],
+        ['Welche Schranken hat die Meinungsfreiheit?', 'Allgemeine Gesetze, Jugendschutz und das Recht der persönlichen Ehre (Art. 5 Abs. 2).'],
+        ['Sind Kunst und Meinung dasselbe?', 'Nein, die Kunstfreiheit (Art. 5 Abs. 3) ist ein eigenes Grundrecht.'],
+        ['Was schützt Art. 8 GG?', 'Die Versammlungsfreiheit: sich friedlich und ohne Waffen zu versammeln, ohne Anmeldung oder Erlaubnis.'],
+        ['Braucht man für eine Versammlung eine Erlaubnis?', 'Nein, Versammlungen sind grundsätzlich erlaubnisfrei. Eine Anmeldung ist nicht dasselbe wie eine Erlaubnis.'],
+        ['Sind Drohungen von Gegendemonstranten ein Verbotsgrund?', 'Nicht automatisch: Das ist eine Sicherheitsfrage und staatliche Schutzaufgabe.'],
+        ['Was schützt Art. 14 GG?', 'Eigentum und Erbrecht. Eigentum verpflichtet und steht unter einem Gemeinwohlvorbehalt.'],
+        ['Nenne die vier Schritte des Prüfrasters.', '1. Beteiligte und Maßnahme, 2. Schutzbereich, 3. Eingriff und Rechtsgrundlage, 4. Verhältnismäßigkeit.'],
+        ['Was prüft man bei der Verhältnismäßigkeit?', 'Legitimer Zweck, Geeignetheit, Erforderlichkeit (kein milderes gleich wirksames Mittel), Angemessenheit.'],
+        ['Was braucht der Staat für einen Eingriff in ein Grundrecht?', 'Eine gesetzliche Grundlage, und er muss verhältnismäßig vorgehen.'],
+        ['Was ist eine Schutzpflicht des Staates?', 'Der Staat muss Grundrechte auch gegen Gefahren von Dritten schützen.']
+      ]
+    },
+    {
+      id: 'kari', name: 'Karikaturanalyse', untertitel: 'In vier Schritten zur Deutung',
+      sektionen: [
+        { h: 'Was ist eine Karikatur?', punkte: [
+          'Eine Zeichnung, die Personen oder Politik bewusst übertrieben darstellt, um Kritik auszudrücken, oft mit Humor.',
+          'Sie zeigt die Meinung des Zeichners, nicht eine neutrale Abbildung.'] },
+        { h: 'Vier Schritte (so aufschreiben)', punkte: [
+          '1. Formales und Thema: Titel, Zeichner, Quelle, Datum, Thema der Karikatur.',
+          '2. Beschreibung: Was ist zu sehen (Personen, Gegenstände, Beschriftung, Sprechblasen)? Ohne zu deuten.',
+          '3. Analyse: Welche Mittel nutzt sie? Übertreibung, Symbole, Personifikation, Vergleiche, Ironie, Beschriftungen. Wer oder was steht für wen?',
+          '4. Deutung und Bewertung: Was will der Zeichner sagen (Kritik, Forderung)? Wie wirkt es? Meine Meinung, Bezug zu Demokratie, Gewaltenteilung oder Grundrechten.'] },
+        { h: 'Satzanfänge für die Prüfung', punkte: [
+          'Die Karikatur mit dem Titel … von … erschien … zum Thema …',
+          'Im Vordergrund ist … zu sehen, der/die … Im Hintergrund …',
+          '… steht symbolisch für … Die Übertreibung von … zeigt, dass …',
+          'Der Zeichner kritisiert, dass … / Er will deutlich machen, dass …',
+          'Ich stimme der Aussage zu / nicht zu, weil …'] }
+      ],
+      karten: [
+        ['Was ist eine Karikatur?', 'Eine übertrieben gezeichnete Darstellung von Personen oder Politik, die Kritik oder Meinung des Zeichners zeigt, oft mit Humor.'],
+        ['Nenne die vier Schritte der Karikaturanalyse.', '1. Formales/Thema, 2. Beschreibung, 3. Analyse (Mittel), 4. Deutung und Bewertung.'],
+        ['Was gehört in die Beschreibung?', 'Was zu sehen ist (Personen, Gegenstände, Beschriftung), ohne Deutung.'],
+        ['Welche Mittel nutzen Karikaturen?', 'Übertreibung, Symbole, Personifikation, Vergleiche, Ironie, Beschriftungen.'],
+        ['Was gehört in die Deutung?', 'Die Aussage des Zeichners (Kritik, Forderung), Wirkung und die eigene Bewertung.'],
+        ['Was gehört zu den formalen Angaben?', 'Titel, Zeichner, Quelle, Datum und das Thema.'],
+        ['Warum ist eine Karikatur keine neutrale Darstellung?', 'Sie zeigt bewusst übertrieben die Meinung des Zeichners.']
+      ]
+    }
   ]
 };

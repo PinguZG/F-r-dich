@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 114, date: '2026-11-24',
+      features: ['Ida · Politik: Inhalte komplett neu auf die Themenliste der Kurzarbeit zugeschnitten (6 Themen, 71 Karten, Plan für Di/Mi).'],
+      small: ['Prüfungen: Zoom-Anzeige in %, Doppeltipp wechselt zwischen Breite und 2,2×.'],
+      hotfix: ['Prüfungen: Finger-Berührungen wurden auf dem Tablet teils als Handballen ignoriert, dadurch ging Zoomen/Scrollen nicht.'] },
     { v: 113, date: '2026-11-23',
       features: ['Lernen: SQL-Kapitel unter Datenbanken (SELECT, GROUP BY, JOIN, ALTER TABLE, Benutzerrechte), 23 SQL-Karten und 9 Übungsaufgaben.'],
       small: [],

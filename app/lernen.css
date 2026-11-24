@@ -386,3 +386,4 @@ body.kv-open{overflow:hidden}
 
 /* Stift: Finger scrollen/zoomen per Skript, nur der Stift zeichnet */
 .ks,.kp,.kp *{touch-action:none}
+.kv-zl{font-size:12px;font-weight:800;color:var(--ink-soft);min-width:44px;text-align:center}

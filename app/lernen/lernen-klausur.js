@@ -138,7 +138,7 @@
     sc.addEventListener('pointerdown', e => {
       if (e.pointerType === 'pen') { penUntil = Date.now() + 900; return; }
       if (e.pointerType !== 'touch') return;
-      if (penNear() || e.width > 40 || e.height > 40) return;      // Handballen / Hand am Stift: ignorieren
+      if (penNear() || e.width > 120 || e.height > 120) return;      // Handballen / Hand am Stift: ignorieren
       cancelAnimationFrame(raf); tp.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
       if (tp.size === 2) { const m = mid(); pz = { d: dist(), z: D.z, nz: D.z, fx: (sc.scrollLeft + m.x) / Math.max(1, sc.scrollWidth), fy: (sc.scrollTop + m.y) / Math.max(1, sc.scrollHeight) }; }
       last = { t: performance.now() }; vel = { x: 0, y: 0 };
@@ -148,15 +148,25 @@
       if (penNear()) { tp.delete(e.pointerId); pz = null; return; }
       const dx = e.clientX - t.x, dy = e.clientY - t.y; t.x = e.clientX; t.y = e.clientY;
       if (tp.size === 2 && pz) {
-        const nz = clampZ(pz.z * dist() / pz.d), m = mid(); pz.nz = nz; sc.style.setProperty('--z', nz);
+        const nz = clampZ(pz.z * dist() / pz.d), m = mid(); pz.nz = nz; sc.style.setProperty('--z', nz); hooks.onZoom && hooks.onZoom(nz);
         sc.scrollLeft = pz.fx * sc.scrollWidth - m.x; sc.scrollTop = pz.fy * sc.scrollHeight - m.y;
       } else if (tp.size === 1) {
         const now = performance.now(), dt = Math.max(1, now - last.t); last.t = now;
         sc.scrollLeft -= dx; sc.scrollTop -= dy; vel = { x: 0.8 * vel.x + 0.2 * (dx / dt), y: 0.8 * vel.y + 0.2 * (dy / dt) };
       }
     });
+    let lastTap = null;
     const upT = e => {
-      if (!tp.has(e.pointerId)) return; tp.delete(e.pointerId);
+      const tt = tp.get(e.pointerId);
+      if (!tt) return; tp.delete(e.pointerId);
+      if (e.type === 'pointerup' && !pz && tp.size === 0 && Math.hypot(e.clientX - tt.sx, e.clientY - tt.sy) < 10 && !(e.target.closest && e.target.closest('.kf-b'))) {
+        const now = Date.now();                                          // Doppeltipp: zwischen Breite und 2,2× umschalten
+        if (lastTap && now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+          lastTap = null; const r = sc.getBoundingClientRect(), fx = (sc.scrollLeft + e.clientX - r.left) / Math.max(1, sc.scrollWidth), fy = (sc.scrollTop + e.clientY - r.top) / Math.max(1, sc.scrollHeight);
+          D.setZoom(D.z < 1.6 ? 2.2 : 1); sc.scrollLeft = fx * sc.scrollWidth - (e.clientX - r.left); sc.scrollTop = fy * sc.scrollHeight - (e.clientY - r.top); return;
+        }
+        lastTap = { t: now, x: e.clientX, y: e.clientY };
+      }
       if (pz && tp.size < 2) { const z = pz.nz; pz = null; D.setZoom(z); }
       if (tp.size === 0 && (Math.abs(vel.x) > 0.05 || Math.abs(vel.y) > 0.05)) {
         let vx = vel.x * 16, vy = vel.y * 16;
@@ -327,7 +337,7 @@
       });
     }
     function release(pg) { if (!pg.ok) return; pg.kc.width = pg.kc.height = 1; pg.ki.width = pg.ki.height = 1; pg.ok = false; }
-    D.setZoom = z => { D.z = z; sc.style.setProperty('--z', z); D.pages.forEach(pg => { pg.ok = false; if (pg.vis) render(pg); }); };
+    D.setZoom = z => { D.z = z; sc.style.setProperty('--z', z); hooks.onZoom && hooks.onZoom(z); D.pages.forEach(pg => { pg.ok = false; if (pg.vis) render(pg); }); };
     D.fit = () => D.setZoom(innerWidth < 700 ? 1.6 : 1);
 
     // --- Aktionen von außen ---
@@ -390,7 +400,7 @@
       <nav class="kv-tabs"></nav>
       <div class="kv-tools">
         <button type="button" class="kv-b" data-k="undo">↶</button><button type="button" class="kv-b" data-k="erase">Radierer</button><i class="kv-sep"></i>
-        <button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button>
+        <button type="button" class="kv-b" data-k="zm">−</button><button type="button" class="kv-b" data-k="zp">+</button><button type="button" class="kv-b" data-k="zf">Breite</button><span class="kv-zl" data-k="zl"></span>
         <i class="kv-sep"></i><button type="button" class="kv-b" data-k="timer">Timer ▶</button><button type="button" class="kv-b sp" data-k="split">Nebeneinander</button>
       </div><div class="kv-panes"></div>`;
     document.body.append(root); document.body.classList.add('kv-open');
@@ -398,7 +408,7 @@
     function getDoc(k) {
       if (docs[k]) return docs[k];
       const host = document.createElement('div'); host.className = 'kv-pane'; panes.append(host);
-      const d = mkDoc(ctx, recOf(k), host, { onHist: upd, onReady: upd, onRetry: () => { d.destroy(); host.remove(); delete docs[k]; layout(); } });
+      const d = mkDoc(ctx, recOf(k), host, { onHist: upd, onReady: upd, onZoom: z => { const l = root.querySelector('[data-k=zl]'); if (l) l.textContent = Math.round(z * 100) + ' %'; }, onRetry: () => { d.destroy(); host.remove(); delete docs[k]; layout(); } });
       d.host = host; return docs[k] = d;
     }
     function shown() {
