@@ -80,6 +80,7 @@
     if (ty.i < LOVE.length) tyTimer = setTimeout(ty.go, 500);
   }
   async function openPop() {
+    const st0 = state(); if (st0 !== 'day' && st0 !== 'preview') return;      // vor 0:00 Uhr (Ida) nie öffnen
     if (pop || !(await load()) || !list.length) return;
     mark(); check();
     pop = document.createElement('div'); pop.className = 'bdp';
@@ -104,7 +105,7 @@
   function render(st) {
     const r = row(); if (!r) return;
     let b = document.getElementById('bdGift');
-    if (!st) { if (b) b.remove(); box = null; return; }
+    if (!st) { if (b) b.remove(); const n0 = document.getElementById('bdNote'); if (n0) n0.remove(); box = null; return; }
     if (!b) {
       b = document.createElement('button'); b.type = 'button'; b.id = 'bdGift'; b.className = 'bd-gift'; b.innerHTML = GIFT;
       b.addEventListener('click', () => {
@@ -114,6 +115,9 @@
       r.append(b);
     }
     const off = st === 'locked';
+    let nt = document.getElementById('bdNote');
+    if (off && !nt) { nt = document.createElement('span'); nt.id = 'bdNote'; nt.className = 'bd-note'; nt.textContent = 'Ab 0 Uhr verfügbar'; r.append(nt); }
+    else if (!off && nt) nt.remove();
     b.classList.toggle('off', off); b.classList.toggle('new', !off && !seen());
     b.setAttribute('aria-disabled', off ? 'true' : 'false');
     b.setAttribute('aria-label', off ? 'Geschenk, ab 0:00 Uhr am 26.11.' : 'Geschenk öffnen');
@@ -125,5 +129,5 @@
   document.addEventListener('wir:show', e => { if (e.detail === 's-home') setTimeout(check, 300); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
   setInterval(check, 4000);                         // trifft 0:00 Uhr auf wenige Sekunden genau
-  window.WIR_BDAY = { check, state, openPop };
+  window.WIR_BDAY = { state };
 })();
