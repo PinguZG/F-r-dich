@@ -20,6 +20,10 @@
   const seen = () => { try { return !!localStorage.getItem(seenKey()); } catch (_) { return false; } };
   const mark = () => { try { localStorage.setItem(seenKey(), '1'); } catch (_) {} };
 
+  // Hintergrund im Pop-up: dieser Text wird wie der Code bei der Blume weich geblurt Zeichen für Zeichen „runtergeschrieben“
+  const LOVE = 'Ich liebe dich.\n\nIch weiß, du hältst nicht viel von deinen Geburtstagen, aber das ist der erste mit mir und er wird toll, genauso wie jeder, der noch kommen wird und den wir zusammen verbringen können.\n\nMorgen bin ich da.';
+  const TYPE_MS = 38, LOOP_WAIT_MS = 4000;          // ca. 26 Zeichen/s, nach dem Ende kurz warten und von vorn
+  let tyTimer = null;
   let box = null, pop = null, list = [], loaded = false, loading = false, token = '', timer = null, pos = 0;
   const url = p => pb().files.getURL(p, p.image, { thumb: '600x0', token });
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -37,7 +41,7 @@
 
   // ---------- Pop-up mit Kamera ----------
   function closePop() {
-    clearTimeout(timer); timer = null; if (!pop) return;
+    clearTimeout(timer); timer = null; clearTimeout(tyTimer); tyTimer = null; if (!pop) return;
     const p = pop; pop = null; p.classList.add('out'); setTimeout(() => p.remove(), 500);
   }
   function setFrame(i) {                            // Bild i und die nächsten zwei laden (spart Daten bei vielen Fotos)
@@ -52,11 +56,22 @@
     pop.querySelector('.bd-track').style.transform = 'translateX(' + (-pos * 100) + '%)';
     timer = setTimeout(step, HOLD_MS + MOVE_MS);
   }
+  function typeLove() {
+    const t = pop && pop.querySelector('.bdp-t'); if (!t) return;
+    let i = 0;
+    const go = () => {
+      if (!pop || !t.isConnected) return;
+      i++; t.textContent = LOVE.slice(0, i);
+      if (i >= LOVE.length) { tyTimer = setTimeout(() => { i = 0; t.textContent = ''; tyTimer = setTimeout(go, 600); }, LOOP_WAIT_MS); return; }
+      tyTimer = setTimeout(go, LOVE[i - 1] === '\n' ? 220 : TYPE_MS);
+    };
+    go();
+  }
   async function openPop() {
     if (pop || !(await load()) || !list.length) return;
     mark();
     pop = document.createElement('div'); pop.className = 'bdp';
-    pop.innerHTML = '<button type="button" class="bdp-x" aria-label="Schließen">✕</button><div class="bdp-in">' +
+    pop.innerHTML = '<div class="bdp-bg" aria-hidden="true"><span class="bdp-t"></span><u></u></div><button type="button" class="bdp-x" aria-label="Schließen">✕</button><div class="bdp-in">' +
       '<div class="bd-cam"><div class="bd-win"><div class="bd-track">' + list.map(() => '<div class="bd-f"><img alt="Erinnerung" decoding="async"></div>').join('') + '</div></div>' +
       '<img class="bd-camimg" src="/img/geburtstag-kamera.png" alt="" decoding="async"></div>' +
       '<div class="bdp-txt"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span></div></div>';
@@ -64,6 +79,7 @@
     document.body.append(pop); pos = 0; setFrame(0);
     requestAnimationFrame(() => pop && pop.classList.add('on'));
     timer = setTimeout(step, HOLD_MS + 350);        // 1. Bild 2 s, dann weiter
+    typeLove();
   }
 
   // ---------- Karte auf der Startseite ----------
