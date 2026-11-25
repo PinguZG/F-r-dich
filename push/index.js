@@ -247,9 +247,15 @@ async function doUpdate() {
   if (v <= state.appVersion) return;
   state.appVersion = v; stateDirty = true;
   await saveState(); // erst merken, dann senden -> nie doppelt
+  // Eigener Text für genau diese Version: app/update-push.json = { "v": 124, "title": "...", "body": "..." } (sonst der Standardtext)
+  let txt = { title: '✨ Neue Version von Wir', body: 'Tippe, um zu sehen, was neu ist.' };
+  try {
+    const j = JSON.parse(require('fs').readFileSync(require('path').join(require('path').dirname(SW_FILE), 'update-push.json'), 'utf8'));
+    if (Number(j.v) === v && j.title) txt = { title: String(j.title).slice(0, 80), body: String(j.body || '').slice(0, 160) };
+  } catch (_) {}
   for (const u of Object.values(users)) {
     if (!UPDATE_TO.includes(String(u.name || '').toLowerCase())) continue;
-    await send(u.id, 'update', { title: '✨ Neue Version von Wir', body: 'Tippe, um zu sehen, was neu ist.', go: 's-home', tag: 'update-' + v });
+    await send(u.id, 'update', { title: txt.title, body: txt.body, go: 's-home', tag: 'update-' + v });
   }
 }
 
