@@ -6,14 +6,13 @@
 .bd-txt span{font-size:15px;font-weight:600;color:var(--ink-soft)}
 .bd-again{margin-top:8px;min-height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--glass-border);background:var(--glass-strong,transparent);color:var(--ink);font:inherit;font-size:14px;font-weight:700}
 /* Pop-up */
-.bdp{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 16px) 12px calc(env(safe-area-inset-bottom) + 16px);background:rgba(24,10,22,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transition:opacity .5s ease,background 1.8s ease}
+.bdp{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 16px) 12px calc(env(safe-area-inset-bottom) + 16px);background:linear-gradient(165deg,#2b1331,#140a1b 70%);opacity:0;transition:opacity .5s ease,background 1.8s ease}
 .bdp.on{opacity:1}.bdp.out{opacity:0}
 .bdp-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 64px) 26px calc(env(safe-area-inset-bottom) + 40px);overflow:hidden;pointer-events:none;z-index:0}
-.bdp-t{max-width:520px;text-align:center;white-space:pre-wrap;font:600 clamp(21px,5.8vw,30px)/1.5 Caveat,Quicksand,system-ui,sans-serif;color:transparent;text-shadow:0 0 3px rgba(255,214,235,.95),0 0 9px rgba(255,150,200,.55);transition:color 1.6s ease,text-shadow 1.6s ease}
+.bdp-t{max-width:520px;text-align:center;white-space:pre-wrap;font:600 clamp(27px,7.8vw,40px)/1.42 Caveat,Quicksand,system-ui,sans-serif;color:transparent;text-shadow:0 0 3px rgba(255,214,235,.95),0 0 9px rgba(255,150,200,.55);transition:color 1.6s ease,text-shadow 1.6s ease}
 .bdp-t .rest{opacity:0}
 .bdp-t .cur{display:inline-block;width:2px;height:1em;margin:0 1px;background:rgba(255,214,235,.9);vertical-align:-3px;animation:bdc 1s steps(1) infinite}
 /* Lesephase: Blur weg, Text scharf, Kamera blendet langsam aus */
-.bdp.read{background:rgba(24,10,22,.88)}
 .bdp.read .bdp-t{color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.4)}
 .bdp.read .bdp-t .cur{opacity:0;animation:none}
 .bdp.read .bdp-in{opacity:0;transform:scale(.94);pointer-events:none;transition:opacity 2s ease,transform 2s ease}

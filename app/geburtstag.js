@@ -22,7 +22,7 @@
 
   // Hintergrund im Pop-up: dieser Text wird wie der Code bei der Blume weich geblurt Zeichen für Zeichen „runtergeschrieben“
   const LOVE = 'Ich liebe dich.\n\nIch weiß, du hältst nicht viel von deinen Geburtstagen, aber das ist der erste mit mir und er wird toll, genauso wie jeder, der noch kommen wird und den wir zusammen verbringen können.\n\nMorgen bin ich da.';
-  const TYPE_MS = 38, LOOP_WAIT_MS = 4000;          // ca. 26 Zeichen/s, nach dem Ende kurz warten und von vorn
+  const TYPE_MS = 38;                               // ca. 26 Zeichen/s, einmal geschrieben
   let tyTimer = null;
   let box = null, pop = null, list = [], loaded = false, loading = false, token = '', timer = null, pos = 0;
   const url = p => pb().files.getURL(p, p.image, { thumb: '600x0', token });
@@ -64,10 +64,7 @@
     const draw = () => { t.innerHTML = escT(LOVE.slice(0, ty.i)) + '<i class="cur"></i><span class="rest">' + escT(LOVE.slice(ty.i)) + '</span>'; };  // Rest unsichtbar: Platz bleibt reserviert, Text steht mittig ruhig
     const go = () => {
       if (!pop || !t.isConnected) return;
-      if (ty.i >= LOVE.length) {
-        if (ty.fast) return;                         // Lesephase: Text bleibt komplett stehen
-        tyTimer = setTimeout(() => { ty.i = 0; draw(); tyTimer = setTimeout(go, 600); }, LOOP_WAIT_MS); return;
-      }
+      if (ty.i >= LOVE.length) return;               // einmal geschrieben, dann bleibt der Text stehen
       ty.i++; draw();
       tyTimer = setTimeout(go, ty.fast ? 14 : (LOVE[ty.i - 1] === '\n' ? 220 : TYPE_MS));
     };
@@ -75,6 +72,7 @@
   }
   function readPhase() {                            // Film fertig: Kamera blendet langsam aus, Blur weg, Text zu Ende schreiben und lesbar stehen lassen
     if (!pop) return;
+    clearTimeout(timer); timer = null;
     pop.classList.add('read');
     if (!ty) return;
     ty.fast = true; clearTimeout(tyTimer);
@@ -88,7 +86,7 @@
       '<div class="bd-cam"><div class="bd-win"><div class="bd-track">' + list.map(() => '<div class="bd-f"><img alt="Erinnerung" decoding="async"></div>').join('') + '</div></div>' +
       '<img class="bd-camimg" src="/img/geburtstag-kamera.png" alt="" decoding="async"></div>' +
       '<div class="bdp-txt"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span></div></div>';
-    pop.addEventListener('click', e => { if (e.target.closest('.bdp-x') || (e.target === pop && !pop.classList.contains('read'))) closePop(); });
+    pop.addEventListener('click', e => { if (!e.target.closest('.bdp-x')) return; if (pop.classList.contains('read')) closePop(); else readPhase(); });
     document.body.append(pop); pos = 0; setFrame(0);
     requestAnimationFrame(() => pop && pop.classList.add('on'));
     timer = setTimeout(step, HOLD_MS + 350);        // 1. Bild 2 s, dann weiter
