@@ -2131,3 +2131,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Rücksetz-Weg:** `git checkout vor-politik-neu -- app/lernen/politik-data.js app/sw.js shared/changelog.js`, `wir-vNN` hochzählen.
 - **Nachtrag (v115):** Politik weiter gekürzt auf die Themenliste: direkte/repräsentative Demokratie zu „Grundwissen“, Staatsorgane und Konflikt-Beispiele knapper, Menschenrechte/Bürgerrechte, Verfassungsbeschwerde, Schutzpflicht, Satzanfänge entfernt (59 Karten). Karten-IDs verschieben sich dadurch erneut.
 - **Nachtrag (v115, Grundgesetz):** „Grundgesetz und Grundrechte“ strikt nach Themenliste neu gegliedert: eigene Abschnitte für Art. 1, Art. 20 und Art. 79 Abs. 3 (Ewigkeitsklausel), keine Randartikel (Art. 38, 103, 19 u. a.). 61 Karten gesamt.
+
+## Geburtstags-Diashow auf der Startseite (25.11.2026, wir-v116)
+- **Neu:** Am 26.11. (Idas Geburtstag) ab 0:00 Uhr erscheint oben auf der Startseite eine Diashow aller Erinnerungen (Collection `photos`, chronologisch, alle 5 s Überblendung) mit „Alles Gute zum Geburtstag“ und „Ich liebe dich mehr als alles andere“. Jedes Jahr am 26.11. (ganzer Tag). Daniel sieht sie als **Vorschau** schon 14 Tage vorher (mit Hinweiszeile), Ida erst ab 0:00 Uhr (Gerätezeit, Prüfung alle 4 s, auch beim Zurückkehren in die App).
+- **Dateien:** `app/geburtstag.js`, `app/geburtstag.css`, Einbindung in `app/index.html`, `app/sw.js`. Kein neues Schema, nur Lesen von `photos`. Der Update-Hinweis („Was ist neu?“) nennt es absichtlich nicht (keine Vorab-Überraschung).
+- **Anpassen:** Datum/Texte oben in `geburtstag.js` (`MONTH`/`DAY`) bzw. im Markup in `mount()`; Dauer pro Bild `SLIDE_MS`. Ausschalten: Script-Zeile aus `index.html` nehmen.
+- **Rücksetz-Weg:** `git checkout vor-geburtstag -- app/index.html app/sw.js shared/changelog.js`, `app/geburtstag.js`/`.css` löschen, `wir-vNN` hochzählen.
