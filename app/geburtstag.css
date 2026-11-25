@@ -1,12 +1,26 @@
-/* Geburtstags-Diashow in der Kamera (geburtstag.js). Kamerabild: img/geburtstag-kamera.png (Original, nur das Display ist durchsichtig). */
+/* Geburtstag: Pop-up mit Kamera + Filmstreifen (geburtstag.js). Kamerabild: img/geburtstag-kamera.png (Original, Hintergrund und Display durchsichtig). */
 .bd{margin:0 0 14px;padding:0}
 .bd-prev{font-size:12px;font-weight:700;color:var(--ink-soft);text-align:center;margin:0 0 8px}
-.bd-card{background:#fff;border-radius:26px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.14);max-width:560px;margin:0 auto}
-.bd-cam{position:relative;width:100%;aspect-ratio:736/524}
-.bd-camimg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;pointer-events:none;user-select:none}
-.bd-win{position:absolute;left:13.859%;top:32.252%;width:46.739%;height:49.237%;overflow:hidden;z-index:1;background:#f4f4f4}
-.bd-s{position:absolute;inset:0;transform:translateX(100%);will-change:transform}
-.bd-s img{width:100%;height:100%;object-fit:cover;display:block}
-.bd-txt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 18px 16px;text-align:center;border-radius:22px;margin:10px auto 0;max-width:560px}
+.bd-txt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 18px 16px;text-align:center;border-radius:22px;max-width:560px;margin:0 auto}
 .bd-txt b{font-family:Caveat,'Quicksand',cursive;font-size:34px;line-height:1.1;font-weight:700;color:var(--ink)}
 .bd-txt span{font-size:15px;font-weight:600;color:var(--ink-soft)}
+.bd-again{margin-top:8px;min-height:40px;padding:0 16px;border-radius:20px;border:1px solid var(--glass-border);background:var(--glass-strong,transparent);color:var(--ink);font:inherit;font-size:14px;font-weight:700}
+/* Pop-up */
+.bdp{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 16px) 12px calc(env(safe-area-inset-bottom) + 16px);background:rgba(24,10,22,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transition:opacity .5s ease}
+.bdp.on{opacity:1}.bdp.out{opacity:0}
+.bdp-x{position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:12px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:18px;font-weight:800}
+.bdp-in{width:min(100%,560px);display:flex;flex-direction:column;align-items:center;gap:6px;transform:scale(.8);transition:transform .55s cubic-bezier(.2,1.2,.4,1)}
+.bdp.on .bdp-in{transform:scale(1)}
+.bd-cam{position:relative;width:100%;aspect-ratio:736/524}
+.bd-camimg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;pointer-events:none;user-select:none;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+.bd-win{position:absolute;left:13.859%;top:32.252%;width:46.739%;height:49.237%;overflow:hidden;z-index:1;background:#111}
+/* Filmstreifen: Bilder hängen aneinander, Lochreihen oben und unten */
+.bd-track{display:flex;height:100%;width:100%;transform:translateX(0);transition:transform .55s cubic-bezier(.65,0,.35,1);will-change:transform}
+.bd-f{flex:0 0 100%;height:100%;position:relative;background:#111;padding:7% 0;box-sizing:border-box;border-right:3px solid #111}
+.bd-f img{display:block;width:100%;height:100%;object-fit:cover;background:#2a2a2a}
+.bd-f::before,.bd-f::after{content:"";position:absolute;left:0;right:0;height:3.2%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.88) 0 3.4%,transparent 3.4% 7%)}
+.bd-f::before{top:1.9%}.bd-f::after{bottom:1.9%}
+.bdp-txt{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.bdp-txt b{font-family:Caveat,'Quicksand',cursive;font-size:36px;line-height:1.1;font-weight:700}
+.bdp-txt span{font-size:15px;font-weight:600;opacity:.92}
+@media (prefers-reduced-motion:reduce){.bd-track{transition:none}.bdp-in{transition:none}}
