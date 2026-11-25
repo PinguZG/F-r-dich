@@ -4,6 +4,7 @@
 .bd-gift svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .bd-gift.new{color:#fff;background:linear-gradient(135deg,var(--accent2,#e0468c),var(--accent,#7a5af8));border-color:transparent;animation:bdPulse 2s ease-in-out infinite}
 .bd-gift.off{opacity:.38;filter:grayscale(1);cursor:default}
+.bd-note{font-size:13px;font-weight:600;color:var(--ink-soft);line-height:1.25}
 .bd-gift.shake{animation:bdShake .45s ease}
 @keyframes bdPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(224,70,140,.45)}50%{transform:scale(1.06);box-shadow:0 0 0 10px rgba(224,70,140,0)}}
 @keyframes bdShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}

@@ -2164,3 +2164,4 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Wichtig:** Jede Versionserhöhung in `app/sw.js` löst einen Push an Ida aus (alle 30 s Prüfung). Mehrere Versionen kurz hintereinander = mehrere Pushs. Mehrere Änderungen deshalb möglichst in **einer** Version bündeln.
 - **Reihenfolge:** Erst `push/index.js` mergen (Auto-Deploy startet `wir-push` neu), danach erst die App-Version erhöhen, sonst kann noch der alte Standardtext rausgehen.
 - **Rücksetz-Weg:** `git checkout vor-update-push-text -- push/index.js`, `app/update-push.json` löschen.
+- **Nachtrag (wir-v124, Geburtstag):** Bei Ida steht neben dem ausgegrauten Geschenk-Knopf klein „Ab 0 Uhr verfügbar“ (`#bdNote`). `openPop()` prüft zusätzlich die Zeit (vor 0:00 nie öffnen, keine Fotos geladen); nichts öffnet sich je von allein. Update-Push an Ida mit eigenem Text „Startseite überarbeitet“ (`app/update-push.json`, `v` = 124).
