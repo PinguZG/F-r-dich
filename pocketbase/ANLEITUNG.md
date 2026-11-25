@@ -2157,3 +2157,4 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Ida:** Knopf ausgegraut (nicht tippbar, wackelt nur) von 14 Tagen vor dem 26.11. bis 0:00 Uhr, dann den ganzen 26.11. aktiv (pulsiert, bis sie es einmal geöffnet hat). **Daniel:** als Vorschau im selben Zeitraum immer aktiv. Außerhalb des Zeitraums gibt es keinen Knopf. Prüfung alle 4 s, daher wird er um 0:00 Uhr sofort frei.
 - **Dateien:** `app/geburtstag.js`, `app/geburtstag.css`.
 - **Rücksetz-Weg:** `git checkout vor-geburtstag -- app/index.html app/sw.js shared/changelog.js`, `app/geburtstag.*` und `app/img/geburtstag-kamera.png` löschen, `wir-vNN` hochzählen.
+- **Nachtrag (v123):** Pop-up-Hintergrund jetzt heller Pastell-Verlauf (rosa → lavendel → hellblau, `.bdp` in `app/geburtstag.css`); Text, Gruß und ✕ in dunklem Pflaumenton `#5b2b57`, Blur-Glühen in dunklem Pink.

@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 123, date: '2026-11-25',
+      features: [],
+      small: [],
+      hotfix: ['Kleine Korrekturen auf der Startseite.'] },
     { v: 122, date: '2026-11-25',
       features: [],
       small: [],
