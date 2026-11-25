@@ -1,7 +1,8 @@
-/* Geburtstag (Ida, 26.11.): ab 0:00 Uhr springt einmalig ein Pop-up mit einer rosa Kamera auf. Im Display läuft ein Filmstreifen aller
-   Erinnerungen von rechts nach links (jedes Bild 2 s, Bilder hängen wie eine Filmrolle aneinander). Danach schließt sich das Pop-up und auf der
-   Startseite bleibt den Tag über die Karte „Alles Gute zum Geburtstag“ (mit Knopf zum Nochmal-Ansehen). Jedes Jahr am 26.11.
-   Daniel sieht es als Vorschau schon 14 Tage vorher. Fotos: Collection photos (nur lesen). Datum/Uhrzeit vom Gerät. */
+/* Geburtstag (Ida, 26.11.): Neben der Uhr auf der Startseite sitzt ein kleiner Geschenk-Knopf. Tippen öffnet ein Pop-up mit einer rosa Kamera:
+   im Display läuft ein Filmstreifen aller Erinnerungen von rechts nach links (jedes Bild 2 s, Bilder hängen wie eine Filmrolle aneinander),
+   dahinter schreibt sich der Liebestext. ✕ schließt zuerst die Kamera, dann den Text. Startet nie automatisch.
+   Ida: Knopf ausgegraut bis 26.11. 0:00 Uhr (sichtbar ab 14 Tage vorher), dann den ganzen Tag aktiv. Daniel: als Vorschau jederzeit aktiv.
+   Jedes Jahr am 26.11. Fotos: Collection photos (nur lesen). Datum/Uhrzeit vom Gerät. */
 (function () {
   const MONTH = 10, DAY = 26;                       // 26. November (Monat 0-basiert)
   const PREVIEW_DAYS = 14, HOLD_MS = 2000, MOVE_MS = 550, DAY_MS = 864e5;
@@ -9,11 +10,11 @@
   const me = () => { const p = pb(); return (p && (p.authStore.record || p.authStore.model)) || null; };
   const isDaniel = () => { const u = me(); return !!u && (/daniel/i.test(u.name || '') || /^daniel/i.test(u.email || '')); };
   const bday = () => new Date(new Date().getFullYear(), MONTH, DAY, 0, 0, 0, 0).getTime();
-  function state() {                                // 'day' = Geburtstag (alle), 'preview' = nur Daniel vorab, null = nichts
+  function state() {                                // 'day' = Geburtstag (alle), 'preview' = Daniel vorab, 'locked' = Ida vorab (ausgegraut), null = nichts
     if (!me()) return null;
     const n = Date.now(), b = bday(), e = b + DAY_MS;
     if (n >= b && n < e) return 'day';
-    if (isDaniel() && n >= b - PREVIEW_DAYS * DAY_MS && n < b) return 'preview';
+    if (n >= b - PREVIEW_DAYS * DAY_MS && n < b) return isDaniel() ? 'preview' : 'locked';
     return null;
   }
   const seenKey = () => 'wir-bday-' + new Date().getFullYear() + '-' + (me() ? me().id : '');
@@ -80,7 +81,7 @@
   }
   async function openPop() {
     if (pop || !(await load()) || !list.length) return;
-    mark();
+    mark(); check();
     pop = document.createElement('div'); pop.className = 'bdp';
     pop.innerHTML = '<div class="bdp-bg" aria-hidden="true"><div class="bdp-t"></div></div><button type="button" class="bdp-x" aria-label="Schließen">✕</button><div class="bdp-in">' +
       '<div class="bd-cam"><div class="bd-win"><div class="bd-track">' + list.map(() => '<div class="bd-f"><img alt="Erinnerung" decoding="async"></div>').join('') + '</div></div>' +
@@ -93,23 +94,33 @@
     typeLove();
   }
 
-  // ---------- Karte auf der Startseite ----------
-  function mount(st) {
-    const home = document.getElementById('s-home'); if (!home) return;
-    box = document.createElement('div'); box.id = 'bdBox'; box.className = 'bd';
-    box.innerHTML = (st === 'preview' ? '<div class="bd-prev">Vorschau für dich: Ida sieht das erst am 26.11. ab 0:00 Uhr.</div>' : '') +
-      '<div class="bd-txt glass"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span><button type="button" class="bd-again" data-bd="again">🎞️ Erinnerungen ansehen</button></div>';
-    box.addEventListener('click', e => { if (e.target.closest('[data-bd=again]')) openPop(); });
-    home.insertBefore(box, home.firstChild);
+  // ---------- Knopf neben der Uhr ----------
+  const GIFT = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="9.5" rx="1.6"/><rect x="3" y="7" width="18" height="3.5" rx="1.2"/><path d="M12 7v13M12 7C10.4 3.8 7 3.8 7.2 5.8 7.4 7.4 10 7 12 7zM12 7c1.6-3.2 5-3.2 4.8-1.2C16.6 7.4 14 7 12 7z"/></svg>';
+  function row() {                                  // Uhr in eine Zeile packen (Uhr links, Knopf rechts), ändert sonst nichts am Aufbau
+    const clock = document.getElementById('stClock'); if (!clock) return null;
+    if (clock.parentNode.classList.contains('bd-row')) return clock.parentNode;
+    const r = document.createElement('div'); r.className = 'bd-row'; clock.parentNode.insertBefore(r, clock); r.append(clock); return r;
   }
-  function unmount() { if (box) box.remove(); box = null; }
-  function check() {
-    const st = state();
-    if (st && !box) mount(st);
-    else if (!st && box) unmount();
-    else if (st === 'day' && box && box.querySelector('.bd-prev')) { unmount(); mount(st); }   // um 0:00 Vorschau-Hinweis weg
-    if (st && !seen() && !pop && homeActive() && !document.hidden) openPop();                  // einmalig, nur auf der Startseite
+  function render(st) {
+    const r = row(); if (!r) return;
+    let b = document.getElementById('bdGift');
+    if (!st) { if (b) b.remove(); box = null; return; }
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'bdGift'; b.className = 'bd-gift'; b.innerHTML = GIFT;
+      b.addEventListener('click', () => {
+        if (b.classList.contains('off')) { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+        openPop();
+      });
+      r.append(b);
+    }
+    const off = st === 'locked';
+    b.classList.toggle('off', off); b.classList.toggle('new', !off && !seen());
+    b.setAttribute('aria-disabled', off ? 'true' : 'false');
+    b.setAttribute('aria-label', off ? 'Geschenk, ab 0:00 Uhr am 26.11.' : 'Geschenk öffnen');
+    b.title = off ? 'Ab 26.11. um 0:00 Uhr' : (st === 'preview' ? 'Vorschau (Ida ab 26.11. 0:00 Uhr)' : 'Geschenk öffnen');
+    box = b;
   }
+  function check() { render(state()); }
   document.addEventListener('wir:started', () => { check(); });
   document.addEventListener('wir:show', e => { if (e.detail === 's-home') setTimeout(check, 300); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
