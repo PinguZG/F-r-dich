@@ -2158,3 +2158,9 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Dateien:** `app/geburtstag.js`, `app/geburtstag.css`.
 - **Rücksetz-Weg:** `git checkout vor-geburtstag -- app/index.html app/sw.js shared/changelog.js`, `app/geburtstag.*` und `app/img/geburtstag-kamera.png` löschen, `wir-vNN` hochzählen.
 - **Nachtrag (v123):** Pop-up-Hintergrund jetzt heller Pastell-Verlauf (rosa → lavendel → hellblau, `.bdp` in `app/geburtstag.css`); Text, Gruß und ✕ in dunklem Pflaumenton `#5b2b57`, Blur-Glühen in dunklem Pink.
+
+### Update-Push mit eigenem Text (25.11.2026)
+- **Neu:** Der Push „Neue Version von Wir“ an Ida (`push/index.js`, `doUpdate`) kann pro Version einen eigenen Text haben: Datei `app/update-push.json` mit `{ "v": <Version>, "title": "…", "body": "…" }`. Passt `v` zur aktuellen `wir-vNN`, wird dieser Text gesendet, sonst der Standardtext. Die Datei bei jedem Update, das einen eigenen Text braucht, anpassen (nicht nötig sonst).
+- **Wichtig:** Jede Versionserhöhung in `app/sw.js` löst einen Push an Ida aus (alle 30 s Prüfung). Mehrere Versionen kurz hintereinander = mehrere Pushs. Mehrere Änderungen deshalb möglichst in **einer** Version bündeln.
+- **Reihenfolge:** Erst `push/index.js` mergen (Auto-Deploy startet `wir-push` neu), danach erst die App-Version erhöhen, sonst kann noch der alte Standardtext rausgehen.
+- **Rücksetz-Weg:** `git checkout vor-update-push-text -- push/index.js`, `app/update-push.json` löschen.
