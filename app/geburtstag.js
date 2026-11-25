@@ -3,7 +3,7 @@
    Fotos: Collection photos (wie Reiter „Erinnerungen“), nur lesen. Datum/Uhrzeit vom Gerät. */
 (function () {
   const MONTH = 10, DAY = 26;                       // 26. November (Monat 0-basiert)
-  const PREVIEW_DAYS = 14, SLIDE_MS = 5000, DAY_MS = 864e5;
+  const PREVIEW_DAYS = 14, SLIDE_MS = 1000, DAY_MS = 864e5;   // jede Sekunde ein neues Bild (Streifen läuft von rechts nach links)
   const pb = () => window.WIR_PB;
   const me = () => { const p = pb(); return (p && (p.authStore.record || p.authStore.model)) || null; };
   const isDaniel = () => { const u = me(); return !!u && (/daniel/i.test(u.name || '') || /^daniel/i.test(u.email || '')); };
@@ -17,7 +17,7 @@
     return null;
   }
   let box = null, list = [], idx = 0, front = 0, timer = null, token = '', loaded = false, loading = false;
-  const url = p => pb().files.getURL(p, p.image, { thumb: '900x0', token });
+  const url = p => pb().files.getURL(p, p.image, { thumb: '600x0', token });
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   async function load() {
@@ -31,30 +31,34 @@
     loading = false;
     if (box) start();
   }
-  function show(i) {
-    if (!box || !list.length) return;
-    const imgs = box.querySelectorAll('.bd-i'), nxt = imgs[1 - front], p = list[i % list.length];
-    nxt.onload = () => { nxt.classList.add('on'); imgs[front].classList.remove('on'); front = 1 - front; const c = box.querySelector('.bd-cap'); if (c) c.textContent = p.caption || ''; };
-    nxt.onerror = () => { idx++; };
-    nxt.alt = p.caption || 'Erinnerung'; nxt.src = url(p);
+  const pre = i => { if (list.length) { const im = new Image(); im.src = url(list[i % list.length]); } };
+  function put(slide, p) { const im = slide.firstElementChild; im.alt = p.caption || 'Erinnerung'; im.src = url(p); }
+  function tick() {
+    if (document.hidden || !box || !box.isConnected || !list.length) return;
+    const home = document.getElementById('s-home'); if (home && !home.classList.contains('active')) return;
+    const sl = box.querySelectorAll('.bd-s'), cur = sl[front], nxt = sl[1 - front];
+    nxt.style.transition = 'none'; nxt.style.transform = 'translateX(100%)';
+    put(nxt, list[idx % list.length]);
+    void nxt.offsetWidth;
+    nxt.style.transition = 'transform .6s ease'; cur.style.transition = 'transform .6s ease';
+    nxt.style.transform = 'translateX(0)'; cur.style.transform = 'translateX(-100%)';
+    front = 1 - front; idx = (idx + 1) % list.length; pre(idx + 1);
   }
   function start() {
     clearInterval(timer); if (!box) return;
-    const stg = box.querySelector('.bd-stage'); if (stg) stg.hidden = !list.length;
     if (!list.length) return;
-    show(0); idx = 1;
-    timer = setInterval(() => {
-      if (document.hidden || !box || !box.isConnected) return;
-      const home = document.getElementById('s-home'); if (home && !home.classList.contains('active')) return;
-      show(idx); idx = (idx + 1) % list.length;
-    }, SLIDE_MS);
+    const sl = box.querySelectorAll('.bd-s');
+    sl[0].style.transform = 'translateX(0)'; sl[1].style.transform = 'translateX(100%)';
+    put(sl[0], list[0]); front = 0; idx = 1 % list.length; pre(idx); pre(idx + 1);
+    timer = setInterval(tick, SLIDE_MS);
   }
   function mount(st) {
     const home = document.getElementById('s-home'); if (!home) return;
     box = document.createElement('div'); box.id = 'bdBox'; box.className = 'bd';
     box.innerHTML = (st === 'preview' ? '<div class="bd-prev">Vorschau für dich: Ida sieht das erst am 26.11. ab 0:00 Uhr.</div>' : '') +
-      '<div class="bd-card glass"><div class="bd-stage"><img class="bd-i on" alt="" decoding="async"><img class="bd-i" alt="" decoding="async"></div><div class="bd-cap" aria-live="off"></div>' +
-      '<div class="bd-txt"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span></div></div>';
+      '<div class="bd-card"><div class="bd-cam"><div class="bd-win"><div class="bd-s"><img alt="" decoding="async"></div><div class="bd-s"><img alt="" decoding="async"></div></div>' +
+      '<img class="bd-camimg" src="/img/geburtstag-kamera.png" alt="Kamera" decoding="async"></div></div>' +
+      '<div class="bd-txt glass"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span></div>';
     home.insertBefore(box, home.firstChild);
     front = 0; if (loaded) start(); else load();
   }
