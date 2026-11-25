@@ -51,31 +51,44 @@
   }
   function step() {
     if (!pop) return;
-    if (pos >= list.length - 1) { timer = setTimeout(closePop, HOLD_MS); return; }   // letztes Bild gezeigt -> Pop-up zu
+    if (pos >= list.length - 1) { timer = setTimeout(readPhase, HOLD_MS); return; }   // letztes Bild gezeigt -> Kamera aus, Text lesbar (X schließt)
     pos++; setFrame(pos);
     pop.querySelector('.bd-track').style.transform = 'translateX(' + (-pos * 100) + '%)';
     timer = setTimeout(step, HOLD_MS + MOVE_MS);
   }
+  const escT = x => x.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  let ty = null;                                    // { i, fast }
   function typeLove() {
     const t = pop && pop.querySelector('.bdp-t'); if (!t) return;
-    let i = 0;
+    ty = { i: 0, fast: false };
+    const draw = () => { t.innerHTML = escT(LOVE.slice(0, ty.i)) + '<i class="cur"></i><span class="rest">' + escT(LOVE.slice(ty.i)) + '</span>'; };  // Rest unsichtbar: Platz bleibt reserviert, Text steht mittig ruhig
     const go = () => {
       if (!pop || !t.isConnected) return;
-      i++; t.textContent = LOVE.slice(0, i);
-      if (i >= LOVE.length) { tyTimer = setTimeout(() => { i = 0; t.textContent = ''; tyTimer = setTimeout(go, 600); }, LOOP_WAIT_MS); return; }
-      tyTimer = setTimeout(go, LOVE[i - 1] === '\n' ? 220 : TYPE_MS);
+      if (ty.i >= LOVE.length) {
+        if (ty.fast) return;                         // Lesephase: Text bleibt komplett stehen
+        tyTimer = setTimeout(() => { ty.i = 0; draw(); tyTimer = setTimeout(go, 600); }, LOOP_WAIT_MS); return;
+      }
+      ty.i++; draw();
+      tyTimer = setTimeout(go, ty.fast ? 14 : (LOVE[ty.i - 1] === '\n' ? 220 : TYPE_MS));
     };
-    go();
+    ty.go = go; draw(); go();
+  }
+  function readPhase() {                            // Film fertig: Kamera blendet langsam aus, Blur weg, Text zu Ende schreiben und lesbar stehen lassen
+    if (!pop) return;
+    pop.classList.add('read');
+    if (!ty) return;
+    ty.fast = true; clearTimeout(tyTimer);
+    if (ty.i < LOVE.length) tyTimer = setTimeout(ty.go, 500);
   }
   async function openPop() {
     if (pop || !(await load()) || !list.length) return;
     mark();
     pop = document.createElement('div'); pop.className = 'bdp';
-    pop.innerHTML = '<div class="bdp-bg" aria-hidden="true"><span class="bdp-t"></span><u></u></div><button type="button" class="bdp-x" aria-label="Schließen">✕</button><div class="bdp-in">' +
+    pop.innerHTML = '<div class="bdp-bg" aria-hidden="true"><div class="bdp-t"></div></div><button type="button" class="bdp-x" aria-label="Schließen">✕</button><div class="bdp-in">' +
       '<div class="bd-cam"><div class="bd-win"><div class="bd-track">' + list.map(() => '<div class="bd-f"><img alt="Erinnerung" decoding="async"></div>').join('') + '</div></div>' +
       '<img class="bd-camimg" src="/img/geburtstag-kamera.png" alt="" decoding="async"></div>' +
       '<div class="bdp-txt"><b>Alles Gute zum Geburtstag 💗</b><span>Ich liebe dich mehr als alles andere</span></div></div>';
-    pop.addEventListener('click', e => { if (e.target.closest('.bdp-x') || e.target === pop) closePop(); });
+    pop.addEventListener('click', e => { if (e.target.closest('.bdp-x') || (e.target === pop && !pop.classList.contains('read'))) closePop(); });
     document.body.append(pop); pos = 0; setFrame(0);
     requestAnimationFrame(() => pop && pop.classList.add('on'));
     timer = setTimeout(step, HOLD_MS + 350);        // 1. Bild 2 s, dann weiter
