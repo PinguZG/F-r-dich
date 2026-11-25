@@ -2137,3 +2137,8 @@ Rücksetz-Weg: `git checkout vor-update-push -- push/index.js`, committen, pushe
 - **Dateien:** `app/geburtstag.js`, `app/geburtstag.css`, Einbindung in `app/index.html`, `app/sw.js`. Kein neues Schema, nur Lesen von `photos`. Der Update-Hinweis („Was ist neu?“) nennt es absichtlich nicht (keine Vorab-Überraschung).
 - **Anpassen:** Datum/Texte oben in `geburtstag.js` (`MONTH`/`DAY`) bzw. im Markup in `mount()`; Dauer pro Bild `SLIDE_MS`. Ausschalten: Script-Zeile aus `index.html` nehmen.
 - **Rücksetz-Weg:** `git checkout vor-geburtstag -- app/index.html app/sw.js shared/changelog.js`, `app/geburtstag.js`/`.css` löschen, `wir-vNN` hochzählen.
+
+### Geburtstags-Diashow in der Kamera (25.11.2026, wir-v117)
+- **Geändert:** Die Diashow läuft jetzt im Display einer rosa Kamera (Bild von Daniel, `app/img/geburtstag-kamera.png`, Original unverändert, nur das weiße Display ist durchsichtig). Die Fotos schieben jede Sekunde von rechts nach links durch (Streifen-Effekt, 0,6 s Übergang). Darunter weiter „Alles Gute zum Geburtstag“ / „Ich liebe dich mehr als alles andere“.
+- **Anpassen:** Display-Position in `app/geburtstag.css` (`.bd-win`, Prozentwerte aus dem Bild 736×524, Display x 102–445, y 169–426), Tempo `SLIDE_MS` in `app/geburtstag.js`.
+- **Rücksetz-Weg:** `git checkout vor-geburtstag -- app/index.html app/sw.js shared/changelog.js`, `app/geburtstag.*` und `app/img/geburtstag-kamera.png` löschen, `wir-vNN` hochzählen.
