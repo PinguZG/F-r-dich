@@ -46,6 +46,7 @@
     renderMoodCard();
   }
 
+  window.WIR_MOODS = { reload: () => loadMoods() };
   let sliding = false;
   const setBar = (nameId, barId, name, v) => {
     const n = $(nameId), bar = $(barId);
@@ -57,7 +58,7 @@
     const pn = p?.name || 'Schatz', pv = mp ? mp.value : null;
     setBar('stMoodName', 'stMoodBar', pn, pv);
     setBar('wzPName', 'wzPBar', pn, pv);
-    document.dispatchEvent(new CustomEvent('wir:mood', { detail: { me: mm ? mm.value : null, partner: pv } }));
+    document.dispatchEvent(new CustomEvent('wir:mood', { detail: { me: mm ? mm.value : null, meKatze: mm && mm.katze != null ? mm.katze : -1, partner: pv, partnerKatze: mp && mp.katze != null ? mp.katze : -1, partnerName: pn } }));
     if (!sliding && $('moodRange')) {
       $('moodRange').value = mm ? mm.value : 50;
       $('wzMeVal').textContent = mm ? mm.value : '–';
@@ -72,7 +73,7 @@
   range.addEventListener('input', () => { sliding = true; $('wzMeVal').textContent = range.value; paintRange(range); });
   range.addEventListener('change', async () => {
     try {
-      await pb.collection('moods').create({ user: myId(), value: Math.round(+range.value) });
+      await pb.collection('moods').create({ user: myId(), value: Math.round(+range.value), katze: window.WIR_KATZE ? window.WIR_KATZE.get() : -1 });
       await loadMoods();
     } catch (err) { toast('Ging nicht: ' + UI.errText(err)); }
     finally { sliding = false; renderMoodCard(); }
@@ -282,7 +283,7 @@
   let checking = false;
   async function checkAsk() {
     if (!started || checking || askReq || document.hidden || !pb.authStore.isValid) return;
-    if (document.querySelector('#s-gift.active, #s-lock.active') || document.querySelector('.sheet-wrap.open')) return;
+    if (document.querySelector('#s-lock.active') || document.querySelector('.sheet-wrap.open')) return;
     checking = true;
     try {
       const since = new Date(Date.now() - 24 * 3600000).toISOString().replace('T', ' ');

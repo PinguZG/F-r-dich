@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 127, date: '2026-11-27',
+      features: [],
+      small: ['Menü-Pfeil frei verschiebbar.', 'Zurück-Knopf geht auf die vorherige Seite.', 'Stimmungskatze der anderen Person auf Start, eigene Stimmung und Katze per Tipp auf den Kasten ändern.'],
+      hotfix: ['Geschenk-Startbildschirm entfernt.'] },
     { v: 126, date: '2026-11-27',
       features: [],
       small: ['Menü-Pfeil am Rand größer, Menü-Hinweis entfernt.'],

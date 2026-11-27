@@ -1144,7 +1144,7 @@
       const r = $('lockCard').getBoundingClientRect();
       UI.burst(r.left + r.width / 2, r.top + r.height / 2, 24);
       await UI.wait(500);
-      UI.show(startGo ? 's-home' : 's-gift');
+      UI.show('s-home');
       enter(startGo);
     } catch {
       UI.shake($('lockCard'));
@@ -1177,7 +1177,7 @@
 
   async function boot() {
     if (!pb.authStore.isValid) { UI.show('s-lock'); return; }
-    UI.show(startGo ? 's-home' : 's-gift');
+    UI.show('s-home');
     try {
       await pb.collection('users').authRefresh();
     } catch (err) {
