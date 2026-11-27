@@ -27,12 +27,13 @@ body.in-app.chat-open.nav-open .tabbar{transform:none!important}
 .nav-backdrop{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s}
 body.nav-open .nav-backdrop{opacity:1;pointer-events:auto}
 .nav-handle{
-  position:fixed;left:0;top:50%;z-index:25;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--glass-border);border-left:none;
-  border-radius:0 16px 16px 0;background:color-mix(in srgb,var(--bg2) 80%,transparent);color:var(--ink-soft);
+  position:fixed;left:0;top:50%;z-index:25;width:34px;height:96px;margin-top:-48px;padding:0;border:1px solid var(--glass-border);border-left:none;
+  border-radius:0 22px 22px 0;background:color-mix(in srgb,var(--bg2) 80%,transparent);color:var(--ink-soft);
   -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer;display:none;align-items:center;justify-content:center;
-  box-shadow:0 6px 18px rgba(var(--shadow),.18);opacity:.8;
+  box-shadow:0 6px 18px rgba(var(--shadow),.22);opacity:.9;
 }
-.nav-handle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.nav-handle::before{content:"";position:absolute;left:0;top:-14px;bottom:-14px;width:52px}
+.nav-handle svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 body.in-app .nav-handle{display:flex}
 body.in-app.chat-open .nav-handle,body.zh-full .nav-handle,body.drawing .nav-handle{display:none}
 body.nav-open .nav-handle{display:none}
