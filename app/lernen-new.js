@@ -192,6 +192,7 @@
     let h;
     if (f) h = V.sub === 'todo' ? vTodo(f) : V.sub === 'cards' ? vCards(f) : vFach(f);
     else h = (V.tab === 'erledigt' ? vDone() : V.tab === 'einst' ? vSet() : vHome());
+    $('s-lernennew').classList.toggle('lnn-in-fach', !!f);   // im Fach: Kopfzeile „← Lernen NEW“ weg, alles rückt nach oben
     root.innerHTML = (f ? '' : tabsHtml()) + h;
   }
   const rerender = () => { const y = window.scrollY; render(); window.scrollTo?.(0, y); };

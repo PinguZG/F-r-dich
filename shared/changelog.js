@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 128, date: '2026-11-27',
+      features: [],
+      small: ['Lernen NEW: im Fach mehr Platz (Kopfzeile ausgeblendet).'],
+      hotfix: [] },
     { v: 127, date: '2026-11-27',
       features: [],
       small: ['Menü-Pfeil frei verschiebbar.', 'Zurück-Knopf geht auf die vorherige Seite.', 'Stimmungskatze der anderen Person auf Start, eigene Stimmung und Katze per Tipp auf den Kasten ändern.'],
