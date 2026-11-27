@@ -62,13 +62,6 @@
   </div>
 </section>
 
-<!-- ============ Geschenk ============ -->
-<section class="screen" id="s-gift">
-  <div class="gift" id="gift"><span>🎁</span></div>
-  <div class="bar"><div id="barFill"></div></div>
-  <div class="tap" id="tapText">Tipp mich an</div>
-</section>
-
 <!-- ============ App-Rahmen: oben Avatar, unten Navigation ============ -->
 <header class="topbar">
   <div class="top-left">
@@ -866,7 +859,6 @@
   <div class="card glass set-card app-card">
     <button class="pack-btn" id="reloadBtn" type="button">↻ App neu laden</button>
     <button class="pack-btn" id="changelogBtn" type="button">📋 Was ist neu?</button>
-    <button class="pack-btn" id="packBtn" type="button">🎁 Wieder einpacken</button>
     <button class="logout" id="logoutBtn" type="button">Abmelden</button>
     <small class="app-version">Version <b data-wir-version>…</b></small>
   </div>
@@ -1385,37 +1377,6 @@
   });
 
   window.WIR_APP = { name: 'wir', title: 'Wir' };
-
-  /* ---------- Geschenk ---------- */
-  let giftOpening = false;
-  $('gift').addEventListener('click', async () => {
-    if (giftOpening) return;
-    giftOpening = true;
-    $('tapText').textContent = 'Wird ausgepackt …';
-    $('gift').classList.add('wiggle');
-    $('barFill').style.width = '100%';
-    await wait(555);
-    const r = $('gift').getBoundingClientRect();
-    $('gift').classList.remove('wiggle');
-    $('gift').classList.add('boom');
-    UI.burst(r.left + r.width / 2, r.top + r.height / 2, 26);
-    await wait(195);
-    UI.show('s-home');
-    $('s-home').scrollTop = 0;
-  });
-
-  /* Einpacken: zurück zum Geschenk */
-  $('packBtn').addEventListener('click', async () => {
-    UI.show('s-gift');
-    await wait(300);
-    $('barFill').style.transition = 'none';
-    $('barFill').style.width = '0';
-    $('gift').classList.remove('boom');
-    $('tapText').textContent = 'Tipp mich an';
-    await wait(50);
-    $('barFill').style.transition = '';
-    giftOpening = false;
-  });
 
   /* ---------- Inhalte (hier anpassen) ---------- */
   // Clay-Bilder liegen in img/clay/<name>.jpg und img/clay/<name>_thumb.jpg

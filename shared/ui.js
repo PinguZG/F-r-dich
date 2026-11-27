@@ -22,10 +22,14 @@
   const alias = {};
   const resolve = id => alias[id] || id;
 
+  // Verlauf: Zurück-Knöpfe gehen auf die zuletzt besuchte Seite (nicht fest auf Start)
+  const hist = []; let cur = null, noPush = false;
   function show(id){
     id = resolve(id);
     const target = $(id);
     if (!target) return;
+    if (!noPush && cur && cur !== id && cur !== 's-lock') { hist.push(cur); if (hist.length > 40) hist.shift(); }
+    cur = id;
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s === target));
     document.querySelectorAll('.sheet-wrap.open').forEach(w => sheet(w.id, false));
     const inApp = target.classList.contains('page');
@@ -96,7 +100,12 @@
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-go]');
     if (!b) return;
-    const id = resolve(b.dataset.go);
+    let id = resolve(b.dataset.go);
+    if (b.classList.contains('back-btn')) {
+      let prev = null;
+      while (hist.length) { const p = hist.pop(); if (p !== cur && p !== 's-lock' && $(p) && $(p).classList.contains('page')) { prev = p; break; } }
+      if (prev) { id = prev; noPush = true; try { show(id); } finally { noPush = false; } if ($(id)) $(id).scrollTop = 0; return; }
+    }
     show(id); if ($(id)) $(id).scrollTop = 0;
   });
 

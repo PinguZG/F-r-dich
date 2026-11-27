@@ -106,9 +106,9 @@ textarea.lnn-in{resize:vertical}
   font:700 14px 'Pixelify Sans','Quicksand',sans-serif;box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78;transition:.25s steps(4)}
 #lnnToast.on{opacity:1;transform:translate(-50%,0)}
 /* Start: Stimmungskatze + Auswahl */
-.st-cat{flex:none;width:58px;height:54px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.st-cat{flex:none;width:58px;height:54px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.st-click{cursor:pointer}
 .st-cat img{width:56px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
-.st-cat:active{transform:scale(.94)}
 .cat-ov{position:fixed;inset:0;z-index:70;background:rgba(80,60,80,.4);display:flex;align-items:flex-end;justify-content:center;padding:16px}
 .cat-sh{width:min(440px,100%);max-height:84vh;overflow:auto;padding:16px;background:#fffaf3;color:#6a4a3c;font-family:'Pixelify Sans','Quicksand',sans-serif;
   box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78}
@@ -120,3 +120,9 @@ textarea.lnn-in{resize:vertical}
 .cat-auto{display:block;width:100%;min-height:44px;margin:12px 0 0;border:0;background:#ffa6c1;color:#fff;font:700 15px 'Pixelify Sans','Quicksand',sans-serif;cursor:pointer;
   box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78}
 .cat-auto.on{background:#9fd69b}
+.km-me{display:flex;align-items:center;gap:12px;margin-bottom:6px}.km-me img{width:72px;image-rendering:pixelated;flex:none}.km-me>div{flex:1}.km-me b{display:block;font-size:1.1em;margin-bottom:4px}
+.km-me input{width:100%;accent-color:#ffa6c1}
+.cat-save{display:block;width:100%;min-height:46px;margin:12px 0 0;border:0;background:#ffa6c1;color:#fff;font:700 16px 'Pixelify Sans','Quicksand',sans-serif;cursor:pointer;
+  box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78}
+.cat-save:disabled{opacity:.6}
+.km-other{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:12px;border-top:2px dashed #e6d9d0;font-size:.9em}.km-other img{width:52px;image-rendering:pixelated;flex:none}.km-other small{display:block;font-size:.75em;color:#a58a80;margin-top:2px}
