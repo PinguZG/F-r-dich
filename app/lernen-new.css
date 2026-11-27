@@ -129,3 +129,10 @@ textarea.lnn-in{resize:vertical}
 #s-lernennew.lnn-in-fach>.sub-head{display:none}
 #s-lernennew.lnn-in-fach #lnnBody{padding-top:0}
 .lnn-ul{margin:4px 0 6px;padding-left:20px;font-size:.85em;line-height:1.45}.lnn-ul li{margin:4px 0;overflow-wrap:anywhere}
+/* Karteikarten: Stufen wie im alten Lernbereich */
+.lnn-lv{display:flex;gap:10px;justify-content:center;margin:6px 4px}
+.lnn-lv button,.lnn-rate button{flex:1;min-height:42px;border:0;margin:4px;font-size:.85em;font-weight:700;cursor:pointer;color:var(--ink);opacity:.55}
+.lnn-lv button.on{opacity:1}
+.lnn-lv i{font-style:normal;margin-left:6px;font-size:.8em;opacity:.8}
+.lv1{background:#ffc4cf!important}.lv2{background:#ffe9a8!important}.lv3{background:#c4ecc4!important}
+.lnn-rate{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 4px 4px}.lnn-rate button{opacity:1;min-height:56px}

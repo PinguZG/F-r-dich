@@ -20,7 +20,6 @@
   const LEGACY = new Set(['GT', 'D', 'M', 'GP', 'PuG', 'SLZ', 'E', 'Gex', 'E-Con', 'Eth', 'Smw', 'Me', 'AdP', 'Nw']);
   const STAGES = [{ n: 'Baby', xp: 0 }, { n: 'Teen', xp: 300 }, { n: 'Adult', xp: 900 }];
   const XP_TODO = 40, XP_CARD = 5, XP_LEARNED = 15;
-  const INT = { 1: 0, 2: 1, 3: 3 };
   const FONTS = { pixelify: ["Pixelify Sans", "'Pixelify Sans','Quicksand',sans-serif", 1], press: ['Press Start', "'Press Start 2P',monospace", .62], silk: ['Silkscreen', "'Silkscreen',monospace", .8], quick: ['Quicksand', "'Quicksand',sans-serif", 1], caveat: ['Handschrift', "'Caveat',cursive", 1.2] };
   const CARDCOL = { rosa: ['Rosa', '#ffd3e0'], mint: ['Mint', '#cdeed8'], himmel: ['Himmel', '#cfe6f7'], gelb: ['Gelb', '#fff0b8'], flieder: ['Flieder', '#e3d8f7'] };
   const SCENES = { wiese: 'Wiese', strand: 'Strand', schnee: 'Schnee', sakura: 'Sakura' };
@@ -40,6 +39,7 @@
   // ---------- Zustand ----------
   let FA = [], IT = [], loaded = false, loadErr = '', tries = 0;
   let V = { tab: 'tiere', fach: null, sub: null, ses: null };
+  let SEL = [1, 2, 3];   // gewählte Karten-Stufen (bleibt beim Seitenwechsel erhalten)
   const stageOf = xp => STAGES.reduce((a, s, i) => xp >= s.xp ? i : a, 0);
   const fach = k => FA.find(f => f.key === k);
   const itemsOf = k => IT.filter(i => i.fach === k);
@@ -54,7 +54,7 @@
       if (learned === total) { mood = 'happy'; text = 'Alles geschafft – ich bin happy bis zur nächsten Prüfung!'; }
       else { const r = pct / need; if (r >= 1) { mood = 'happy'; text = 'Alles im Plan – ich bin glücklich!'; } else if (r >= .75) { mood = 'ok'; text = 'Läuft ganz gut, weiter so!'; } else if (r >= .45) { mood = 'meh'; text = 'Hmm … ich brauche mehr Futter (Lernstoff)!'; } else { mood = 'sad'; text = 'Ich bin traurig – lass uns lernen!'; } }
     }
-    return { todos, cards, learned, total, need, pct, mood, text, open: todos.filter(i => !i.done), done: todos.filter(i => i.done), due: cards.filter(c => !c.due || c.due <= dstr(0)), all: learned === total && total > 0 };
+    return { todos, cards, learned, total, need, pct, mood, text, open: todos.filter(i => !i.done), done: todos.filter(i => i.done), due: cards.filter(c => (c.box || 1) < 3), all: learned === total && total > 0 };
   }
   const sprite = (f, mood, cls) => `<img class="${cls || 'lnn-spr'}" alt="" src="${P.animal(f.tier || 'fuchs', { mood: mood || stats(f).mood, stage: stageOf(f.xp || 0) })}">`;
 
@@ -116,7 +116,7 @@
       <h2 class="lnn-hello">${esc(f.name || f.key)}</h2>
       <div class="lnn-stage"><div class="lnn-bubble px">${esc(s.text)}</div>${sprite(f, s.mood, 'lnn-spr big m-' + s.mood)}</div>
       <button type="button" class="lnn-xp" data-act="evo"><span>XP ${f.xp || 0}</span>${bar(xpPct)}<em>${STAGES[st].n}${nxt ? ' → ' + nxt.n : ' ★'}</em></button>
-      <div class="lnn-btns"><button type="button" class="lnn-b pink px" data-act="cards"><b>Karteikarten</b><small>${s.due.length} fällig</small></button>
+      <div class="lnn-btns"><button type="button" class="lnn-b pink px" data-act="cards"><b>Karteikarten</b><small>${s.due.length} offen</small></button>
       <button type="button" class="lnn-b green px" data-act="todo"><b>To-Do-Liste</b><small>${s.open.length} offen</small></button></div></div>
       <div class="lnn-box px"><div class="lnn-row"><div><b>${d == null ? 'Kein Prüfungstermin' : 'Prüfung ' + esc(f.examName || '') + ' ' + dlabel(f.exam)}</b><div class="lnn-sub">${examChip(f)}${s.total ? ` · Soll heute: ${s.need} %` : ''}</div></div><button type="button" class="lnn-sm px" data-act="exam">Termin</button></div>
         ${s.total ? `<div class="lnn-sub" style="margin-top:8px">Gelernt: ${s.learned} von ${s.total} (${s.pct} %)</div>${bar(s.pct, s.need)}` : ''}</div>
@@ -134,10 +134,14 @@
     const have = new Set(itemsOf(f.key).filter(i => i.typ === 'karte').map(i => i.title)), todo = [];
     window.WIR_ETHIK.themen.forEach(t => t.karten.forEach(k => { if (!have.has(k[0])) todo.push(k); }));
     if (!todo.length) { if (manual) toast('Alle Karten sind schon da'); return; }
-    const me = meRec();
-    for (let i = 0; i < todo.length; i += 10) {
-      const recs = await Promise.all(todo.slice(i, i + 10).map(k => pb.collection('lnew_items').create({ user: learnerId(), fach: f.key, typ: 'karte', title: k[0].slice(0, 300), back: (k[1] + (k[2] ? '\n\nQuelle: ' + k[2] : '')).slice(0, 1000), box: 1, done: false, by: 'ethik-kae1' }, { requestKey: null })));
-      recs.forEach(r => IT.push(r));
+    let n = 0;
+    for (let i = 0; i < todo.length; i += 5) {
+      const mk = k => pb.collection('lnew_items').create({ user: learnerId(), fach: f.key, typ: 'karte', title: k[0].slice(0, 300), back: (k[1] + (k[2] ? '\n\nQuelle: ' + k[2] : '')).slice(0, 1000), box: 1, done: false, by: 'ethik-kae1' }, { requestKey: null });
+      for (const k of todo.slice(i, i + 5)) {
+        let rec = null;
+        for (let t = 0; t < 3 && !rec; t++) { try { rec = await mk(k); } catch (e) { if (t === 2) { toast(n + ' von ' + todo.length + ' Karten eingefügt – Knopf „KAE1-Karten einfügen / ergänzen“ holt den Rest'); throw e; } await new Promise(r => setTimeout(r, 700 * (t + 1))); } }
+        IT.push(rec); n++;
+      }
     }
     try { localStorage.setItem(IMPKEY(f), '1'); } catch (_) {}
     toast(todo.length + ' Karten für KAE1 eingefügt');
@@ -156,16 +160,19 @@
       <button type="button" class="lnn-btn px" data-act="add">+ Aufgabe hinzufügen</button>`;
   }
 
+  const LVN = { 1: 'Schlecht', 2: 'Okay', 3: 'Sehr gut' };   // Stufe steht in item.box (1 = Schlecht/neu, 2 = Okay, 3 = Sehr gut = gelernt)
+  const lvlOf = c => Math.min(3, Math.max(1, c.box || 1));
+  const selTabs = s => `<div class="lnn-lv">${[1, 2, 3].map(l => `<button type="button" class="lv${l} px ${SEL.includes(l) ? 'on' : ''}" data-act="sel" data-l="${l}" aria-pressed="${SEL.includes(l)}">${LVN[l]}<i>${s.cards.filter(c => lvlOf(c) === l).length}</i></button>`).join('')}</div>`;
   function vCards(f) {
-    const s = stats(f), ses = V.ses;
-    const head = `<div class="lnn-scene lnn-top">${clouds()}<button type="button" class="lnn-back px" data-act="fach" aria-label="Zurück">‹</button><h2 class="lnn-hello">Karten · ${esc(f.name || f.key)}</h2><p class="lnn-sub">${s.cards.length} Karten · ${s.cards.filter(c => c.box >= 3).length} gelernt</p></div>`;
+    const s = stats(f), ses = V.ses, pool = s.cards.filter(c => SEL.includes(lvlOf(c)));
+    const head = `<div class="lnn-scene lnn-top">${clouds()}<button type="button" class="lnn-back px" data-act="fach" aria-label="Zurück">‹</button><h2 class="lnn-hello">Karten · ${esc(f.name || f.key)}</h2><p class="lnn-sub">${s.cards.length} Karten · ${s.cards.filter(c => lvlOf(c) === 3).length} sehr gut</p></div>`;
     if (!s.cards.length) return head + `<div class="lnn-box px"><p class="lnn-empty">Noch keine Karteikarten. Leg welche an!</p></div><button type="button" class="lnn-btn px" data-act="add">+ Karte hinzufügen</button>`;
-    if (!ses) return head + `<div class="lnn-box px center"><p>${s.due.length ? `<b>${s.due.length}</b> Karte${s.due.length === 1 ? '' : 'n'} fällig` : 'Heute ist nichts fällig – du kannst trotzdem üben.'}</p><button type="button" class="lnn-btn px" data-act="start">${s.due.length ? 'Los geht’s' : 'Alle üben'}</button></div><button type="button" class="lnn-btn soft px" data-act="add">+ Karte hinzufügen</button>`;
-    if (ses.i >= ses.q.length) return head + `<div class="lnn-box px center">${sprite(f, 'happy', 'lnn-spr big')}<h3>Geschafft!</h3><p>${ses.ok} gewusst · ${ses.no} nochmal · +${ses.xp} XP</p><button type="button" class="lnn-btn px" data-act="fach">Zurück zu ${esc(f.name || f.key)}</button></div>`;
+    if (!ses) return head + selTabs(s) + `<div class="lnn-box px center"><p>${pool.length ? `<b>${pool.length}</b> Karte${pool.length === 1 ? '' : 'n'} in der Auswahl` : 'In dieser Auswahl sind keine Karten. Wähle oben andere Stufen.'}</p><button type="button" class="lnn-btn px" data-act="start" ${pool.length ? '' : 'disabled'}>Los geht’s</button></div><button type="button" class="lnn-btn soft px" data-act="add">+ Karte hinzufügen</button>`;
+    if (ses.i >= ses.q.length) return head + selTabs(s) + `<div class="lnn-box px center">${sprite(f, 'happy', 'lnn-spr big')}<h3>Runde geschafft!</h3><p>${ses.cnt[3]} sehr gut · ${ses.cnt[2]} okay · ${ses.cnt[1]} schlecht · +${ses.xp} XP</p><button type="button" class="lnn-btn px" data-act="start" ${pool.length ? '' : 'disabled'}>Nochmal</button><button type="button" class="lnn-btn soft px" data-act="fach">Zurück zu ${esc(f.name || f.key)}</button></div>`;
     const c = IT.find(i => i.id === ses.q[ses.i]);
-    return head + `<div class="lnn-prog">${ses.i + 1} / ${ses.q.length}</div>
+    return head + selTabs(s) + `<div class="lnn-prog">${ses.i + 1} / ${ses.q.length}</div>
       <button type="button" class="lnn-card px ${ses.flip ? 'flip' : ''}" data-act="flip"><small>${ses.flip ? 'Antwort' : 'Frage'}</small><div>${esc(ses.flip ? (c.back || '–') : c.title)}</div><em>${ses.flip ? '' : 'Antippen zum Umdrehen'}</em></button>
-      ${ses.flip ? `<div class="lnn-btns"><button type="button" class="lnn-b pink px" data-act="no"><b>Nochmal</b></button><button type="button" class="lnn-b green px" data-act="yes"><b>Gewusst</b></button></div>` : ''}`;
+      ${ses.flip ? `<div class="lnn-rate">${[1, 2, 3].map(l => `<button type="button" class="lv${l} px" data-act="rate" data-l="${l}"><b>${LVN[l]}</b></button>`).join('')}</div>` : ''}`;
   }
 
   function vDone() {
@@ -259,12 +266,16 @@
     scene: el => { prefs.scene = el.dataset.v; savePrefs(); render(); },
     flip: () => { V.ses.flip = true; render(); },
     start: () => {
-      const f = fach(V.fach), s = stats(f), pool = (s.due.length ? s.due : s.cards).map(c => c.id);
+      const f = fach(V.fach), pool = stats(f).cards.filter(c => SEL.includes(lvlOf(c))).map(c => c.id);
       for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-      V.ses = { q: pool, i: 0, flip: false, ok: 0, no: 0, xp: 0 }; render();
+      V.ses = { q: pool, i: 0, flip: false, cnt: { 1: 0, 2: 0, 3: 0 }, xp: 0 }; render();
     },
-    yes: async () => { await answer(true); },
-    no: async () => { await answer(false); },
+    sel: el => {
+      const l = +el.dataset.l, i = SEL.indexOf(l);
+      if (i >= 0) { if (SEL.length === 1) return; SEL.splice(i, 1); } else SEL.push(l);
+      if (V.ses) act.start(); else render();
+    },
+    rate: async el => { await answer(+el.dataset.l); },
     undo: async el => { const it = IT.find(i => i.id === el.dataset.id); if (!it) return; await patchItem(it, { done: false, doneAt: '' }); await addXp(fach(it.fach), -XP_TODO); rerender(); },
     del: async el => { const it = IT.find(i => i.id === el.dataset.id); if (!it || !confirm('Wirklich löschen?')) return; try { await pb.collection('lnew_items').delete(it.id); IT = IT.filter(i => i !== it); } catch (e) { toast(errText(e)); } rerender(); },
     examclear: async () => { const f = fach(V.fach); await saveFach(f, { exam: '', examName: '' }); closeSheet(); render(); },
@@ -299,13 +310,10 @@
     },
   };
   async function saveFach(f, data) { Object.assign(f, data); try { await pb.collection('lnew_faecher').update(f.id, data); } catch (e) { toast('Ging nicht: ' + errText(e)); } }
-  async function answer(ok) {
-    const ses = V.ses, c = IT.find(i => i.id === ses.q[ses.i]), f = fach(c.fach); let gain = 0;
-    if (ok) {
-      const nb = Math.min(3, (c.box || 1) + 1); gain = XP_CARD + (nb === 3 && c.box < 3 ? XP_LEARNED : 0);
-      const dd = new Date(); dd.setDate(dd.getDate() + (INT[nb] || 3)); const due = dd.getFullYear() + '-' + String(dd.getMonth() + 1).padStart(2, '0') + '-' + String(dd.getDate()).padStart(2, '0');
-      await patchItem(c, { box: nb, due }); ses.ok++;
-    } else { await patchItem(c, { box: 1, due: dstr(0) }); ses.no++; }
+  async function answer(level) {
+    const ses = V.ses, c = IT.find(i => i.id === ses.q[ses.i]), f = fach(c.fach), before = lvlOf(c);
+    const gain = level === 3 ? XP_CARD + (before < 3 ? XP_LEARNED : 0) : level === 2 ? 2 : 0;
+    await patchItem(c, { box: level, due: '' }); ses.cnt[level]++;
     if (gain) { ses.xp += gain; await addXp(f, gain); }
     ses.i++; ses.flip = false; render();
   }

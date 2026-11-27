@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 133, date: '2026-11-27',
+      features: [],
+      small: ['Lernen NEW: Karteikarten mit Stufen Schlecht / Okay / Sehr gut und Auswahl der Stufen (wie im alten Lernen).'],
+      hotfix: ['Ethik-Karten werden zuverlässiger eingefügt.'] },
     { v: 132, date: '2026-11-27',
       features: [],
       small: [],
