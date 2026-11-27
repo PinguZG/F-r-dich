@@ -121,7 +121,31 @@
       <div class="lnn-box px"><div class="lnn-row"><div><b>${d == null ? 'Kein Prüfungstermin' : 'Prüfung ' + esc(f.examName || '') + ' ' + dlabel(f.exam)}</b><div class="lnn-sub">${examChip(f)}${s.total ? ` · Soll heute: ${s.need} %` : ''}</div></div><button type="button" class="lnn-sm px" data-act="exam">Termin</button></div>
         ${s.total ? `<div class="lnn-sub" style="margin-top:8px">Gelernt: ${s.learned} von ${s.total} (${s.pct} %)</div>${bar(s.pct, s.need)}` : ''}</div>
       <div class="lnn-row two"><button type="button" class="lnn-btn px" data-act="add">+ Stoff hinzufügen</button></div>
+      ${isEthik(f) ? '<div class="lnn-row two"><button type="button" class="lnn-btn soft px" data-act="ueber">Übersicht (Themen mit Quelle)</button></div><div class="lnn-row two"><button type="button" class="lnn-btn soft px" data-act="ethimp">KAE1-Karten einfügen / ergänzen</button></div>' : ''}
       ${itemsOf(f.key).length ? `<details class="lnn-box px"><summary>Alle Inhalte (${itemsOf(f.key).length})</summary>${itemsOf(f.key).map(i => `<div class="lnn-li"><span>${i.typ === 'karte' ? '🃏' : '✅'} ${esc(i.title)}${i.typ === 'karte' && i.back ? ' → ' + esc(i.back) : ''}</span><button type="button" class="lnn-x" data-act="del" data-id="${i.id}" aria-label="Löschen">×</button></div>`).join('')}</details>` : ''}`;
+  }
+
+  // ---------- Ethik (Klausur KAE1): Inhalte aus app/lernen/ethik-data.js ----------
+  const isEthik = f => /ethik/i.test(f.name || '');
+  const loadEthik = () => window.WIR_ETHIK ? Promise.resolve() : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = '/lernen/ethik-data.js'; sc.onload = res; sc.onerror = () => rej(new Error('Ethik-Inhalte nicht ladbar')); document.head.append(sc); });
+  const IMPKEY = f => 'wir-lnn-eth-imp-' + f.id;
+  async function importEthik(f, manual) {
+    await loadEthik();
+    const have = new Set(itemsOf(f.key).filter(i => i.typ === 'karte').map(i => i.title)), todo = [];
+    window.WIR_ETHIK.themen.forEach(t => t.karten.forEach(k => { if (!have.has(k[0])) todo.push(k); }));
+    if (!todo.length) { if (manual) toast('Alle Karten sind schon da'); return; }
+    const me = meRec();
+    for (let i = 0; i < todo.length; i += 10) {
+      const recs = await Promise.all(todo.slice(i, i + 10).map(k => pb.collection('lnew_items').create({ user: learnerId(), fach: f.key, typ: 'karte', title: k[0].slice(0, 300), back: (k[1] + (k[2] ? '\n\nQuelle: ' + k[2] : '')).slice(0, 1000), box: 1, done: false, by: 'ethik-kae1' }, { requestKey: null })));
+      recs.forEach(r => IT.push(r));
+    }
+    try { localStorage.setItem(IMPKEY(f), '1'); } catch (_) {}
+    toast(todo.length + ' Karten für KAE1 eingefügt');
+  }
+  function vUeber(f) {
+    const D = window.WIR_ETHIK;
+    return `<div class="lnn-scene lnn-top">${clouds()}<button type="button" class="lnn-back px" data-act="fach" aria-label="Zurück">‹</button><h2 class="lnn-hello">Übersicht</h2><p class="lnn-sub">${esc(D ? D.anlass : '')}</p></div>
+      ${D ? D.themen.map(t => `<details class="lnn-box px"><summary>${esc(t.name)}</summary>${t.sektionen.map(s => `<h3>${esc(s.h)}</h3><ul class="lnn-ul">${s.punkte.map(p => `<li>${esc(p)}</li>`).join('')}</ul><div class="lnn-sub">Quelle: ${esc(s.q || '')}</div>`).join('')}</details>`).join('') : '<div class="lnn-box px"><p class="lnn-empty">Lade …</p></div>'}`;
   }
 
   function vTodo(f) {
@@ -199,7 +223,7 @@
     if (!loaded) { root.innerHTML = `<div class="lnn-box px"><p class="lnn-empty">${loadErr ? 'Konnte nicht laden: ' + esc(loadErr) : 'Lade …'}</p></div>`; return; }
     const f = V.fach ? fach(V.fach) : null;
     let h;
-    if (f) h = V.sub === 'todo' ? vTodo(f) : V.sub === 'cards' ? vCards(f) : vFach(f);
+    if (f) h = V.sub === 'todo' ? vTodo(f) : V.sub === 'cards' ? vCards(f) : V.sub === 'ueber' ? vUeber(f) : vFach(f);
     else h = (V.tab === 'erledigt' ? vDone() : V.tab === 'einst' ? vSet() : vHome());
     $('s-lernennew').classList.toggle('lnn-in-fach', !!f);   // im Fach: Kopfzeile „← Lernen NEW“ weg, alles rückt nach oben
     root.innerHTML = (f ? '' : tabsHtml()) + h;
@@ -212,10 +236,17 @@
   // ---------- Aktionen ----------
   const act = {
     tab: el => { V = { tab: el.dataset.v, fach: null, sub: null, ses: null }; render(); },
-    open: el => { V.fach = el.dataset.k; V.sub = null; render(); window.scrollTo?.(0, 0); },
+    open: async el => {
+      V.fach = el.dataset.k; V.sub = null; render(); window.scrollTo?.(0, 0);
+      const f = fach(V.fach);
+      let done = false; try { done = localStorage.getItem(IMPKEY(f)) === '1'; } catch (_) {}
+      if (f && isEthik(f) && !itemsOf(f.key).length && !done) { toast('Lade Ethik-Karten für KAE1 …'); try { await importEthik(f); } catch (e) { toast('Ging nicht: ' + errText(e)); } if (V.fach === f.key) render(); }
+    },
     home: () => { V.fach = null; V.sub = null; render(); },
     fach: () => { V.sub = null; V.ses = null; render(); },
     todo: () => { V.sub = 'todo'; render(); },
+    ueber: async () => { V.sub = 'ueber'; render(); await loadEthik(); render(); },
+    ethimp: async () => { await importEthik(fach(V.fach), true); render(); },
     cards: () => { V.sub = 'cards'; V.ses = null; render(); },
     evo: () => evoSheet(fach(V.fach)),
     add: () => addSheet(fach(V.fach)),
@@ -246,6 +277,7 @@
       const key = 'f' + Date.now().toString(36).slice(-6);
       try { FA.push(await pb.collection('lnew_faecher').create({ user: learnerId(), key, name, tier: np.tier, xp: 0 })); } catch (e) { toast('Ging nicht: ' + errText(e)); return; }
       closeSheet(); V = { tab: 'tiere', fach: key, sub: null, ses: null }; render(); window.scrollTo?.(0, 0);
+      if (isEthik(fach(key))) act.open({ dataset: { k: key } });
     },
     tick: async el => {
       const it = IT.find(i => i.id === el.dataset.id); if (!it) return;
