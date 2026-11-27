@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 130, date: '2026-11-27',
+      features: ['Ethik (Klausur KAE1): Übersicht und Karteikarten mit Quellenangabe, in Lernen -> Ida'],
+      small: [],
+      hotfix: [] },
     { v: 129, date: '2026-11-27',
       features: [],
       small: ['Lernen NEW: Fächer legst du selbst an und wählst ein Tier.'],

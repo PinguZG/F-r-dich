@@ -387,3 +387,7 @@ body.kv-open{overflow:hidden}
 /* Stift: Finger scrollen/zoomen per Skript, nur der Stift zeichnet */
 .ks,.kp,.kp *{touch-action:none}
 .kv-zl{font-size:12px;font-weight:800;color:var(--ink-soft);min-width:44px;text-align:center}
+
+/* Ethik: Quellenangabe (PDF-Kürzel + Seite) unter Abschnitten und auf der Kartenrückseite */
+.et-q{display:block;margin-top:8px;font-size:11px;font-weight:600;color:var(--ink-soft);opacity:.85}
+.kk-ans+.et-q{margin-top:12px}
