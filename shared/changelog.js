@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 132, date: '2026-11-27',
+      features: [],
+      small: [],
+      hotfix: ['Ethik-Lernstoff nur noch in Lernen NEW (alter Reiter entfernt).'] },
     { v: 131, date: '2026-11-27',
       features: [],
       small: ['Lernen NEW: Fach „Ethik“ bekommt die KAE1-Karten und eine Übersicht automatisch.'],

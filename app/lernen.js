@@ -623,17 +623,17 @@
   }
   // Profilwahl: „Wer lernt?“ – Daniel hat die Lernmappen, Ida bekommt ihren Bereich später
   function showWho() {
-    V.who = null; clearInterval(V.ptimer); window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount(); window.WIR_ETHIK_UI?.unmount(); window.WIR_KUNST_UI?.unmount();
+    V.who = null; clearInterval(V.ptimer); window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount(); window.WIR_KUNST_UI?.unmount();
     $('lnNav').innerHTML = ''; $('lnNav').classList.remove('solo'); $('lnSync').hidden = true; const wb = $('lnWhoBtn'); if (wb) wb.hidden = true;
     const card = (w, n, sub) => `<button class="ln-who glass" type="button" data-act="who" data-w="${w}"><span class="ln-av">${n[0]}</span><b>${n}</b><small>${sub}</small></button>`;
-    body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Englisch · Politik · Kunst · Ethik') + '</div>';
+    body().innerHTML = '<div class="ln-big" style="font-size:24px">Wer lernt?</div><div class="ln-whos">' + card('daniel', 'Daniel', 'AP2-Prüfung 25.11.') + card('ida', 'Ida', 'Englisch · Politik · Kunst') + '</div>';
   }
   // Idas Reiter: Englisch (englisch.js) und Politik (politik.js, Lernplan bis zur Kurzarbeit)
   function showIda(tab) {
-    V.idaTab = tab; window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount(); window.WIR_ETHIK_UI?.unmount(); window.WIR_KUNST_UI?.unmount();
+    V.idaTab = tab; window.WIR_ENGLISCH?.unmount(); window.WIR_POLITIK_UI?.unmount(); window.WIR_KUNST_UI?.unmount();
     $('lnNav').classList.remove('solo');
-    $('lnNav').innerHTML = [['englisch', 'Englisch'], ['politik', 'Politik'], ['kunst', 'Kunst'], ['ethik', 'Ethik']].map(([k, n]) => `<button type="button" data-ida="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
-    const mod = tab === 'ethik' ? window.WIR_ETHIK_UI : tab === 'kunst' ? window.WIR_KUNST_UI : tab === 'politik' ? window.WIR_POLITIK_UI : window.WIR_ENGLISCH;
+    $('lnNav').innerHTML = [['englisch', 'Englisch'], ['politik', 'Politik'], ['kunst', 'Kunst']].map(([k, n]) => `<button type="button" data-ida="${k}" class="${k === tab ? 'on' : ''}">${n}</button>`).join('');
+    const mod = tab === 'kunst' ? window.WIR_KUNST_UI : tab === 'politik' ? window.WIR_POLITIK_UI : window.WIR_ENGLISCH;
     if (mod) mod.mount(body()); else body().innerHTML = '<div class="ln-empty">Konnte nicht geladen werden.</div>';
   }
   async function pickWho(w) {
