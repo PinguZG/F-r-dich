@@ -5,6 +5,14 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 126, date: '2026-11-27',
+      features: [],
+      small: ['Menü-Pfeil am Rand größer, Menü-Hinweis entfernt.'],
+      hotfix: [] },
+    { v: 125, date: '2026-11-27',
+      features: ['Lernen NEW: jedes Fach ein Pixel-Tier, das mit dir lernt und wächst', 'Stimmungskatzen auf der Startseite'],
+      small: [],
+      hotfix: [] },
     { v: 124, date: '2026-11-25',
       features: [],
       small: ['Startseite überarbeitet.'],
