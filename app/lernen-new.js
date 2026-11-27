@@ -17,8 +17,7 @@
   const errText = e => (e && (e.response?.message || e.message)) || 'Fehler';
 
   // ---------- feste Werte ----------
-  const DEFAULTS = [['GT', 'fuchs'], ['D', 'hase'], ['M', 'panda'], ['GP', 'katze'], ['PuG', 'baer'], ['SLZ', 'hamster'], ['E', 'einhorn'],
-    ['Gex', 'frosch'], ['E-Con', 'hund'], ['Eth', 'eule'], ['Smw', 'pinguin'], ['Me', 'schwein'], ['AdP', 'koala'], ['Nw', 'kueken']];
+  const LEGACY = new Set(['GT', 'D', 'M', 'GP', 'PuG', 'SLZ', 'E', 'Gex', 'E-Con', 'Eth', 'Smw', 'Me', 'AdP', 'Nw']);
   const STAGES = [{ n: 'Baby', xp: 0 }, { n: 'Teen', xp: 300 }, { n: 'Adult', xp: 900 }];
   const XP_TODO = 40, XP_CARD = 5, XP_LEARNED = 15;
   const INT = { 1: 0, 2: 1, 3: 3 };
@@ -65,10 +64,10 @@
     try {
       const flt = pb.filter('user = {:u}', { u: uid });
       [FA, IT] = await Promise.all([pb.collection('lnew_faecher').getFullList({ filter: flt, sort: 'created' }), pb.collection('lnew_items').getFullList({ filter: flt, sort: 'created' })]);
-      if (!FA.length) {
-        for (const [key, tier] of DEFAULTS) { try { await pb.collection('lnew_faecher').create({ user: uid, key, name: key, tier, xp: 0 }); } catch (_) {} }
-        FA = await pb.collection('lnew_faecher').getFullList({ filter: flt, sort: 'created' });
-      }
+      // frühere Standard-Fächer (Stand 27.11.), die nie benutzt wurden, räumen wir auf – Fächer legt man jetzt selbst an
+      const stale = FA.filter(f => LEGACY.has(f.key) && f.name === f.key && !f.xp && !f.exam && !IT.some(i => i.fach === f.key));
+      for (const f of stale) { try { await pb.collection('lnew_faecher').delete(f.id); } catch (_) {} }
+      FA = FA.filter(f => !stale.includes(f));
       loadErr = ''; loaded = true;
     } catch (e) { loadErr = errText(e); }
   }
@@ -101,9 +100,11 @@
   function vHome() {
     const list = FA.filter(f => !f.hidden).sort((a, b) => { const da = daysTo(a.exam), db = daysTo(b.exam); return (da == null ? 9999 : da) - (db == null ? 9999 : db) || a.created.localeCompare(b.created); });
     const happy = list.filter(f => stats(f).mood === 'happy').length;
-    return `<div class="lnn-scene lnn-top">${clouds()}<h2 class="lnn-hello">Hi, ${esc(firstName())}!</h2><p class="lnn-sub">${happy} von ${list.length} Tieren sind glücklich</p></div>
+    return `<div class="lnn-scene lnn-top">${clouds()}<h2 class="lnn-hello">Hi, ${esc(firstName())}!</h2><p class="lnn-sub">${list.length ? happy + ' von ' + list.length + ' Tieren sind glücklich' : 'Erstelle dein erstes Fach und such dir ein Tier aus'}</p></div>
+      ${list.length ? '' : '<div class="lnn-box px"><p class="lnn-empty">Noch kein Fach da. Jedes Fach bekommt ein eigenes Pixel-Tier, das mit dir lernt.</p></div>'}
       <div class="lnn-grid">${list.map(f => { const s = stats(f); const st = stageOf(f.xp || 0);
-        return `<button type="button" class="lnn-pet px m-${s.mood}" data-act="open" data-k="${esc(f.key)}">${sprite(f, s.mood)}<b>${esc(f.name || f.key)}</b><span>${STAGES[st].n} · ${f.xp || 0} XP</span>${bar(s.pct == null ? 0 : s.pct, s.total ? s.need : null)}<small>${s.total ? s.learned + '/' + s.total + ' gelernt' : 'noch kein Stoff'} · ${examChip(f)}</small></button>`; }).join('')}</div>`;
+        return `<button type="button" class="lnn-pet px m-${s.mood}" data-act="open" data-k="${esc(f.key)}">${sprite(f, s.mood)}<b>${esc(f.name || f.key)}</b><span>${STAGES[st].n} · ${f.xp || 0} XP</span>${bar(s.pct == null ? 0 : s.pct, s.total ? s.need : null)}<small>${s.total ? s.learned + '/' + s.total + ' gelernt' : 'noch kein Stoff'} · ${examChip(f)}</small></button>`; }).join('')}</div>
+      <button type="button" class="lnn-btn px" data-act="newfach">+ Fach erstellen</button>`;
   }
 
   function vFach(f) {
@@ -157,7 +158,7 @@
         <h3>Karteikarten-Farbe</h3><div class="lnn-chips">${Object.entries(CARDCOL).map(([k, v]) => `<button type="button" class="lnn-chip px ${prefs.card === k ? 'on' : ''}" data-act="cardcol" data-v="${k}" style="background:${v[1]}">${v[0]}</button>`).join('')}</div>
         <h3>Szene</h3><div class="lnn-chips">${Object.entries(SCENES).map(([k, n]) => `<button type="button" class="lnn-chip px ${prefs.scene === k ? 'on' : ''}" data-act="scene" data-v="${k}">${n}</button>`).join('')}</div></div>
       <div class="lnn-box px"><h3>Fächer</h3>${FA.map(f => `<div class="lnn-frow"><button type="button" class="lnn-pick px" data-act="pick" data-k="${esc(f.key)}" aria-label="Tier wählen">${sprite(f, 'ok', 'lnn-spr xs')}</button><input class="lnn-in" data-act="rename" data-k="${esc(f.key)}" value="${esc(f.name || f.key)}" maxlength="40" aria-label="Fachname"><label class="lnn-hide"><input type="checkbox" data-act="hide" data-k="${esc(f.key)}" ${f.hidden ? 'checked' : ''}><span>aus</span></label></div>`).join('')}
-        <div class="lnn-row two"><input class="lnn-in" id="lnnNew" placeholder="Neues Fach (z. B. Bio)" maxlength="40"><button type="button" class="lnn-sm px" data-act="newfach">+</button></div></div>`;
+        <button type="button" class="lnn-btn px" data-act="newfach">+ Fach erstellen</button></div>`;
   }
 
   // ---------- Pop-ups ----------
@@ -179,6 +180,14 @@
   function examSheet(f) {
     sheet(`<h3>Prüfungstermin ${esc(f.name || f.key)}</h3><input class="lnn-in" id="lnnEn" placeholder="Name (z. B. Klausur Kap. 3)" maxlength="80" value="${esc(f.examName || '')}"><input class="lnn-in" id="lnnEd" type="date" value="${esc(f.exam || '')}">
       <p class="lnn-sub">Je näher der Termin, desto mehr Prozent braucht dein Tier, um glücklich zu sein.</p><div class="lnn-btns"><button type="button" class="lnn-btn soft px" data-act="examclear">Termin löschen</button><button type="button" class="lnn-btn px" data-act="examsave">Speichern</button></div>`);
+  }
+  let np = { tier: 'fuchs' };
+  function newSheet() {
+    const used = new Set(FA.map(f => f.tier)); np = { tier: P.KEYS.find(k => !used.has(k)) || P.KEYS[0] };
+    sheet(`<h3>Neues Fach</h3><input class="lnn-in" id="lnnNew" placeholder="Name (z. B. Mathe)" maxlength="40"><p class="lnn-sub">Such dir ein Tier aus:</p>
+      <div class="lnn-pgrid">${P.KEYS.map(k => `<button type="button" class="lnn-pick px ${k === np.tier ? 'on' : ''}" data-act="npick" data-v="${k}"><img class="lnn-spr xs" alt="${esc(P.names[k])}" src="${P.animal(k, { mood: 'happy', stage: 0 })}"><small>${esc(P.names[k])}</small></button>`).join('')}</div>
+      <div class="lnn-btns"><button type="button" class="lnn-btn soft px" data-act="close">Abbrechen</button><button type="button" class="lnn-btn px" data-act="nsave">Erstellen</button></div>`);
+    $('lnnNew')?.focus();
   }
   function pickSheet(f) {
     sheet(`<h3>Tier für ${esc(f.name || f.key)}</h3><div class="lnn-pgrid">${P.KEYS.map(k => `<button type="button" class="lnn-pick px ${k === f.tier ? 'on' : ''}" data-act="settier" data-k="${esc(f.key)}" data-v="${k}"><img class="lnn-spr xs" alt="${esc(P.names[k])}" src="${P.animal(k, { mood: 'happy', stage: stageOf(f.xp || 0) })}"><small>${esc(P.names[k])}</small></button>`).join('')}</div>`);
@@ -229,11 +238,13 @@
     examclear: async () => { const f = fach(V.fach); await saveFach(f, { exam: '', examName: '' }); closeSheet(); render(); },
     examsave: async () => { const f = fach(V.fach); await saveFach(f, { exam: $('lnnEd').value || '', examName: $('lnnEn').value.trim().slice(0, 80) }); closeSheet(); render(); },
     settier: async el => { await saveFach(fach(el.dataset.k), { tier: el.dataset.v }); closeSheet(); render(); },
-    newfach: async () => {
-      const name = ($('lnnNew').value || '').trim().slice(0, 40); if (!name) return;
-      const key = 'f' + Date.now().toString(36).slice(-6), used = new Set(FA.map(f => f.tier)), tier = P.KEYS.find(k => !used.has(k)) || P.KEYS[FA.length % P.KEYS.length];
-      try { FA.push(await pb.collection('lnew_faecher').create({ user: learnerId(), key, name, tier, xp: 0 })); } catch (e) { toast(errText(e)); }
-      render();
+    newfach: () => newSheet(),
+    npick: el => { np.tier = el.dataset.v; document.querySelectorAll('#lnnSheet .lnn-pick').forEach(b => b.classList.toggle('on', b === el)); },
+    nsave: async () => {
+      const name = ($('lnnNew').value || '').trim().slice(0, 40); if (!name) { toast('Gib dem Fach einen Namen'); return; }
+      const key = 'f' + Date.now().toString(36).slice(-6);
+      try { FA.push(await pb.collection('lnew_faecher').create({ user: learnerId(), key, name, tier: np.tier, xp: 0 })); } catch (e) { toast('Ging nicht: ' + errText(e)); return; }
+      closeSheet(); V = { tab: 'tiere', fach: key, sub: null, ses: null }; render(); window.scrollTo?.(0, 0);
     },
     tick: async el => {
       const it = IT.find(i => i.id === el.dataset.id); if (!it) return;
