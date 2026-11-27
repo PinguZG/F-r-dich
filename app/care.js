@@ -57,6 +57,7 @@
     const pn = p?.name || 'Schatz', pv = mp ? mp.value : null;
     setBar('stMoodName', 'stMoodBar', pn, pv);
     setBar('wzPName', 'wzPBar', pn, pv);
+    document.dispatchEvent(new CustomEvent('wir:mood', { detail: { me: mm ? mm.value : null, partner: pv } }));
     if (!sliding && $('moodRange')) {
       $('moodRange').value = mm ? mm.value : 50;
       $('wzMeVal').textContent = mm ? mm.value : '–';

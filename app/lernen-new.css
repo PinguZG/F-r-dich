@@ -1,0 +1,122 @@
+/* Lernseite NEW + Stimmungskatzen (27.11.2026): helles, süßes Pixel-Design. Die Seite hat bewusst ihre eigene Pastell-Palette (Variablen unten),
+   passt zu jeder Farbwelt, weil sie auf hellem Papier-Grund steht. Pixel-Ränder per box-shadow (keine runden Ecken). */
+#s-lernennew{--pxl:#8a6b78;--paper:#fffaf3;--pink:#ffa6c1;--green:#9fd69b;--sky:#bfe6f2;--ink:#6a4a3c;--soft:#a58a80;--grass:#a9d86a;--grass2:#8fc455;
+  --lnn-font:'Pixelify Sans','Quicksand',sans-serif;--lnn-fs:1;--lnn-card:#ffd3e0;
+  color-scheme:light;font-family:var(--lnn-font);font-size:calc(16px * var(--lnn-fs));color:var(--ink);padding-bottom:calc(var(--nav-h,0px) + 30px)}
+#s-lernennew *{font-family:inherit}
+#s-lernennew[data-scene=strand]{--sky:#c5ecf5;--grass:#f3deaa;--grass2:#e8cf92}
+#s-lernennew[data-scene=schnee]{--sky:#dbeaf7;--grass:#f7fbff;--grass2:#dfeaf5}
+#s-lernennew[data-scene=sakura]{--sky:#ffe3ec;--grass:#cfe8a8;--grass2:#b9d98c}
+#lnnBody{display:flex;flex-direction:column;gap:18px;padding:6px 4px;animation:lnnIn .25s steps(4) both}
+@keyframes lnnIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.px{background:var(--paper);border:0;margin:4px;color:var(--ink);
+  box-shadow:0 -4px 0 0 var(--pxl),0 4px 0 0 var(--pxl),-4px 0 0 0 var(--pxl),4px 0 0 0 var(--pxl),inset -4px -4px 0 0 rgba(106,74,60,.1)}
+.lnn-box{padding:14px 16px}
+.lnn-box h3{font-size:1em;margin:12px 0 8px;font-weight:700}.lnn-box h3:first-child{margin-top:0}
+.lnn-box.center{text-align:center}
+.lnn-sub{font-size:.8em;color:var(--soft);font-weight:600}
+.lnn-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.lnn-row.two{gap:8px;margin:2px 4px}.lnn-sp{flex:1;min-width:0}
+.lnn-empty{text-align:center;color:var(--soft);padding:14px 4px;margin:0}
+/* Reiter */
+.lnn-tabs{display:flex;gap:10px;overflow-x:auto;padding:4px;scrollbar-width:none}.lnn-tabs::-webkit-scrollbar{display:none}
+.lnn-tabs button{flex:none;min-height:40px;padding:0 16px;border:0;margin:4px;background:var(--paper);color:var(--soft);font-weight:700;font-size:.9em;
+  box-shadow:0 -4px 0 0 var(--pxl),0 4px 0 0 var(--pxl),-4px 0 0 0 var(--pxl),4px 0 0 0 var(--pxl)}
+.lnn-tabs button.on{background:var(--pink);color:#fff;text-shadow:0 2px 0 rgba(106,74,60,.35)}
+/* Szene */
+.lnn-scene{position:relative;overflow:hidden;margin:4px;text-align:center;padding:16px 12px 0;
+  background:linear-gradient(var(--sky) 0 68%,var(--grass) 68% 100%);
+  box-shadow:0 -4px 0 0 var(--pxl),0 4px 0 0 var(--pxl),-4px 0 0 0 var(--pxl),4px 0 0 0 var(--pxl)}
+.lnn-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:32%;pointer-events:none;
+  background:repeating-linear-gradient(90deg,var(--grass2) 0 8px,transparent 8px 24px) 0 8px/100% 8px no-repeat,repeating-linear-gradient(90deg,transparent 0 12px,var(--grass2) 12px 20px,transparent 20px 40px) 0 24px/100% 8px no-repeat}
+.lnn-top{min-height:96px;padding-bottom:40px;background:linear-gradient(var(--sky) 0 72%,var(--grass) 72% 100%)}
+.lnn-big{padding-bottom:16px}
+.lnn-hello{position:relative;z-index:1;margin:6px 0 4px;font-size:1.45em;font-weight:700;text-shadow:2px 2px 0 rgba(255,255,255,.7)}
+.lnn-scene .lnn-sub{position:relative;z-index:1;color:var(--ink);opacity:.75;margin:0}
+.lnn-back{position:absolute;left:10px;top:10px;z-index:2;width:38px;height:38px;font-size:1.4em;line-height:1;font-weight:700;cursor:pointer}
+.lnn-cl{position:absolute;display:block;width:12px;height:12px;background:#fff;opacity:.92;animation:lnnDrift 40s linear infinite;
+  box-shadow:12px 0 #fff,24px 0 #fff,36px 0 #fff,12px -12px #fff,24px -12px #fff,-12px 0 #fff0}
+.lnn-cl.c1{top:34px;left:8%}.lnn-cl.c2{top:64px;left:58%;animation-duration:55s;transform:scale(.8)}.lnn-cl.c3{top:20px;left:78%;animation-duration:70s;transform:scale(.6)}
+@keyframes lnnDrift{0%{margin-left:-30px}100%{margin-left:40px}}
+.lnn-stage{position:relative;z-index:1;margin:10px 0 4px}
+.lnn-bubble{display:inline-block;max-width:88%;padding:8px 12px;font-size:.82em;font-weight:600;margin-bottom:10px}
+/* Tiere */
+.lnn-spr{image-rendering:pixelated;image-rendering:crisp-edges;width:96px;height:auto;display:block;margin:0 auto}
+.lnn-spr.big{width:min(62vw,260px);animation:lnnBob 1.6s steps(2) infinite}
+.lnn-spr.big.m-sad,.lnn-spr.big.m-meh{animation-duration:2.6s}
+.lnn-spr.sm{width:64px;flex:none}.lnn-spr.xs{width:48px}
+@keyframes lnnBob{0%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.lnn-spr.big,.lnn-cl{animation:none}}
+.lnn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 10px}
+@media (min-width:640px){.lnn-grid{grid-template-columns:repeat(3,1fr)}}
+.lnn-pet{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 12px;cursor:pointer;text-align:center;font-size:1em}
+.lnn-pet:active{transform:translateY(3px)}
+.lnn-pet b{font-size:1.05em}.lnn-pet span{font-size:.72em;color:var(--soft);font-weight:600}.lnn-pet small{font-size:.66em;color:var(--soft);line-height:1.25}
+.lnn-pet.m-happy{background:#fff3f7}.lnn-pet.m-sad{background:#eef5fb}
+/* Balken */
+.lnn-bar{position:relative;width:100%;height:12px;background:#ece3dc;box-shadow:-2px 0 0 #cdbdb2,2px 0 0 #cdbdb2,0 -2px 0 #cdbdb2,0 2px 0 #cdbdb2;margin:6px 0}
+.lnn-bar i{position:absolute;left:0;top:0;bottom:0;background:#ffe27a;box-shadow:inset 0 -3px 0 rgba(0,0,0,.1);transition:width .4s steps(8)}
+.lnn-bar b{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--pxl)}
+.lnn-xp{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;width:calc(100% - 8px);margin:12px 4px 0;background:none;border:0;color:var(--ink);font-size:.78em;font-weight:700;position:relative;z-index:1;cursor:pointer}
+.lnn-xp em{font-style:normal;opacity:.7}
+.lnn-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 4px 4px;position:relative;z-index:1}
+.lnn-b{min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:1em;cursor:pointer;color:#fff}
+.lnn-b b{text-shadow:0 2px 0 rgba(106,74,60,.4)}.lnn-b small{font-size:.7em;opacity:.95}
+.lnn-b.pink,.lnn-b.pink:active{background:var(--pink)}.lnn-b.green{background:var(--green)}
+.lnn-b:active,.lnn-btn:active,.lnn-sm:active{transform:translateY(3px)}
+.lnn-btn{display:block;width:calc(100% - 8px);min-height:48px;margin:4px;padding:0 18px;font-size:1em;font-weight:700;background:var(--pink);color:#fff;cursor:pointer;text-shadow:0 2px 0 rgba(106,74,60,.35)}
+.lnn-btn.soft{background:var(--paper);color:var(--ink);text-shadow:none}
+.lnn-sm{flex:none;min-height:34px;padding:0 12px;font-size:.8em;font-weight:700;cursor:pointer;background:var(--paper);margin:4px}
+/* Listen */
+.lnn-li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:2px dashed #e6d9d0;font-size:.85em}
+.lnn-li span{flex:1;min-width:0;overflow-wrap:anywhere}
+.lnn-x{flex:none;width:30px;height:30px;border:0;background:none;color:var(--soft);font-size:1.3em;cursor:pointer}
+.lnn-box summary{cursor:pointer;font-weight:700;margin-bottom:6px}
+.lnn-todo{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:2px dashed #e6d9d0;cursor:pointer;transition:opacity .3s,transform .3s}
+.lnn-todo:first-child{border-top:0}.lnn-todo.gone{opacity:0;transform:translateX(30px)}
+.lnn-todo input{position:absolute;opacity:0;pointer-events:none}
+.lnn-chk{flex:none;width:22px;height:22px;margin:3px;background:#fff;box-shadow:0 -3px 0 0 var(--pxl),0 3px 0 0 var(--pxl),-3px 0 0 0 var(--pxl),3px 0 0 0 var(--pxl)}
+.lnn-todo input:checked+.lnn-chk{background:var(--green)}
+.lnn-todo span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}.lnn-todo small{display:block;font-size:.75em;color:var(--soft)}.lnn-todo small.late{color:#d4506a}
+/* Karteikarten */
+.lnn-prog{text-align:center;font-weight:700;font-size:.85em;color:var(--soft)}
+.lnn-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:240px;margin:8px 10px 14px;padding:22px 18px;text-align:center;background:var(--lnn-card);cursor:pointer;
+  box-shadow:0 -4px 0 0 var(--pxl),0 4px 0 0 var(--pxl),-4px 0 0 0 var(--pxl),4px 0 0 0 var(--pxl),10px 10px 0 0 rgba(106,74,60,.18),6px 6px 0 0 var(--lnn-card)}
+.lnn-card.flip{background:#fff}
+.lnn-card small{font-size:.72em;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.08em}
+.lnn-card div{font-size:1.3em;font-weight:700;line-height:1.35;overflow-wrap:anywhere}.lnn-card em{font-size:.7em;font-style:normal;color:var(--soft)}
+/* Einstellungen */
+.lnn-chips{display:flex;flex-wrap:wrap;gap:10px}
+.lnn-chip{min-height:34px;padding:0 12px;font-size:.82em;font-weight:700;cursor:pointer;margin:3px}.lnn-chip.on{background:var(--pink);color:#fff}
+.lnn-range{width:100%;accent-color:var(--pink)}
+.lnn-in{display:block;width:calc(100% - 8px);min-height:42px;margin:6px 4px;padding:8px 10px;background:#fff;color:var(--ink);font-size:.9em;border:0;border-radius:0;
+  box-shadow:0 -3px 0 0 var(--pxl),0 3px 0 0 var(--pxl),-3px 0 0 0 var(--pxl),3px 0 0 0 var(--pxl)}
+textarea.lnn-in{resize:vertical}
+.lnn-frow{display:flex;align-items:center;gap:8px}.lnn-frow .lnn-in{flex:1;width:auto}.lnn-hide{display:flex;align-items:center;gap:4px;font-size:.75em;color:var(--soft)}
+.lnn-pick{flex:none;width:58px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.lnn-pick .lnn-spr.xs{width:40px}.lnn-pick small{font-size:.6em}.lnn-pick.on{background:#ffe3ec}
+.lnn-pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0}.lnn-pgrid .lnn-pick{width:auto;height:74px}.lnn-pgrid .lnn-pick .lnn-spr.xs{width:52px}
+/* Pop-ups */
+.lnn-ov{position:fixed;inset:0;z-index:60;background:rgba(106,74,60,.4);display:flex;align-items:center;justify-content:center;padding:20px;animation:lnnIn .2s steps(3) both}
+.lnn-sh{width:min(420px,100%);max-height:86vh;overflow:auto;padding:18px 16px;margin:0}
+.lnn-sh h3{margin:0 0 10px;font-size:1.1em}
+.lnn-evo{display:flex;align-items:center;justify-content:center;gap:4px;margin:10px 0}.lnn-evo>div{flex:1;text-align:center;opacity:.55}.lnn-evo>div.on{opacity:1}
+.lnn-evo img{width:100%;max-width:90px;image-rendering:pixelated;display:block;margin:0 auto}.lnn-evo small{display:block;font-size:.7em;color:var(--soft)}
+#lnnToast{position:fixed;left:50%;bottom:calc(var(--nav-h,0px) + 24px);z-index:80;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:10px 16px;background:var(--paper,#fffaf3);color:#6a4a3c;
+  font:700 14px 'Pixelify Sans','Quicksand',sans-serif;box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78;transition:.25s steps(4)}
+#lnnToast.on{opacity:1;transform:translate(-50%,0)}
+/* Start: Stimmungskatze + Auswahl */
+.st-cat{flex:none;width:58px;height:54px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.st-cat img{width:56px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.st-cat:active{transform:scale(.94)}
+.cat-ov{position:fixed;inset:0;z-index:70;background:rgba(80,60,80,.4);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.cat-sh{width:min(440px,100%);max-height:84vh;overflow:auto;padding:16px;background:#fffaf3;color:#6a4a3c;font-family:'Pixelify Sans','Quicksand',sans-serif;
+  box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78}
+.cat-sh h3{margin:0 0 10px;font-size:1.1em}.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cat-grid button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:0;background:#fff;color:#6a4a3c;font:600 11px 'Pixelify Sans','Quicksand',sans-serif;cursor:pointer;
+  box-shadow:0 -3px 0 0 #d6c8c0,0 3px 0 0 #d6c8c0,-3px 0 0 0 #d6c8c0,3px 0 0 0 #d6c8c0}
+.cat-grid button.on{background:#ffe3ec;box-shadow:0 -3px 0 0 #8a6b78,0 3px 0 0 #8a6b78,-3px 0 0 0 #8a6b78,3px 0 0 0 #8a6b78}
+.cat-grid img{width:100%;image-rendering:pixelated;display:block}
+.cat-auto{display:block;width:100%;min-height:44px;margin:12px 0 0;border:0;background:#ffa6c1;color:#fff;font:700 15px 'Pixelify Sans','Quicksand',sans-serif;cursor:pointer;
+  box-shadow:0 -4px 0 0 #8a6b78,0 4px 0 0 #8a6b78,-4px 0 0 0 #8a6b78,4px 0 0 0 #8a6b78}
+.cat-auto.on{background:#9fd69b}
