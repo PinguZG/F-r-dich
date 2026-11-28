@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 136, date: '2026-11-28',
+      features: [],
+      small: ['Neu: Fernschalter für ein Pop-up (nur für Daniel einstellbar).'],
+      hotfix: [] },
     { v: 135, date: '2026-11-28',
       features: [],
       small: ['Ethik: wieder die ursprünglichen Karteikarten, Meta-Karten (Was muss man lernen) entfernt.'],
