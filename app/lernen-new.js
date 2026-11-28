@@ -143,7 +143,7 @@
         IT.push(rec); n++;
       }
     }
-    try { localStorage.setItem(IMPKEY(f), '1'); } catch (_) {}
+    try { localStorage.setItem(IMPKEY(f), String(window.WIR_ETHIK.themen.reduce((a, t) => a + t.karten.length, 0))); } catch (_) {}
     toast(todo.length + ' Karten für KAE1 eingefügt');
   }
   function vUeber(f) {
@@ -246,8 +246,14 @@
     open: async el => {
       V.fach = el.dataset.k; V.sub = null; render(); window.scrollTo?.(0, 0);
       const f = fach(V.fach);
-      let done = false; try { done = localStorage.getItem(IMPKEY(f)) === '1'; } catch (_) {}
-      if (f && isEthik(f) && !itemsOf(f.key).length && !done) { toast('Lade Ethik-Karten für KAE1 …'); try { await importEthik(f); } catch (e) { toast('Ging nicht: ' + errText(e)); } if (V.fach === f.key) render(); }
+      if (f && isEthik(f)) {
+        let seen = 0; try { seen = +(localStorage.getItem(IMPKEY(f)) || 0); } catch (_) {}
+        try {
+          await loadEthik();
+          const total = window.WIR_ETHIK.themen.reduce((a, t) => a + t.karten.length, 0);
+          if (total > seen && (seen > 0 || !itemsOf(f.key).length || itemsOf(f.key).some(i => i.by === 'ethik-kae1'))) { toast('Lade Ethik-Karten für KAE1 …'); await importEthik(f); if (V.fach === f.key) render(); }
+        } catch (e) { toast('Ging nicht: ' + errText(e)); }
+      }
     },
     home: () => { V.fach = null; V.sub = null; render(); },
     fach: () => { V.sub = null; V.ses = null; render(); },
