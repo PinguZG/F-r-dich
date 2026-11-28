@@ -81,7 +81,7 @@
       const open = E.open === t.id;
       return `<section class="po-th ${open ? 'open' : ''}"><button type="button" class="po-thh" data-po="open" data-id="${esc(t.id)}"><span><b>${esc(t.name)}</b><small>${esc(t.untertitel || '')}</small></span><i>${open ? '–' : '+'}</i></button>
         ${open ? '<div class="po-thb">' + t.sektionen.map(s => `<h4>${esc(s.h)}</h4><ul>${s.punkte.map(p => `<li>${esc(p)}</li>`).join('')}</ul>${s.q ? `<small class="et-q">Quelle: ${esc(s.q)}</small>` : ''}`).join('') +
-          `<button type="button" class="ln-btn po-tk" data-po="gokarten" data-x="${esc(t.id)}">Karteikarten dazu</button></div>` : ''}</section>`;
+          (t.karten.length ? `<button type="button" class="ln-btn po-tk" data-po="gokarten" data-x="${esc(t.id)}">Karteikarten dazu</button>` : '') + '</div>' : ''}</section>`;
     }).join('');
   }
 
@@ -94,7 +94,7 @@
     return E.deck;
   }
   function vKarten(b) {
-    const chips = `<div class="en-chips">${[['alle', 'Alle']].concat(D.themen.map(t => [t.id, t.name])).map(([k, n]) => `<button type="button" data-po="thema" data-x="${esc(k)}" class="${E.thema === k ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>`;
+    const chips = `<div class="en-chips">${[['alle', 'Alle']].concat(D.themen.filter(t => t.karten.length).map(t => [t.id, t.name])).map(([k, n]) => `<button type="button" data-po="thema" data-x="${esc(k)}" class="${E.thema === k ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>`;
     const d = deck();
     if (!d.length) { b.innerHTML = chips + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty">Hier sind gerade keine Karten.</div></div>`; return; }
     if (E.dpos >= d.length) { b.innerHTML = chips + `<div class="kk kk-none">${tabsHtml()}<div class="kk-empty"><b>Runde geschafft</b><button type="button" class="ln-btn" data-po="again">Nochmal</button></div></div>`; return; }

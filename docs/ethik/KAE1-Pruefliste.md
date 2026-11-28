@@ -9,20 +9,6 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 - Übersicht „Wiederholung für die Kurzarbeit“ → KA S.1
 - Übersicht „Aufbau der Kurzarbeit“ → KA S.2
 
-| ID | Quelle | Frage | Antwort |
-|---|---|---|---|
-| ka-1 | KA S.1 | Was wird laut Lehrkraft für die Kurzarbeit wiederholt? | Begriffe erklären (Ethik, Moral, Normen, Werte, Tugend, Eudaimonie); Bedeutung von Moral, Werten, Normen -> ethisch bewerten; Sokrates, Platon und Aristoteles; Kant und seine Pflichtethik (deontologische Ethik); Utilitarismus und die Folgenethik (teleologische Ethik); Wie werte ich eine Karikatur/Tabelle/Statistik aus?; Wie argumentiere ich richtig? |
-| ka-2 | KA S.2 | Aus wie vielen Teilen besteht die Kurzarbeit? Was ist jeweils gefragt? | Drei Teile. 1. Teil: reine Abfrage (Definitionen und Begriffe, auswendig gelernt runterschreiben). 2. Teil: Gelerntes anwenden oder einordnen. 3. Teil: Eigenleistung, für die man nicht lernen kann (Karikatur/Tabelle etc., dazu nimmst du Stellung). |
-| ka-3 | KA S.2 | Wie zählt die Kurzarbeit? | 1:1 zum Mündlichen. |
-| ka-4 | KA S.2 | Kurzarbeit: Was ist der 1. Teil? | Reine Abfrage: Definitionen und Begriffe, die auswendig gelernt einfach runtergeschrieben werden können. |
-| ka-5 | KA S.2 | Kurzarbeit: Was ist der 2. Teil? | Gelerntes anzuwenden oder einzuordnen. |
-| ka-6 | KA S.2 | Kurzarbeit: Was ist der 3. Teil? | Eine Eigenleistung, für die man nicht lernen kann. Hier kommt eine Karikatur/Tabelle etc. und zu der nehmt ihr Stellung. |
-| ka-7 | KA S.1 | Welche Begriffe musst du für die Kurzarbeit erklären können? | Ethik, Moral, Normen, Werte, Tugend, Eudaimonie. |
-| ka-8 | KA S.1 | Welche Denker und Ethikarten werden wiederholt? | Sokrates, Platon und Aristoteles; Kant und seine Pflichtethik (deontologische Ethik); Utilitarismus und die Folgenethik (teleologische Ethik). |
-| ka-9 | KA S.1 | Was ist die Pflichtethik Kants noch – welcher Fachbegriff steht in der Themenliste? | Deontologische Ethik. |
-| ka-10 | KA S.1 | Was ist die Folgenethik des Utilitarismus noch – welcher Fachbegriff steht in der Themenliste? | Teleologische Ethik. |
-| ka-11 | KA S.1 | Welche zwei Anwendungsthemen stehen außerdem in der Themenliste? | Wie werte ich eine Karikatur/Tabelle/Statistik aus? Wie argumentiere ich richtig? |
-
 ## Begriffe: Ethik, Moral, Normen, Werte, Tugend, Eudaimonie
 
 - Übersicht „Ethik“ → WE S.2; EZ S.1
@@ -51,24 +37,6 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 | grund-14 | SPA S.4 | Eudaimonie – Definition | Bezeichnet eine gelungene Lebensführung, die auf ein ausgeglichenes Gemüt zurückzuführen ist, mit dem Ziel der Eudaimonia. |
 | grund-15 | SPA S.4 | Eudaimonia bedeutet … | Glückseligkeit, guter Geist. |
 | grund-16 | EZ S.1 | Wie hängen Werte, Normen und Tugend zusammen? | Werte = Ziele/Ideale. Normen = Regeln, um diese Ziele zu erreichen. Tugend = Charaktereigenschaften, mit denen man diese Regeln gut umsetzen kann. |
-| grund-17 | WE S.2 | Zu welcher Disziplin gehört die Ethik? | Sie ist eine Disziplin der Philosophie. |
-| grund-18 | WE S.2; EZ S.1 | Ethik ist die Wissenschaft von … | dem moralischen Handeln. |
-| grund-19 | WE S.2 | Was untersucht die Ethik? | Die Geltungsgründe moralischer Normen und die Bedingungen, unter denen eine Handlung als moralisch bezeichnet werden kann. |
-| grund-20 | EZ S.1 | Was ist die Leitfrage der Ethik zum Handeln? | Was soll ich tun? |
-| grund-21 | EZ S.1 | Was ist die Leitfrage der Ethik zum Leben? | Wie soll ich leben? |
-| grund-22 | EZ S.1 | Was bedeutet „Gebot“ in der Moral? | „Du sollst …“ |
-| grund-23 | EZ S.1 | Was bedeutet „Verbot“ in der Moral? | „Du sollst nicht …“ |
-| grund-24 | EZ S.1 | Nenne Beispiele für Gruppenmoral. | Kultur, Religion, Subkulturen. |
-| grund-25 | EZ S.1 | Nenne Beispiele für Werte. | Ehrlichkeit, Freiheit, Sicherheit, Gerechtigkeit. |
-| grund-26 | EZ S.1 | Nenne Beispiele für Tugenden. | Mut, Besonnenheit, Gerechtigkeit. |
-| grund-27 | EZ S.1 | Wozu dienen Normen als Maßstab? | Für Urteile über Verhalten. |
-| grund-28 | EZ S.1 | Welche Folgen hat ein rechtlicher Verstoß gegen „Du sollst nicht töten“? | Gefängnisstrafe (rechtlich). |
-| grund-29 | EZ S.1 | Welche Folge hat ein Verstoß gegen „Du sollst nicht mit vollem Mund reden“? | Schiefe Blicke der Mitmenschen (sozial). |
-| grund-30 | EZ S.1 | Werte sind für Normen und Tugend was? | Werte = Ziele/Ideale (Normen sind die Regeln, um sie zu erreichen). |
-| grund-31 | EZ S.1 | Normen sind im Verhältnis zu den Werten was? | Regeln, um die Ziele/Ideale (Werte) zu erreichen. |
-| grund-32 | EZ S.1 | Tugend ist im Verhältnis zu Normen was? | Charaktereigenschaften, mit denen man die Regeln gut umsetzen kann. |
-| grund-33 | SPA S.4 | Wie nennt man eine gelungene Lebensführung mit ausgeglichenem Gemüt? | Eudaimonie. |
-| grund-34 | SPA S.4 | Wie lautet die Übersetzung von „Eudaimonia“? | Glückseligkeit, guter Geist. |
 
 ## Bedeutung von Moral, Werten, Normen – ethisch bewerten
 
@@ -85,18 +53,6 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 | bewerten-5 | WE S.5 | Welche drei Fragen gehören zum ethischen Bewerten? (Schema) | Werte/Normen: Was ist richtig? – Handlung: Was tue ich? – Folgen: Was passiert? |
 | bewerten-6 | WE S.5 | Was gilt für eine allgemeine Norm und den Einzelfall? | Eine allgemeine Norm beantwortet nicht automatisch jeden konkreten Einzelfall! |
 | bewerten-7 | WE S.6 | Ethisches Bewerten bedeutet deshalb … | Werte und Normen erkennen, Folgen betrachten, Konflikte zwischen ihnen erkennen und begründet abwägen. |
-| bewerten-8 | EZ S.1 | Bedeutung von Moral/Werten/Normen: Was ist der Mensch? | Ein soziales Wesen – er braucht Regeln für das Zusammenleben. |
-| bewerten-9 | EZ S.1 | Bedeutung: Was suchen Menschen und was geben Normen ihnen? | Menschen suchen Sicherheit & Routine, Normen geben Orientierung. |
-| bewerten-10 | EZ S.1 | Bedeutung: Was bewirken Regeln und Werte für die eigene Gruppe? | Wir-Gefühl / Abgrenzung: Regeln & Werte stärken die eigene Gruppe (z. B. „Bei uns ist Gewalt nicht in Ordnung“). |
-| bewerten-11 | EZ S.1 | Bedeutung: Wozu brauchen Menschen Grenzen? | Sie schützen vor Schaden (z. B. Gesetze gegen Diebstahl). |
-| bewerten-12 | EZ S.1 | Bedeutung: Was bedeutet „Entlastung & Vereinfachung“ durch Normen? | Normen nehmen uns Entscheidungen ab (z. B. Verkehrsregeln). |
-| bewerten-13 | EZ S.1 | Bedeutung: Was verhindern moralische Systeme? | Dass nur Egoismus/Selbstsucht zählt; sie ermöglichen friedliches Zusammenleben. |
-| bewerten-14 | WE S.5 | Ethisch bewerten: Was ist falsch, was ist richtig? | Nicht einfach „Ich finde das gut/schlecht.“, sondern: Ich begründe, warum ich eine Handlung unter bestimmten moralischen Maßstäben für richtig oder falsch halte. |
-| bewerten-15 | WE S.5 | Ethisch bewerten: Nach welchen drei Dingen bewertest du? | Nach Werten, Normen und Folgen. |
-| bewerten-16 | WE S.5 | Schema ethisch bewerten: Was fragt das Feld „Werte/Normen“? | Was ist richtig? |
-| bewerten-17 | WE S.5 | Schema ethisch bewerten: Was fragt das Feld „Handlung“? | Was tue ich? |
-| bewerten-18 | WE S.5 | Schema ethisch bewerten: Was fragt das Feld „Folgen“? | Was passiert? |
-| bewerten-19 | WE S.5 | Wovon hängen deine moralischen Entscheidungen ab? | Davon, welche Abwägung du triffst zwischen Werten oder Normen und den Folgen und dem Nutzen. |
 
 ## Sokrates, Platon, Aristoteles
 
@@ -145,60 +101,6 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 | antike-36 | EZ S.3 | Wie entstehen Tugenden nach Aristoteles? | Durch Übung & Gewohnheit (man kann sie „trainieren“). |
 | antike-37 | SPA S.13 | Aristoteles: Beispiel Mut, Gerechtigkeit und praktische Klugheit (Schülerin, Freund gibt Ideen als eigene aus) | Mut: das Problem anzusprechen. Gerechtigkeit: auch die anderen Gruppenmitglieder zu berücksichtigen. Praktische Klugheit: die passende Form zu wählen – etwa zunächst ein ruhiges Gespräch, statt den Freund sofort vor der ganzen Klasse bloßzustellen. |
 | antike-38 | SPA S.13 | Aristoteles – Merksatz | Eudaimonia ist gelingendes Leben; Tugenden und praktische Klugheit helfen, in konkreten Situationen gut zu handeln. |
-| antike-39 | SPA S.4 | Welche Fragen stellt die Antike? | Was soll ich tun? Wie soll ich leben? Was macht ein gutes Leben aus? |
-| antike-40 | SPA S.1 | Welche Ethikart ist die Ethik der Antike (Name)? | Eudämonistische Ethik, auch Tugendethik genannt. |
-| antike-41 | SPA S.4 | Antike: Wodurch wird das Ziel Glückseligkeit erreicht? (zwei Dinge) | 1. durch einen guten Charakter, 2. durch ein gelungenes Leben. |
-| antike-42 | SPA S.11 | Sokrates: Was wollte er in Gesprächen herausfinden? | Was Begriffe wie Gerechtigkeit, Mut oder Frömmigkeit wirklich bedeuten. |
-| antike-43 | SPA S.11 | Sokrates: Was tat er mit scheinbar selbstverständlichen Überzeugungen? | Er stellte sie in Gesprächen infrage. |
-| antike-44 | SPA S.11 | Sokrates: Wie ging er mit den Antworten seiner Gesprächspartner um? | Statt fertige Antworten zu verkünden, stellte er Fragen und prüfte die Begründungen seiner Gesprächspartner. |
-| antike-45 | SPA S.11 | Was ist die sokratische Gesprächsführung? | Fragen stellen und die Begründungen der Gesprächspartner prüfen, statt fertige Antworten zu verkünden. |
-| antike-46 | SPA S.11 | Sokrates: Wodurch entsteht Fehlverhalten? | Wesentlich aus Unwissenheit oder einer falschen Einschätzung dessen, was wirklich gut ist. |
-| antike-47 | SPA S.11 | Sokrates: Reicht es, Regeln auswendig zu kennen? | Nein. Man muss sich ernsthaft mit der Frage auseinandersetzen, was gut ist und warum. |
-| antike-48 | SPA S.11 | Sokrates: Was tut, wer wirklich versteht, was gut und gerecht ist? | Er wird auch entsprechend handeln. |
-| antike-49 | EZ S.2 | Sokrates: Was führt zum Glück? | Wissen führt zum Glück: Wer weiß, was gut für sich und andere ist, kann sinnvoll handeln. |
-| antike-50 | EZ S.2 | Sokrates: Wie entsteht Tugend? | Durch Erkenntnis/Wissen des Guten; sie kann teilweise gelehrt werden (Philosophie, Erziehung), muss aber auch eingeübt & erlebt werden. |
-| antike-51 | SPA S.6 | Sokrates: Was ist für ihn der höchste Wert? | Das gerechte und gute Leben. |
-| antike-52 | SPA S.6 | Sokrates: Wie soll der Mensch ein „gutes“ Leben führen? | Mit Hilfe seiner Vernunft. |
-| antike-53 | SPA S.6 | Sokrates: Wozu fordert er seine Mitbürger auf? | Mit Hilfe ihrer Vernunft eine neue, für alle verbindliche Orientierungsbasis zu finden. |
-| antike-54 | SPA S.6 | Sokrates: Welche beiden Dinge betont er? | Die Bedeutung von Vernunft und Gewissen. |
-| antike-55 | EZ S.2 | Sokrates: Was heißt „Erkenne dich selbst“ konkret? | Selbstkritik, eigene Motive prüfen, Charakter entwickeln. |
-| antike-56 | EZ S.2 | Sokrates: Warum handeln Menschen falsch? | Sie denken, es sei gut für sie (Fehleinschätzung). |
-| antike-57 | SPA S.12 | Platon: Was kann einen Menschen täuschen? | Einzelne angenehme Erfahrungen: Menschen können etwas für gut halten, das nur kurzfristig nützlich oder angenehm erscheint. |
-| antike-58 | SPA S.12 | Platon: Was ist ein verlässlicher Maßstab für ein gutes Leben? | Nicht einzelne angenehme Erfahrungen, sondern die Idee des Guten (Orientierung an Gerechtigkeit und vernünftiger Einsicht). |
-| antike-59 | SPA S.12 | Platon: Worum soll sich bemühen, wer gut handeln will? | Nicht nur fragen, was ihm gerade gefällt oder einen Vorteil bringt, sondern sich um Erkenntnis des Guten bemühen. |
-| antike-60 | SPA S.12 | Platon: Woran braucht ein gutes Leben Orientierung? | An Gerechtigkeit und vernünftiger Einsicht. |
-| antike-61 | SPA S.8 | Platon: Philosophenkönige – wodurch herrschen sie, welche Tugend gehört dazu? | Sie herrschen dank ihrer Vernunft; Tugend: Weisheit (wählt das Gute als Ziel). |
-| antike-62 | SPA S.8 | Platon: Wächter – wodurch dienen sie dem Staat, welche Tugend gehört dazu? | Mit ihrer Energie; Tugend: Tapferkeit/Tatkraft (verwirklicht das Gute auch gegen Widerstände). |
-| antike-63 | SPA S.8 | Platon: Bauern, Handwerker etc. – wie verhalten sie sich, welche Tugend gehört dazu? | Sie gehorchen trotz ihrer Triebe; Tugend: Mäßigung (akzeptiert besonnen das Gute auch gegen Lust- und Unlustgefühle). |
-| antike-64 | SPA S.8 | Platon: Was ist die Tugend Weisheit? | Wählt das Gute als Ziel (gehört zur Vernunft). |
-| antike-65 | SPA S.8 | Platon: Was ist die Tugend Tapferkeit/Tatkraft? | Verwirklicht das Gute auch gegen Widerstände (gehört zur Energie). |
-| antike-66 | SPA S.8 | Platon: Was ist die Tugend Mäßigung? | Akzeptiert besonnen das Gute auch gegen Lust- und Unlustgefühle (gehört zu den Trieben). |
-| antike-67 | EZ S.2 | Platon: Wie heißt der erste Seelenteil und was will er? | Vernunft (Logos) – will das Gute erkennen. |
-| antike-68 | EZ S.2 | Platon: Wie heißt der zweite Seelenteil und was tut er? | Mut/Wille (Thymos) – setzt das Erkannte durch. |
-| antike-69 | EZ S.2 | Platon: Wie heißt der dritte Seelenteil und was will er? | Begehren (Epithymia) – will Lust, Genuss, Besitz. |
-| antike-70 | EZ S.2 | Platon: Wann ist man glücklich? | Wenn die Seele im Gleichgewicht ist: Vernunft führt, Mut unterstützt, Begehren ist gezügelt. |
-| antike-71 | EZ S.2 | Platon: Was ist Gerechtigkeit? | Jeder Seelenteil „tut das Seine“ – das entspricht auch einem gerechten Staat. |
-| antike-72 | EZ S.2 | Platon: Wer tut im gerechten Staat was? | Philosophen herrschen, Wächter schützen, Bauern/Handwerker arbeiten. |
-| antike-73 | EZ S.3 | Aristoteles: Was ist die Grundfrage? | „Was ist das höchste Gut, das wir um seiner selbst willen anstreben?“ |
-| antike-74 | EZ S.3 | Aristoteles: Was ist die Antwort auf die Grundfrage? | Eudaimonia (Glückseligkeit / gelingendes Leben). |
-| antike-75 | EZ S.3 | Aristoteles: Was ist das „höchste Gut“? | Das wichtigste Ziel im Leben, über dem nichts mehr steht. |
-| antike-76 | EZ S.3 | Aristoteles: Was sind alle anderen Dinge im Verhältnis zum höchsten Gut? | Nur Mittel, um dieses Ziel zu erreichen (Geld, Erfolg, Gesundheit). |
-| antike-77 | SPA S.13 | Aristoteles: Was ist Eudaimonia nicht? | Nicht einfach ein kurzer Glücksmoment oder gute Laune. |
-| antike-78 | SPA S.13 | Aristoteles: Was ist Eudaimonia? | Ein insgesamt gelingendes Leben, in dem ein Mensch seine Fähigkeiten vernünftig entfaltet und gut handelt. |
-| antike-79 | EZ S.3 | Aristoteles: Ist Glück eine einzelne Lust? | Nein, es ist eine Lebensform: vernunftgemäßes, tugendhaftes Leben. |
-| antike-80 | SPA S.13 | Aristoteles: Wie entstehen Tugenden? | Durch Übung: Wer gerecht handeln will, muss Gerechtigkeit immer wieder praktisch einüben. |
-| antike-81 | SPA S.13 | Aristoteles: Ist tugendhaftes Handeln Regelbefolgung oder spontan? | Weder blindes Befolgen von Regeln noch spontanes Tun, wonach einem gerade ist. |
-| antike-82 | SPA S.13 | Aristoteles: Was sind Tugenden (Haltungen)? | Eingeübte Haltungen, durch die Menschen in Situationen angemessen handeln können. |
-| antike-83 | SPA S.13 | Aristoteles: Wie wird die Mitte gefunden? | Durch Vernunft und praktische Klugheit. |
-| antike-84 | EZ S.3; SPA S.13 | Aristoteles: Welche Tugend liegt zwischen Feigheit und Tollkühnheit? | Mut. |
-| antike-85 | EZ S.3 | Aristoteles: Welche Tugend liegt zwischen Geiz und Verschwendung? | Großzügigkeit. |
-| antike-86 | EZ S.3 | Aristoteles: Welche Tugend liegt zwischen Unterwürfigkeit und Arroganz? | Selbstbewusstsein. |
-| antike-87 | EZ S.3 | Aristoteles: Welche Tugend liegt zwischen Zügellosigkeit und Gefühlslosigkeit? | Besonnenheit. |
-| antike-88 | EZ S.3 | Mut: Was ist „zu wenig“ und was „zu viel“? | Zu wenig: Feigheit. Zu viel: Tollkühnheit. |
-| antike-89 | SPA S.10 | Was bedeutet „Mesotes“? | Tugend = Mesotes = richtiges Maß (zwischen Mangel und Übermaß). |
-| antike-90 | SPA S.13 | Aristoteles: Was tut der mutige Mensch? | Er erkennt eine Gefahr, wägt sie ab und handelt aus einem guten Grund. |
-| antike-91 | SPA S.13 | Aristoteles: Was verlangt Gerechtigkeit im Gruppenbeispiel? | Auch die anderen Gruppenmitglieder zu berücksichtigen. |
-| antike-92 | SPA S.13 | Aristoteles: Was hilft praktische Klugheit im Gruppenbeispiel? | Die passende Form zu wählen – etwa zunächst ein ruhiges Gespräch, statt den Freund sofort vor der ganzen Klasse bloßzustellen. |
 
 ## Kant – Pflichtethik
 
@@ -232,37 +134,6 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 | kant-19 | EZ S.4 | Beispiel: dem Freund die Wahrheit sagen – wie bewertet Kant? | Handlung: ehrlich sein. Prinzip: ich lüge nicht („Lügen ist schlecht“). Trotz der schlechten Folge (er ist danach evtl. kurz wütend) gilt das Handeln bei Kant als moralisch gut, weil man das Richtige getan hat. |
 | kant-20 | EZ S.4 | Beispiel Spicken – wie bewertet Kant? | Trotz guter Folge (bessere Note) falsch. Maxime wäre: „Jeder sollte schummeln & betrügen“ -> würden das alle machen, wäre die Klassenarbeit sinnlos, außerdem möchte man nicht betrogen werden -> die Handlung ist an sich unmoralisch, egal wie gut die Folgen sind. |
 | kant-21 | EZ S.5 | Beispiel Versprechen brechen – wie prüft man die Maxime? | Maxime: „Jeder darf Versprechen brechen, wenn es gerade so für einen passt.“ -> würden das alle machen, würde niemand mehr Versprechen glauben -> Versprechen hätten keinen Sinn -> Widerspruch. Folgerung: Du hast die Pflicht, deine Versprechen zu halten – sie ergibt sich aus der Vernunft, nicht aus Folgen. |
-| kant-22 | KU S.2 | Kant: Was bedeutet „deontologisch“? | Handlungsorientiert. |
-| kant-23 | EZ S.4 | Kant: Was bedeutet „deon“ (griechisch)? | Pflicht. |
-| kant-24 | EZ S.4 | Kant: Worauf achtet die handlungsorientierte Ethik vor allem? | Darauf, wie du handelst (Art der Handlung & das Prinzip dahinter), weniger auf die Konsequenzen. |
-| kant-25 | KU S.2 | Kant: Was ist wichtig, wenn nicht die Folgen? | Allein die Voraussetzungen des Handelns. |
-| kant-26 | KU S.2 | Kant: Welche Handlung ist moralisch gut? | Eine, die an sich gut ist – nicht eine, aus der Gutes hervorgeht. |
-| kant-27 | KU S.2 | Kant: Kann eine moralisch gute Handlung schlechte Folgen haben? | Ja. |
-| kant-28 | KU S.2 | Kant: Welche Vernunft nimmt er an? | Eine universale, für alle Menschen gültige Vernunft, unabhängig von allem kulturellen Einfluss. |
-| kant-29 | KU S.2 | Kant: Was lässt sich aus der Vernunft ableiten? | Ein allgemein gültiges Gesetz. |
-| kant-30 | KU S.4 | Kant: Was ist im Schaubild das Entscheidende bei der Motivation? | Der gute Wille ist entscheidend! |
-| kant-31 | KU S.4 | Kant: Was sind Neigungen und Gesetze der Klugheit moralisch? | Nur pflichtgemäß und daher moralisch wertlos. |
-| kant-32 | KU S.4 | Kant: Was muss für die Handlung benutzt werden? | Der Verstand, aus dem sich der kategorische Imperativ ableitet. |
-| kant-33 | KU S.4 | Kant: Welcher Teil des Schaubilds Motivation – Handlung – Konsequenz ist durchgestrichen? | Die Konsequenz. |
-| kant-34 | KU S.4 | Kant: Wie nennt er das richtige Handeln im Schaubild? | Handeln aus Pflicht! |
-| kant-35 | KAB S.3 | Was gibt einer Handlung nach Kant ihren moralischen Wert? | Nicht der erwartete Erfolg, sondern der gute Wille und das Handeln aus Pflicht. |
-| kant-36 | KU S.3 | Kategorischer Imperativ: Wonach darfst du nur handeln? | Nach derjenigen Maxime, durch die du zugleich wollen kannst, dass sie ein allgemeines Gesetz werde. |
-| kant-37 | KAB S.3 | Maxime: Was ist das (kurz)? | Dein persönlicher Vorsatz oder die Regel, nach der du in einer bestimmten Situation handeln willst. |
-| kant-38 | KAB S.3 | Allgemeines Gesetz: Für wen und wann müsste es gelten? | Für alle Menschen zu jeder Zeit ausnahmslos. |
-| kant-39 | EZ S.5 | Maxime prüfen: Was folgt, wenn du wollen kannst, dass alle so handeln? | Die Handlung ist moralisch erlaubt. |
-| kant-40 | EZ S.5 | Maxime prüfen: Was folgt, wenn du nicht wollen kannst, dass alle so handeln? | Die Handlung ist moralisch falsch. |
-| kant-41 | EZ S.4 | Pflichtgemäß handeln: Warum tut man das Richtige? | Aus anderen Gründen (z. B. Angst), nicht weil man die Pflicht erfüllen will. |
-| kant-42 | EZ S.4 | Aus Pflicht handeln: Warum tut man das Richtige? | Weil man erkennt, dass es die moralische Pflicht ist. |
-| kant-43 | EZ S.4 | Was ist laut Kant nur moralisch wertvoll – pflichtgemäß oder aus Pflicht? | Nur Handeln aus Pflicht (aus Achtung vor dem moralischen Gesetz). |
-| kant-44 | EZ S.4 | Woraus handelt man nicht, wenn man aus Pflicht handelt? | Nicht aus Angst, Lust, Gewohnheit, Vorteil, … |
-| kant-45 | EZ S.4; KU S.2 | Kant: Aus welcher Quelle wird die Pflicht abgeleitet? | Aus der Vernunft, nicht aus Folgen. |
-| kant-46 | EZ S.4 | Kant: Wie bestimmen wir unsere Pflichten (nicht)? | Nicht nach „Was bringt beste Folgen?“ (utilitaristisch), sondern mit unserer Vernunft, um moralische Regeln zu erkennen, die für alle Menschen gelten sollten. |
-| kant-47 | EZ S.4 | Spicken: Was ist die Maxime? | „Jeder sollte schummeln & betrügen.“ |
-| kant-48 | EZ S.4 | Spicken: Warum ist es für Kant falsch, trotz guter Note? | Würden das alle machen, wäre die Klassenarbeit sinnlos, außerdem möchte man nicht betrogen werden – die Handlung ist an sich unmoralisch, egal wie gut die Folgen sind. |
-| kant-49 | EZ S.5 | Versprechen: Was ist die Maxime? | „Jeder darf Versprechen brechen, wenn es gerade so für einen passt.“ |
-| kant-50 | EZ S.5 | Versprechen: Warum ist die Maxime ein Widerspruch? | Würden das alle machen, würde niemand mehr Versprechen glauben, Versprechen hätten keinen Sinn. |
-| kant-51 | EZ S.5 | Versprechen: Welche Pflicht ergibt sich daraus? | Du hast die Pflicht, deine Versprechen zu halten – sie ergibt sich aus der Vernunft, nicht aus Folgen. |
-| kant-52 | EZ S.4 | Wahrheit sagen: Welches Prinzip steckt dahinter? | „Ich lüge nicht“ (Lügen ist schlecht) – trotz der schlechten Folge gilt das Handeln als moralisch gut. |
 
 ## Utilitarismus – Folgenethik
 
@@ -286,24 +157,5 @@ Gleiche Daten wie in `app/lernen/ethik-data.js`.
 | util-11 | KU S.9 | Deontologische Ethik (Pflichtethik) – Kurzdefinition | Handlung selbst soll gut sein = Handeln aus Pflicht. Beispiel: Kants Pflichtethik. |
 | util-12 | KU S.9 | Teleologische Ethik (Folgenethik) – Kurzdefinition | Die Handlungen sind auf ein Ziel gerichtet = Handeln wird nach Folgen beurteilt. Beispiel: Utilitarismus. |
 | util-13 | EZ S.4 | Wie unterscheiden sich Utilitarismus und Kant bei einer Lüge, die viele glücklicher macht? | Utilitarismus: Eine Lüge wäre in Ordnung, wenn dadurch viele glücklicher wären (gut ist, was gute Folgen/viel Glück bringt). Kant: Eine Handlung wird nicht danach beurteilt, wie praktisch/nützlich die Folgen sind, sondern ob sie einer moralischen Regel/Pflicht entspricht. |
-| util-14 | KU S.6 | Utilitarismus: Was bedeutet „teleologisch“? | Zielorientiert. |
-| util-15 | KU S.6 | Utilitarismus: Wonach wird die Handlung bewertet? | Nach dem Nutzen. |
-| util-16 | KU S.6 | Utilitarismus: Was wird beurteilt? | Die Folgen. |
-| util-17 | KU S.6 | Utilitarismus: Wie lautet die Maxime? | Größtmögliches Glück der größtmöglichen Zahl. |
-| util-18 | EZ S.5 | Utilitarismus: Wie noch genannt (zwei Namen)? | Folgenethik und Nutzenethik. |
-| util-19 | EZ S.5 | Utilitarismus: Wie ist die Ethik noch bezeichnet (Fachwort neben teleologisch)? | Konsequentialistische Ethik: Folgen der Handlung entscheidend, Handlung wird nach Nutzen bewertet. |
-| util-20 | EZ S.5 | Utilitarismus: Was soll am Ende sein? | Möglichst viele Menschen möglichst zufrieden. |
-| util-21 | EZ S.5 | Utilitarismus: Moralisch gut ist … | Moralisch gut ist, was insgesamt am meisten Glück/Nutzen bringt & am wenigsten Leid. |
-| util-22 | EZ S.5 | Trolley: Was passiert, wenn du nichts machst? | Der Zug fährt auf Gleis 1, auf dem 5 Leute liegen. |
-| util-23 | EZ S.5 | Trolley: Was passiert, wenn du umlenkst? | Der Zug fährt auf Gleis 2, wo nur 1 Person liegt. |
-| util-24 | EZ S.5 | Trolley: Was wählt der Utilitarist? | Das Umlenken (Möglichkeit 2) – er opfert lieber 1 statt 5. |
-| util-25 | EZ S.5 | Utilitarismus – Vorteil 1 | Denkt an alle Betroffenen & will Leid verringern. |
-| util-26 | EZ S.5 | Utilitarismus – Vorteil 2 | Hilft bei politischen Entscheidungen (z. B. Gesundheitswesen, Klimaschutz) – man schaut auf das Wohl aller. |
-| util-27 | EZ S.5 | Utilitarismus – Kritik 1 | Minderheiten können benachteiligt werden (wenn die Mehrheit profitiert). |
-| util-28 | EZ S.5 | Utilitarismus – Kritik 2 | Gefahr, dass Menschen nur als „Mittel“ gesehen werden (z. B. jemanden opfern, um andere zu retten). |
-| util-29 | EZ S.5 | Utilitarismus – Kritik 3 | Folgen nicht genau vorhersagbar. |
-| util-30 | KU S.9 | Nenne je ein Beispiel für deontologische und teleologische Ethik. | Deontologisch (Pflichtethik): Kants Pflichtethik. Teleologisch (Folgenethik): Utilitarismus. |
-| util-31 | KU S.9 | Worauf richtet sich die deontologische Ethik, worauf die teleologische? | Deontologisch: Handlung selbst soll gut sein = Handeln aus Pflicht. Teleologisch: Handlungen sind auf ein Ziel gerichtet = Handeln wird nach Folgen beurteilt. |
-| util-32 | EZ S.4 | Kant und Utilitarismus: Was ist bei Kant der Maßstab, was beim Utilitarismus? | Kant: ob die Handlung einer moralischen Regel/Pflicht entspricht. Utilitarismus: was letztlich gute Folgen/viel Glück bringt. |
 
-Gesamt: 240 Karten.
+Gesamt: 95 Karten.

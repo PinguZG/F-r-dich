@@ -5,6 +5,10 @@
 //   hotfix   = Fehlerbehebungen und Kleinkram
 (() => {
   const ENTRIES = [
+    { v: 135, date: '2026-11-28',
+      features: [],
+      small: ['Ethik: wieder die ursprünglichen Karteikarten, Meta-Karten (Was muss man lernen) entfernt.'],
+      hotfix: [] },
     { v: 134, date: '2026-11-28',
       features: ['Ethik (KAE1) auch im alten Lernbereich (Lernen -> Ida -> Ethik)'],
       small: ['Ethik: 240 statt 98 Karteikarten, alles Gefragte in kleinen Häppchen.'],

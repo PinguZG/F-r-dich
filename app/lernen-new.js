@@ -146,6 +146,14 @@
     try { localStorage.setItem(IMPKEY(f), String(window.WIR_ETHIK.themen.reduce((a, t) => a + t.karten.length, 0))); } catch (_) {}
     toast(todo.length + ' Karten für KAE1 eingefügt');
   }
+  // Karten, die früher aus den Ethik-Daten kamen und dort nicht mehr stehen, werden entfernt (eigene Karten bleiben)
+  async function pruneEthik(f) {
+    await loadEthik();
+    const keep = new Set(); window.WIR_ETHIK.themen.forEach(t => t.karten.forEach(k => keep.add(k[0].slice(0, 300))));
+    const stale = itemsOf(f.key).filter(i => i.by === 'ethik-kae1' && !keep.has(i.title));
+    for (let i = 0; i < stale.length; i += 5) await Promise.all(stale.slice(i, i + 5).map(it => pb.collection('lnew_items').delete(it.id, { requestKey: null }).catch(() => {})));
+    if (stale.length) { IT = IT.filter(i => !stale.includes(i)); try { localStorage.setItem(IMPKEY(f), String(keep.size)); } catch (_) {} }
+  }
   function vUeber(f) {
     const D = window.WIR_ETHIK;
     return `<div class="lnn-scene lnn-top">${clouds()}<button type="button" class="lnn-back px" data-act="fach" aria-label="Zurück">‹</button><h2 class="lnn-hello">Übersicht</h2><p class="lnn-sub">${esc(D ? D.anlass : '')}</p></div>
@@ -249,7 +257,7 @@
       if (f && isEthik(f)) {
         let seen = 0; try { seen = +(localStorage.getItem(IMPKEY(f)) || 0); } catch (_) {}
         try {
-          await loadEthik();
+          await pruneEthik(f); if (V.fach === f.key) render();
           const total = window.WIR_ETHIK.themen.reduce((a, t) => a + t.karten.length, 0);
           if (total > seen && (seen > 0 || !itemsOf(f.key).length || itemsOf(f.key).some(i => i.by === 'ethik-kae1'))) { toast('Lade Ethik-Karten für KAE1 …'); await importEthik(f); if (V.fach === f.key) render(); }
         } catch (e) { toast('Ging nicht: ' + errText(e)); }
